@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMME Reference Forms Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: { DEFAULT: '#1B4D3E', light: '#2a6b56', dark: '#143a2f' },
+                        sage: { DEFAULT: '#4a9e8c', light: '#6bb5a5', dark: '#3a8070' },
+                        cream: { DEFAULT: '#faf7f2', dark: '#f0ebe3' },
+                        amber: { DEFAULT: '#f4a261', light: '#f7bc8a', dark: '#e08a3a' },
+                        rating: {
+                            1: '#dc2626', 2: '#ea580c', 3: '#d97706',
+                            4: '#84cc16', 5: '#22c55e', 6: '#14b8a6', 7: '#1B4D3E'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest: #1B4D3E;
+            --forest-light: #2a6b56;
+            --sage: #4a9e8c;
+            --cream: #faf7f2;
+            --cream-dark: #f0ebe3;
+            --amber: #f4a261;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--cream); color: #1a1a1a; margin: 0; }
+        .highlight-match { background: #fef08a; padding: 1px 2px; border-radius: 2px; }
+        .age-card-active { box-shadow: 0 0 0 3px var(--sage), 0 4px 20px rgba(74,158,140,0.2); transform: translateY(-2px); }
+        .tree-card { animation: slideIn 0.35s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        .toast { animation: toastIn 0.3s ease, toastOut 0.3s ease 2s forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+        .accordion-content.open { max-height: none; }
+        .tab-btn-main { transition: all 0.2s ease; }
+        .breadcrumb-item::after { content: '→'; margin: 0 8px; color: #9ca3af; }
+        .breadcrumb-item:last-child::after { content: ''; margin: 0; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .print-only { display: block !important; }
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--cream); }
+        ::-webkit-scrollbar-thumb { background: var(--sage); border-radius: 4px; }
+        .outcome-border-1 { border-left: 4px solid var(--sage); }
+        .outcome-border-2 { border-left: 4px solid var(--amber); }
+        .outcome-border-3 { border-left: 4px solid #8b5cf6; }
+    </style>
+</head>
+<body data-id="0" class="min-h-screen">
+    <app-icon data-id="1" hidden data-icon="clipboard-list" data-palette="Green"></app-icon>
+
+    <!-- STICKY HEADER -->
+    <header data-id="2" id="header-bar-h1k2" class="sticky top-0 z-50 bg-forest text-white shadow-lg no-print">
+        <div data-id="3" class="max-w-[1600px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+            <div data-id="4" class="flex items-center gap-2">
+                <span data-id="5" class="text-xl md:text-2xl">📋</span>
+                <span data-id="6" class="text-lg md:text-xl font-bold tracking-tight">emmé Reference Forms</span>
+            </div>
+            <div data-id="7" class="flex items-center gap-2 md:gap-3 text-sm">
+                <span data-id="8" id="current-date-d9f3" class="hidden md:inline text-white/70 text-xs mr-1"></span>
+
+                <a data-id="9" id="nav-dashboard-link" href="https://copilot.microsoft.com/shares/artifacts/ekjoMtqaHfyHiVriqVUp5" target="_blank" rel="noopener"
+                   style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); border-radius:8px; padding:6px 12px; color:white; font-size:12px; font-weight:600; text-decoration:none; transition:background 0.2s; white-space:nowrap;">
+                    <i data-id="10" data-lucide="layout-dashboard" style="width:13px; height:13px;"></i>
+                    <span data-id="11" class="hidden sm:inline">Dashboard</span>
+                </a>
+
+                <a data-id="12" id="nav-guidebook-link" href="https://copilot.microsoft.com/shares/artifacts/U64zSSXSCWEroC3KehTFZ" target="_blank" rel="noopener"
+                   style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); border-radius:8px; padding:6px 12px; color:white; font-size:12px; font-weight:600; text-decoration:none; transition:background 0.2s; white-space:nowrap;">
+                    <i data-id="13" data-lucide="book-open" style="width:13px; height:13px;"></i>
+                    <span data-id="14" class="hidden sm:inline">Guidebook</span>
+                </a>
+
+                <a data-id="15" id="nav-reporthub-link" href="https://copilot.microsoft.com/shares/artifacts/Zig9mScrhPiPUSbRyYX7q" target="_blank" rel="noopener"
+                   style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); border-radius:8px; padding:6px 12px; color:white; font-size:12px; font-weight:600; text-decoration:none; transition:background 0.2s; white-space:nowrap;">
+                    <i data-id="16" data-lucide="file-text" style="width:13px; height:13px;"></i>
+                    <span data-id="17" class="hidden sm:inline">Report Hub</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- TAB BUTTONS -->
+    <div data-id="18" id="tab-bar-t4x1" class="no-print sticky top-[52px] z-40 bg-cream border-b border-cream-dark">
+        <div data-id="19" class="max-w-[1600px] mx-auto px-4 md:px-6 py-3 flex gap-3">
+            <button data-id="20" id="tab-age-btn" class="tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2" data-tab="age">
+                <span data-id="21">🧒</span> Age Anchoring Tool
+            </button>
+            <button data-id="22" id="tab-cos-btn" class="tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2" data-tab="cos">
+                <span data-id="23">🌳</span> COS Decision Tree
+            </button>
+        </div>
+    </div>
+
+    <main data-id="24" class="max-w-[1600px] mx-auto px-4 md:px-6 pb-12">
+
+        <!-- ==================== TAB 1: AGE ANCHORING TOOL ==================== -->
+        <section data-id="25" id="tab-age-content" class="mt-6">
+
+            <!-- CONTROLS ROW -->
+            <div data-id="26" class="flex flex-col lg:flex-row gap-4 mb-5 no-print">
+                <!-- Outcome filter pills -->
+                <div data-id="27" class="flex flex-wrap gap-2">
+                    <button data-id="28" class="outcome-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-outcome="all">All Outcomes</button>
+                    <button data-id="29" class="outcome-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-outcome="1">Outcome 1: Social-Emotional</button>
+                    <button data-id="30" class="outcome-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-outcome="2">Outcome 2: Knowledge & Skills</button>
+                    <button data-id="31" class="outcome-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-outcome="3">Outcome 3: Actions to Meet Needs</button>
+                </div>
+                <!-- Print button -->
+                <button data-id="32" id="print-btn-p8k1" class="ml-auto flex items-center gap-2 px-4 py-2 bg-forest text-white rounded-lg font-semibold text-sm hover:bg-forest-light transition-colors min-h-[44px] whitespace-nowrap">
+                    <span data-id="33">🖨️</span> Print
+                </button>
+            </div>
+
+            <!-- Age pills -->
+            <div data-id="34" class="flex flex-wrap gap-2 mb-4 no-print">
+                <span data-id="35" class="text-sm font-semibold text-forest self-center mr-1">Age Range:</span>
+                <button data-id="36" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="all">All Ages</button>
+                <button data-id="37" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="0-3">0-3m</button>
+                <button data-id="38" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="4-6">4-6m</button>
+                <button data-id="39" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="7-9">7-9m</button>
+                <button data-id="40" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="10-12">10-12m</button>
+                <button data-id="41" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="13-18">13-18m</button>
+                <button data-id="42" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="19-24">19-24m</button>
+                <button data-id="43" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="25-30">25-30m</button>
+                <button data-id="44" class="age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]" data-age="31-36">31-36m</button>
+            </div>
+
+            <!-- Search bar -->
+            <div data-id="45" class="relative mb-5 no-print">
+                <i data-id="46" data-lucide="search" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input data-id="47" id="search-input-s3j7" type="text" placeholder="🔍 Search milestones..." class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-sage focus:outline-none text-base bg-white shadow-sm" />
+            </div>
+
+            <!-- Quick Lookup Panel (desktop sticky sidebar) -->
+            <div data-id="48" class="flex gap-6">
+                <div data-id="49" class="flex-1 min-w-0">
+
+                    <!-- Info Banner -->
+                    <div data-id="50" id="info-banner-b2m9" class="bg-cream border-2 border-forest/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+                        <i data-id="51" data-lucide="info" class="w-5 h-5 text-forest mt-0.5 flex-shrink-0"></i>
+                        <p data-id="52" class="text-sm text-forest/80 leading-relaxed">Use this tool alongside the COS Decision Tree to anchor a child's functioning to the age range that best represents their typical performance. All content from the Larimer County Age Anchoring Tool.</p>
+                    </div>
+
+                    <!-- OUTCOME SECTIONS -->
+                    <div data-id="53" id="outcomes-container-o1a2">
+
+                        <!-- OUTCOME 1 -->
+                        <div data-id="54" class="outcome-section mb-6" data-outcome-section="1">
+                            <div data-id="55" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <button data-id="56" class="accordion-toggle w-full flex items-center justify-between p-4 md:p-5 hover:bg-gray-50 transition-colors" data-accordion="outcome1">
+                                    <div data-id="57" class="flex items-start gap-3 text-left">
+                                        <div data-id="58" class="w-1.5 h-12 bg-sage rounded-full flex-shrink-0 mt-0.5"></div>
+                                        <div data-id="59">
+                                            <h2 data-id="60" class="text-lg md:text-xl font-bold text-forest">Outcome 1 — Positive Social-Emotional Skills</h2>
+                                            <p data-id="61" class="text-sm text-gray-500 mt-1">Children demonstrate age appropriate functioning by...</p>
+                                        </div>
+                                    </div>
+                                    <i data-id="62" data-lucide="chevron-down" class="w-5 h-5 text-gray-400 flex-shrink-0 accordion-icon transition-transform"></i>
+                                </button>
+                                <div data-id="63" class="accordion-content open" id="accordion-outcome1">
+                                    <div data-id="64" class="px-4 md:px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="outcome1-grid">
+                                        <!-- Age cards rendered by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OUTCOME 2 -->
+                        <div data-id="65" class="outcome-section mb-6" data-outcome-section="2">
+                            <div data-id="66" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <button data-id="67" class="accordion-toggle w-full flex items-center justify-between p-4 md:p-5 hover:bg-gray-50 transition-colors" data-accordion="outcome2">
+                                    <div data-id="68" class="flex items-start gap-3 text-left">
+                                        <div data-id="69" class="w-1.5 h-12 bg-amber rounded-full flex-shrink-0 mt-0.5"></div>
+                                        <div data-id="70">
+                                            <h2 data-id="71" class="text-lg md:text-xl font-bold text-forest">Outcome 2 — Acquiring and Using Knowledge and Skills</h2>
+                                            <p data-id="72" class="text-sm text-gray-500 mt-1">Children demonstrate age appropriate functioning by...</p>
+                                        </div>
+                                    </div>
+                                    <i data-id="73" data-lucide="chevron-down" class="w-5 h-5 text-gray-400 flex-shrink-0 accordion-icon transition-transform"></i>
+                                </button>
+                                <div data-id="74" class="accordion-content open" id="accordion-outcome2">
+                                    <div data-id="75" class="px-4 md:px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="outcome2-grid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OUTCOME 3 -->
+                        <div data-id="76" class="outcome-section mb-6" data-outcome-section="3">
+                            <div data-id="77" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <button data-id="78" class="accordion-toggle w-full flex items-center justify-between p-4 md:p-5 hover:bg-gray-50 transition-colors" data-accordion="outcome3">
+                                    <div data-id="79" class="flex items-start gap-3 text-left">
+                                        <div data-id="80" class="w-1.5 h-12 bg-purple-500 rounded-full flex-shrink-0 mt-0.5"></div>
+                                        <div data-id="81">
+                                            <h2 data-id="82" class="text-lg md:text-xl font-bold text-forest">Outcome 3 — Taking Appropriate Actions to Meet Needs</h2>
+                                            <p data-id="83" class="text-sm text-gray-500 mt-1">Children demonstrate age appropriate functioning by...</p>
+                                        </div>
+                                    </div>
+                                    <i data-id="84" data-lucide="chevron-down" class="w-5 h-5 text-gray-400 flex-shrink-0 accordion-icon transition-transform"></i>
+                                </button>
+                                <div data-id="85" class="accordion-content open" id="accordion-outcome3">
+                                    <div data-id="86" class="px-4 md:px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="outcome3-grid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Age Anchor Quick Lookup (desktop only) -->
+                <div data-id="87" class="hidden xl:block w-64 flex-shrink-0 no-print">
+                    <div data-id="88" class="sticky top-[140px] bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                        <h3 data-id="89" class="font-bold text-forest text-sm mb-3 flex items-center gap-2">
+                            <i data-id="90" data-lucide="crosshair" class="w-4 h-4"></i>
+                            Age Anchor Quick Lookup
+                        </h3>
+                        <label data-id="91" class="text-xs text-gray-500 mb-1 block">Child's age in months:</label>
+                        <input data-id="92" id="age-lookup-input-a7m2" type="number" min="0" max="36" placeholder="e.g. 14" class="w-full px-3 py-2.5 rounded-lg border-2 border-gray-200 focus:border-sage focus:outline-none text-base mb-3" />
+                        <div data-id="93" id="age-lookup-result-r5n8" class="text-sm text-gray-500"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: COS DECISION TREE ==================== -->
+        <section data-id="94" id="tab-cos-content" class="mt-6 hidden">
+
+            <!-- Outcome selector pills -->
+            <div data-id="95" class="flex flex-wrap gap-2 mb-4 no-print">
+                <span data-id="96" class="text-sm font-semibold text-forest self-center mr-1">Rating for:</span>
+                <button data-id="97" class="cos-outcome-pill px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-cos-outcome="1">Outcome 1</button>
+                <button data-id="98" class="cos-outcome-pill px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-cos-outcome="2">Outcome 2</button>
+                <button data-id="99" class="cos-outcome-pill px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-cos-outcome="3">Outcome 3</button>
+            </div>
+            <div data-id="100" id="cos-outcome-label-l3k9" class="text-sm font-medium text-forest/70 mb-5 bg-forest/5 rounded-lg px-4 py-2.5 border border-forest/10"></div>
+
+            <!-- Intro Card -->
+            <div data-id="101" class="bg-cream border-2 border-forest/20 rounded-xl p-4 md:p-5 mb-6">
+                <h2 data-id="102" class="text-lg font-bold text-forest mb-2">COS Decision Tree — Child Outcomes Summary Process (2016)</h2>
+                <p data-id="103" class="text-sm text-forest/80 leading-relaxed">Use this decision tree alongside the Age Anchoring Tool to determine the appropriate 1–7 rating for each of the three global outcomes. Work through the questions from top to bottom.</p>
+            </div>
+
+            <!-- Rating Reference Table -->
+            <div data-id="104" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-5 mb-6">
+                <h3 data-id="105" class="font-bold text-forest text-sm mb-3 flex items-center gap-2">
+                    <i data-id="106" data-lucide="palette" class="w-4 h-4"></i>
+                    Rating Reference
+                </h3>
+                <div data-id="107" class="overflow-x-auto">
+                    <div data-id="108" class="flex flex-wrap gap-2">
+                        <span data-id="109" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-red-600">1 — Very early skills</span>
+                        <span data-id="110" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-orange-500">2 — Some early skills</span>
+                        <span data-id="111" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-amber-500">3 — Many important early skills</span>
+                        <span data-id="112" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-lime-500">4 — Some age-expected skills</span>
+                        <span data-id="113" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-green-500">5 — Many age-expected skills</span>
+                        <span data-id="114" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-teal-500">6 — Some concerns with skills</span>
+                        <span data-id="115" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-forest bg-emerald-200">7 — All skills expected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decision Tree Container -->
+            <div data-id="116" id="decision-tree-container-d5t3" class="mb-6">
+                <!-- Tree cards rendered by JS -->
+            </div>
+
+            <!-- Breadcrumb Path -->
+            <div data-id="117" id="breadcrumb-container-b8c4" class="no-print bg-white rounded-xl border border-gray-100 p-4 mb-6 hidden">
+                <h4 data-id="118" class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Decision Path</h4>
+                <div data-id="119" id="breadcrumb-path-p2v6" class="flex flex-wrap items-center text-sm font-medium text-forest"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast -->
+    <div data-id="120" id="toast-container-t9w1" class="fixed bottom-6 right-6 z-[100] hidden no-print">
+        <div data-id="121" class="bg-forest text-white px-5 py-3 rounded-xl shadow-xl text-sm font-medium toast flex items-center gap-2">
+            <i data-id="122" data-lucide="check-circle" class="w-4 h-4"></i>
+            <span data-id="123" id="toast-msg-m4k8"></span>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer data-id="124" id="footer-f7g3" class="bg-forest text-white py-6 mt-8">
+        <div data-id="125" class="max-w-[1600px] mx-auto px-4 md:px-6 text-center">
+            <p data-id="126" class="text-sm text-white/80">📋 EMME Reference Forms · Larimer County Age Anchoring Tool · COS Decision Tree 2016</p>
+            <p data-id="127" class="text-xs text-white/50 mt-2">Made by Copilot</p>
+        </div>
+    </footer>
+
+    <script>
+    // ===== ICONS =====
+    if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+        lucide.createIcons();
+    }
+
+    // ===== NAV BUTTON HOVER HANDLERS =====
+    document.getElementById('nav-dashboard-link').addEventListener('mouseover', function() {
+        this.style.background = 'rgba(255,255,255,0.22)';
+    });
+    document.getElementById('nav-dashboard-link').addEventListener('mouseout', function() {
+        this.style.background = 'rgba(255,255,255,0.12)';
+    });
+    document.getElementById('nav-guidebook-link').addEventListener('mouseover', function() {
+        this.style.background = 'rgba(255,255,255,0.22)';
+    });
+    document.getElementById('nav-guidebook-link').addEventListener('mouseout', function() {
+        this.style.background = 'rgba(255,255,255,0.12)';
+    });
+    document.getElementById('nav-reporthub-link').addEventListener('mouseover', function() {
+        this.style.background = 'rgba(255,255,255,0.22)';
+    });
+    document.getElementById('nav-reporthub-link').addEventListener('mouseout', function() {
+        this.style.background = 'rgba(255,255,255,0.12)';
+    });
+
+    // ===== DATE =====
+    const dateEl = document.getElementById('current-date-d9f3');
+    if (dateEl) {
+        const now = new Date();
+        dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // ===== DATA =====
+    const outcomeData = {
+        1: {
+            "0-3": [
+                "Fixating on the human face and maintaining gaze with caregiver",
+                "Turning their head and eyes in the direction of the parent voice",
+                "Being comforted and appearing to enjoy touch and being held by a familiar adult",
+                "Draws attention to self when in distress"
+            ],
+            "4-6": [
+                "Anticipating being lifted or fed and moving body toward adult when being approached",
+                "Smiling spontaneously to human contact, smiling in play, and smiling at self in mirror",
+                "Vocalizes to express pleasure & displeasure sounds in addition to crying/cooing",
+                "Is able to stop unexplained crying",
+                "Enjoying games with others such as \"Where is your nose?\" and \"So Big!\"",
+                "Vocalizing in response to babbling behavior, vocalizations and speech produced by an adult",
+                "Repeating arm movements to keep a toy activated, keep mom singing, or causal event",
+                "Visually studies hands and objects, looks at mirror image",
+                "Waving in response to \"bye-bye\"",
+                "Saying \"mama\" or \"dada\" meaningfully",
+                "Pushing or pulling an adult's hand to have a behavior instigated or repeated",
+                "Showing attachment to favorite toy or blanket",
+                "Expressing two or more emotions (pleasure, fear, sadness)",
+                "Briefly stopping behavior when told \"no\"",
+                "Babbles with wide variety of sounds"
+            ],
+            "7-9": [
+                "Smiling and laughing during turn-taking",
+                "Participating in simple games (pat-a-cake, peek-a-boo)",
+                "Demonstrating anticipation of play activities",
+                "Exhibiting anxious behavior around unfamiliar adults",
+                "Using gestures and vocalizing to protest",
+                "Shouting or vocalizing to gain attention",
+                "Shows anxiety over separation from parents",
+                "Repeating a behavior (shows off) to maintain adult attention"
+            ],
+            "10-12": [
+                "Imitating familiar words in turn-taking",
+                "Showing sensitivity to the mood of others",
+                "Performing for social attention",
+                "Responding to a request of \"come here\"",
+                "Stopping when name is called",
+                "Maintaining attention to speaker",
+                "Responding with gesture to \"come up\" or \"want up\"",
+                "Waving in response to \"bye-bye\"",
+                "Saying \"mama\" or \"dada\" meaningfully",
+                "Using a word to call a person",
+                "Pushing or pulling an adult's hand to have a behavior instigated or repeated",
+                "Showing attachment to favorite toy or blanket",
+                "Expressing two or more emotions (pleasure, fear, sadness)",
+                "Show jealousy of attention given to others, especially own family",
+                "Using vocalizations and words during pretend play",
+                "Playing alone for short periods",
+                "Recognizes self in photograph",
+                "Uses concept \"mine\" to denote possessiveness"
+            ],
+            "13-18": [
+                "Pretending to talk on phone, feed a baby, comfort a doll, clean a spill",
+                "Discriminating between familiar and unfamiliar people",
+                "Showing awareness of the feelings of others",
+                "Initiating familiar turn-taking routines",
+                "Requesting assistance from an adult",
+                "Hugs & kisses parents",
+                "Demonstrating a functional use of objects such as trying to use a brush or drinking from a toy cup",
+                "Gives a toy to caregiver spontaneously & upon request",
+                "Having temper tantrums when frustrated",
+                "Sometimes doing the opposite of what is asked of them"
+            ],
+            "19-24": [
+                "Shows a wide variety of emotions i.e., fear, anger, sympathy, modesty, guilt, joy",
+                "\"Checking-in\" with familiar adults while playing",
+                "Resisting change, transitions are difficult",
+                "Show jealousy of attention given to others, especially own family",
+                "Using vocalizations and words during pretend play",
+                "Playing alone for short periods",
+                "Recognizes self in photograph",
+                "Uses concept \"mine\" to denote possessiveness",
+                "Asking \"What's that?\"",
+                "Demonstrating symbolic play, using one object as a signifier for another object",
+                "Attempting to repair broken toys"
+            ],
+            "25-30": [
+                "Being apt to snatch, push, kick, rather than give and take in polite fashion",
+                "Throwing tantrums when frustrated",
+                "Showing facial expression and behavior indicating pity, shame and modesty",
+                "Being restless, rebellious and very active at times",
+                "Becoming resistant and dawdling at times",
+                "Separates easily in familiar surroundings",
+                "Wanting to do favorite activities over and over again",
+                "Continuing to try a difficult task for a brief period of time (building with blocks for 3 to 5 minutes)",
+                "Insisting on some choices (food, clothing, appearance)",
+                "Seeking and accepting assistance when encountering difficulties",
+                "Inventing new uses for everyday materials with assistance (using a box for a house)",
+                "May develop sudden fears (i.e. large animals)",
+                "Displaying understanding of how objects work together (gets the dustpan when adult is sweeping the floor)",
+                "Substituting similar objects (uses boxes for blocks)",
+                "Realizing that behaviors can precede events (if mom takes things out the refrigerator and turns on the stove, she is going to cook lunch)",
+                "Attempting to comfort others in distress",
+                "Addressing listener appropriately to get attention (uses child's or adult's name to get attention)"
+            ],
+            "31-36": [
+                "Observing other children at play; may join in for a few minutes",
+                "Playing well with two or three children in group",
+                "Having difficulty sharing",
+                "Showing facial expressions and behaviors indicating pity, shame, modesty",
+                "Sometimes being restless, rebellious, very active",
+                "Becoming resistant, dawdles",
+                "Throwing tantrums when thwarted or unable to express urgent needs",
+                "Objecting to major changes in routines",
+                "Verbalizing play plan for assigned role (\"I am mother\" \"You be baby\" \"I cook\" \"You watch TV\")",
+                "Verbalizing play plan and using pretend props identified for benefit of adult (\"This is our house (box)\")",
+                "Following simple rules",
+                "Taking turns in games",
+                "Listening and participating in group activities with adult supervision",
+                "Enjoying opportunities for pretend play and creating things (crafts, art)",
+                "Altering behavior based on a past event and builds on it (\"this didn't work, so I will try this\")",
+                "Relating an experience today to one that happened in the past",
+                "Saying \"please\" and \"thank you\" when reminded",
+                "Stating whether they are a boy or a girl",
+                "Begins to obey and respect simple rules",
+                "Takes pride in achievements",
+                "Resists change, may want things done the same way",
+                "May be able to participate in games that involve following simple directions and taking turns (i.e. \"Duck, Duck, Goose\")"
+            ]
+        },
+        2: {
+            "0-3": [
+                "Lifts head while on tummy",
+                "Clasping hands together and hands to mouth",
+                "Grasping finger if placed in palm",
+                "Kicking legs while lying on back",
+                "Begins cooing"
+            ],
+            "4-6": [
+                "Beginning to reach for objects",
+                "Looking to place on body where being touched",
+                "Trying to cause things to happen such as kicking a mobile and smiling",
+                "Dropping a ball and observing the fall",
+                "Developing more precise imitation skills of facial movements and speech sounds",
+                "Securing an object that is partially hidden with a cloth",
+                "Pushing up through extended arms while on tummy",
+                "Repeating arm movements to keep a toy activated",
+                "Visually studies hands and objects, looks at mirror image",
+                "Waving in response to \"bye-bye\"",
+                "Saying \"mama\" or \"dada\" meaningfully",
+                "Vocalizing with intent frequently",
+                "Using sentence-like intonation patterns",
+                "Makes a horizontal and vertical stroke with crayon"
+            ],
+            "7-9": [
+                "Shows desire to get to things that are not within reach",
+                "Sitting unsupported while playing with toys",
+                "Plays 2-3 minutes with a single toy",
+                "Reaching for and grasping blocks or other small toys",
+                "Reaching for objects while on tummy"
+            ],
+            "10-12": [
+                "Pointing with index finger",
+                "Imitating behaviors initiated by caregiver (playing peek-a-boo; smiling and laughing during turn-taking; or attempting to name pictures and objects)",
+                "Banging blocks and other small toys together",
+                "Repeatedly throwing or dropping objects to watch the movement",
+                "Stirring with a spoon in a cup",
+                "Banging a spoon on inverted cup or tabletop",
+                "Demonstrates emerging problem solving skills such as (placing objects in the mouth and mouthing; pushing or pulling adult's hands to have a behavior instigated or repeated; turning a picture or mirror over to view the functional side; rotating three-dimensional objects to view the functional side; using a hammer or stick to play a xylophone)",
+                "Singing along with a familiar song",
+                "Using gestures and/or vocalizing (grunts/whines) to protest",
+                "Shouting or vocalizing to gain attention",
+                "Responding to a request to \"come here\"",
+                "Waving in response to \"bye-bye\"",
+                "Saying \"mama\" or \"dada\" meaningfully",
+                "Imitating consonant and vowel combinations",
+                "Imitating non-speech sounds",
+                "Vocalizing with intent frequently",
+                "Using a word to call a person",
+                "Giving objects upon verbal request",
+                "Performing a routine activity upon verbal request",
+                "Looking at familiar objects and people when named",
+                "Understanding simple questions",
+                "Identifying two body parts on self",
+                "Demonstrating intense attention to adult language"
+            ],
+            "13-18": [
+                "Explores the environment independent of caregiver",
+                "Turning the pages in a book",
+                "Looking at, pointing to, and naming pictures in a book",
+                "Imitating scribbling motions",
+                "Initiating familiar turn-taking routines",
+                "Begins to imitate sounds often, in turn taking conversational way",
+                "Pointing to two action words in pictures",
+                "Pointing to, showing, and giving an object",
+                "Handing a toy to an adult for assistance"
+            ],
+            "19-24": [
+                "Identifying six body parts",
+                "Choosing two familiar objects upon request",
+                "Sorts objects by type (i.e. kitchen vs. animals)",
+                "Can follow two different directions with a toy (i.e. put it in, turn it over, etc)",
+                "Asking \"What's that?\"",
+                "Demonstrating symbolic play, using one object as a signifier for another object",
+                "Attempting to repair broken toys",
+                "Choosing one object from a group of five upon verbal request",
+                "Stacking 5 or 6 blocks",
+                "Using two word utterance sometimes combined with gestures, to communicate",
+                "Using three-word phrases occasionally",
+                "Imitating words overheard in conversation",
+                "Naming 5 to 7 objects upon request",
+                "Using new words regularly (adding 2 to 5 words a week)",
+                "Spontaneously naming objects, person, and actions",
+                "Following novel commands",
+                "Tells about a personal experience",
+                "Referring to self by name",
+                "Using early pronouns occasionally",
+                "Engaging in adult-like dialogue",
+                "Uses speech understood by others 50% of the time",
+                "Makes a horizontal and vertical stroke with crayon"
+            ],
+            "25-30": [
+                "Liking to take things apart and put them together again (puzzles, toys)",
+                "Following caregiver around the house and copying domestic activities in simultaneous play",
+                "Identifying boy or girl in picture book",
+                "Making doll/toy act on self as though capable of performing actions independent of child (placing brush in doll's arms, then moving the doll's arm as if doll is combing hair)",
+                "Communicating about the actions of others",
+                "Answering simple \"what\", \"where\" questions about familiar people or things",
+                "Asking increasing numbers of questions (\"where/what\")",
+                "Understanding negatives (no, not, can't, don't)",
+                "Formulating negative judgments (\"spoon, not fork\")",
+                "Recognizes at least one color correctly",
+                "Understanding simple possessive forms (daddy's shirt)",
+                "Understanding complex sentences (\"when we get to the store, I'll buy you an ice cream cone\")",
+                "Pointing to smaller parts of the body when asked (chin, elbow)",
+                "Recognizing and identifying general family names/categories (Grandma, Uncle)",
+                "Recognizing the names and pictures of most common objects",
+                "Understanding word association through functional association (\"what do you drink with?\", \"What do you sleep on?\", \"What do you brush your teeth with?\")",
+                "Understanding size difference (little dog, large dog)",
+                "Following directions involving common prepositions (in, on, behind, out)",
+                "Enjoying finger plays (songs and games that use hands)",
+                "Speaking in 2 or 3 word sentences; jargon and speaking by imitation only are almost gone",
+                "Often using personal pronouns (I, you, he, it, me) correctly",
+                "Using regular plurals (cats, dogs, balls)",
+                "Beginning to recall parts of a previously heard story",
+                "Requesting to hear familiar stories",
+                "Changing intonation and tone to communicate meaning",
+                "Understanding \"one\", \"all\" (\"Give me one block\")",
+                "Matching an object to a picture",
+                "Matching simple shapes such as a circle, square and triangle",
+                "Attempting to locate objects when they are discussed by others"
+            ],
+            "31-36": [
+                "Understanding concepts of \"mine\" and \"his/hers\"",
+                "Telling gender when asked",
+                "Sometimes labeling and talking about own drawings when asked",
+                "Giving first and last name when asked",
+                "Using several verb forms correctly to describe a variety of actions (i.e. ing, ed)",
+                "Expanding use of prepositions (under, in front of, behind)",
+                "Understanding common adjectives of color, size, and shape",
+                "Showing interest in explanations that involve \"why\" and \"how\"",
+                "Using 4 to 6 word phrases or sentences",
+                "Making negative statements (\"Can't open it,\" \"Don't touch\")",
+                "Beginning to use contractions (can't, we'll, won't)",
+                "Using some plural forms correctly in speech",
+                "Using the past tense",
+                "Dictating a story for adult to write out",
+                "Performing multi-step tasks when playing (takes money, rings cash register, puts money in drawer)",
+                "Beginning to use inductive reasoning (if you do this, that happens)",
+                "Expressing understanding of cause and effect (it's quiet because you turned off the music)",
+                "Copying a circle",
+                "Drawing a simple face",
+                "Matching three colors",
+                "Matching objects by color, shape and size"
+            ]
+        },
+        3: {
+            "0-3": [
+                "Hands begin to open more and rest in open position",
+                "Holds small objects or toys when placed in hand",
+                "Follows moving object in range of 30 degrees either side of midline (object 10-12\" away from baby's face)",
+                "Responds to loud noise with startle or upset",
+                "Responds to human voice more readily than any other sound",
+                "Begins to produce different cries for different reasons",
+                "Turning head to either side when lying on back",
+                "Rooting-reflexive turning of mouth toward hand rubbing cheek",
+                "Lifting and rotating head when lying on tummy or when held at shoulder",
+                "Primary Standing-moving legs into extension for weight bearing when held upright with feet contacting surface",
+                "Walking-reflexive stepping when held upright with feet contacting surface, lifts feet alternatively in walking-like motion",
+                "Kicks feet in bicycle motion when lying on back"
+            ],
+            "4-6": [
+                "Brings hands together in midline over chest when lying on back (places hands on bottle while eating, playing with own hands held together over chest)",
+                "Begins to reach and grasp or bat at objects, shakes or bangs toys on surface",
+                "Brings objects to mouth (toys, pacifier, bottle when not so full)",
+                "Moves objects back and forth from one hand to the other",
+                "Babbles with wide variety of sounds",
+                "Rolling-tummy to back (over either L/R side) often comes before back to tummy",
+                "Raises head and shoulders by resting on forearms/hands when on tummy to look around",
+                "Sits with less and less support, tries to prop forward on arms to stay sitting or tries to raise self to sitting when leaning back, as in the car seat",
+                "Reaches for and plays with feet",
+                "Holds head up well in many positions to be able to see all around",
+                "Enjoys bath-keeps eyes open and indicates pleasure when placed in warm water or plays by splashing"
+            ],
+            "7-9": [
+                "Holds an object in each hand and bangs them together",
+                "Reaches for objects with either hand, one at a time, when lying on tummy",
+                "Rakes at tinier objects with fingers",
+                "Turns to look when name is called",
+                "Begins to imitate sounds, often in turn-taking, conversational way",
+                "Moves body to music",
+                "Shows desire to get to things that are not within reach",
+                "Rolling in both directions and may use sequential rolling to get somewhere",
+                "Crawling on belly using both arms and legs symmetrically to propel 3+ feet",
+                "Pulls up into standing position when helped with your hands and supports all of weight on legs",
+                "Sitting on own once placed in that position to play",
+                "Begins to participate when being dressed, pulls off socks or hat",
+                "Grabs for spoon/cup when being fed"
+            ],
+            "10-12": [
+                "Points with index finger and activates toys using one finger",
+                "Begins to develop more refined grasp using tips of finger and thumb to pick up much smaller things with precision",
+                "Learns to voluntarily let go of what is being held, may throw objects",
+                "Raises arms up when wanting to be picked up",
+                "Expresses full range of emotion including resistive behavior",
+                "Raises self to sitting position",
+                "Creeps on hands and knees to get around",
+                "Pulls up on furniture",
+                "Cruises along furniture and/or walks with hands-on help",
+                "Tries to climb to get to higher surfaces, crawls up stairs",
+                "Fusses when uncomfortable in diaper",
+                "Feeds self with fingers/sippy cup and tries to use small utensils"
+            ],
+            "13-18": [
+                "Able to pick up objects of all sorts of sizes and weights using either hand and precision with fingers",
+                "Removes objects while holding on to container",
+                "Places objects into large containers",
+                "Uses wider variety of gestures to communicate wants and needs",
+                "Begins to say words for the most familiar thing or people",
+                "Follows simple directions, i.e. \"Let's go to the kitchen.\", \"Find your shoes.\"",
+                "Can correctly match sound to object, i.e. doorbell, telephone",
+                "Stands without support for brief periods",
+                "Walks independently with good quality, needs guidance to ascend/descend stairs on feet",
+                "Climbs up on couch or chair",
+                "Removes loose clothing partially or completely",
+                "Practices using child-sized fork and spoon to eat (non-liquids)",
+                "Tries to help with tooth brushing"
+            ],
+            "19-24": [
+                "Tries to take things apart",
+                "May enjoy marking/drawing on paper with crayons or other writing tools",
+                "Begins to place objects in containers with smaller openings",
+                "Uses two word utterances, plus gestures, to express wants and needs",
+                "Can answer questions with \"yes\" or \"no\" using head shake, gestures or words",
+                "Expresses need for independence with doing things on own or asks for help when needed",
+                "Follows 2 or 3 step directions",
+                "Likes to imitate adult actions especially to \"help out\"",
+                "Garners someone's attention or takes someone's hand to take them to something they want or want to show them",
+                "Demonstrates more advanced movement and motor skills such as running and more proficient climbing (climbing out of the crib)",
+                "Attempts to jump down from step or raised surface",
+                "Positions body more automatically to help put on clothing",
+                "More developed skills with spoon and fork, less spilling",
+                "Tries to wash own hands and face, comb hair"
+            ],
+            "25-30": [
+                "Opens doors by handle/knob",
+                "Turning knobs on objects like radio or TV",
+                "Catching ball (by trapping against body) when playing with adult or peer",
+                "Knows where things are kept",
+                "Puts things away to help clean up",
+                "Uses non-verbal gestures and body language to express needs and feelings (hugs, hands on hips, etc.)",
+                "Progressively more articulate with language to express thoughts and desires",
+                "Walks up steps, alternating feet while holding rail or hand for support",
+                "Sits on riding toys and pushes with feet; may ride tricycle",
+                "Swings leg to kick stationary ball",
+                "Plays on outdoor play structures (climbing, sliding)",
+                "Attempts to jump with two feet together",
+                "Puts on socks, coat and shirt",
+                "Takes off own shoes, socks, and some pants as well as other unfastened garments",
+                "Uses fork to spear bite sized chunks of food",
+                "Knows which faucet is hot and cold",
+                "Washes self in bath",
+                "Interested in trying potty while still predominantly wearing diapers"
+            ],
+            "31-36": [
+                "Can problem solve and carry out a plan for getting something they need or want",
+                "Follows simple rules",
+                "Separates easily from mother in familiar environment",
+                "Hops in place on one foot (either foot) three times without losing balance",
+                "Stands on one foot (either foot) for three seconds",
+                "Jumps over object (string/rope) that is two inches high",
+                "Walks upstairs alternating feet",
+                "Walks downstairs four steps without support, placing both feet on each step",
+                "Can dress and undress independently, including unbuttoning buttons, with few exceptions",
+                "Asserts food preferences and recognizes what they are and are not allowed to eat",
+                "Gets drink from fountain",
+                "Follows basic health practices when reminded (washing/drying hands, brushing teeth)",
+                "Verbalizes toilet needs fairly consistently",
+                "Shows daytime control of toileting needs with occasional accidents"
+            ]
+        }
+    };
+
+    const ageRanges = ["0-3","4-6","7-9","10-12","13-18","19-24","25-30","31-36"];
+    const ageLabels = {"0-3":"0–3 Months","4-6":"4–6 Months","7-9":"7–9 Months","10-12":"10–12 Months","13-18":"13–18 Months","19-24":"19–24 Months","25-30":"25–30 Months","31-36":"31–36 Months"};
+    const outcomeTitles = {
+        1: "Positive Social-Emotional Skills (Including the ability to form relationships with others and express a full range of emotions)",
+        2: "Acquiring and Using Knowledge and Skills (Including early language/communication and early literacy)",
+        3: "Taking Appropriate Actions to Meet Needs (Including the ability to take care of basic needs and contribute to own health and safety)"
+    };
+    const outcomeColors = { 1: 'border-l-sage', 2: 'border-l-amber', 3: 'border-l-purple-500' };
+
+    // ===== STATE =====
+    let activeTab = localStorage.getItem('emme-active-tab') || 'age';
+    let activeOutcome = 'all';
+    let activeAge = 'all';
+    let searchQuery = '';
+    let cosOutcome = parseInt(localStorage.getItem('emme-cos-outcome')) || 1;
+    let treeState = [];
+
+    // ===== RENDER AGE CARDS =====
+    function renderAgeCards() {
+        [1,2,3].forEach(oc => {
+            const grid = document.getElementById(`outcome${oc}-grid`);
+            if (!grid) return;
+            grid.innerHTML = '';
+            ageRanges.forEach(age => {
+                const milestones = outcomeData[oc][age];
+                if (!milestones) return;
+                const isAgeActive = activeAge === age;
+                const filteredMilestones = milestones.filter(m => {
+                    if (!searchQuery) return true;
+                    return m.toLowerCase().includes(searchQuery.toLowerCase());
+                });
+
+                if (searchQuery && filteredMilestones.length === 0) return;
+                if (activeAge !== 'all' && activeAge !== age) return;
+
+                const card = document.createElement('div');
+                card.className = `bg-gray-50 rounded-xl p-4 border border-gray-100 transition-all duration-200 age-card ${isAgeActive ? 'age-card-active ring-2 ring-sage/30 bg-sage/5' : ''}`;
+                card.dataset.ageCard = age;
+
+                const header = document.createElement('div');
+                header.className = 'flex items-center justify-between mb-3';
+                header.innerHTML = `<h4 class="font-bold text-forest text-sm">${ageLabels[age]}</h4>
+                    <button class="copy-age-btn flex items-center gap-1 text-xs text-sage hover:text-forest transition-colors px-2 py-1 rounded-md hover:bg-sage/10" data-copy-age="${age}" data-copy-outcome="${oc}">
+                        <span>📋</span> Copy
+                    </button>`;
+                card.appendChild(header);
+
+                const ul = document.createElement('ul');
+                ul.className = 'space-y-1.5';
+                const displayMilestones = searchQuery ? filteredMilestones : milestones;
+                displayMilestones.forEach(m => {
+                    const li = document.createElement('li');
+                    li.className = 'text-xs text-gray-700 leading-relaxed flex items-start gap-1.5';
+                    let text = m;
+                    if (searchQuery) {
+                        const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+                        text = m.replace(regex, '<span class="highlight-match">$1</span>');
+                    }
+                    li.innerHTML = `<span class="text-sage mt-0.5 flex-shrink-0">•</span><span>${text}</span>`;
+                    ul.appendChild(li);
+                });
+                card.appendChild(ul);
+                grid.appendChild(card);
+            });
+
+            // Re-attach copy handlers
+            grid.querySelectorAll('.copy-age-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const a = this.dataset.copyAge;
+                    const o = this.dataset.copyOutcome;
+                    const ms = outcomeData[o][a];
+                    if (ms) {
+                        const text = `${ageLabels[a]} - Outcome ${o}:\n` + ms.map(m => `• ${m}`).join('\n');
+                        navigator.clipboard.writeText(text).then(() => showToast('Age range copied to clipboard!'));
+                    }
+                });
+            });
+        });
+    }
+
+    // ===== TOAST =====
+    function showToast(msg) {
+        const c = document.getElementById('toast-container-t9w1');
+        const m = document.getElementById('toast-msg-m4k8');
+        if (!c || !m) return;
+        m.textContent = msg;
+        c.classList.remove('hidden');
+        clearTimeout(c._timer);
+        c._timer = setTimeout(() => c.classList.add('hidden'), 2500);
+    }
+
+    // ===== TABS =====
+    function setTab(tab) {
+        activeTab = tab;
+        localStorage.setItem('emme-active-tab', tab);
+        const ageContent = document.getElementById('tab-age-content');
+        const cosContent = document.getElementById('tab-cos-content');
+        const ageBtn = document.getElementById('tab-age-btn');
+        const cosBtn = document.getElementById('tab-cos-btn');
+
+        if (tab === 'age') {
+            ageContent.classList.remove('hidden');
+            cosContent.classList.add('hidden');
+            ageBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-forest text-white border-forest shadow-md scale-[1.02]';
+            cosBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-white text-forest border-forest/30 hover:border-forest/50';
+        } else {
+            ageContent.classList.add('hidden');
+            cosContent.classList.remove('hidden');
+            cosBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-forest text-white border-forest shadow-md scale-[1.02]';
+            ageBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-white text-forest border-forest/30 hover:border-forest/50';
+        }
+    }
+
+    document.getElementById('tab-age-btn').addEventListener('click', () => setTab('age'));
+    document.getElementById('tab-cos-btn').addEventListener('click', () => setTab('cos'));
+
+    // ===== OUTCOME FILTER =====
+    function setOutcomeFilter(outcome) {
+        activeOutcome = outcome;
+        document.querySelectorAll('.outcome-pill').forEach(p => {
+            if (p.dataset.outcome === outcome) {
+                p.className = 'outcome-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px] bg-forest text-white border-forest';
+            } else {
+                p.className = 'outcome-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px] bg-white text-forest border-forest/30 hover:border-forest/50';
+            }
+        });
+        document.querySelectorAll('.outcome-section').forEach(s => {
+            if (outcome === 'all' || s.dataset.outcomeSection === outcome) {
+                s.classList.remove('hidden');
+            } else {
+                s.classList.add('hidden');
+            }
+        });
+    }
+
+    document.querySelectorAll('.outcome-pill').forEach(p => {
+        p.addEventListener('click', () => setOutcomeFilter(p.dataset.outcome));
+    });
+
+    // ===== AGE FILTER =====
+    function setAgeFilter(age) {
+        activeAge = age;
+        document.querySelectorAll('.age-pill').forEach(p => {
+            if (p.dataset.age === age) {
+                p.className = 'age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-all min-h-[36px] bg-sage text-white border-sage';
+            } else {
+                p.className = 'age-pill px-3 py-1.5 rounded-full text-sm font-medium border-2 border-sage/30 bg-white hover:bg-sage/10 transition-all min-h-[36px]';
+            }
+        });
+        renderAgeCards();
+    }
+
+    document.querySelectorAll('.age-pill').forEach(p => {
+        p.addEventListener('click', () => setAgeFilter(p.dataset.age));
+    });
+
+    // ===== SEARCH =====
+    document.getElementById('search-input-s3j7').addEventListener('input', function() {
+        searchQuery = this.value.trim();
+        renderAgeCards();
+    });
+
+    // ===== ACCORDION =====
+    document.querySelectorAll('.accordion-toggle').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = document.getElementById('accordion-' + this.dataset.accordion);
+            const icon = this.querySelector('.accordion-icon');
+            if (target.classList.contains('open')) {
+                target.classList.remove('open');
+                target.style.maxHeight = '0';
+                if (icon) icon.style.transform = 'rotate(-90deg)';
+            } else {
+                target.classList.add('open');
+                target.style.maxHeight = 'none';
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }
+        });
+    });
+
+    // ===== AGE LOOKUP =====
+    document.getElementById('age-lookup-input-a7m2').addEventListener('input', function() {
+        const months = parseInt(this.value);
+        const resultEl = document.getElementById('age-lookup-result-r5n8');
+        if (isNaN(months) || months < 0 || months > 36) {
+            resultEl.innerHTML = '<span class="text-gray-400">Enter 0–36 months</span>';
+            setAgeFilter('all');
+            return;
+        }
+        let matchedAge = '0-3';
+        if (months <= 3) matchedAge = '0-3';
+        else if (months <= 6) matchedAge = '4-6';
+        else if (months <= 9) matchedAge = '7-9';
+        else if (months <= 12) matchedAge = '10-12';
+        else if (months <= 18) matchedAge = '13-18';
+        else if (months <= 24) matchedAge = '19-24';
+        else if (months <= 30) matchedAge = '25-30';
+        else matchedAge = '31-36';
+
+        resultEl.innerHTML = `<div class="bg-sage/10 text-forest rounded-lg px-3 py-2 text-sm font-medium"><span class="font-bold">${months} months</span> → <span class="font-bold">${ageLabels[matchedAge]}</span></div>`;
+        setAgeFilter(matchedAge);
+    });
+
+    // ===== PRINT =====
+    document.getElementById('print-btn-p8k1').addEventListener('click', () => window.print());
+
+    // ===== COS DECISION TREE =====
+    const ratingData = {
+        1: { color: 'bg-red-600', label: 'Very early skills', guidance: 'Child does not yet use foundational skills related to this outcome.' },
+        2: { color: 'bg-orange-500', label: 'Some early skills', guidance: 'Child uses some early foundational skills occasionally.' },
+        3: { color: 'bg-amber-500', label: 'Many important early skills', guidance: 'Child uses many foundational skills most or all of the time.' },
+        4: { color: 'bg-lime-500', label: 'Some age-expected skills', guidance: 'Child occasionally uses age-expected skills but more behaviors are not age-expected.' },
+        5: { color: 'bg-green-500', label: 'Many age-expected skills', guidance: 'Child uses a mix of age-expected and not age-expected behaviors across settings.' },
+        6: { color: 'bg-teal-500', label: 'Some concerns with skills', guidance: 'Child functions age-appropriately but someone has concerns.' },
+        7: { color: 'bg-forest', label: 'All skills expected', guidance: 'Child functions as expected across all or most settings with no concerns.' }
+    };
+
+    const treeNodes = {
+        start: {
+            question: "Does the child ever function in ways that would be considered age-expected with regard to this outcome?",
+            options: [
+                { label: "Yes", next: 'yes_branch' },
+                { label: "No", next: 'no_branch' }
+            ]
+        },
+        no_branch: {
+            question: "Does the child use any immediate foundational skills related to this outcome on which to build age-expected functioning across settings and situations?",
+            options: [
+                { label: "Yes", next: 'no_yes_extent' },
+                { label: "No", next: 'rating_1' }
+            ]
+        },
+        no_yes_extent: {
+            question: "To what extent is the child using immediate foundational skills across settings and situations?",
+            options: [
+                { label: "Occasional use of immediate foundational skills", next: 'rating_2' },
+                { label: "Child uses immediate foundational skills most or all of the time", next: 'rating_3' }
+            ]
+        },
+        yes_branch: {
+            question: "Is the child's functioning age-expected across all or almost all settings and situations?",
+            options: [
+                { label: "Yes", next: 'yes_yes_concerns' },
+                { label: "No", next: 'yes_no_extent' }
+            ]
+        },
+        yes_no_extent: {
+            question: "To what extent is the child using age-expected skills across settings and situations?",
+            options: [
+                { label: "Occasional use of age-expected skills; there is more behavior that is not age-expected than age-expected", next: 'rating_4' },
+                { label: "Child uses a mix of age-expected skills and not age-expected behaviors and skills across settings and situations", next: 'rating_5' }
+            ]
+        },
+        yes_yes_concerns: {
+            question: "Does anyone have concerns about the child's functioning with regard to the outcome area?",
+            options: [
+                { label: "Yes", next: 'rating_6' },
+                { label: "No", next: 'rating_7' }
+            ]
+        }
+    };
+
+    function setCosOutcome(oc) {
+        cosOutcome = oc;
+        localStorage.setItem('emme-cos-outcome', oc);
+        document.querySelectorAll('.cos-outcome-pill').forEach(p => {
+            if (parseInt(p.dataset.cosOutcome) === oc) {
+                p.className = 'cos-outcome-pill px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px] bg-forest text-white border-forest';
+            } else {
+                p.className = 'cos-outcome-pill px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px] bg-white text-forest border-forest/30 hover:border-forest/50';
+            }
+        });
+        document.getElementById('cos-outcome-label-l3k9').innerHTML = `<strong>Currently rating:</strong> Outcome ${oc} — ${outcomeTitles[oc]}`;
+        resetTree();
+    }
+
+    document.querySelectorAll('.cos-outcome-pill').forEach(p => {
+        p.addEventListener('click', () => setCosOutcome(parseInt(p.dataset.cosOutcome)));
+    });
+
+    function resetTree() {
+        treeState = [];
+        renderTree('start');
+        updateBreadcrumb();
+    }
+
+    function renderTree(nodeId) {
+        const container = document.getElementById('decision-tree-container-d5t3');
+        container.innerHTML = '';
+
+        // Show previous decisions
+        treeState.forEach((step, idx) => {
+            const prevCard = document.createElement('div');
+            prevCard.className = 'bg-white rounded-xl border border-gray-200 p-4 md:p-5 mb-4 opacity-60';
+            prevCard.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0 text-forest font-bold text-sm">${idx + 1}</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-700 mb-2">${step.question}</p>
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-forest/10 text-forest">${step.answer}</span>
+                    </div>
+                </div>`;
+            container.appendChild(prevCard);
+        });
+
+        // Check if it's a rating result
+        if (nodeId.startsWith('rating_')) {
+            const ratingNum = parseInt(nodeId.split('_')[1]);
+            const rating = ratingData[ratingNum];
+            const resultCard = document.createElement('div');
+            resultCard.className = 'tree-card bg-white rounded-2xl border-2 border-forest/20 shadow-lg p-6 md:p-8 text-center';
+            resultCard.innerHTML = `
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full ${rating.color} text-white text-3xl font-black mb-4 shadow-lg">${ratingNum}</div>
+                <h3 class="text-xl font-bold text-forest mb-2">Rating ${ratingNum}: ${rating.label}</h3>
+                <p class="text-sm text-gray-600 mb-6 max-w-lg mx-auto leading-relaxed">${rating.guidance}</p>
+                <div class="flex flex-wrap gap-3 justify-center">
+                    <button class="tree-copy-btn flex items-center gap-2 px-4 py-2.5 bg-forest text-white rounded-lg font-semibold text-sm hover:bg-forest-light transition-colors min-h-[44px]" data-rating="${ratingNum}">
+                        <span>📋</span> Copy Rating
+                    </button>
+                    <button class="tree-report-btn flex items-center gap-2 px-4 py-2.5 bg-amber text-white rounded-lg font-semibold text-sm hover:bg-amber-dark transition-colors min-h-[44px]" data-rating="${ratingNum}">
+                        <span>📄</span> Add to Report
+                    </button>
+                    <button class="tree-reset-btn flex items-center gap-2 px-4 py-2.5 bg-white text-forest border-2 border-forest/20 rounded-lg font-semibold text-sm hover:bg-forest/5 transition-colors min-h-[44px]">
+                        <span>🔄</span> Start Over
+                    </button>
+                </div>`;
+            container.appendChild(resultCard);
+
+            resultCard.querySelector('.tree-copy-btn').addEventListener('click', function() {
+                const r = ratingData[parseInt(this.dataset.rating)];
+                navigator.clipboard.writeText(`Rating ${this.dataset.rating}: ${r.label}`).then(() => showToast('Rating copied to clipboard!'));
+            });
+            resultCard.querySelector('.tree-report-btn').addEventListener('click', function() {
+                const r = ratingData[parseInt(this.dataset.rating)];
+                navigator.clipboard.writeText(`Outcome ${cosOutcome} - Rating ${this.dataset.rating}: ${r.label}`).then(() => showToast('Rating copied for report use!'));
+            });
+            resultCard.querySelector('.tree-reset-btn').addEventListener('click', resetTree);
+            updateBreadcrumb();
+            return;
+        }
+
+        // Active question card
+        const node = treeNodes[nodeId];
+        if (!node) return;
+        const stepNum = treeState.length + 1;
+        const activeCard = document.createElement('div');
+        activeCard.className = 'tree-card bg-white rounded-2xl border-2 border-forest shadow-lg overflow-hidden';
+        activeCard.innerHTML = `
+            <div class="bg-forest px-5 py-3">
+                <span class="text-white/70 text-xs font-medium uppercase tracking-wider">Step ${stepNum}</span>
+            </div>
+            <div class="p-5 md:p-6">
+                <p class="text-base md:text-lg font-semibold text-gray-800 mb-5 leading-relaxed">${node.question}</p>
+                <div class="flex flex-col sm:flex-row gap-3" id="tree-options-container"></div>
+            </div>`;
+        container.appendChild(activeCard);
+
+        const optionsContainer = activeCard.querySelector('#tree-options-container');
+        node.options.forEach(opt => {
+            const btn = document.createElement('button');
+            const isYesNo = opt.label === 'Yes' || opt.label === 'No';
+            const btnColor = opt.label === 'Yes' ? 'bg-forest hover:bg-forest-light text-white' :
+                             opt.label === 'No' ? 'bg-white hover:bg-red-50 text-red-600 border-2 border-red-200' :
+                             'bg-white hover:bg-sage/10 text-forest border-2 border-forest/20';
+            btn.className = `flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all min-h-[44px] ${btnColor} ${isYesNo ? '' : 'text-left'}`;
+            btn.textContent = opt.label;
+            btn.addEventListener('click', () => {
+                treeState.push({ question: node.question, answer: opt.label });
+                renderTree(opt.next);
+            });
+            optionsContainer.appendChild(btn);
+        });
+
+        updateBreadcrumb();
+    }
+
+    function updateBreadcrumb() {
+        const bc = document.getElementById('breadcrumb-container-b8c4');
+        const path = document.getElementById('breadcrumb-path-p2v6');
+        if (treeState.length === 0) {
+            bc.classList.add('hidden');
+            return;
+        }
+        bc.classList.remove('hidden');
+        path.innerHTML = '';
+        treeState.forEach((step, idx) => {
+            const span = document.createElement('span');
+            span.className = 'breadcrumb-item text-forest';
+            span.textContent = step.answer;
+            path.appendChild(span);
+        });
+    }
+
+    // ===== INIT =====
+    function init() {
+        setTab(activeTab);
+        setOutcomeFilter('all');
+        setAgeFilter('all');
+        setCosOutcome(cosOutcome);
+        renderAgeCards();
+        renderTree('start');
+
+        // Re-render Lucide icons for dynamically added nav buttons
+        if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+            lucide.createIcons();
+        }
+    }
+
+    init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMME Resource Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#0d5f6e',
+              'primary-dark': '#094e5b',
+              'primary-light': '#1a7a8c',
+              secondary: '#4a9e8c',
+              'secondary-light': '#5fbaa6',
+              cream: '#faf7f2',
+              'cream-dark': '#f0ebe3',
+              accent: '#f4a261',
+              'accent-dark': '#e08c3e',
+              'accent-light': '#f7b97a',
+            }
+          }
+        }
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --primary: #0d5f6e;
+        --primary-dark: #094e5b;
+        --secondary: #4a9e8c;
+        --cream: #faf7f2;
+        --accent: #f4a261;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html { scroll-behavior: smooth; font-family: 'Inter', system-ui, sans-serif; }
+      body { background: var(--cream); color: #334155; padding-top: 56px; }
+
+      /* Back to Home nav bar */
+      .back-to-home-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 48px;
+        background: #FAF8F4;
+        border-bottom: 1px solid rgba(122,158,126,0.25);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+      .back-to-home-bar .back-link {
+        font-family: 'Nunito', sans-serif;
+        font-weight: 700;
+        color: #7A9E7E;
+        font-size: 14px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.15s;
+      }
+      .back-to-home-bar .back-link:hover { color: #5e7e62; }
+      .back-to-home-bar .emme-logo-link {
+        font-family: 'Nunito', sans-serif;
+        font-weight: 800;
+        color: #2D2D2D;
+        font-size: 16px;
+        text-decoration: none;
+        transition: opacity 0.15s;
+      }
+      .back-to-home-bar .emme-logo-link:hover { opacity: 0.7; }
+
+      .sidebar-scroll::-webkit-scrollbar { width: 5px; }
+      .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+      .sidebar-scroll::-webkit-scrollbar-thumb { background: #c5d0c8; border-radius: 10px; }
+
+      .card-resource { transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; }
+      .card-resource:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(13,95,110,0.12); }
+
+      .toc-item { transition: background 0.15s, color 0.15s, border-color 0.15s; cursor: pointer; }
+      .toc-item:hover { background: #e8f0ed; }
+      .toc-item.active { background: #dff0ea; color: var(--primary); font-weight: 600; border-left: 3px solid var(--secondary); }
+
+      .filter-pill { transition: all 0.2s ease; cursor: pointer; }
+      .filter-pill:hover { opacity: 0.85; }
+      .filter-pill.active { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; }
+      .filter-pill.active-fav { background: var(--accent) !important; color: white !important; border-color: var(--accent) !important; }
+
+      .dropdown-menu { display: none; }
+      .dropdown-menu.show { display: block; }
+
+      .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+      .toast { background: var(--accent); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.15); animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards; }
+      @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+
+      .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; justify-content: center; align-items: center; }
+      .modal-overlay.show { display: flex; }
+
+      .section-header { scroll-margin-top: 124px; }
+
+      .ai-result-card { animation: fadeInUp 0.4s ease; }
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .spinner { animation: spin 0.8s linear infinite; }
+
+      .toc-sub { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+      .toc-sub.expanded { max-height: 600px; }
+
+      /* Favorite star */
+      .fav-star-btn { position: absolute; top: 12px; right: 12px; z-index: 10; background: none; border: none; cursor: pointer; padding: 4px; transition: transform 0.2s ease; }
+      .fav-star-btn:hover { transform: scale(1.15); }
+      .fav-star-btn .star-icon { width: 22px; height: 22px; transition: all 0.2s ease; }
+      .fav-star-btn .star-icon.unfav { color: #c0c0c0; }
+      .fav-star-btn .star-icon.fav { color: #f4a261; fill: #f4a261; }
+      @keyframes starPop { 0% { transform: scale(1); } 50% { transform: scale(1.35); } 100% { transform: scale(1); } }
+      .star-pop { animation: starPop 0.3s ease; }
+
+      /* Notes panel */
+      .notes-panel { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+      .notes-panel.expanded { max-height: 280px; }
+      .notes-saved-indicator { opacity: 0; transition: opacity 0.3s ease; font-size: 11px; color: #22c55e; font-weight: 600; }
+      .notes-saved-indicator.visible { opacity: 1; }
+      .note-badge { cursor: pointer; }
+
+      /* Pinned resources strip */
+      .pinned-strip::-webkit-scrollbar { height: 4px; }
+      .pinned-strip::-webkit-scrollbar-track { background: transparent; }
+      .pinned-strip::-webkit-scrollbar-thumb { background: #c5d0c8; border-radius: 10px; }
+
+      /* Print area */
+      #print-area { display: none; }
+
+      @media (max-width: 767px) {
+        .filter-strip { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; flex-wrap: nowrap !important; }
+        .filter-strip::-webkit-scrollbar { display: none; }
+      }
+
+      @media print {
+        body * { visibility: hidden !important; }
+        #print-area, #print-area * { visibility: visible !important; }
+        #print-area {
+          display: block !important;
+          position: fixed;
+          left: 0; top: 0;
+          width: 100%;
+          z-index: 99999;
+          background: #fff;
+          color: #000;
+          font-family: Georgia, 'Times New Roman', serif;
+          padding: 40px 50px;
+          box-shadow: none !important;
+        }
+        #print-area h1 { font-size: 24pt; }
+        #print-area p, #print-area span { font-size: 11pt; }
+        #print-area .print-tag { border: 1px solid #888 !important; color: #333 !important; background: transparent !important; }
+        #print-area .print-url-box { background: #f5f5f5 !important; border: 1px solid #ccc !important; font-family: 'Courier New', monospace; font-size: 9pt; word-break: break-all; }
+        #print-area .print-notes-box { background: #f9f9f0 !important; border: 1px solid #ddd !important; }
+        .no-print { display: none !important; }
+        .back-to-home-bar { display: none !important; }
+        @page { margin: 0.75in; }
+      }
+    </style>
+</head>
+<body data-id="0" class="min-h-screen">
+    <app-icon data-id="1" hidden data-icon="book-open" data-palette="Green"></app-icon>
+
+    <!-- BACK TO HOME NAV BAR -->
+    <div data-id="2" class="back-to-home-bar no-print">
+      <a data-id="3" id="back-home-link" href="https://copilot.microsoft.com/shares/artifacts/H8tAgPeYVRcGK8gnoUsZT" target="_blank" rel="noopener noreferrer" class="back-link">← Home Dashboard</a>
+      <a data-id="4" id="emme-logo-link" href="https://www.emmeco.org/" target="_blank" rel="noopener noreferrer" class="emme-logo-link">Emme</a>
+    </div>
+
+    <!-- HEADER -->
+    <header data-id="5" id="app-header-hdr1" class="sticky top-[56px] z-50 bg-primary text-white shadow-md no-print">
+      <div data-id="6" class="max-w-[1600px] mx-auto flex items-center justify-between px-4 md:px-6 py-3">
+        <div data-id="7" class="flex items-center gap-2">
+          <button data-id="8" id="mobile-sidebar-btn" class="md:hidden p-2 rounded-lg hover:bg-primary-light mr-1">
+            <i data-id="9" data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+          <span data-id="10" class="text-xl md:text-2xl">📚</span>
+          <div data-id="11">
+            <h1 data-id="12" id="logo-title-t1a2" class="text-lg md:text-xl font-extrabold tracking-tight">EMME Resource Hub</h1>
+            <p data-id="13" class="text-[11px] md:text-xs text-teal-200 -mt-0.5 hidden sm:block">Your centralized therapy resource library</p>
+          </div>
+        </div>
+        <nav data-id="14" class="hidden md:flex items-center gap-1 text-sm font-medium">
+          <a data-id="15" id="nav-dash-lk01" href="#dashboard" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-primary-light transition">🏠 Dashboard</a>
+          <a data-id="16" id="nav-guide-lk02" href="https://emmeco031-my.sharepoint.com/personal/jenriat_emmeco_org/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjenriat%5Femmeco%5Forg%2FDocuments%2FEMME%20TEAM&viewid=f9ae0229%2D0179%2D44b8%2D8daf%2D31cc549769ca" target="_blank" rel="noopener" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-primary-light transition">📖 Guidebook</a>
+          <span data-id="17" class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-light/40">👤 Samantha</span>
+        </nav>
+        <div data-id="18" class="md:hidden flex items-center gap-2">
+          <span data-id="19" class="text-xs font-medium bg-primary-light/40 px-2.5 py-1 rounded-full">👤 Samantha</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MOBILE SIDEBAR OVERLAY -->
+    <div data-id="20" id="mobile-sidebar-overlay" class="fixed inset-0 bg-black/40 z-40 hidden md:hidden"></div>
+    <aside data-id="21" id="mobile-sidebar-panel" class="fixed top-0 left-0 h-full w-[280px] bg-cream z-50 transform -translate-x-full transition-transform duration-300 md:hidden overflow-y-auto sidebar-scroll shadow-2xl">
+      <div data-id="22" class="flex items-center justify-between p-4 border-b border-cream-dark">
+        <span data-id="23" class="font-bold text-primary text-lg">📚 Menu</span>
+        <button data-id="24" id="mobile-sidebar-close" class="p-2 rounded-lg hover:bg-cream-dark">
+          <i data-id="25" data-lucide="x" class="w-5 h-5 text-gray-600"></i>
+        </button>
+      </div>
+      <div data-id="26" class="p-3 space-y-1">
+        <a data-id="27" href="#dashboard" class="block px-3 py-2.5 rounded-lg hover:bg-cream-dark text-sm font-medium text-gray-700">🏠 Dashboard</a>
+        <a data-id="28" href="https://emmeco031-my.sharepoint.com/personal/jenriat_emmeco_org/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjenriat%5Femmeco%5Forg%2FDocuments%2FEMME%20TEAM&viewid=f9ae0229%2D0179%2D44b8%2D8daf%2D31cc549769ca" target="_blank" rel="noopener" class="block px-3 py-2.5 rounded-lg hover:bg-cream-dark text-sm font-medium text-gray-700">📖 Guidebook</a>
+      </div>
+      <div data-id="29" class="border-t border-cream-dark mx-3 my-2"></div>
+      <div data-id="30" id="mobile-toc-container" class="p-3"></div>
+    </aside>
+
+    <!-- MAIN LAYOUT -->
+    <div data-id="31" class="max-w-[1600px] mx-auto flex">
+      <!-- SIDEBAR (Desktop) -->
+      <aside data-id="32" id="sidebar-desk-sd01" class="hidden md:block w-[260px] flex-shrink-0 sticky top-[116px] h-[calc(100vh-116px)] overflow-y-auto sidebar-scroll bg-cream border-r border-cream-dark no-print">
+        <div data-id="33" class="p-4">
+          <a data-id="34" id="guidebook-btn-gb01" href="https://emmeco031-my.sharepoint.com/personal/jenriat_emmeco_org/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjenriat%5Femmeco%5Forg%2FDocuments%2FEMME%20TEAM&viewid=f9ae0229%2D0179%2D44b8%2D8daf%2D31cc549769ca" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 w-full bg-secondary hover:bg-secondary-light text-white font-semibold text-sm py-2.5 px-4 rounded-xl shadow-sm transition">
+            📖 Open Guidebook
+          </a>
+        </div>
+        <div data-id="35" class="px-3 pb-2">
+          <p data-id="36" class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2">Table of Contents</p>
+        </div>
+        <nav data-id="37" id="toc-nav-tc01" class="px-2 pb-6 space-y-0.5"></nav>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main data-id="38" id="main-content-mn01" class="flex-1 min-w-0 px-4 md:px-6 lg:px-8 py-5 md:py-6">
+
+        <!-- SEARCH BAR -->
+        <div data-id="39" id="search-wrap-sw01" class="mb-4">
+          <div data-id="40" class="relative">
+            <i data-id="41" data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none"></i>
+            <input data-id="42" id="search-input-si01" type="text" placeholder="Search by topic, category, or keyword..." class="w-full pl-12 pr-12 py-3.5 rounded-full border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-base bg-white shadow-sm transition" />
+            <button data-id="43" id="search-clear-sc01" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
+              <i data-id="44" data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <p data-id="45" id="result-count-rc01" class="text-sm text-gray-500 mt-2 ml-1">Showing 31 of 31 resources</p>
+        </div>
+
+        <!-- RECENTLY ACCESSED -->
+        <div data-id="46" id="recent-strip-rs01" class="mb-4 hidden">
+          <div data-id="47" class="flex items-center gap-2 flex-wrap">
+            <span data-id="48" class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recently accessed:</span>
+            <div data-id="49" id="recent-chips-rc02" class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </div>
+
+        <!-- PINNED RESOURCES BANNER -->
+        <div data-id="50" id="pinned-banner" class="mb-5 hidden">
+          <div data-id="51" class="bg-white border-2 border-secondary/30 rounded-2xl p-4 shadow-sm">
+            <div data-id="52" class="flex items-center justify-between mb-3">
+              <div data-id="53" class="flex items-center gap-2">
+                <span data-id="54" class="text-lg">📌</span>
+                <span data-id="55" class="text-amber-500 text-lg">⭐</span>
+                <h3 data-id="56" class="font-bold text-primary text-sm md:text-base">Your Pinned Resources</h3>
+              </div>
+              <button data-id="57" id="unpin-all-btn" class="text-xs text-gray-400 hover:text-gray-600 transition hover:underline">Unpin all</button>
+            </div>
+            <div data-id="58" id="pinned-items-row" class="pinned-strip flex gap-3 overflow-x-auto pb-2"></div>
+          </div>
+        </div>
+
+        <!-- FILTER PILLS -->
+        <div data-id="59" id="filter-wrap-fw01" class="mb-6">
+          <div data-id="60" class="filter-strip flex gap-2 pb-2">
+            <button data-id="61" data-filter="favorites" class="filter-pill text-sm font-medium px-4 py-2 rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:border-amber-400">⭐ Favorites</button>
+            <button data-id="62" data-filter="all" class="filter-pill active text-sm font-medium px-4 py-2 rounded-full bg-primary text-white border border-primary">All</button>
+            <button data-id="63" data-filter="communication" class="filter-pill text-sm font-medium px-4 py-2 rounded-full bg-white text-gray-600 border border-gray-200 hover:border-primary/40">🗣️ Communication</button>
+            <button data-id="64" data-filter="development" class="filter-pill text-sm font-medium px-4 py-2 rounded-full bg-white text-gray-600 border border-gray-200 hover:border-primary/40">🧠 Development</button>
+            <button data-id="65" data-filter="clinical" class="filter-pill text-sm font-medium px-4 py-2 rounded-full bg-white text-gray-600 border border-gray-200 hover:border-primary/40">🏥 Clinical</button>
+            <button data-id="66" data-filter="family" class="filter-pill text-sm font-medium px-4 py-2 rounded-full bg-white text-gray-600 border border-gray-200 hover:border-primary/40">👨‍👩‍👧 Family</button>
+            <button data-id="67" data-filter="admin" class="filter-pill text-sm font-medium px-4 py-2 rounded-full bg-white text-gray-600 border border-gray-200 hover:border-primary/40">📋 Admin</button>
+          </div>
+        </div>
+
+        <!-- RESOURCE SECTIONS -->
+        <div data-id="68" id="sections-container-sc02"></div>
+
+        <!-- AI EXTERNAL RESOURCE SEARCH -->
+        <section data-id="69" id="ai-search-section-as01" class="mt-10 mb-8">
+          <div data-id="70" class="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 md:p-8 text-white shadow-lg">
+            <div data-id="71" class="flex items-center gap-3 mb-2">
+              <span data-id="72" class="text-2xl">🔍</span>
+              <h2 data-id="73" class="text-xl md:text-2xl font-bold">Find Evidence-Based External Resources</h2>
+            </div>
+            <p data-id="74" class="text-teal-200 text-sm mb-5">Search for research articles, handouts, and tools beyond your library</p>
+            <div data-id="75" class="flex flex-col sm:flex-row gap-3">
+              <input data-id="76" id="ai-search-input-ai01" type="text" placeholder="e.g. AAC strategies for toddlers, feeding aversion oral motor..." class="flex-1 px-5 py-3 rounded-xl text-gray-800 text-base outline-none focus:ring-2 focus:ring-accent" />
+              <button data-id="77" id="ai-search-btn-ai02" class="bg-accent hover:bg-accent-dark text-white font-semibold px-6 py-3 rounded-xl transition flex items-center justify-center gap-2 min-w-[120px]">
+                <i data-id="78" data-lucide="search" class="w-4 h-4"></i> Search
+              </button>
+            </div>
+            <div data-id="79" id="ai-results-container-ai03" class="mt-6"></div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer data-id="80" id="footer-ft01" class="bg-primary text-white text-center py-5 mt-4 no-print">
+      <p data-id="81" class="text-sm opacity-90">📚 EMME Resource Hub · Built for the EMME Team · June 2026</p>
+      <p data-id="82" class="text-xs opacity-60 mt-1">Made by Copilot</p>
+    </footer>
+
+    <!-- SHARE MODAL -->
+    <div data-id="83" id="share-modal-sm01" class="modal-overlay">
+      <div data-id="84" class="bg-white rounded-2xl shadow-2xl w-[95%] max-w-lg mx-4 p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+        <h3 data-id="85" class="text-lg font-bold text-primary flex items-center gap-2 mb-4">📤 Share Resource with Family</h3>
+        <p data-id="86" id="share-resource-name-sn01" class="text-sm text-gray-500 bg-cream rounded-lg px-3 py-2 mb-4 font-medium"></p>
+        <label data-id="87" class="text-sm font-medium text-gray-700 block mb-1">Family Email (optional)</label>
+        <input data-id="88" id="share-email-se01" type="email" placeholder="family@email.com" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm mb-4 outline-none focus:border-primary focus:ring-1 focus:ring-primary/30" />
+        <label data-id="89" class="text-sm font-medium text-gray-700 block mb-1">Personal note to family</label>
+        <textarea data-id="90" id="share-note-sn02" rows="3" placeholder="Hi! I wanted to share this resource with you..." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm mb-4 outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 resize-none"></textarea>
+        <label data-id="91" class="text-sm font-medium text-gray-700 block mb-1">SharePoint Link</label>
+        <div data-id="92" id="share-link-box-sl01" class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 break-all mb-5 select-all"></div>
+        <div data-id="93" class="flex flex-wrap gap-3">
+          <button data-id="94" id="share-copy-btn-sc03" class="flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">📋 Copy Link</button>
+          <button data-id="95" id="share-email-btn-se02" class="flex items-center gap-1.5 bg-accent hover:bg-accent-dark text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">✉️ Open Email Draft</button>
+          <button data-id="96" id="share-cancel-btn-sc04" class="text-sm text-gray-500 hover:text-gray-700 px-3 py-2.5 transition">Cancel</button>
+        </div>
+        <div data-id="97" class="mt-3 pt-3 border-t border-gray-100">
+          <button data-id="98" id="share-print-btn" class="flex items-center justify-center gap-2 w-full border-2 border-gray-200 hover:border-gray-400 text-gray-600 hover:text-gray-800 text-sm font-semibold px-5 py-2.5 rounded-lg transition">🖨️ Print Share Sheet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAVE TO CLIENT MODAL -->
+    <div data-id="99" id="save-modal-sv01" class="modal-overlay">
+      <div data-id="100" class="bg-white rounded-2xl shadow-2xl w-[95%] max-w-lg mx-4 p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+        <h3 data-id="101" class="text-lg font-bold text-primary flex items-center gap-2 mb-4">💾 Save to Client Folder</h3>
+        <p data-id="102" id="save-resource-name-sr01" class="text-sm text-gray-500 bg-cream rounded-lg px-3 py-2 mb-4 font-medium"></p>
+        <label data-id="103" class="text-sm font-medium text-gray-700 block mb-1">Client Name</label>
+        <input data-id="104" id="save-client-input-sc05" type="text" placeholder='e.g. "Smith, Emily"' class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm mb-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary/30" />
+        <div data-id="105" id="recent-clients-wrap-rc03" class="mb-4 hidden">
+          <p data-id="106" class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Recent clients</p>
+          <div data-id="107" id="recent-clients-chips-rc04" class="flex flex-wrap gap-1.5"></div>
+        </div>
+        <p data-id="108" class="text-xs text-gray-500 mb-4 leading-relaxed">This will open SharePoint so you can navigate to the client folder and add this resource.</p>
+        <div data-id="109" class="flex flex-wrap gap-3">
+          <button data-id="110" id="save-open-sp-btn-so01" class="flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">📂 Open SharePoint Clients Folder</button>
+          <button data-id="111" id="save-copy-btn-sc06" class="flex items-center gap-1.5 bg-secondary hover:bg-secondary-light text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">📋 Copy Resource Link</button>
+          <button data-id="112" id="save-cancel-btn-sc07" class="text-sm text-gray-500 hover:text-gray-700 px-3 py-2.5 transition">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div data-id="113" id="toast-container-tc02" class="toast-container"></div>
+
+    <!-- PRINT AREA (hidden, only visible when printing) -->
+    <div data-id="114" id="print-area"></div>
+
+    <script>
+    // ==================== DATA ====================
+    const SP_BASE = 'https://emmeco031-my.sharepoint.com/personal/jenriat_emmeco_org/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjenriat%5Femmeco%5Forg%2FDocuments%2FEMME%20TEAM%2FRESOURCES%2F';
+    const SP_VIEW = '&viewid=f9ae0229%2D0179%2D44b8%2D8daf%2D31cc549769ca';
+    const SP_TEAM = 'https://emmeco031-my.sharepoint.com/personal/jenriat_emmeco_org/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjenriat%5Femmeco%5Forg%2FDocuments%2FEMME%20TEAM&viewid=f9ae0229%2D0179%2D44b8%2D8daf%2D31cc549769ca';
+
+    const sections = [
+      {
+        id: 'communication', title: '🗣️ Communication & Language', icon: '🗣️',
+        items: [
+          { id:'aac', icon:'🗣️', name:'AAC', files:'7 files', desc:'Augmentative & Alternative Communication tools, app lists, parent handouts, and sample treatment goals for diverse communication needs.', tags:['AAC','App Lists','Parent Handouts'], folder:'AAC' },
+          { id:'artic', icon:'👄', name:'Articulation', files:'1 subfolder', desc:'Articulation resources organized by sound target. Includes R-sound subfolder with therapy materials and drill activities.', tags:['Articulation','Sound Targets','Practice'], folder:'Articulation' },
+          { id:'lang', icon:'💬', name:'Language', files:'12 files', desc:'Expressive and receptive language development resources, activities, data sheets, and research articles.', tags:['Language','Expressive','Receptive'], folder:'Language' },
+          { id:'prag', icon:'🤝', name:'Pragmatics', files:'2 files', desc:'Social communication and pragmatic language tools to support conversational skills and social interaction.', tags:['Social Communication','Pragmatics'], folder:'Pragmatics' },
+          { id:'speech', icon:'🎙️', name:'Speech', files:'11 files', desc:'Speech sound development charts, intelligibility tools, articulation norms, and therapy activity resources.', tags:['Speech Sounds','Intelligibility','Norms'], folder:'Speech' }
+        ]
+      },
+      {
+        id: 'development', title: '🧠 Development & Behavior', icon: '🧠',
+        items: [
+          { id:'autism', icon:'🌈', name:'Autism', files:'6 files', desc:'Autism spectrum resources for assessment support, therapy strategies, and family education materials.', tags:['Autism','ASD','Family Education'], folder:'Autism' },
+          { id:'behavior', icon:'⚡', name:'Behavior', files:'3 files', desc:'Behavioral support strategies, function-based intervention tools, and de-escalation resources.', tags:['Behavior','Strategies','Intervention'], folder:'Behavior' },
+          { id:'ef', icon:'🧩', name:'Executive Functioning', files:'5 files', desc:'Resources covering attention, planning, working memory, and self-regulation for pediatric populations.', tags:['Executive Function','Self-Regulation','Attention'], folder:'EF' },
+          { id:'play', icon:'🧸', name:'Play', files:'11 files', desc:'Play-based therapy resources, developmental play progression guides, and activity ideas across age ranges.', tags:['Play','Development','Activities'], folder:'Play' },
+          { id:'social_em', icon:'❤️', name:'Social & Emotional', files:'5 files', desc:'Social-emotional learning tools, feelings identification resources, and co-regulation strategies.', tags:['SEL','Feelings','Regulation'], folder:'Social%20and%20Emotional' },
+          { id:'social_st', icon:'📖', name:'Social Stories', files:'8 files', desc:'Pre-made and customizable social stories targeting common therapy goals and daily routine transitions.', tags:['Social Stories','Visual Supports','Routine'], folder:'Social%20Stories' }
+        ]
+      },
+      {
+        id: 'clinical', title: '🏥 Clinical & Assessment', icon: '🏥',
+        items: [
+          { id:'assess', icon:'📋', name:'Assessment', files:'18 files', desc:'Standardized and informal assessment tools, evaluation protocols, scoring forms, and report templates.', tags:['Assessment','Evaluation','Forms'], folder:'Assessment' },
+          { id:'audio', icon:'👂', name:'Audiology & DHH', files:'6 files', desc:'Deaf and Hard of Hearing resources plus audiology reference materials for clinicians and family education.', tags:['Audiology','DHH','Hearing'], folder:'Audiology-DHH' },
+          { id:'feeding', icon:'🥄', name:'Feeding', files:'17 files', desc:'Pediatric feeding therapy resources including food chaining, oral motor activities, and family handouts.', tags:['Feeding','Oral Motor','Pediatric'], folder:'Feeding' },
+          { id:'omd', icon:'😮', name:'Orofacial Myofunctional', files:'2 files', desc:'OMD assessment and treatment resources covering tongue thrust, oral rest posture, and myofunctional exercises.', tags:['OMD','Orofacial','Myofunctional'], folder:'Orofacial%20Myofunctional%20Disorders' },
+          { id:'motor', icon:'🏃', name:'Physical Motor', files:'10 files', desc:'Gross and fine motor development resources, milestone charts, and therapy activities for early intervention.', tags:['Motor','Gross Motor','Fine Motor'], folder:'Physical%20Motor' },
+          { id:'poly', icon:'🌿', name:'Polyvagal Theory', files:'3 files', desc:'Polyvagal theory resources for trauma-informed, regulation-based therapy approaches in early intervention.', tags:['Polyvagal','Trauma-Informed','Regulation'], folder:'Polyvagal%20Theory' },
+          { id:'potty', icon:'🚽', name:'Potty Training', files:'2 files', desc:'Toilet training guides, readiness checklists, and parent handouts for families navigating this milestone.', tags:['Potty Training','Parent Guide','Milestone'], folder:'Potty%20Training' },
+          { id:'sensory', icon:'🌀', name:'Sensory Regulation', files:'5 files', desc:'Sensory processing and regulation resources for therapy sessions and home carry-over program development.', tags:['Sensory','Regulation','Carry-Over'], folder:'Sensory%20Regulation' },
+          { id:'sleep', icon:'🌙', name:'Sleep', files:'8 files', desc:'Pediatric sleep resources, evidence-based handouts, and sleep hygiene strategies for families.', tags:['Sleep','Pediatric','Evidence-Based'], folder:'Sleep' }
+        ]
+      },
+      {
+        id: 'family', title: '👨‍👩‍👧 Family & Coaching', icon: '👨‍👩‍👧',
+        items: [
+          { id:'coaching', icon:'🌟', name:'Coaching', files:'7 files', desc:'Family coaching frameworks, caregiver coaching tools, and early intervention coaching practice resources.', tags:['Coaching','Family','EI'], folder:'Coaching' },
+          { id:'cd', icon:'🏫', name:'Conscious Discipline', files:'7 files', desc:'Conscious Discipline materials for family implementation, classroom use, and social-emotional skill building.', tags:['Conscious Discipline','SEL','Behavior'], folder:'Conscious%20Discipline' },
+          { id:'family_res', icon:'🏠', name:'Family Resources', files:'6 files', desc:'Family education handouts, home program templates, and caregiver tools for between-session carry-over.', tags:['Family','Handouts','Home Program'], folder:'Family%20Resources' }
+        ]
+      },
+      {
+        id: 'admin', title: '📋 Professional & Admin', icon: '📋',
+        items: [
+          { id:'coaimh', icon:'🌱', name:'COAIMH', files:'1 file', desc:'Colorado Association for Infant and Mental Health competency resources and credentialing materials.', tags:['COAIMH','Infant Mental Health','Colorado'], folder:'COAIMH' },
+          { id:'elco', icon:'🎓', name:'El Colorado Training', files:'4 files', desc:'El Colorado training materials and professional development resources for EMME team members.', tags:['Training','Professional Development'], folder:'El%20Colorado%20Training%20Resources' },
+          { id:'equity', icon:'⚖️', name:'Equity', files:'8 files', desc:'Diversity, equity, and inclusion resources supporting culturally responsive and linguistically affirming practice.', tags:['Equity','DEI','Culturally Responsive'], folder:'Equity' },
+          { id:'hr', icon:'👥', name:'Human Resources', files:'3 files', desc:'HR policies, staff forms, onboarding materials, and internal team resources.', tags:['HR','Staff','Policies'], folder:'Human%20Resources' },
+          { id:'intakeq', icon:'📝', name:'IntakeQ & EMME Process', files:'3 files', desc:'IntakeQ platform guides, intake workflow handouts, and EMME documentation process resources.', tags:['IntakeQ','Process','Intake'], folder:'IntakeQ%20%26%20EMME%20Process%20Handouts' },
+          { id:'journals', icon:'🔬', name:'Journals', files:'5 files', desc:'Evidence-based journal articles and peer-reviewed research publications for clinical reference and EBP.', tags:['Research','Journals','Evidence-Based'], folder:'Journals' },
+          { id:'reflect', icon:'🪞', name:'Reflective Supervision', files:'3 files', desc:'Reflective supervision frameworks, self-reflection tools, and resources for supervisors and supervisees.', tags:['Supervision','Reflective Practice'], folder:'Reflective%20Supervision' },
+          { id:'telehealth', icon:'💻', name:'Telehealth', files:'5 files', desc:'Telehealth setup guides, virtual therapy best practices, platform resources, and family tech tips.', tags:['Telehealth','Remote','Platform'], folder:'Telehealth' }
+        ]
+      }
+    ];
+
+    const allItems = sections.flatMap(s => s.items.map(i => ({ ...i, sectionId: s.id })));
+
+    function getSpUrl(folder) { return SP_BASE + folder + SP_VIEW; }
+
+    // ==================== TOAST ====================
+    function showToast(msg) {
+      const c = document.getElementById('toast-container-tc02');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => { if(t.parentNode) t.remove(); }, 3100);
+    }
+
+    // ==================== LOCAL STORAGE HELPERS ====================
+    function getRecent() { try { return JSON.parse(localStorage.getItem('emme_recent_resources')) || []; } catch { return []; } }
+    function saveRecent(id) {
+      let r = getRecent();
+      r = r.filter(x => x !== id);
+      r.unshift(id);
+      r = r.slice(0, 5);
+      try { localStorage.setItem('emme_recent_resources', JSON.stringify(r)); } catch {}
+      renderRecentStrip();
+    }
+    function getRecentClients() { try { return JSON.parse(localStorage.getItem('emme_recent_clients')) || []; } catch { return []; } }
+    function saveClient(name) {
+      if (!name.trim()) return;
+      let c = getRecentClients();
+      c = c.filter(x => x !== name.trim());
+      c.unshift(name.trim());
+      c = c.slice(0, 5);
+      try { localStorage.setItem('emme_recent_clients', JSON.stringify(c)); } catch {}
+    }
+
+    // ==================== FAVORITES ====================
+    function getFavorites() { try { return JSON.parse(localStorage.getItem('emme_favorites')) || []; } catch { return []; } }
+    function setFavorites(arr) { try { localStorage.setItem('emme_favorites', JSON.stringify(arr)); } catch {} }
+    function toggleFavorite(id) {
+      let favs = getFavorites();
+      if (favs.includes(id)) { favs = favs.filter(x => x !== id); } else { favs.push(id); }
+      setFavorites(favs);
+      updateStarStates();
+      renderPinnedBanner();
+      if (activeFilter === 'favorites') applyFilters();
+    }
+    function isFavorite(id) { return getFavorites().includes(id); }
+
+    function updateStarStates() {
+      document.querySelectorAll('.fav-star-btn').forEach(btn => {
+        const id = btn.dataset.id;
+        const svg = btn.querySelector('.star-icon');
+        if (!svg) return;
+        if (isFavorite(id)) {
+          svg.classList.remove('unfav');
+          svg.classList.add('fav');
+          svg.setAttribute('fill', '#f4a261');
+        } else {
+          svg.classList.remove('fav');
+          svg.classList.add('unfav');
+          svg.setAttribute('fill', 'none');
+        }
+      });
+    }
+
+    function renderPinnedBanner() {
+      const banner = document.getElementById('pinned-banner');
+      const row = document.getElementById('pinned-items-row');
+      const favs = getFavorites();
+      if (favs.length === 0) { banner.classList.add('hidden'); return; }
+      banner.classList.remove('hidden');
+      row.innerHTML = '';
+      favs.forEach(fid => {
+        const item = allItems.find(i => i.id === fid);
+        if (!item) return;
+        const chip = document.createElement('div');
+        chip.className = 'flex items-center gap-2 bg-cream rounded-xl px-4 py-2.5 border border-secondary/20 flex-shrink-0';
+        chip.innerHTML = `<span class="text-lg">${item.icon}</span><span class="text-sm font-semibold text-primary whitespace-nowrap">${item.name}</span><a href="${getSpUrl(item.folder)}" target="_blank" rel="noopener" class="text-xs bg-primary hover:bg-primary-dark text-white px-3 py-1 rounded-lg font-medium transition pinned-open" data-id="${item.id}">Open</a>`;
+        row.appendChild(chip);
+      });
+      // Attach click handlers for pinned open links
+      row.querySelectorAll('.pinned-open').forEach(a => {
+        a.addEventListener('click', () => saveRecent(a.dataset.id));
+      });
+    }
+
+    // ==================== CLINICIAN NOTES ====================
+    function getNote(id) { try { return localStorage.getItem('emme_note_' + id) || ''; } catch { return ''; } }
+    function setNote(id, text) { try { localStorage.setItem('emme_note_' + id, text); } catch {} }
+
+    const noteDebounceTimers = {};
+    function handleNoteInput(id, textarea, savedEl) {
+      const text = textarea.value;
+      const countEl = textarea.parentElement.querySelector('.note-char-count');
+      if (countEl) countEl.textContent = text.length + ' / 500';
+      if (noteDebounceTimers[id]) clearTimeout(noteDebounceTimers[id]);
+      noteDebounceTimers[id] = setTimeout(() => {
+        setNote(id, text);
+        savedEl.classList.add('visible');
+        setTimeout(() => savedEl.classList.remove('visible'), 2000);
+        updateNoteBadge(id);
+      }, 500);
+    }
+
+    function updateNoteBadge(id) {
+      const card = document.getElementById('card-' + id);
+      if (!card) return;
+      const badge = card.querySelector('.note-badge');
+      const noteText = getNote(id);
+      if (badge) { badge.style.display = noteText ? 'inline-flex' : 'none'; }
+    }
+
+    function toggleNotesPanel(id) {
+      const panel = document.getElementById('notes-panel-' + id);
+      if (!panel) return;
+      const isExpanded = panel.classList.contains('expanded');
+      // Close all other panels first
+      document.querySelectorAll('.notes-panel.expanded').forEach(p => {
+        if (p.id !== 'notes-panel-' + id) p.classList.remove('expanded');
+      });
+      if (isExpanded) { panel.classList.remove('expanded'); } else { panel.classList.add('expanded'); const ta = panel.querySelector('textarea'); if (ta) ta.focus(); }
+    }
+
+    // ==================== PRINT SHARE SHEET ====================
+    function printShareSheet(itemId) {
+      const item = allItems.find(i => i.id === itemId);
+      if (!item) return;
+      const url = getSpUrl(item.folder);
+      const note = getNote(itemId);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const printArea = document.getElementById('print-area');
+      let notesSection = '';
+      if (note) {
+        notesSection = `
+          <div style="margin-top:24px;">
+            <h3 style="font-size:13pt;font-weight:bold;margin-bottom:8px;color:#333;">📝 Clinician Notes</h3>
+            <div class="print-notes-box" style="background:#f9f9f0;border:1px solid #ddd;border-radius:8px;padding:14px 16px;font-size:11pt;line-height:1.6;color:#444;">
+              <p style="font-size:9pt;font-weight:bold;color:#888;margin-bottom:6px;">Your therapist's notes:</p>
+              <p style="margin:0;">${note.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</p>
+            </div>
+          </div>`;
+      }
+      printArea.innerHTML = `
+        <div style="max-width:700px;margin:0 auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0d5f6e;padding-bottom:12px;margin-bottom:24px;">
+            <div style="font-size:14pt;font-weight:bold;color:#0d5f6e;">EMME Co | Therapy Resource</div>
+            <div style="font-size:10pt;color:#666;">${dateStr}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+            <span style="font-size:36pt;">${item.icon}</span>
+            <h1 style="font-size:24pt;font-weight:bold;color:#222;margin:0;">${item.name}</h1>
+          </div>
+          <p style="font-size:12pt;line-height:1.7;color:#444;margin-bottom:20px;">${item.desc}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+            ${item.tags.map(t => `<span class="print-tag" style="display:inline-block;font-size:9pt;border:1px solid #999;color:#555;border-radius:20px;padding:3px 12px;">${t}</span>`).join('')}
+          </div>
+          <div style="margin-top:20px;">
+            <h3 style="font-size:13pt;font-weight:bold;margin-bottom:8px;color:#333;">🔗 Access This Resource</h3>
+            <div class="print-url-box" style="background:#f5f5f5;border:1px solid #ccc;border-radius:8px;padding:12px 16px;font-family:'Courier New',monospace;font-size:9pt;word-break:break-all;color:#333;">
+              ${url}
+            </div>
+          </div>
+          ${notesSection}
+          <hr style="margin:32px 0;border:none;border-top:1px solid #ccc;" />
+          <p style="font-size:10pt;color:#888;text-align:center;line-height:1.6;">
+            This resource was shared by your EMME therapist.<br/>
+            Questions? Reach out to your care team.
+          </p>
+        </div>`;
+      setTimeout(() => {
+        window.print();
+        showToast('🖨️ Print dialog opened!');
+      }, 100);
+    }
+
+    // ==================== RECENT STRIP ====================
+    function renderRecentStrip() {
+      const strip = document.getElementById('recent-strip-rs01');
+      const chips = document.getElementById('recent-chips-rc02');
+      const recent = getRecent();
+      if (recent.length === 0) { strip.classList.add('hidden'); return; }
+      strip.classList.remove('hidden');
+      chips.innerHTML = '';
+      recent.forEach(rid => {
+        const item = allItems.find(i => i.id === rid);
+        if (!item) return;
+        const chip = document.createElement('button');
+        chip.className = 'text-xs font-medium px-3 py-1.5 rounded-full bg-secondary/15 text-secondary hover:bg-secondary/25 transition cursor-pointer';
+        chip.textContent = item.icon + ' ' + item.name;
+        chip.addEventListener('click', () => {
+          const el = document.getElementById('card-' + rid);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        chips.appendChild(chip);
+      });
+    }
+
+    // ==================== RENDER SECTIONS ====================
+    function renderSections() {
+      const container = document.getElementById('sections-container-sc02');
+      container.innerHTML = '';
+      sections.forEach(sec => {
+        const sectionEl = document.createElement('section');
+        sectionEl.id = 'section-' + sec.id;
+        sectionEl.className = 'mb-8 section-group section-header';
+        sectionEl.dataset.section = sec.id;
+        sectionEl.innerHTML = `<h2 class="text-xl md:text-2xl font-bold text-primary mb-4 flex items-center gap-2 pb-2 border-b-2 border-secondary/20">${sec.title}</h2>`;
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4';
+        sec.items.forEach(item => {
+          const hasNote = getNote(item.id) ? true : false;
+          const card = document.createElement('div');
+          card.id = 'card-' + item.id;
+          card.className = 'card-resource bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col';
+          card.dataset.search = (item.name + ' ' + item.desc + ' ' + item.tags.join(' ')).toLowerCase();
+          card.dataset.section = sec.id;
+          card.dataset.itemId = item.id;
+          card.innerHTML = `
+            <button class="fav-star-btn" data-id="${item.id}" title="Toggle favorite">
+              <svg class="star-icon unfav" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <div class="flex items-start justify-between mb-2 pr-8">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">${item.icon}</span>
+                <a href="${getSpUrl(item.folder)}" target="_blank" rel="noopener" class="font-bold text-primary hover:text-primary-light transition text-base leading-tight card-name-link" data-id="${item.id}">${item.name}</a>
+              </div>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <span class="note-badge text-[11px] font-semibold bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full cursor-pointer" style="display:${hasNote ? 'inline-flex' : 'none'}" data-id="${item.id}" title="Has clinician notes">📝</span>
+                <span class="text-[11px] font-semibold bg-accent/20 text-accent-dark px-2.5 py-1 rounded-full whitespace-nowrap">${item.files}</span>
+              </div>
+            </div>
+            <p class="text-sm text-gray-500 leading-relaxed mb-3 line-clamp-2 flex-1">${item.desc}</p>
+            <div class="flex flex-wrap gap-1.5 mb-3">${item.tags.map(t => `<span class="text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-primary/20 text-primary/70">${t}</span>`).join('')}</div>
+            <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
+              <a href="${getSpUrl(item.folder)}" target="_blank" rel="noopener" class="flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition card-open-link" data-id="${item.id}">📂 Open in SharePoint</a>
+              <div class="relative ml-auto">
+                <button class="actions-toggle text-xs text-gray-400 hover:text-gray-600 px-2.5 py-2 rounded-lg hover:bg-gray-100 transition" data-id="${item.id}">⋯ Actions</button>
+                <div class="dropdown-menu absolute right-0 bottom-full mb-1 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-30" data-dropdown="${item.id}">
+                  <button class="action-share w-full text-left px-4 py-2 text-sm hover:bg-cream transition" data-id="${item.id}" data-name="${item.name}" data-folder="${item.folder}">📤 Share with Family</button>
+                  <button class="action-save w-full text-left px-4 py-2 text-sm hover:bg-cream transition" data-id="${item.id}" data-name="${item.name}" data-folder="${item.folder}">💾 Save to Client Folder</button>
+                  <button class="action-copy w-full text-left px-4 py-2 text-sm hover:bg-cream transition" data-id="${item.id}" data-folder="${item.folder}">📋 Copy Link</button>
+                  <button class="action-notes w-full text-left px-4 py-2 text-sm hover:bg-cream transition" data-id="${item.id}">📝 Notes</button>
+                  <button class="action-print w-full text-left px-4 py-2 text-sm hover:bg-cream transition" data-id="${item.id}">🖨️ Print Share Sheet</button>
+                </div>
+              </div>
+            </div>
+            <div class="notes-panel" id="notes-panel-${item.id}">
+              <div class="bg-cream-dark rounded-b-xl border-t border-gray-200 p-4 mt-2">
+                <textarea class="note-textarea w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 resize-none bg-white" rows="3" maxlength="500" placeholder="Add clinical notes, favorite activities, or family-specific tips for this resource..." data-id="${item.id}">${getNote(item.id).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                <div class="flex items-center justify-between mt-1.5">
+                  <span class="notes-saved-indicator" id="note-saved-${item.id}">✓ Saved</span>
+                  <div class="flex items-center gap-3">
+                    <span class="note-char-count text-[11px] text-gray-400">${getNote(item.id).length} / 500</span>
+                    <button class="note-close-btn text-[11px] text-gray-400 hover:text-gray-600 transition" data-id="${item.id}">✕ Close notes</button>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+          grid.appendChild(card);
+        });
+        sectionEl.appendChild(grid);
+        container.appendChild(sectionEl);
+      });
+    }
+
+    // ==================== TABLE OF CONTENTS ====================
+    function renderTOC(containerId) {
+      const nav = document.getElementById(containerId);
+      if (!nav) return;
+      nav.innerHTML = '';
+      sections.forEach(sec => {
+        const group = document.createElement('div');
+        group.className = 'mb-1';
+        const header = document.createElement('button');
+        header.className = 'toc-group-toggle w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-cream-dark transition';
+        header.dataset.group = sec.id;
+        header.innerHTML = `<span>${sec.title}</span><i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 toc-chevron transition-transform"></i>`;
+        const sub = document.createElement('div');
+        sub.className = 'toc-sub expanded';
+        sub.id = containerId + '-sub-' + sec.id;
+        sec.items.forEach(item => {
+          const btn = document.createElement('button');
+          btn.className = 'toc-item w-full text-left pl-8 pr-3 py-1.5 text-[13px] text-gray-600 rounded-r-lg border-l-3 border-transparent';
+          btn.dataset.target = item.id;
+          btn.textContent = item.icon + ' ' + item.name;
+          btn.addEventListener('click', () => {
+            const el = document.getElementById('card-' + item.id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (window.innerWidth < 768) closeMobileSidebar();
+          });
+          sub.appendChild(btn);
+        });
+        header.addEventListener('click', () => {
+          const isExpanded = sub.classList.contains('expanded');
+          sub.classList.toggle('expanded');
+          const chev = header.querySelector('.toc-chevron');
+          if (chev) chev.style.transform = isExpanded ? 'rotate(-90deg)' : '';
+        });
+        group.appendChild(header);
+        group.appendChild(sub);
+        nav.appendChild(group);
+      });
+      if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+    }
+
+    // ==================== SEARCH / FILTER ====================
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    function applyFilters() {
+      const cards = document.querySelectorAll('.card-resource');
+      const sectionGroups = document.querySelectorAll('.section-group');
+      const favs = getFavorites();
+      let visible = 0;
+      cards.forEach(card => {
+        const itemId = card.dataset.itemId;
+        let matchesFilter;
+        if (activeFilter === 'favorites') {
+          matchesFilter = favs.includes(itemId);
+        } else {
+          matchesFilter = activeFilter === 'all' || card.dataset.section === activeFilter;
+        }
+        const matchesSearch = !searchQuery || card.dataset.search.includes(searchQuery.toLowerCase());
+        const show = matchesFilter && matchesSearch;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      sectionGroups.forEach(sg => {
+        const visCards = sg.querySelectorAll('.card-resource');
+        let anyVisible = false;
+        visCards.forEach(c => { if (c.style.display !== 'none') anyVisible = true; });
+        sg.style.display = anyVisible ? '' : 'none';
+      });
+      const label = activeFilter === 'favorites' ? `Showing ${visible} favorite${visible !== 1 ? 's' : ''}` : `Showing ${visible} of ${allItems.length} resources`;
+      document.getElementById('result-count-rc01').textContent = label;
+      const clearBtn = document.getElementById('search-clear-sc01');
+      clearBtn.classList.toggle('hidden', !searchQuery);
+    }
+
+    // ==================== DROPDOWN ACTIONS ====================
+    let openDropdown = null;
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-menu.show').forEach(d => d.classList.remove('show'));
+      openDropdown = null;
+    }
+
+    // ==================== MODAL HANDLING ====================
+    let currentShareItem = null;
+    let currentSaveItem = null;
+
+    function openShareModal(name, folder, itemId) {
+      currentShareItem = { name, folder, itemId };
+      const url = folder ? getSpUrl(folder) : '';
+      document.getElementById('share-resource-name-sn01').textContent = '📂 ' + name;
+      document.getElementById('share-link-box-sl01').textContent = url;
+      document.getElementById('share-email-se01').value = '';
+      document.getElementById('share-note-sn02').value = '';
+      // Show/hide print button based on whether we have an itemId
+      const printBtn = document.getElementById('share-print-btn');
+      if (itemId && allItems.find(i => i.id === itemId)) {
+        printBtn.style.display = '';
+        printBtn.dataset.itemId = itemId;
+      } else {
+        printBtn.style.display = 'none';
+      }
+      document.getElementById('share-modal-sm01').classList.add('show');
+    }
+
+    function openSaveModal(name, folder) {
+      currentSaveItem = { name, folder };
+      document.getElementById('save-resource-name-sr01').textContent = '📂 ' + name;
+      document.getElementById('save-client-input-sc05').value = '';
+      renderRecentClients();
+      document.getElementById('save-modal-sv01').classList.add('show');
+    }
+
+    function renderRecentClients() {
+      const wrap = document.getElementById('recent-clients-wrap-rc03');
+      const chips = document.getElementById('recent-clients-chips-rc04');
+      const clients = getRecentClients();
+      if (clients.length === 0) { wrap.classList.add('hidden'); return; }
+      wrap.classList.remove('hidden');
+      chips.innerHTML = '';
+      clients.forEach(c => {
+        const chip = document.createElement('button');
+        chip.className = 'text-xs font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition';
+        chip.textContent = c;
+        chip.addEventListener('click', () => {
+          document.getElementById('save-client-input-sc05').value = c;
+        });
+        chips.appendChild(chip);
+      });
+    }
+
+    // ==================== MOBILE SIDEBAR ====================
+    function openMobileSidebar() {
+      document.getElementById('mobile-sidebar-overlay').classList.remove('hidden');
+      document.getElementById('mobile-sidebar-panel').style.transform = 'translateX(0)';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileSidebar() {
+      document.getElementById('mobile-sidebar-overlay').classList.add('hidden');
+      document.getElementById('mobile-sidebar-panel').style.transform = 'translateX(-100%)';
+      document.body.style.overflow = '';
+    }
+
+    // ==================== AI SEARCH ====================
+    async function performAISearch(query) {
+      const container = document.getElementById('ai-results-container-ai03');
+      const btn = document.getElementById('ai-search-btn-ai02');
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="w-5 h-5 spinner" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-linecap="round"/></svg> Searching…';
+      container.innerHTML = '<div class="flex items-center gap-3 text-teal-200 py-4"><svg class="w-5 h-5 spinner" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-linecap="round"/></svg> <span>Finding evidence-based resources…</span></div>';
+
+      try {
+        const res = await AppSDK.ai.chat({
+          messages: [
+            { role: 'system', content: 'You are a pediatric SLP and early intervention specialist. When given a search query, return exactly 5 evidence-based external resource suggestions. Format each as a JSON array with fields: title, source (website/org name), url_hint (likely domain, e.g. asha.org), description (2 sentences about content), tags (array of 3 strings), relevance (1 sentence why it fits EI/SLP practice). Return ONLY valid JSON array, no markdown.' },
+            { role: 'user', content: query }
+          ]
+        });
+
+        let results;
+        try {
+          let cleaned = res.content.trim();
+          if (cleaned.startsWith('```')) {
+            cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+          }
+          results = JSON.parse(cleaned);
+        } catch {
+          container.innerHTML = `<div class="bg-white/10 rounded-xl p-5 mt-4 text-sm text-teal-100 whitespace-pre-wrap leading-relaxed">${res.content}</div>`;
+          return;
+        }
+
+        container.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">' + results.map((r, idx) => `
+          <div class="ai-result-card bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10" style="animation-delay:${idx*0.1}s">
+            <h4 class="font-bold text-white text-sm mb-1">${r.title || 'Resource'}</h4>
+            <span class="inline-block text-[10px] font-semibold bg-accent/80 text-white px-2 py-0.5 rounded-full mb-2">${r.source || r.url_hint || 'Source'}</span>
+            <p class="text-teal-200 text-xs leading-relaxed mb-2">${r.description || ''}</p>
+            <div class="flex flex-wrap gap-1 mb-3">${(r.tags||[]).map(t => `<span class="text-[10px] px-2 py-0.5 rounded-full border border-teal-300/30 text-teal-200">${t}</span>`).join('')}</div>
+            <p class="text-[11px] text-teal-300 italic mb-3">${r.relevance || ''}</p>
+            <div class="flex gap-2">
+              <button class="ai-share-btn text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-lg transition" data-title="${(r.title||'').replace(/"/g,'&quot;')}" data-desc="${(r.description||'').replace(/"/g,'&quot;')}">📤 Share</button>
+              <button class="ai-save-btn text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-lg transition" data-title="${(r.title||'').replace(/"/g,'&quot;')}" data-desc="${(r.description||'').replace(/"/g,'&quot;')}">🔖 Save Note</button>
+            </div>
+          </div>`).join('') + '</div>';
+
+        container.querySelectorAll('.ai-share-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const title = btn.dataset.title;
+            const desc = btn.dataset.desc;
+            openShareModal(title, '', null);
+            document.getElementById('share-link-box-sl01').textContent = title + ' — ' + desc;
+          });
+        });
+        container.querySelectorAll('.ai-save-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const text = btn.dataset.title + ' — ' + btn.dataset.desc;
+            navigator.clipboard.writeText(text).then(() => showToast('✓ Note copied to clipboard!'));
+          });
+        });
+
+      } catch (e) {
+        container.innerHTML = '<div class="bg-white/10 rounded-xl p-5 mt-4 text-sm text-red-200">⚠️ Something went wrong while searching. Please try again.</div>';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="search" class="w-4 h-4"></i> Search';
+        if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') lucide.createIcons();
+      }
+    }
+
+    // ==================== INTERSECTION OBSERVER ====================
+    function setupScrollSpy() {
+      const sectionEls = document.querySelectorAll('.section-group');
+      const tocItems = document.querySelectorAll('#toc-nav-tc01 .toc-item');
+      if (!sectionEls.length || !tocItems.length) return;
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.dataset.section;
+            tocItems.forEach(ti => {
+              const item = allItems.find(i => i.id === ti.dataset.target);
+              if (item && item.sectionId === sectionId) {
+                // Keep in view
+              }
+            });
+          }
+        });
+      }, { rootMargin: '-124px 0px -60% 0px', threshold: 0.1 });
+      sectionEls.forEach(s => observer.observe(s));
+    }
+
+    // ==================== INIT ====================
+    function init() {
+      renderSections();
+      renderTOC('toc-nav-tc01');
+      renderTOC('mobile-toc-container');
+      renderRecentStrip();
+      renderPinnedBanner();
+      updateStarStates();
+
+      // Search input
+      const searchInput = document.getElementById('search-input-si01');
+      searchInput.addEventListener('input', () => {
+        searchQuery = searchInput.value.trim();
+        applyFilters();
+      });
+
+      // Search clear
+      document.getElementById('search-clear-sc01').addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        applyFilters();
+      });
+
+      // Filter pills
+      document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.filter-pill').forEach(p => {
+            p.classList.remove('active');
+            p.classList.remove('active-fav');
+          });
+          const filterVal = pill.dataset.filter;
+          if (filterVal === 'favorites') {
+            pill.classList.add('active-fav');
+          } else {
+            pill.classList.add('active');
+          }
+          activeFilter = filterVal;
+          applyFilters();
+          if (activeFilter !== 'all' && activeFilter !== 'favorites') {
+            const sec = document.getElementById('section-' + activeFilter);
+            if (sec) setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+          }
+        });
+      });
+
+      // Card name links & open buttons — save to recently accessed
+      document.querySelectorAll('.card-name-link, .card-open-link').forEach(link => {
+        link.addEventListener('click', () => { saveRecent(link.dataset.id); });
+      });
+
+      // Favorite star buttons
+      document.querySelectorAll('.fav-star-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          toggleFavorite(id);
+          const svg = btn.querySelector('.star-icon');
+          if (svg) { svg.classList.add('star-pop'); setTimeout(() => svg.classList.remove('star-pop'), 300); }
+        });
+      });
+
+      // Note badge click → open notes panel
+      document.querySelectorAll('.note-badge').forEach(badge => {
+        badge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleNotesPanel(badge.dataset.id);
+        });
+      });
+
+      // Note textareas
+      document.querySelectorAll('.note-textarea').forEach(ta => {
+        ta.addEventListener('input', () => {
+          if (ta.value.length > 500) ta.value = ta.value.slice(0, 500);
+          const savedEl = document.getElementById('note-saved-' + ta.dataset.id);
+          handleNoteInput(ta.dataset.id, ta, savedEl);
+        });
+      });
+
+      // Note close buttons
+      document.querySelectorAll('.note-close-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          toggleNotesPanel(btn.dataset.id);
+        });
+      });
+
+      // Unpin all
+      document.getElementById('unpin-all-btn').addEventListener('click', () => {
+        setFavorites([]);
+        updateStarStates();
+        renderPinnedBanner();
+        if (activeFilter === 'favorites') applyFilters();
+        showToast('✓ All pins removed');
+      });
+
+      // Dropdown toggles
+      document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.actions-toggle');
+        if (toggle) {
+          e.stopPropagation();
+          const id = toggle.dataset.id;
+          const dd = document.querySelector(`[data-dropdown="${id}"]`);
+          if (dd) {
+            const isOpen = dd.classList.contains('show');
+            closeAllDropdowns();
+            if (!isOpen) { dd.classList.add('show'); openDropdown = id; }
+          }
+          return;
+        }
+        if (!e.target.closest('.dropdown-menu')) closeAllDropdowns();
+      });
+
+      // Action: Share
+      document.querySelectorAll('.action-share').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeAllDropdowns();
+          openShareModal(btn.dataset.name, btn.dataset.folder, btn.dataset.id);
+        });
+      });
+
+      // Action: Save
+      document.querySelectorAll('.action-save').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeAllDropdowns();
+          openSaveModal(btn.dataset.name, btn.dataset.folder);
+        });
+      });
+
+      // Action: Copy Link
+      document.querySelectorAll('.action-copy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeAllDropdowns();
+          const url = getSpUrl(btn.dataset.folder);
+          navigator.clipboard.writeText(url).then(() => showToast('✓ Link copied to clipboard!'));
+        });
+      });
+
+      // Action: Notes
+      document.querySelectorAll('.action-notes').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeAllDropdowns();
+          toggleNotesPanel(btn.dataset.id);
+        });
+      });
+
+      // Action: Print Share Sheet (from dropdown)
+      document.querySelectorAll('.action-print').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeAllDropdowns();
+          printShareSheet(btn.dataset.id);
+        });
+      });
+
+      // Share Modal Buttons
+      document.getElementById('share-copy-btn-sc03').addEventListener('click', () => {
+        const link = document.getElementById('share-link-box-sl01').textContent;
+        navigator.clipboard.writeText(link).then(() => showToast('✓ Link copied!'));
+      });
+
+      document.getElementById('share-email-btn-se02').addEventListener('click', () => {
+        const name = currentShareItem ? currentShareItem.name : '';
+        const note = document.getElementById('share-note-sn02').value;
+        const link = document.getElementById('share-link-box-sl01').textContent;
+        const email = document.getElementById('share-email-se01').value;
+        const subject = encodeURIComponent('Resource from EMME: ' + name);
+        const body = encodeURIComponent((note ? note + '\n\n' : '') + 'Resource: ' + name + '\nLink: ' + link + '\n\nShared from EMME Resource Hub');
+        window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_self');
+        showToast('✓ Email draft opened');
+      });
+
+      // Share modal print button
+      document.getElementById('share-print-btn').addEventListener('click', () => {
+        const itemId = currentShareItem ? currentShareItem.itemId : null;
+        if (itemId) {
+          document.getElementById('share-modal-sm01').classList.remove('show');
+          printShareSheet(itemId);
+        }
+      });
+
+      document.getElementById('share-cancel-btn-sc04').addEventListener('click', () => {
+        document.getElementById('share-modal-sm01').classList.remove('show');
+      });
+
+      document.getElementById('share-modal-sm01').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+      });
+
+      // Save Modal Buttons
+      document.getElementById('save-open-sp-btn-so01').addEventListener('click', () => {
+        const clientName = document.getElementById('save-client-input-sc05').value;
+        if (clientName.trim()) saveClient(clientName.trim());
+        window.open(SP_TEAM, '_blank', 'noopener');
+        showToast('✓ Client saved!');
+        document.getElementById('save-modal-sv01').classList.remove('show');
+      });
+
+      document.getElementById('save-copy-btn-sc06').addEventListener('click', () => {
+        if (currentSaveItem) {
+          const url = currentSaveItem.folder ? getSpUrl(currentSaveItem.folder) : SP_TEAM;
+          navigator.clipboard.writeText(url).then(() => showToast('✓ Link copied to clipboard!'));
+        }
+      });
+
+      document.getElementById('save-cancel-btn-sc07').addEventListener('click', () => {
+        document.getElementById('save-modal-sv01').classList.remove('show');
+      });
+
+      document.getElementById('save-modal-sv01').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+      });
+
+      // Mobile sidebar
+      document.getElementById('mobile-sidebar-btn').addEventListener('click', openMobileSidebar);
+      document.getElementById('mobile-sidebar-close').addEventListener('click', closeMobileSidebar);
+      document.getElementById('mobile-sidebar-overlay').addEventListener('click', closeMobileSidebar);
+
+      // AI Search
+      document.getElementById('ai-search-btn-ai02').addEventListener('click', () => {
+        const q = document.getElementById('ai-search-input-ai01').value.trim();
+        if (q) performAISearch(q);
+      });
+
+      document.getElementById('ai-search-input-ai01').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const q = e.target.value.trim();
+          if (q) performAISearch(q);
+        }
+      });
+
+      // Scroll spy
+      setupScrollSpy();
+
+      // Keyboard: Escape to close modals
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.getElementById('share-modal-sm01').classList.remove('show');
+          document.getElementById('save-modal-sv01').classList.remove('show');
+          closeAllDropdowns();
+          if (window.innerWidth < 768) closeMobileSidebar();
+        }
+      });
+
+      // Restore star states after render
+      updateStarStates();
+    }
+
+    // Guard Lucide, then init
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
+    }
+    init();
+    </script>
+</body>
+</html>

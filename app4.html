@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>emmé | EI Report Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        forest: { 50: '#EEF5F0', 100: '#D6E8DB', 200: '#A8D4B5', 300: '#6EBD85', 400: '#4CAF7D', 500: '#1B4D3E', 600: '#186849', 700: '#245E4D', 800: '#143D32', 900: '#0D2A22' },
+        cream: { 50: '#FDFAF4', 100: '#FAF4E6', 200: '#F5ECD5', 300: '#E2D9C5', 400: '#C5B99A', 500: '#A89E82', 600: '#8B7F66', 700: '#6E634D', 800: '#514836', 900: '#352F22' },
+        gold: { 50: '#FEF9E7', 100: '#FEF3C7', 200: '#FDE68A', 300: '#FCD34D', 400: '#F5C842', 500: '#D4A017', 600: '#92700A', 700: '#78590D', 800: '#5C4310', 900: '#3F2E0E' },
+        rose: { 50: '#FDEDEF', 100: '#FBD5DA', 200: '#F9BEC7', 300: '#F4A7B3', 400: '#E8899A', 500: '#C05070', 600: '#A03D5C', 700: '#803048', 800: '#602434', 900: '#401820' },
+        grayc: { 50: '#FAF8F2', 100: '#F5F0E6', 200: '#EBE5D8', 300: '#E2D9C5', 400: '#C5B99A', 500: '#7A9E92', 600: '#4A7C6B', 700: '#3A6355', 800: '#1B4D3E', 900: '#0D2A22' }
+      }
+    }
+  }
+};
+</script>
+<script src="https://unpkg.com/lucide@latest" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg-page:#FAF4E6;--bg-card:#FFFFFF;--bg-accent:#FEF3C7;--bg-sidebar:#1B4D3E;--bg-sidebar-hover:#245E4D;--bg-btn-primary:#186849;--bg-btn-hover:#1B4D3E;--color-primary:#1B4D3E;--color-secondary:#4A7C6B;--color-muted:#7A9E92;--color-border:#E2D9C5;--color-border-dark:#C5B99A;--color-text:#1B4D3E;--color-text-light:#FFFFFF;--color-slp:#F4A7B3;--color-ot:#F5C842;--color-di:#4CAF7D;--color-pt:#F9BEC7;--color-success:#16a34a;--color-warning:#d97706;--color-danger:#dc2626;--color-info:#0369a1;--radius-card:16px;--radius-btn:24px;--radius-input:10px;--radius-pill:100px;--font-display:'Comfortaa','Comic Sans MS',cursive;--font-body:'Inter','Segoe UI',system-ui,sans-serif;--shadow-card:0 2px 12px rgba(27,77,62,0.08);--shadow-btn:0 2px 8px rgba(24,104,73,0.25);--shadow-lg:0 4px 16px rgba(27,77,62,0.12);
+}
+*{box-sizing:border-box;}
+body{font-family:var(--font-body);background-color:var(--bg-page);color:var(--color-text);margin:0;}
+h1,h2,h3,h4,h5,h6{font-family:var(--font-display);color:var(--color-primary);}
+.font-brand{font-family:var(--font-display);}
+.screen{display:none;animation:fadeIn .3s ease;}.screen.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideIn{from{transform:translateX(-10px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes toastSlideIn{from{transform:translateY(-20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+.topnav .emme-accent{color:#6EE7B7;}
+.tab-item{transition:all .2s;color:rgba(255,255,255,.8);}.tab-item:hover{background:var(--bg-sidebar-hover);border-radius:10px;}.tab-item.active{background:rgba(255,255,255,.12)!important;border-left:3px solid #6EE7B7;color:white!important;}
+.form-input{border:1.5px solid var(--color-border);border-radius:var(--radius-input);padding:8px 12px;width:100%;font-size:14px;transition:border-color .2s,box-shadow .2s;background:#FDFAF4;color:var(--color-text);font-family:var(--font-body);}
+.form-input:focus{outline:none;border-color:var(--bg-btn-primary);box-shadow:0 0 0 3px rgba(24,104,73,.12);}
+.form-label{font-size:13px;font-weight:500;color:var(--color-secondary);margin-bottom:4px;display:block;}.form-label.required::after{content:' *';color:var(--color-danger);}
+.btn{border-radius:var(--radius-btn);padding:10px 20px;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;border:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-body);}
+.btn-primary{background:var(--bg-btn-primary)!important;color:white!important;border-radius:var(--radius-btn)!important;box-shadow:var(--shadow-btn);}.btn-primary:hover{background:var(--bg-btn-hover)!important;}
+.btn-navy{background:var(--bg-btn-primary)!important;color:white!important;border-radius:var(--radius-btn)!important;box-shadow:var(--shadow-btn);}.btn-navy:hover{background:var(--bg-btn-hover)!important;}
+.btn-outline{background:transparent;border:1.5px solid var(--color-border);color:var(--color-primary);border-radius:var(--radius-btn);}.btn-outline:hover{border-color:var(--bg-btn-primary);color:var(--bg-btn-primary);}
+.btn-ai{background:linear-gradient(135deg,#186849,#4CAF7D);color:white;font-size:13px;padding:6px 14px;border-radius:var(--radius-btn);}.btn-ai:hover{background:linear-gradient(135deg,#1B4D3E,#186849);}
+.btn-copy{background:#EEF5F0;color:var(--color-primary);font-size:12px;padding:5px 12px;border-radius:var(--radius-pill);border:1px solid var(--color-border);}.btn-copy:hover{background:var(--bg-btn-primary)!important;color:white!important;}
+.btn-save-exit{background:transparent;border:1.5px solid rgba(255,255,255,.5);color:white;font-size:13px;padding:7px 16px;border-radius:var(--radius-pill);cursor:pointer;font-family:var(--font-body);font-weight:600;transition:all .2s;}.btn-save-exit:hover{background:rgba(255,255,255,.15);border-color:white;}
+.card{background:var(--bg-card);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:24px;}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:600;}
+.badge-teal{background:#EEF5F0;color:#186849;}.badge-amber{background:#FEF3C7;color:#92700A;}.badge-red{background:#fee2e2;color:#991b1b;}.badge-green{background:#d1fae5;color:#065f46;}.badge-navy{background:#EEF5F0;color:var(--color-primary);}
+.name-code{width:48px;height:48px;border-radius:50%;background:var(--bg-accent);color:var(--color-primary);border:2px solid var(--color-border-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;font-family:var(--font-display);}.name-code-sm{width:36px;height:36px;font-size:12px;}
+.report-card-select{border:2px solid var(--color-border);border-radius:var(--radius-card);padding:16px 20px;cursor:pointer;transition:all .2s;background:white;}.report-card-select:hover{background:#F5FAF7;border-color:var(--color-secondary);}.report-card-select.selected{border-color:#186849;background:#EEF5F0;}.report-card-select input[type="radio"]{accent-color:var(--bg-btn-primary);width:18px;height:18px;}
+.section-divider{border-top:1px solid var(--color-border);margin:24px 0;}
+input[type="checkbox"]{accent-color:var(--bg-btn-primary);width:16px;height:16px;border-radius:4px;}input[type="radio"]{accent-color:var(--bg-btn-primary);}
+.checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;}.checkbox-item{display:flex;align-items:flex-start;gap:8px;padding:4px 8px;border-radius:6px;font-size:13px;cursor:pointer;}.checkbox-item:hover{background:#EEF5F0;}.checkbox-item input{margin-top:2px;flex-shrink:0;}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;}.dot-red{background:var(--color-danger);}.dot-amber{background:var(--color-warning);}.dot-green{background:var(--color-success);}
+.sidebar-nav{width:260px;min-height:calc(100vh - 56px);background:var(--bg-sidebar)!important;border-right:none;position:fixed;top:56px;left:0;overflow-y:auto;z-index:30;}
+.sidebar-nav *{color:rgba(255,255,255,.9);}.sidebar-nav .badge{color:rgba(255,255,255,.9);}.sidebar-nav .badge-teal{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);}.sidebar-nav .name-code{background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.25);}.sidebar-nav .form-input,.sidebar-nav input,.sidebar-nav select{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:white;}
+.main-content{margin-left:260px;padding:24px;min-height:calc(100vh - 56px);}
+.topnav{height:56px;background:var(--bg-sidebar);position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;padding:0 20px;color:white;}
+.hear-card{border-left:4px solid;border-radius:var(--radius-card);padding:16px;background:white;margin-bottom:12px;border:1px solid var(--color-border);border-left-width:4px;box-shadow:var(--shadow-card);}
+.form-section{margin-bottom:32px;}.form-section-title{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--color-primary);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #EEF5F0;}
+textarea.form-input{min-height:80px;resize:vertical;}.score-cell{text-align:center;}.score-cell input{width:70px;text-align:center;}
+.classification-badge{font-size:11px;padding:2px 8px;border-radius:var(--radius-pill);font-weight:600;white-space:nowrap;}
+.modal-overlay{position:fixed;inset:0;background:rgba(27,77,62,.4);z-index:100;display:none;align-items:center;justify-content:center;}.modal-overlay.show{display:flex;}.modal-content{background:white;border-radius:var(--radius-card);padding:32px;max-width:520px;width:90%;max-height:90vh;overflow-y:auto;border:1px solid var(--color-border);box-shadow:var(--shadow-lg);}
+thead tr,th{background:#EEF5F0!important;color:var(--color-primary)!important;font-family:var(--font-body);}tbody tr:nth-child(even){background:#FAF8F2;}table{border-collapse:collapse;}td,th{border-color:var(--color-border);}
+.breadcrumb-nav{display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,.6);}.breadcrumb-nav span{color:rgba(255,255,255,.5);}.breadcrumb-link{color:rgba(255,255,255,.7);cursor:pointer;text-decoration:none;transition:color .2s;}.breadcrumb-link:hover{color:white;text-decoration:underline;}.breadcrumb-current{color:white;font-weight:500;}
+.emme-toast{position:fixed;top:70px;right:20px;background:#186849;color:white;padding:12px 24px;border-radius:24px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);animation:toastSlideIn .3s ease;transition:opacity .3s;}
+.ei-report-section{margin-bottom:20px;}
+.ei-table{width:100%;border-collapse:collapse;font-size:13px;}.ei-table thead th{background:#1B4D3E!important;color:white!important;padding:10px 12px;text-align:left;font-weight:600;font-size:12px;}.ei-table tbody td{padding:10px 12px;border-bottom:1px solid #E2D9C5;}.ei-table tbody tr:nth-child(even){background:#FAF8F2;}
+.eligibility-eligible{background:#E8F5ED;border:1px solid #A8D4B5;border-left:4px solid #186849;border-radius:var(--radius-card);padding:24px;}
+.eligibility-not-eligible{background:#FFF8E7;border:1px solid #E2D9C5;border-left:4px solid #d97706;border-radius:var(--radius-card);padding:24px;}
+.sig-block{display:flex;gap:40px;flex-wrap:wrap;margin-top:16px;}.sig-line{flex:1;min-width:200px;}.sig-line .line{border-bottom:1px solid #1B4D3E;height:40px;margin-bottom:4px;}.sig-line .label{font-size:11px;color:var(--color-muted);}
+.narrative-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(27,77,62,.2);border-top-color:#186849;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle;}
+.report-download-bar{display:flex;gap:12px;align-items:center;padding:16px 24px;background:#FEF3C7;border-radius:12px;margin-bottom:24px;border:1px solid #E2D9C5;flex-wrap:wrap;}
+.report-header-block{background:#FEF3C7;border-radius:16px;padding:28px 32px;margin-bottom:24px;border-left:6px solid #186849;}
+.report-section-card{background:white;border-radius:12px;border:1px solid #E2D9C5;padding:24px 28px;margin-bottom:16px;box-shadow:0 1px 4px rgba(27,77,62,.06);}
+.report-section-card h3{font-family:'Comfortaa',cursive;color:#1B4D3E;font-size:15px;font-weight:700;margin:0 0 16px 0;padding-bottom:10px;border-bottom:2px solid #E2D9C5;}
+.report-field{margin-bottom:12px;}
+.report-field-label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#7A9E92;font-weight:600;}
+.report-field-value{color:#1B4D3E;font-size:14px;margin-top:3px;}
+.report-yn-yes{background:#E8F5ED;color:#186849;border-radius:100px;padding:2px 10px;font-size:12px;font-weight:600;display:inline-block;}
+.report-yn-no{background:#f1f5f9;color:#64748b;border-radius:100px;padding:2px 10px;font-size:12px;font-weight:600;display:inline-block;}
+.report-yn-na{background:#FEF3C7;color:#92700A;border-radius:100px;padding:2px 10px;font-size:12px;font-weight:600;display:inline-block;}
+.report-sig-block{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:12px;}
+.report-confidence{text-align:center;font-size:11px;color:#7A9E92;margin-top:32px;padding:16px;border-top:1px solid #E2D9C5;}
+.copy-section-btn{position:absolute;top:16px;right:16px;}
+.copilot-chat-bubble{padding:12px 16px;border-radius:16px;max-width:85%;font-size:14px;line-height:1.6;margin-bottom:12px;word-wrap:break-word;white-space:pre-wrap;}
+.copilot-bubble-user{background:var(--bg-sidebar);color:white;margin-left:auto;border-bottom-right-radius:4px;}
+.copilot-bubble-ai{background:white;color:var(--color-text);border:1px solid var(--color-border);border-left:4px solid var(--bg-btn-primary);margin-right:auto;border-bottom-left-radius:4px;}
+.copilot-loading-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bg-btn-primary);animation:copilotPulse 1.2s infinite ease-in-out;margin:0 3px;}
+.copilot-loading-dot:nth-child(2){animation-delay:.2s;}
+.copilot-loading-dot:nth-child(3){animation-delay:.4s;}
+@keyframes copilotPulse{0%,80%,100%{transform:scale(0.6);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
+.copilot-pill-toggle{display:inline-flex;border-radius:var(--radius-pill);overflow:hidden;border:1.5px solid var(--color-border);background:white;}
+.copilot-pill-toggle button{padding:6px 16px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--color-secondary);font-family:var(--font-body);transition:all .2s;}
+.copilot-pill-toggle button.active{background:var(--bg-btn-primary);color:white;}
+.age-pill-toggle{display:inline-flex;border-radius:var(--radius-pill);overflow:hidden;border:1.5px solid var(--color-border-dark);background:white;}
+.age-pill-toggle button{padding:6px 18px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--color-secondary);font-family:var(--font-body);transition:all .2s;}
+.age-pill-toggle button.active{background:var(--bg-btn-primary);color:white;}
+.dt-node{border-radius:12px;padding:14px 18px;text-align:center;font-size:13px;line-height:1.4;font-weight:600;cursor:pointer;transition:all .25s;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.dt-node:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.15);}
+.dt-node.highlighted{outline:3px solid #1B4D3E;outline-offset:2px;}
+.dt-question{background:#1B4D3E;color:white;max-width:320px;}
+.dt-yn-btn{display:inline-flex;align-items:center;justify-content:center;width:56px;height:32px;border-radius:16px;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;border:2px solid transparent;}
+.dt-yn-yes{background:#d1fae5;color:#065f46;}.dt-yn-yes:hover,.dt-yn-yes.highlighted{background:#065f46;color:white;}
+.dt-yn-no{background:#fee2e2;color:#991b1b;}.dt-yn-no:hover,.dt-yn-no.highlighted{background:#991b1b;color:white;}
+.dt-rating{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:white;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.dt-rating:hover{transform:scale(1.15);}
+.dt-connector{stroke:#C5B99A;stroke-width:2;fill:none;}
+.dt-connector.highlighted{stroke:#1B4D3E;stroke-width:3;}
+.aa-card{background:white;border:1px solid var(--color-border);border-radius:12px;padding:16px;min-width:220px;max-width:260px;flex-shrink:0;transition:all .2s;}
+.aa-card.current-age{background:#E8F5ED;border-color:#A8D4B5;box-shadow:0 0 0 2px #186849;}
+.aa-card h4{font-family:'Comfortaa',cursive;font-size:13px;font-weight:700;color:#1B4D3E;margin:0 0 10px 0;padding-bottom:6px;border-bottom:2px solid #EEF5F0;}
+.aa-card li{font-size:12px;color:#1B4D3E;line-height:1.5;margin-bottom:4px;}
+.ref-tab{padding:10px 20px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--color-secondary);font-family:var(--font-body);border-bottom:3px solid transparent;transition:all .2s;}
+.ref-tab.active{color:var(--color-primary);border-bottom-color:var(--bg-btn-primary);}
+.ref-tab:hover{color:var(--color-primary);}
+.accordion-header{cursor:pointer;padding:12px 16px;background:#EEF5F0;border-radius:10px;font-weight:600;font-size:14px;color:var(--color-primary);display:flex;align-items:center;gap:8px;transition:background .2s;font-family:'Comfortaa',cursive;}
+.accordion-header:hover{background:#D6E8DB;}
+.accordion-body{padding:12px 16px;}
+.guiding-card{border-left:4px solid var(--bg-btn-primary);background:white;border-radius:0 12px 12px 0;padding:16px 20px;margin-bottom:12px;box-shadow:0 1px 4px rgba(27,77,62,.06);}
+.guiding-card h5{font-family:'Comfortaa',cursive;font-size:13px;font-weight:700;color:#1B4D3E;margin:0 0 6px 0;}
+.guiding-card .desc{font-size:12px;color:#4A7C6B;font-style:italic;margin-bottom:8px;}
+.guiding-card ol{margin:0;padding-left:20px;}.guiding-card li{font-size:12px;color:#1B4D3E;line-height:1.6;margin-bottom:4px;}
+#copilot-download-bar{display:none;}
+#copilot-download-bar.visible{display:flex!important;}
+@media (max-width:767px){
+  .sidebar-nav{display:none;position:fixed;bottom:0;top:auto;left:0;right:0;width:100%;min-height:auto;max-height:60vh;border-right:none;border-top:1px solid rgba(255,255,255,.15);z-index:50;}.sidebar-nav.mobile-open{display:block;}.main-content{margin-left:0;padding:16px;padding-bottom:80px;}.mobile-tab-toggle{display:flex!important;}.topnav{padding:0 12px;}.breadcrumb-nav{font-size:11px;}.report-download-bar{flex-direction:column;text-align:center;}.report-sig-block{grid-template-columns:1fr;}
+  .copilot-panels{flex-direction:column!important;}
+  .copilot-left,.copilot-right{width:100%!important;min-width:0!important;max-height:none!important;}
+  .aa-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  #screen-copilot .copilot-split-layout{flex-direction:column!important;height:auto!important;}
+  #screen-copilot .copilot-split-left{width:100%!important;min-width:0!important;max-height:none!important;border-right:none!important;border-bottom:1px solid #E2D9C5;}
+  #screen-copilot .copilot-split-right{width:100%!important;min-height:400px;}
+}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .no-print,.topnav,.sidebar-nav,.action-bar,button,.btn,.mobile-tab-toggle,.report-download-bar,.copy-section-btn,.copy-btn{display:none!important;}
+  .main-content{margin-left:0!important;padding:20px!important;}
+  .report-card{page-break-inside:avoid;margin-bottom:16px;}
+  body{margin:0;background:white;}
+  .screen{display:none!important;}.screen.print-active{display:block!important;}
+  h1,h2,h3{color:var(--color-primary)!important;}
+  .ei-report-section,.report-section-card{page-break-inside:avoid;margin-bottom:24px;}
+  .report-header-block{background:#FEF3C7!important;}
+  .eligibility-eligible{background:#E8F5ED!important;}
+  .eligibility-not-eligible{background:#FFF8E7!important;}
+  #report-output-content-r2s3,.report-output{display:block!important;}
+  .report-confidence{display:block!important;}
+  #screen-home,#screen-clients,#screen-demographics{display:none!important;}
+  #screen-copilot .copilot-topbar-nav,
+  #screen-copilot .copilot-split-left,
+  #copilot-download-bar,#copilot-empty,#copilot-loading{display:none!important;}
+  #copilot-report-output{display:block!important;}
+}
+.mobile-tab-toggle{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-sidebar);color:white;padding:12px;text-align:center;z-index:45;cursor:pointer;font-weight:600;font-size:14px;border:none;font-family:var(--font-body);}
+</style>
+</head>
+<body data-id="0" class="bg-cream-100">
+<app-icon data-id="1" hidden data-icon="leaf" data-palette="Green"></app-icon>
+
+<!-- TOP NAV -->
+<nav data-id="2" class="topnav no-print" id="topnav-bar-a1b2" style="display:none;">
+  <div data-id="3" class="flex items-center gap-2 flex-shrink-0">
+    <button data-id="4" class="p-2 hover:bg-white/10 rounded-lg" data-action="go-home" title="Home" style="border:none;background:none;cursor:pointer;color:white;"><i data-id="5" data-lucide="home" class="w-5 h-5"></i></button>
+    <img data-id="6" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAADQCAYAAAAah+pYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAEBrSURBVHhe7d11WFTZGwfwL52CNCoiJhiILbqK/bN17bV1MdZA1xYTA8XAbhdbsQsLO1ERE0QRBZVukEbQ3x/ACEdi5sbMXDif59ln8T0XdwX5zpn3nnuOgnqnVj9BURRFCZYiWaAoiqKEhQY5RVGUwNEgpyiKEjga5BRFUQJHg5yiKErgaJBTFEUJHA1yiqIogaNBTlEUJXA0yCmKogSOBjlFUZTA0SCnKIoSOBrkFEVRAkeDnKIoSuBokFMURQkcDXKKoiiBo0FOURQlcDTIKYqiBI4GOUVRlMDRIKcoihI4GuQURVECR4OcoihK4GiQUxRFCRwNcoqiKIGjQU5RFCVwNMgpiqIEjgY5RVGUwNEgpyiKEjga5BRFUQJHg5yiKErgaJBTFEUJHA1yiqIogaNBTlEUJXA0yCmKogSOBjlFUZTA0SCnKIoSOBrkFEVRAkeDnKIoSuBokFMURQkcDXKKoiiBo0FOURQlcDTIKYqiBI4GOUVRlMDRIKcoihI4GuQURVECR4OcoihK4GiQUxRFCRwNcoqiKIGjQU5RFCVwNMgpiqIEjgY5RVGUwNEgpyiKEjga5BRFUQJHg5yiKErgaJBTFEUJHA1yiqIogaNBTlEUJXA0yCmKogSOBjlFUZTAKaidWv0ERVEUJViKZIGiKIoSFhrkFEVRAkeDnKIoSuBokFMURQkcDXKKoiiBo0FOURQlcDTIKYqiBI4GOUVRlMDRIKcoihI4GuQURVECR4OcoihK4GiQUxRFCRwNcoqiKIGjQU5RFCVwNMgpiqIEjgY5RVGUwNEgpyiKEjga5BRFUQJHg5yiKErg6OHLZYSpnh6CDh8CALz7+hVNJ08hL6GKoKddAWZGhlBXVUVYbCwi4xPw4+cP8jKZq2tujs2TJwEAvkRFYcLGTeQlVDlGg1wOqauqIP7sWbJcpDUnTmDZ4SM0yCU0oE1bOA79C/WqmReqJ6QkY8elS1h38hSysr8XGpOlFpaWuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZ+sJhQ7FuwnhySOrehASh6+ICwNSuXbi2eh2STYJuOu6HgAQGBqKxv/khgpFgbZWqPJoSLt2OD5/7m8hjrwZZBtJopISgEEAAAAASUVORK5CYII=" alt="emmé Therapy Services" style="height:36px;object-fit:contain;display:block;" />
+  </div>
+  <div data-id="7" class="flex-1 flex items-center justify-center" id="breadcrumb-ctr-x9z2">
+    <div data-id="8" class="breadcrumb-nav" id="breadcrumb-nav-m3n4"><span data-id="9" class="breadcrumb-current">Dashboard</span></div>
+  </div>
+  <div data-id="10" class="flex items-center gap-3 flex-shrink-0">
+    <span data-id="11" class="text-xs text-white/60" id="autosave-indicator-p5q6">💾 Ready</span>
+    <div data-id="12" id="datetime-display" class="text-right leading-tight" style="color:white;font-size:13px;"></div>
+    <button data-id="13" class="btn-save-exit no-print" id="save-exit-btn-a3b4" data-action="save-exit" style="display:none;">💾 Save &amp; Exit</button>
+    <button data-id="14" class="p-2 hover:bg-white/10 rounded-lg" data-action="open-settings" title="Settings" style="border:none;background:none;cursor:pointer;color:white;"><i data-id="15" data-lucide="settings" class="w-5 h-5"></i></button>
+  </div>
+</nav>
+
+<!-- SCREEN: HOME -->
+<div data-id="16" class="screen active" id="screen-home" style="padding-top:0;">
+  <div data-id="17" class="min-h-screen flex flex-col items-center justify-center px-4 py-12" style="background:linear-gradient(135deg,#FAF4E6 0%,#EEF5F0 50%,#FEF3C7 100%);">
+    <div data-id="18" class="text-center mb-10">
+      <div data-id="19" class="flex items-center justify-center gap-3 mb-2">
+        <img data-id="20" src="data:image/png;base64,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" alt="emmé" style="height:48px;object-fit:contain;display:block;" />
+      </div>
+      <p data-id="21" class="font-medium text-sm tracking-widest uppercase mt-1" style="color:var(--color-secondary);">Early Intervention Documentation</p>
+      <p data-id="22" class="text-sm mt-3 max-w-md mx-auto" style="color:var(--color-muted);">Clinical report dashboard for pediatric early intervention therapy documentation.</p>
+    </div>
+    <div data-id="23" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mb-6" id="home-cards-grid-z1x2">
+      <div data-id="24" class="card p-0 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" data-action="go-clients" style="background:var(--bg-sidebar);border:none;border-radius:20px;">
+        <div data-id="25" class="p-10 text-white">
+          <div data-id="26" class="flex items-center gap-3 mb-4">
+            <div data-id="27" class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center"><i data-id="28" data-lucide="file-edit" class="w-6 h-6"></i></div>
+            <h2 data-id="29" class="text-xl font-bold" style="font-family:'Comfortaa',cursive;color:white;">Write a Report</h2>
+          </div>
+          <p data-id="30" class="text-white/70 text-sm mb-6">Create a new evaluation, annual review, or clinical report</p>
+          <div data-id="31" class="flex items-center justify-between">
+            <span data-id="32" class="btn bg-white/20 text-white text-sm" style="border-radius:var(--radius-btn);">Get Started →</span>
+            <span data-id="33" class="badge bg-white/10 text-white/80" id="active-clients-count-d4e5">0 active clients</span>
+          </div>
+        </div>
+      </div>
+      <div data-id="34" class="card p-0 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" data-action="go-forms" style="background:var(--bg-accent);border:2px solid var(--color-border-dark);border-radius:20px;">
+        <div data-id="35" class="p-10">
+          <div data-id="36" class="flex items-center gap-3 mb-4">
+            <div data-id="37" class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#EEF5F0;"><i data-id="38" data-lucide="file-down" class="w-6 h-6" style="color:var(--bg-btn-primary);"></i></div>
+            <h2 data-id="39" class="text-xl font-bold" style="font-family:'Comfortaa',cursive;color:var(--color-primary);">Download a Form</h2>
+          </div>
+          <p data-id="40" class="text-sm mb-6" style="color:var(--color-secondary);">Download any blank form as a standalone PDF</p>
+          <div data-id="41" class="flex items-center justify-between">
+            <span data-id="42" class="btn-outline btn text-sm">Browse Forms →</span>
+            <span data-id="43" class="badge badge-teal">9 forms available</span>
+          </div>
+        </div>
+      </div>
+      <div data-id="44" class="card p-0 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" data-action="go-copilot" style="background:linear-gradient(135deg,#1B4D3E,#186849);border:none;border-radius:20px;">
+        <div data-id="45" class="p-10 text-white" style="min-height:260px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div data-id="46">
+            <div data-id="47" class="flex items-center gap-3 mb-4">
+              <div data-id="48" class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center"><i data-id="49" data-lucide="sparkles" class="w-6 h-6"></i></div>
+              <h2 data-id="50" class="text-xl font-bold" style="font-family:'Comfortaa',cursive;color:white;">Copilot Mode</h2>
+            </div>
+            <p data-id="51" class="text-white/70 text-sm mb-6">Paste your notes, upload a doc, or describe your client — Copilot fills the report for you</p>
+          </div>
+          <div data-id="52" class="flex items-center justify-between">
+            <span data-id="53" class="btn bg-white/20 text-white text-sm" style="border-radius:var(--radius-btn);">Talk to Copilot →</span>
+            <span data-id="54" class="badge text-[10px]" style="background:#FEF3C7;color:#92700A;">✨ AI-Powered</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links Bar -->
+    <div data-id="55" class="max-w-5xl w-full mb-6" id="quick-links-section">
+      <div data-id="56" style="padding:16px 24px;background:white;border-radius:12px;border:1px solid #E2D9C5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <span data-id="57" style="font-family:'Comfortaa',cursive;font-size:13px;font-weight:700;color:#1B4D3E;margin-right:4px;">Quick Links:</span>
+        <button data-id="58" data-action="open-link" data-param="resource-hub" style="display:inline-flex;align-items:center;gap:6px;background:#EEF5F0;color:#1B4D3E;border:1px solid #C5D9C8;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;"><i data-id="59" data-lucide="wrench" class="w-3 h-3"></i> Resource Hub</button>
+        <button data-id="60" data-action="open-link" data-param="guidebook" style="display:inline-flex;align-items:center;gap:6px;background:#FEF3C7;color:#92700A;border:1px solid #E2C97A;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;"><i data-id="61" data-lucide="book-open" class="w-3 h-3"></i> Provider Guidebook</button>
+        <button data-id="62" data-action="open-link" data-param="infant-checklist" style="display:inline-flex;align-items:center;gap:6px;background:#FEF0F2;color:#C04060;border:1px solid #F9BEC7;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;"><i data-id="63" data-lucide="baby" class="w-3 h-3"></i> Infant SLP Checklist</button>
+        <button data-id="64" data-action="go-reference-library" style="display:inline-flex;align-items:center;gap:6px;background:#EEF5F0;color:#1B4D3E;border:1px solid #C5D9C8;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;"><i data-id="65" data-lucide="library" class="w-3 h-3"></i> Reference Library</button>
+        <button data-id="66" style="margin-left:auto;background:none;border:none;color:#7A9E92;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;" data-action="go-link-settings"><i data-id="67" data-lucide="settings" class="w-3 h-3" style="display:inline;vertical-align:middle;"></i> Set URLs</button>
+      </div>
+    </div>
+
+    <!-- Age Calculator Widget -->
+    <div data-id="68" class="max-w-5xl w-full mb-10" id="age-calc-widget-w3e4">
+      <div data-id="69" class="rounded-2xl p-6 md:p-8" style="background:#FEF3C7;border:2px solid var(--color-border-dark);border-radius:16px;">
+        <h3 data-id="70" class="text-lg font-bold mb-4 flex items-center gap-2" style="font-family:'Comfortaa',cursive;color:var(--color-primary);"><i data-id="71" data-lucide="cake" class="w-5 h-5"></i> Age Calculator</h3>
+        <div data-id="72" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div data-id="73">
+            <label data-id="74" class="form-label" style="color:var(--color-primary);font-weight:600;">Date of Birth</label>
+            <input data-id="75" type="date" class="form-input" id="calc-dob" style="background:white;" />
+          </div>
+          <div data-id="76">
+            <label data-id="77" class="form-label" style="color:var(--color-primary);font-weight:600;">Born Premature?</label>
+            <div data-id="78" class="age-pill-toggle mt-1" id="calc-premature-toggle-wrap">
+              <button data-id="79" class="active" id="calc-prem-no" data-action="calc-prem-no" type="button">No</button>
+              <button data-id="80" id="calc-prem-yes" data-action="calc-prem-yes" type="button">Yes</button>
+            </div>
+            <div data-id="81" id="calc-gestation-wrap" class="hidden mt-3">
+              <label data-id="82" class="form-label" style="color:var(--color-primary);font-weight:600;">Gestational Age at Birth</label>
+              <div data-id="83" class="flex items-center gap-2"><input data-id="84" type="number" class="form-input" id="calc-gestation" min="20" max="42" placeholder="e.g. 32" style="background:white;width:100px;" /><span data-id="85" class="text-sm font-medium" style="color:var(--color-secondary);">weeks</span></div>
+            </div>
+          </div>
+          <div data-id="86">
+            <button data-id="87" class="btn btn-primary w-full text-sm py-3" data-action="calculate-age" type="button">Calculate Age →</button>
+          </div>
+        </div>
+        <div data-id="88" id="calc-results" class="mt-6 space-y-3" style="display:none;">
+          <div data-id="89" class="rounded-xl p-4" style="background:white;border:1px solid var(--color-border);">
+            <div data-id="90" class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--color-secondary);">Chronological Age</div>
+            <div data-id="91" id="calc-chrono-result" class="text-base" style="color:var(--color-primary);"></div>
+          </div>
+          <div data-id="92" id="calc-adj-row" class="rounded-xl p-4" style="background:white;border:1px solid var(--color-border);display:none;">
+            <div data-id="93" class="text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1" style="color:var(--color-warning);"><i data-id="94" data-lucide="alert-triangle" class="w-3 h-3"></i> Adjusted Age</div>
+            <div data-id="95" id="calc-adj-result" class="text-base" style="color:var(--color-primary);"></div>
+          </div>
+          <div data-id="96" class="rounded-xl p-3 flex items-center gap-3 flex-wrap" style="background:#EEF5F0;border:1px solid #A8D4B5;">
+            <span data-id="97" class="text-sm" style="color:var(--color-primary);"><i data-id="98" data-lucide="clipboard" class="w-4 h-4 inline"></i> Using for a report?</span>
+            <button data-id="99" class="btn btn-primary text-xs py-2" data-action="calc-use" type="button">Use This Child's Age →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-id="100" class="max-w-5xl w-full">
+      <h3 data-id="101" class="text-sm font-semibold uppercase tracking-wider mb-4" style="color:var(--color-muted);font-family:var(--font-display);">Recent Clients</h3>
+      <div data-id="102" id="recent-clients-ctr-h8i9" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div data-id="103" class="card text-center py-8 col-span-full" style="color:var(--color-muted);"><i data-id="104" data-lucide="users" class="w-8 h-8 mx-auto mb-2 opacity-40"></i><p data-id="105" class="text-sm">No recent clients — click Write a Report to get started</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: LINK SETTINGS -->
+<div data-id="106" class="screen" id="screen-link-settings" style="padding-top:56px;">
+  <div data-id="107" class="min-h-screen flex items-center justify-center px-4 py-8" style="background:rgba(27,77,62,.08);">
+    <div data-id="108" class="card" style="max-width:520px;width:100%;">
+      <div data-id="109" class="flex items-center justify-between mb-6">
+        <h3 data-id="110" class="text-lg font-bold" style="font-family:'Comfortaa',cursive;color:var(--color-primary);"><i data-id="111" data-lucide="link" class="w-5 h-5 inline mr-2"></i>Quick Link Settings</h3>
+        <button data-id="112" class="btn btn-outline text-sm" data-action="go-back"><i data-id="113" data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+      </div>
+      <p data-id="114" class="text-xs mb-4" style="color:var(--color-muted);">Paste the live URL for each emmé app. You'll find these in your Copilot conversation where each app was created.</p>
+      <div data-id="115" class="space-y-4">
+        <div data-id="116"><label data-id="117" class="form-label" style="font-weight:600;color:var(--color-primary);"><i data-id="118" data-lucide="wrench" class="w-3 h-3 inline"></i> Resource Hub URL</label><input data-id="119" type="text" class="form-input" id="link-input-resource-hub" placeholder="https://..." /></div>
+        <div data-id="120"><label data-id="121" class="form-label" style="font-weight:600;color:var(--color-primary);"><i data-id="122" data-lucide="book-open" class="w-3 h-3 inline"></i> Provider Guidebook URL</label><input data-id="123" type="text" class="form-input" id="link-input-guidebook" placeholder="https://..." /></div>
+        <div data-id="124"><label data-id="125" class="form-label" style="font-weight:600;color:var(--color-primary);"><i data-id="126" data-lucide="baby" class="w-3 h-3 inline"></i> Infant SLP Checklist URL</label><input data-id="127" type="text" class="form-input" id="link-input-infant-checklist" placeholder="https://..." /></div>
+        <button data-id="128" class="btn btn-primary w-full mt-2" data-action="save-links">💾 Save Links</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: FORMS LIBRARY -->
+<div data-id="129" class="screen" id="screen-forms" style="padding-top:56px;">
+  <div data-id="130" class="max-w-6xl mx-auto px-4 md:px-8 py-8">
+    <div data-id="131" class="flex items-center gap-3 mb-8 no-print">
+      <button data-id="132" class="btn btn-outline text-sm" data-action="go-back"><i data-id="133" data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+      <div data-id="134"><h2 data-id="135" class="text-2xl font-bold">Form Library</h2><p data-id="136" class="text-sm" style="color:var(--color-secondary);">Download blank forms or fill them online</p></div>
+    </div>
+    <div data-id="137" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="forms-grid-l2m3"></div>
+  </div>
+</div>
+
+<!-- SCREEN: CLIENTS -->
+<div data-id="138" class="screen" id="screen-clients" style="padding-top:56px;">
+  <div data-id="139" class="max-w-5xl mx-auto px-4 md:px-8 py-8">
+    <div data-id="140" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div data-id="141" class="flex items-center gap-3">
+        <button data-id="142" class="btn btn-outline text-sm" data-action="go-back"><i data-id="143" data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+        <h2 data-id="144" class="text-2xl font-bold">Clients</h2>
+      </div>
+      <button data-id="145" class="btn btn-primary" data-action="new-client"><i data-id="146" data-lucide="plus" class="w-4 h-4"></i> New Client</button>
+    </div>
+    <div data-id="147" class="card mb-6 no-print">
+      <div data-id="148" class="flex flex-col sm:flex-row gap-3">
+        <div data-id="149" class="flex-1 relative"><i data-id="150" data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--color-muted);"></i><input data-id="151" type="text" class="form-input pl-10" placeholder="Search clients by name or code..." id="client-search-r8s9" /></div>
+        <select data-id="152" class="form-input w-auto" id="client-sort-t0u1"><option data-id="153" value="modified">Last Modified</option><option data-id="154" value="name">By Name</option><option data-id="155" value="age">By Age</option></select>
+      </div>
+      <div data-id="156" class="flex flex-wrap gap-2 mt-3" id="client-filter-pills-v2w3">
+        <button data-id="157" class="badge badge-teal cursor-pointer filter-pill active" data-filter="all">All</button>
+        <button data-id="158" class="badge badge-navy cursor-pointer filter-pill" data-filter="Active">Active</button>
+        <button data-id="159" class="badge badge-navy cursor-pointer filter-pill" data-filter="DQ">Did Not Qualify</button>
+        <button data-id="160" class="badge badge-navy cursor-pointer filter-pill" data-filter="Transitioned">Transitioned</button>
+        <button data-id="161" class="badge badge-navy cursor-pointer filter-pill" data-filter="Closed">Closed</button>
+      </div>
+    </div>
+    <div data-id="162" id="client-list-x4y5" class="space-y-3">
+      <div data-id="163" class="card text-center py-12" style="color:var(--color-muted);"><i data-id="164" data-lucide="user-plus" class="w-10 h-10 mx-auto mb-3 opacity-40"></i><p data-id="165" class="text-sm">No clients yet — click + New Client to add your first client profile.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: DEMOGRAPHICS -->
+<div data-id="166" class="screen" id="screen-demographics" style="padding-top:56px;">
+  <div data-id="167" class="max-w-4xl mx-auto px-4 md:px-8 py-8">
+    <div data-id="168" class="flex items-center gap-3 mb-6 no-print">
+      <button data-id="169" class="btn btn-outline text-sm" data-action="go-back"><i data-id="170" data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+      <div data-id="171"><h2 data-id="172" class="text-2xl font-bold" id="demo-title-b8c9">New Client</h2><p data-id="173" class="text-sm" style="color:var(--color-secondary);">Enter demographics and select report type</p></div>
+    </div>
+    <div data-id="174" class="space-y-6">
+      <div data-id="175" class="card">
+        <h3 data-id="176" class="form-section-title"><i data-id="177" data-lucide="baby" class="w-5 h-5 inline mr-2" style="color:var(--bg-btn-primary);"></i>Child Information</h3>
+        <div data-id="178" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div data-id="179"><label data-id="180" class="form-label required">Child First Name</label><input data-id="181" type="text" class="form-input" id="demo-firstName-d0e1" /><span data-id="182" class="text-xs mt-1 block" style="color:var(--color-muted);" id="name-code-preview-f2g3"></span></div>
+          <div data-id="183"><label data-id="184" class="form-label required">Child Last Name</label><input data-id="185" type="text" class="form-input" id="demo-lastName-h4i5" /></div>
+          <div data-id="186"><label data-id="187" class="form-label required">Date of Birth</label><input data-id="188" type="date" class="form-input" id="demo-dob-j6k7" /><span data-id="189" class="text-xs mt-1 block font-medium" style="color:var(--bg-btn-primary);" id="age-display-l8m9"></span></div>
+          <div data-id="190"><label data-id="191" class="form-label">Primary Language</label><input data-id="192" type="text" class="form-input" id="demo-language-n0o1" value="English" /></div>
+          <div data-id="193"><label data-id="194" class="form-label">Born Prematurely?</label><div data-id="195" class="flex gap-4 mt-1"><label data-id="196" class="flex items-center gap-2 cursor-pointer text-sm"><input data-id="197" type="radio" name="premature" value="no" checked /> No</label><label data-id="198" class="flex items-center gap-2 cursor-pointer text-sm"><input data-id="199" type="radio" name="premature" value="yes" /> Yes</label></div></div>
+          <div data-id="200" id="premature-fields-p2q3" class="hidden"><label data-id="201" class="form-label">Gestational Age (weeks)</label><input data-id="202" type="number" class="form-input" id="demo-gestAge-r4s5" min="20" max="42" /><span data-id="203" class="text-xs mt-1 block" style="color:var(--bg-btn-primary);" id="adjusted-age-display-t6u7"></span></div>
+          <div data-id="204"><label data-id="205" class="form-label">Service Coordinator Name</label><input data-id="206" type="text" class="form-input" id="demo-serviceCoord-v8w9" /></div>
+        </div>
+      </div>
+      <div data-id="207" class="card">
+        <h3 data-id="208" class="form-section-title"><i data-id="209" data-lucide="stethoscope" class="w-5 h-5 inline mr-2" style="color:var(--bg-btn-primary);"></i>Clinical Information</h3>
+        <div data-id="210" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div data-id="211"><label data-id="212" class="form-label required">Evaluating Clinician Name</label><input data-id="213" type="text" class="form-input" id="demo-clinician-x0y1" /></div>
+          <div data-id="214"><label data-id="215" class="form-label">Clinician Credentials</label><input data-id="216" type="text" class="form-input" id="demo-credentials-z2a3" placeholder="e.g. MS, CCC-SLP" /></div>
+          <div data-id="217"><label data-id="218" class="form-label">Clinician Discipline</label><select data-id="219" class="form-input" id="demo-discipline-b4c5"><option data-id="220" value="">Select...</option><option data-id="221" value="SLP">SLP</option><option data-id="222" value="OT">OT</option><option data-id="223" value="PT">PT</option><option data-id="224" value="DI">Developmental Interventionist</option><option data-id="225" value="Other">Other</option></select></div>
+          <div data-id="226"><label data-id="227" class="form-label">Organization</label><input data-id="228" type="text" class="form-input" id="demo-org-d6e7" value="emmé" /></div>
+          <div data-id="229"><label data-id="230" class="form-label">CCB (Community Centered Board)</label><input data-id="231" type="text" class="form-input" id="demo-ccb-f8g9" /></div>
+          <div data-id="232"><label data-id="233" class="form-label">Report Date</label><input data-id="234" type="date" class="form-input" id="demo-reportDate-h0i1" /></div>
+        </div>
+      </div>
+      <div data-id="235" class="card">
+        <h3 data-id="236" class="form-section-title"><i data-id="237" data-lucide="heart-pulse" class="w-5 h-5 inline mr-2" style="color:var(--bg-btn-primary);"></i>Medical Overview</h3>
+        <div data-id="238" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div data-id="239"><label data-id="240" class="form-label">Medical Diagnosis</label><input data-id="241" type="text" class="form-input" id="demo-medDiag-j2k3" /></div>
+          <div data-id="242"><label data-id="243" class="form-label">Allergies</label><input data-id="244" type="text" class="form-input" id="demo-allergies-l4m5" /></div>
+          <div data-id="245" class="md:col-span-2"><label data-id="246" class="form-label">Relevant Medical History</label><textarea data-id="247" class="form-input" rows="3" id="demo-medHistory-n6o7"></textarea></div>
+          <div data-id="248"><label data-id="249" class="form-label">Current Medications</label><textarea data-id="250" class="form-input" rows="2" id="demo-medications-p8q9"></textarea></div>
+          <div data-id="251"><label data-id="252" class="form-label">Medical Specialists</label><input data-id="253" type="text" class="form-input" id="demo-specialists-r0s1" /></div>
+        </div>
+      </div>
+      <div data-id="254" class="card">
+        <h3 data-id="255" class="form-section-title"><i data-id="256" data-lucide="clipboard-list" class="w-5 h-5 inline mr-2" style="color:var(--bg-btn-primary);"></i>Report Type Selection</h3>
+        <p data-id="257" class="text-sm mb-4" style="color:var(--color-secondary);">Choose the type of report you want to create.</p>
+        <div data-id="258" class="space-y-3" id="report-type-selector-t2u3">
+          <label data-id="259" class="report-card-select flex items-start gap-4 block"><input data-id="260" type="radio" name="reportType" value="initial" class="mt-1" /><div data-id="261"><div data-id="262" class="font-semibold" style="color:var(--color-primary);">Initial Evaluation</div><div data-id="263" class="text-xs" style="color:var(--color-secondary);">Full developmental evaluation with eligibility determination</div></div></label>
+          <label data-id="264" class="report-card-select flex items-start gap-4 block"><input data-id="265" type="radio" name="reportType" value="annual" class="mt-1" /><div data-id="266"><div data-id="267" class="font-semibold" style="color:var(--color-primary);">Annual Review</div><div data-id="268" class="text-xs" style="color:var(--color-secondary);">Annual eligibility redetermination</div></div></label>
+          <label data-id="269" class="report-card-select flex items-start gap-4 block"><input data-id="270" type="radio" name="reportType" value="global" class="mt-1" /><div data-id="271"><div data-id="272" class="font-semibold" style="color:var(--color-primary);">Global Outcomes Summary</div><div data-id="273" class="text-xs" style="color:var(--color-secondary);">COSF global outcomes documentation only</div></div></label>
+          <label data-id="274" class="report-card-select flex items-start gap-4 block"><input data-id="275" type="radio" name="reportType" value="medicaid" class="mt-1" /><div data-id="276"><div data-id="277" class="font-semibold" style="color:var(--color-primary);">Medicaid Evaluation Report</div><div data-id="278" class="text-xs" style="color:var(--color-secondary);">Medicaid-billable evaluation report with ICD-10 coding</div></div></label>
+          <label data-id="279" class="report-card-select flex items-start gap-4 block"><input data-id="280" type="radio" name="reportType" value="transition" class="mt-1" /><div data-id="281"><div data-id="282" class="font-semibold" style="color:var(--color-primary);">Pre-K Transition Report</div><div data-id="283" class="text-xs" style="color:var(--color-secondary);">Transition to preschool report by developmental domain</div></div></label>
+          <label data-id="284" class="report-card-select flex items-start gap-4 block"><input data-id="285" type="radio" name="reportType" value="medicaid-poc" class="mt-1" /><div data-id="286"><div data-id="287" class="font-semibold" style="color:var(--color-primary);">Medicaid Plan of Care</div><div data-id="288" class="text-xs" style="color:var(--color-secondary);">Treatment goals, interventions, and CPT codes</div></div></label>
+          <label data-id="289" class="report-card-select flex items-start gap-4 block"><input data-id="290" type="radio" name="reportType" value="care-plan" class="mt-1" /><div data-id="291"><div data-id="292" class="font-semibold" style="color:var(--color-primary);">emmé Care Plan</div><div data-id="293" class="text-xs" style="color:var(--color-secondary);">Individualized care plan with goals and progress tracking</div></div></label>
+          <label data-id="294" class="report-card-select flex items-start gap-4 block"><input data-id="295" type="radio" name="reportType" value="pcp-referral" class="mt-1" /><div data-id="296"><div data-id="297" class="font-semibold" style="color:var(--color-primary);">PCP Referral Letter</div><div data-id="298" class="text-xs" style="color:var(--color-secondary);">Professional referral letter to primary care physician</div></div></label>
+        </div>
+        <div data-id="299" id="annual-fields-v4w5" class="hidden mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
+          <h4 data-id="300" class="font-semibold text-sm text-amber-800 mb-3">Annual Review — Additional Fields</h4>
+          <div data-id="301" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div data-id="302"><label data-id="303" class="form-label">IFSP Expiration Date</label><input data-id="304" type="date" class="form-input" id="demo-ifspExp-x6y7" /></div>
+            <div data-id="305"><label data-id="306" class="form-label required">Second Evaluator Name</label><input data-id="307" type="text" class="form-input" id="demo-eval2Name-b0c1" /></div>
+            <div data-id="308"><label data-id="309" class="form-label">Second Evaluator Credential</label><input data-id="310" type="text" class="form-input" id="demo-eval2Cred-d2e3" /></div>
+            <div data-id="311"><label data-id="312" class="form-label">Second Evaluator Organization</label><input data-id="313" type="text" class="form-input" id="demo-eval2Org-f4g5" /></div>
+          </div>
+        </div>
+      </div>
+      <button data-id="314" class="btn btn-primary w-full text-base py-3" data-action="continue-builder">Continue to Report →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: REPORT BUILDER -->
+<div data-id="315" class="screen" id="screen-report-builder" style="padding-top:56px;">
+  <div data-id="316" class="sidebar-nav no-print" id="report-sidebar-j8k9">
+    <div data-id="317" class="p-4" style="border-bottom:1px solid rgba(255,255,255,.15);">
+      <div data-id="318" class="flex items-center gap-3 mb-2">
+        <div data-id="319" class="name-code name-code-sm" id="sidebar-namecode-l0m1">--</div>
+        <div data-id="320"><div data-id="321" class="font-semibold text-sm" id="sidebar-name-n2o3" style="color:white;">Client Name</div><span data-id="322" class="badge badge-teal text-[10px]" id="sidebar-reporttype-p4q5">Report</span></div>
+      </div>
+      <div data-id="323" style="margin-top:8px;">
+        <img data-id="324" src="data:image/png;base64,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" alt="emmé" style="height:32px;object-fit:contain;display:block;opacity:.7;" />
+      </div>
+    </div>
+    <div data-id="325" class="py-2" id="sidebar-tabs-r6s7"></div>
+    <div data-id="326" id="sidebar-optional-t8u9" class="hidden px-4 py-3" style="border-top:1px solid rgba(255,255,255,.15);">
+      <p data-id="327" class="text-xs font-semibold uppercase mb-2" style="color:rgba(255,255,255,.6);">Optional Assessments</p>
+      <label data-id="328" class="flex items-center gap-2 text-sm cursor-pointer mb-2"><input data-id="329" type="checkbox" id="opt-sleep-v0w1" /> Sleep Evaluation</label>
+      <label data-id="330" class="flex items-center gap-2 text-sm cursor-pointer"><input data-id="331" type="checkbox" id="opt-feeding-x2y3" /> SOS Feeding Skills</label>
+    </div>
+    <div data-id="332" class="p-4 space-y-2" style="border-top:1px solid rgba(255,255,255,.15);">
+      <div data-id="333" class="text-xs mb-2" style="color:rgba(255,255,255,.6);" id="tab-progress-z4a5">0 of 0 tabs completed</div>
+      <button data-id="334" class="btn btn-primary w-full text-sm" data-action="generate-report" style="background:#4CAF7D!important;"><i data-id="335" data-lucide="rocket" class="w-4 h-4"></i> Generate Report</button>
+      <button data-id="336" class="btn w-full text-sm" data-action="save-draft" style="background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-btn);">💾 Save Draft</button>
+      <div data-id="337" class="flex gap-2 mt-2">
+        <button data-id="338" class="text-xs flex items-center gap-1 hover:underline" style="color:rgba(255,255,255,.6);background:none;border:none;cursor:pointer;" data-action="open-link" data-param="resource-hub"><i data-id="339" data-lucide="wrench" class="w-3 h-3"></i> Resource Hub</button>
+        <button data-id="340" class="text-xs flex items-center gap-1 hover:underline" style="color:rgba(255,255,255,.6);background:none;border:none;cursor:pointer;" data-action="open-link" data-param="guidebook"><i data-id="341" data-lucide="book-open" class="w-3 h-3"></i> Guidebook</button>
+      </div>
+    </div>
+  </div>
+  <button data-id="342" class="mobile-tab-toggle" data-action="toggle-mobile-tabs"><i data-id="343" data-lucide="layout-list" class="w-4 h-4 inline"></i> Show Tabs</button>
+  <div data-id="344" class="main-content" id="report-main-h2i3"><div data-id="345" id="tab-content-area-j4k5"></div></div>
+</div>
+
+<!-- SCREEN: REPORT OUTPUT -->
+<div data-id="346" class="screen" id="screen-report-output" style="padding-top:56px;">
+  <div data-id="347" class="max-w-4xl mx-auto px-4 md:px-8 py-8">
+    <div data-id="348" class="flex flex-wrap items-center gap-3 mb-6 no-print action-bar">
+      <button data-id="349" class="btn btn-outline text-sm" data-action="go-back"><i data-id="350" data-lucide="arrow-left" class="w-4 h-4"></i> Back to Edit</button>
+    </div>
+    <div data-id="351" id="report-output-content-r2s3" class="report-output"></div>
+  </div>
+</div>
+
+<!-- SCREEN: COPILOT (Full AI Report Writer) -->
+<div data-id="352" class="screen" id="screen-copilot" style="padding-top:0;min-height:100vh;background:#FAF4E6;">
+
+  <!-- Copilot top nav bar -->
+  <div data-id="353" class="copilot-topbar-nav no-print" style="background:#1B4D3E;padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;">
+    <button data-id="354" data-action="go-home" style="background:rgba(255,255,255,0.12);border:none;color:white;border-radius:100px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">
+      <i data-id="355" data-lucide="home" class="w-4 h-4" style="display:inline;vertical-align:middle;margin-right:4px;"></i> Home
+    </button>
+    <div data-id="356" style="font-family:'Comfortaa',cursive;font-size:18px;font-weight:700;color:white;flex:1;">
+      <i data-id="357" data-lucide="sparkles" class="w-5 h-5" style="display:inline;vertical-align:middle;margin-right:6px;color:#6EE7B7;"></i> Copilot AI Report Builder
+    </div>
+    <button data-id="358" data-action="copilot-reset" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:100px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;">
+      <i data-id="359" data-lucide="refresh-cw" class="w-3 h-3" style="display:inline;vertical-align:middle;margin-right:4px;"></i> Start Over
+    </button>
+  </div>
+
+  <div data-id="360" class="copilot-split-layout" style="display:flex;gap:0;height:calc(100vh - 56px);">
+
+    <!-- LEFT PANEL — Input -->
+    <div data-id="361" class="copilot-split-left" style="width:42%;min-width:320px;background:white;border-right:1px solid #E2D9C5;display:flex;flex-direction:column;overflow:hidden;">
+
+      <div data-id="362" style="padding:24px;border-bottom:1px solid #E2D9C5;">
+        <div data-id="363" style="font-family:'Comfortaa',cursive;font-size:17px;font-weight:700;color:#1B4D3E;margin-bottom:4px;">Hey! Tell me about your client <span data-id="364" style="font-size:20px;">👋</span></div>
+        <div data-id="365" style="font-size:12px;color:#7A9E92;">Paste notes, scores, a referral letter — anything you have. I'll structure it into a complete report.</div>
+      </div>
+
+      <!-- Report type selector -->
+      <div data-id="366" style="padding:16px 24px;border-bottom:1px solid #E2D9C5;">
+        <label data-id="367" style="font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:#7A9E92;font-weight:600;display:block;margin-bottom:8px;">What report do you need?</label>
+        <select data-id="368" id="copilot-report-type" class="form-input" style="background:#FDFAF4;">
+          <option data-id="369" value="EI Launch Screening">EI Launch Screening (Initial Eval)</option>
+          <option data-id="370" value="Annual Results Summary">Annual Results Summary</option>
+          <option data-id="371" value="Global Outcomes Summary">Global Outcomes Summary</option>
+          <option data-id="372" value="Medicaid Evaluation">Medicaid Evaluation Report</option>
+          <option data-id="373" value="Medicaid Plan of Care">Medicaid Plan of Care</option>
+          <option data-id="374" value="Provider Transition Report">Pre-K Transition Report</option>
+          <option data-id="375" value="emmé Care Plan">emmé Care Plan</option>
+          <option data-id="376" value="PCP Referral Letter">PCP Referral Letter</option>
+          <option data-id="377" value="Sleep Evaluation">Sleep Evaluation</option>
+          <option data-id="378" value="SOS Feeding Assessment">SOS Feeding Assessment</option>
+        </select>
+      </div>
+
+      <!-- Chat area -->
+      <div data-id="379" id="copilot-chat" style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px;">
+        <!-- Welcome message -->
+        <div data-id="380" style="display:flex;flex-direction:column;gap:4px;">
+          <div data-id="381" style="font-size:10px;color:#7A9E92;font-weight:600;"><i data-id="382" data-lucide="sparkles" class="w-3 h-3" style="display:inline;vertical-align:middle;margin-right:2px;"></i> emmé Copilot</div>
+          <div data-id="383" style="background:#EEF5F0;border-left:3px solid #186849;border-radius:0 12px 12px 12px;padding:14px 16px;font-size:13px;color:#1B4D3E;line-height:1.6;max-width:90%;">
+            Hi! I'm your emmé Copilot. 🌿<br data-id="384"><br data-id="385">
+            Tell me about your client — paste your session notes, DAYC-2 scores, referral info, or just describe what you know. I'll extract the details and build a complete clinical report for you.<br data-id="386"><br data-id="387">
+            <strong data-id="388">Example:</strong> "14-month-old girl Sofia, DOB 4/3/2025, referred for speech. DAYC-2: Receptive SS 78, Expressive SS 71..."
+          </div>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div data-id="389" style="padding:16px 24px;border-top:1px solid #E2D9C5;background:#FAFAF7;">
+        <textarea data-id="390" id="copilot-input" class="form-input" placeholder="Paste your notes here, or just start typing..." style="min-height:100px;resize:vertical;background:#FDFAF4;"></textarea>
+        <div data-id="391" style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+          <span data-id="392" style="font-size:11px;color:#7A9E92;flex:1;">Ctrl+Enter to send</span>
+          <button data-id="393" class="btn btn-primary text-sm" data-action="copilot-build-report" style="font-family:'Comfortaa',cursive;">
+            <i data-id="394" data-lucide="sparkles" class="w-4 h-4"></i> Build Report
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — Report Preview -->
+    <div data-id="395" class="copilot-split-right" style="flex:1;overflow-y:auto;padding:28px;background:#FAF4E6;">
+
+      <!-- Download bar (hidden until report generated) -->
+      <div data-id="396" id="copilot-download-bar" style="background:#FEF3C7;border-radius:12px;padding:14px 20px;margin-bottom:20px;border:1px solid #E2D9C5;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div data-id="397" style="flex:1;">
+          <div data-id="398" style="font-family:'Comfortaa',cursive;font-weight:700;font-size:14px;color:#1B4D3E;">Ready to export!</div>
+          <div data-id="399" style="font-size:11px;color:#4A7C6B;margin-top:2px;">Choose your format</div>
+        </div>
+        <button data-id="400" class="btn btn-primary text-xs" data-action="copilot-print-report"><i data-id="401" data-lucide="printer" class="w-3 h-3"></i> Beautiful PDF</button>
+        <button data-id="402" class="btn btn-outline text-xs" data-action="copilot-download-text"><i data-id="403" data-lucide="file-text" class="w-3 h-3"></i> Plain Text</button>
+        <button data-id="404" class="btn btn-outline text-xs" data-action="copilot-copy-all"><i data-id="405" data-lucide="clipboard" class="w-3 h-3"></i> Copy All</button>
+      </div>
+
+      <!-- Empty state -->
+      <div data-id="406" id="copilot-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;">
+        <div data-id="407" style="font-size:48px;margin-bottom:16px;"><i data-id="408" data-lucide="sparkles" class="w-12 h-12" style="color:var(--color-border-dark);"></i></div>
+        <div data-id="409" style="font-family:'Comfortaa',cursive;font-size:20px;font-weight:700;color:#1B4D3E;margin-bottom:8px;">Your report will appear here</div>
+        <div data-id="410" style="font-size:13px;color:#7A9E92;max-width:320px;line-height:1.6;">Tell Copilot about your client on the left and click <strong data-id="411">Build Report</strong> — the full clinical document will appear here instantly.</div>
+        <div data-id="412" style="margin-top:24px;display:flex;flex-direction:column;gap:8px;text-align:left;background:white;border-radius:12px;padding:20px;border:1px solid #E2D9C5;max-width:360px;">
+          <div data-id="413" style="font-size:11px;font-weight:700;color:#1B4D3E;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">You can share:</div>
+          <div data-id="414" style="font-size:12px;color:#4A7C6B;">📋 Session notes or observations</div>
+          <div data-id="415" style="font-size:12px;color:#4A7C6B;">📊 DAYC-2 scores (raw, standard, percentile)</div>
+          <div data-id="416" style="font-size:12px;color:#4A7C6B;">📄 Referral letters or intake forms</div>
+          <div data-id="417" style="font-size:12px;color:#4A7C6B;">🎂 Child's DOB, diagnosis, services</div>
+          <div data-id="418" style="font-size:12px;color:#4A7C6B;">🏥 Medical history, evaluators, goals</div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div data-id="419" id="copilot-loading" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;">
+        <div data-id="420" style="width:48px;height:48px;border:4px solid #E2D9C5;border-top-color:#186849;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:20px;"></div>
+        <div data-id="421" id="copilot-loading-text" style="font-family:'Comfortaa',cursive;font-size:16px;color:#1B4D3E;">Reading your notes...</div>
+        <div data-id="422" style="font-size:12px;color:#7A9E92;margin-top:8px;">This takes about 10–20 seconds</div>
+      </div>
+
+      <!-- Generated report output -->
+      <div data-id="423" id="copilot-report-output" style="display:none;"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: REFERENCE LIBRARY -->
+<div data-id="424" class="screen" id="screen-reference-library" style="padding-top:56px;">
+  <div data-id="425" class="max-w-7xl mx-auto px-4 md:px-8 py-8">
+    <div data-id="426" class="flex items-center gap-3 mb-6 no-print">
+      <button data-id="427" class="btn btn-outline text-sm" data-action="go-back"><i data-id="428" data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+      <div data-id="429"><h2 data-id="430" class="text-2xl font-bold"><i data-id="431" data-lucide="library" class="w-6 h-6 inline mr-2" style="color:var(--bg-btn-primary);"></i>Reference Library</h2><p data-id="432" class="text-sm" style="color:var(--color-secondary);">Global outcomes decision tree, age anchoring tool, and guiding questions</p></div>
+    </div>
+    <div data-id="433" class="flex flex-wrap gap-0 mb-6" style="border-bottom:2px solid var(--color-border);" id="ref-lib-tabs-ctr">
+      <button data-id="434" class="ref-tab active" data-action="ref-tab" data-param="decision-tree"><i data-id="435" data-lucide="git-branch" class="w-4 h-4 inline"></i> Decision Tree</button>
+      <button data-id="436" class="ref-tab" data-action="ref-tab" data-param="age-anchoring"><i data-id="437" data-lucide="bar-chart-3" class="w-4 h-4 inline"></i> Age Anchoring</button>
+      <button data-id="438" class="ref-tab" data-action="ref-tab" data-param="guiding-questions"><i data-id="439" data-lucide="clipboard-list" class="w-4 h-4 inline"></i> Guiding Questions</button>
+      <button data-id="440" class="ref-tab" data-action="ref-tab" data-param="ddrc-resources"><i data-id="441" data-lucide="paperclip" class="w-4 h-4 inline"></i> DDRC Resources</button>
+    </div>
+    <div data-id="442" id="ref-lib-content-area" class="min-h-[400px]"></div>
+  </div>
+</div>
+
+<!-- SAVE TO CLIENT MODAL -->
+<div data-id="443" class="modal-overlay" id="copilot-save-modal-q3r4">
+  <div data-id="444" class="modal-content">
+    <div data-id="445" class="flex items-center justify-between mb-4">
+      <h3 data-id="446" class="text-lg font-bold">💾 Save to Client</h3>
+      <button data-id="447" class="p-2 rounded-lg" data-action="close-copilot-save-modal" style="border:none;background:none;cursor:pointer;color:var(--color-primary);"><i data-id="448" data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <p data-id="449" class="text-sm mb-4" style="color:var(--color-secondary);">Save the Copilot-generated report to a client profile.</p>
+    <div data-id="450" class="space-y-3">
+      <select data-id="451" class="form-input" id="copilot-save-client-select"><option data-id="452" value="">— Select existing client —</option></select>
+      <div data-id="453" class="text-center text-xs" style="color:var(--color-muted);">or</div>
+      <button data-id="454" class="btn btn-outline w-full text-sm" data-action="copilot-save-new-client"><i data-id="455" data-lucide="plus" class="w-4 h-4"></i> Create New Client</button>
+      <button data-id="456" class="btn btn-primary w-full text-sm" data-action="copilot-save-confirm">Save Report →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div data-id="457" class="modal-overlay" id="settings-modal-t4u5">
+  <div data-id="458" class="modal-content">
+    <div data-id="459" class="flex items-center justify-between mb-6">
+      <h3 data-id="460" class="text-lg font-bold"><i data-id="461" data-lucide="settings" class="w-5 h-5 inline mr-1"></i> Default Settings</h3>
+      <button data-id="462" class="p-2 rounded-lg" data-action="close-settings" style="color:var(--color-primary);border:none;background:none;cursor:pointer;"><i data-id="463" data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div data-id="464" class="space-y-4">
+      <div data-id="465"><label data-id="466" class="form-label">Default Clinician Name</label><input data-id="467" type="text" class="form-input" id="set-clinician-x8y9" /></div>
+      <div data-id="468"><label data-id="469" class="form-label">Default Credentials</label><input data-id="470" type="text" class="form-input" id="set-credentials-z0a1" /></div>
+      <div data-id="471"><label data-id="472" class="form-label">Default Discipline</label><select data-id="473" class="form-input" id="set-discipline-b2c3"><option data-id="474" value="">Select...</option><option data-id="475" value="SLP">SLP</option><option data-id="476" value="OT">OT</option><option data-id="477" value="PT">PT</option><option data-id="478" value="DI">Developmental Interventionist</option><option data-id="479" value="Other">Other</option></select></div>
+      <div data-id="480"><label data-id="481" class="form-label">Default Organization</label><input data-id="482" type="text" class="form-input" id="set-org-d4e5" value="emmé" /></div>
+      <div data-id="483"><label data-id="484" class="form-label">Default CCB</label><input data-id="485" type="text" class="form-input" id="set-ccb-f6g7" /></div>
+      <div data-id="486"><label data-id="487" class="form-label">Default Service Coordinator</label><input data-id="488" type="text" class="form-input" id="set-serviceCoord-h8i9" /></div>
+      <button data-id="489" class="btn btn-primary w-full mt-4" data-action="save-settings">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW CLIENT MODAL -->
+<div data-id="490" class="modal-overlay" id="new-client-modal-l2m3">
+  <div data-id="491" class="modal-content">
+    <div data-id="492" class="flex items-center justify-between mb-6">
+      <h3 data-id="493" class="text-lg font-bold">New Client</h3>
+      <button data-id="494" class="p-2 rounded-lg" data-action="close-new-client-modal" style="color:var(--color-primary);border:none;background:none;cursor:pointer;"><i data-id="495" data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <p data-id="496" class="text-sm mb-4" style="color:var(--color-secondary);">You'll enter full demographics on the next screen. For now, just the basics:</p>
+    <div data-id="497" class="space-y-4">
+      <div data-id="498"><label data-id="499" class="form-label required">First Name</label><input data-id="500" type="text" class="form-input" id="nc-first-p6q7" /></div>
+      <div data-id="501"><label data-id="502" class="form-label required">Last Name</label><input data-id="503" type="text" class="form-input" id="nc-last-r8s9" /></div>
+      <div data-id="504"><label data-id="505" class="form-label required">Date of Birth</label><input data-id="506" type="date" class="form-input" id="nc-dob-t0u1" /></div>
+      <button data-id="507" class="btn btn-primary w-full" data-action="nc-create">Create &amp; Continue →</button>
+    </div>
+  </div>
+</div>
+
+<footer data-id="508" class="text-center py-6 text-xs no-print" style="color:var(--color-muted);">Made by Copilot</footer>
+
+<script>
+// ===============================================
+// emmé EI Report Dashboard — Full Copilot AI
+// ===============================================
+
+// ─── LOGO DATA URIs ─────────────────────────────────────────────
+window.LOGO_LIGHT = 'data:image/png;base64,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';
+window.LOGO_DARK = 'data:image/png;base64,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';
+
+// ─── GLOBAL STATE ───────────────────────────────────────────────
+window.currentClientId = null;
+window.currentReportType = null;
+window.reportData = {};
+window.screenHistory = ['screen-home'];
+window.activeTabs = [];
+window.activeTabId = null;
+window.tabStatus = {};
+window.calcPrematureActive = false;
+window.copilotChatHistory = [];
+window.copilotReportJSON = null;
+window.copilotIsAIAssisted = false;
+window.autoSaveTimer = null;
+window.activeRefTab = 'decision-tree';
+window.activeAAOutcome = 1;
+
+// ─── ICONS ──────────────────────────────────────────────────────
+if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") { lucide.createIcons(); }
+
+// ─── UTILITY FUNCTIONS ─────────────────────────────────────────
+window.uuid = function() { return 'xxxx-xxxx'.replace(/x/g, function() { return (Math.random()*16|0).toString(16); }); };
+window.genNameCode = function(first, last) {
+  var f = (first||'').replace(/[^a-zA-Z]/g,'').substring(0,2);
+  var l = (last||'').replace(/[^a-zA-Z]/g,'').substring(0,2);
+  return (f.charAt(0).toUpperCase()+(f.charAt(1)||'').toLowerCase()) + (l.charAt(0).toUpperCase()+(l.charAt(1)||'').toLowerCase());
+};
+window.calcAge = function(dob) {
+  if (!dob) return {months:0, days:0, text:''};
+  var d = new Date(dob+'T00:00:00'), now = new Date();
+  var months = (now.getFullYear()-d.getFullYear())*12 + (now.getMonth()-d.getMonth());
+  var days = now.getDate()-d.getDate();
+  if (days<0) { months--; var prev = new Date(now.getFullYear(), now.getMonth(), 0); days += prev.getDate(); }
+  return {months:months, days:days, text: months+' months, '+days+' days ('+(months+days/30).toFixed(1)+' months)'};
+};
+window.calcAdjustedAge = function(dob, gestWeeks) {
+  if (!dob || !gestWeeks) return null;
+  var premWeeks = 40 - gestWeeks;
+  var d = new Date(dob+'T00:00:00');
+  d.setDate(d.getDate() + premWeeks*7);
+  return window.calcAge(d.toISOString().split('T')[0]);
+};
+
+// ─── TOAST ──────────────────────────────────────────────────────
+window.showToast = function(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'emme-toast';
+  if (type === 'error') t.style.background = '#dc2626';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.style.opacity='0'; setTimeout(function(){ t.remove(); }, 300); }, 2500);
+};
+
+// ─── COPY TEXT ──────────────────────────────────────────────────
+window.copyText = function(text, btn) {
+  var ta = document.createElement('textarea');
+  ta.value = (text||'').trim();
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  ta.setAttribute('readonly','');
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  if (btn) {
+    var orig = btn.innerHTML;
+    btn.textContent = ok ? '✅ Copied!' : '⚠️ Try again';
+    btn.style.background = ok ? '#186849' : '#d97706';
+    btn.style.color = 'white';
+    setTimeout(function() { btn.innerHTML = orig; btn.style.background=''; btn.style.color=''; }, 2000);
+  }
+};
+
+// ─── DATA LAYER ─────────────────────────────────────────────────
+window.getClients = function() { try { return JSON.parse(localStorage.getItem('emme_clients')||'[]'); } catch(e) { return []; } };
+window.saveClients = function(c) { localStorage.setItem('emme_clients', JSON.stringify(c)); };
+window.getSettings = function() { try { return JSON.parse(localStorage.getItem('emme_settings')||'{}'); } catch(e) { return {}; } };
+window.saveSettingsData = function(s) { localStorage.setItem('emme_settings', JSON.stringify(s)); };
+window.getCurrentReport = function() { try { return JSON.parse(localStorage.getItem('emme_current_report')||'{}'); } catch(e) { return {}; } };
+window.saveCurrentReport = function(r) { localStorage.setItem('emme_current_report', JSON.stringify(r)); };
+
+// ─── App Links ──────────────────────────────────────────────────
+window.getAppLinks = function() {
+  try { return JSON.parse(localStorage.getItem('emme_app_links') || '{}'); } catch(e) { return {}; }
+};
+window.saveAppLinks = function() {
+  var links = {
+    'resource-hub': (document.getElementById('link-input-resource-hub') || {}).value || '',
+    'guidebook': (document.getElementById('link-input-guidebook') || {}).value || '',
+    'infant-checklist': (document.getElementById('link-input-infant-checklist') || {}).value || ''
+  };
+  try { localStorage.setItem('emme_app_links', JSON.stringify(links)); } catch(e) {}
+  window.showToast('Links saved! ✅');
+  window.showScreen('screen-home');
+};
+window.openExternalLink = function(appKey) {
+  var links = window.getAppLinks();
+  var url = links[appKey];
+  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+    window.open(url, '_blank', 'noopener');
+  } else {
+    window.showToast('Paste the URL first — click ⚙️ Set URLs', 'error');
+    setTimeout(function() { window.showScreen('screen-link-settings'); }, 800);
+  }
+};
+window.loadLinkSettings = function() {
+  var links = window.getAppLinks();
+  var rh = document.getElementById('link-input-resource-hub');
+  var gb = document.getElementById('link-input-guidebook');
+  var ic = document.getElementById('link-input-infant-checklist');
+  if (rh) rh.value = links['resource-hub'] || '';
+  if (gb) gb.value = links['guidebook'] || '';
+  if (ic) ic.value = links['infant-checklist'] || '';
+};
+
+// ─── SAVE HELPERS ───────────────────────────────────────────────
+window.saveCurrentFormData = function() {
+  if (window.currentClientId && Object.keys(window.reportData).length > 0) {
+    window.saveCurrentReport(window.reportData);
+    var clients = window.getClients();
+    var idx = clients.findIndex(function(c) { return c.id === window.currentClientId; });
+    if (idx >= 0) { clients[idx].lastModified = Date.now(); window.saveClients(clients); }
+  }
+};
+window.saveAndGoHome = function() {
+  window.saveCurrentFormData();
+  window.showToast('Progress saved! ✅');
+  setTimeout(function() { window.showScreen('screen-home'); }, 400);
+};
+
+// ─── DATE/TIME ──────────────────────────────────────────────────
+window.updateDateTime = function() {
+  var el = document.getElementById('datetime-display');
+  if (!el) return;
+  var now = new Date();
+  var dateStr = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  var timeStr = now.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', hour12:true});
+  el.innerHTML = '<span style="font-weight:600;">'+timeStr+'</span><span style="color:rgba(255,255,255,0.65);font-size:11px;display:block;margin-top:1px;">'+dateStr+'</span>';
+};
+setInterval(window.updateDateTime, 1000);
+window.updateDateTime();
+
+// ─── SCREEN NAVIGATION ─────────────────────────────────────────
+window.showScreen = function(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  var nav = document.getElementById('topnav-bar-a1b2');
+  if (nav) nav.style.display = (id === 'screen-home' || id === 'screen-copilot') ? 'none' : 'flex';
+  window.updateBreadcrumb(id);
+  window.scrollTo(0, 0);
+  if (id !== 'screen-home' && window.screenHistory[window.screenHistory.length-1] !== id) {
+    window.screenHistory.push(id);
+  }
+  var saveBtn = document.getElementById('save-exit-btn-a3b4');
+  if (saveBtn) saveBtn.style.display = (id !== 'screen-home' && id !== 'screen-copilot') ? 'inline-flex' : 'none';
+  if (id === 'screen-clients') window.renderClientList();
+  if (id === 'screen-home') window.renderRecentClients();
+  if (id === 'screen-forms') window.renderFormsGrid();
+  if (id === 'screen-link-settings') window.loadLinkSettings();
+  if (id === 'screen-reference-library') window.renderRefLibContent();
+};
+
+window.goBack = function() {
+  var prev = {
+    'screen-clients':'screen-home',
+    'screen-forms':'screen-home',
+    'screen-copilot':'screen-home',
+    'screen-demographics':'screen-clients',
+    'screen-report-builder':'screen-demographics',
+    'screen-report-output':'screen-report-builder',
+    'screen-link-settings':'screen-home',
+    'screen-reference-library':'screen-home'
+  };
+  var current = 'screen-home';
+  document.querySelectorAll('.screen.active').forEach(function(s) { current = s.id; });
+  var target = prev[current] || 'screen-home';
+  window.showScreen(target);
+};
+
+// ─── BREADCRUMB ─────────────────────────────────────────────────
+window.updateBreadcrumb = function(screenId) {
+  var nav = document.getElementById('breadcrumb-nav-m3n4');
+  if (!nav) return;
+  var clientName = (window.reportData.firstName||'')+' '+(window.reportData.lastName||'');
+  var typeLabels = {initial:'Initial Eval',annual:'Annual Review',global:'Global Outcomes',medicaid:'Medicaid',transition:'Transition','medicaid-poc':'Medicaid POC','care-plan':'Care Plan','pcp-referral':'PCP Referral'};
+  var reportLabel = typeLabels[window.currentReportType]||'';
+  var crumbs = [];
+  if (screenId !== 'screen-home') crumbs.push({label:'Home',screen:'screen-home'});
+  if (screenId === 'screen-clients') crumbs.push({label:'Clients',screen:null});
+  else if (screenId === 'screen-forms') crumbs.push({label:'Form Library',screen:null});
+  else if (screenId === 'screen-copilot') crumbs.push({label:'Copilot Mode',screen:null});
+  else if (screenId === 'screen-link-settings') crumbs.push({label:'Link Settings',screen:null});
+  else if (screenId === 'screen-reference-library') crumbs.push({label:'Reference Library',screen:null});
+  else if (screenId === 'screen-demographics') { crumbs.push({label:'Clients',screen:'screen-clients'}); crumbs.push({label:clientName.trim()||'New Client',screen:null}); }
+  else if (screenId === 'screen-report-builder') { crumbs.push({label:clientName.trim()||'Client',screen:'screen-demographics'}); crumbs.push({label:reportLabel||'Report',screen:null}); }
+  else if (screenId === 'screen-report-output') { crumbs.push({label:clientName.trim()||'Client',screen:'screen-demographics'}); crumbs.push({label:reportLabel||'Report',screen:'screen-report-builder'}); crumbs.push({label:'Output',screen:null}); }
+  var html = '';
+  crumbs.forEach(function(c, i) {
+    if (i > 0) html += '<span style="color:rgba(255,255,255,0.4);">›</span>';
+    if (c.screen) html += '<a class="breadcrumb-link" data-action="nav-to" data-param="'+c.screen+'">'+c.label+'</a>';
+    else html += '<span class="breadcrumb-current">'+c.label+'</span>';
+  });
+  nav.innerHTML = html;
+};
+
+// ─── REPORT HELPERS ─────────────────────────────────────────────
+window.ynBadge = function(val) {
+  if (val==='yes') return '<span class="report-yn-yes">✓ Yes</span>';
+  if (val==='no') return '<span class="report-yn-no">No</span>';
+  return '<span class="report-yn-na">N/A</span>';
+};
+window.reportField = function(label, value) {
+  return '<div class="report-field"><span class="report-field-label">'+label+'</span><div class="report-field-value">'+(value||'Not reported')+'</div></div>';
+};
+
+// ─── DOWNLOAD FUNCTIONS ────────────────────────────────────────
+window.downloadBeautifulReport = function() {
+  document.getElementById('screen-report-output').classList.add('print-active');
+  window.print();
+  setTimeout(function() { document.getElementById('screen-report-output').classList.remove('print-active'); }, 1000);
+};
+window.downloadPlainText = function() {
+  var reportEl = document.getElementById('report-output-content-r2s3');
+  if (!reportEl) { window.showToast('No report to download.'); return; }
+  var clone = reportEl.cloneNode(true);
+  clone.querySelectorAll('button,.no-print,.copy-btn,.report-download-bar,svg,[data-lucide],.copy-section-btn').forEach(function(el) { el.remove(); });
+  var lines = (clone.textContent||'').split('\n');
+  var cleaned = lines.map(function(l) { return l.trim(); }).filter(function(l, i, arr) { return l || (i>0 && arr[i-1]); }).join('\n');
+  var nc = window.reportData.nameCode || 'report';
+  var rt = (window.currentReportType||'report').replace(/\s+/g,'-').toLowerCase();
+  var dateStr = new Date().toISOString().slice(0,10);
+  var filename = nc+'_'+rt+'_'+dateStr+'.txt';
+  var blob = new Blob([cleaned], {type:'text/plain;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  window.showToast('Plain text downloaded!');
+};
+
+// ─── AUTO-SAVE ──────────────────────────────────────────────────
+window.triggerAutoSave = function() {
+  clearTimeout(window.autoSaveTimer);
+  window.autoSaveTimer = setTimeout(function() {
+    window.saveCurrentReport(window.reportData);
+    var ind = document.getElementById('autosave-indicator-p5q6');
+    if (ind) {
+      var t = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+      ind.textContent = '💾 Saved '+t;
+    }
+  }, 2000);
+};
+setInterval(function() {
+  if (Object.keys(window.reportData).length > 0) {
+    window.saveCurrentReport(window.reportData);
+    var ind = document.getElementById('autosave-indicator-p5q6');
+    if (ind) {
+      var t = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+      ind.textContent = '💾 Autosaved '+t;
+    }
+  }
+}, 30000);
+
+// ─── FORMS LIBRARY ──────────────────────────────────────────────
+window.formsData = [
+  {id:'ei-launch',name:'EI Launch Screening',desc:'Background, medical history, evaluation methods, eligibility determination',pages:5},
+  {id:'dayc2',name:'DAYC-2 Assessment',desc:'Developmental Assessment of Young Children, 2nd Edition scoring and narratives',pages:'Varies'},
+  {id:'sleep',name:'Sleep Evaluation',desc:'Systemic, sensory, and behavioral sleep assessment',pages:4},
+  {id:'sos-feeding',name:'SOS Feeding Skills Assessment',desc:'SOS Approach to Feeding Skills',pages:7},
+  {id:'medicaid',name:'Medicaid Evaluation Report',desc:'Medicaid billing-compliant evaluation with ICD-10 coding',pages:5},
+  {id:'transition',name:'Provider Transition Report',desc:'Pre-K transition report by developmental domain',pages:2},
+  {id:'global-outcomes',name:'Global Outcomes Summary',desc:'Three COSF global outcomes with ratings and strategies',pages:2},
+  {id:'hear',name:'H.E.A.R. Checklist',desc:'CDE hearing risk indicator checklist',pages:1},
+  {id:'vision',name:'Vision Screening Interview',desc:'Comprehensive vision screening interview form',pages:3}
+];
+window.renderFormsGrid = function() {
+  var grid = document.getElementById('forms-grid-l2m3');
+  if (!grid) return;
+  grid.innerHTML = window.formsData.map(function(f) {
+    return '<div class="card hover:shadow-lg transition-shadow"><div class="flex items-start justify-between mb-3"><h3 class="font-semibold text-sm" style="color:var(--color-primary);font-family:var(--font-display);">'+f.name+'</h3><span class="badge badge-navy text-[10px]">'+f.pages+' pg</span></div><p class="text-xs mb-4" style="color:var(--color-secondary);">'+f.desc+'</p><div class="flex gap-2"><button class="btn btn-outline text-xs flex-1" data-action="form-print" data-param="'+f.id+'"><i data-lucide="printer" class="w-3 h-3"></i> Print</button><button class="btn btn-primary text-xs flex-1" data-action="form-fill" data-param="'+f.id+'"><i data-lucide="pencil" class="w-3 h-3"></i> Fill Online</button></div></div>';
+  }).join('');
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+};
+
+// ─── CLIENT LIST ────────────────────────────────────────────────
+window.renderClientList = function() {
+  var clients = window.getClients();
+  var list = document.getElementById('client-list-x4y5');
+  if (!list) return;
+  var searchEl = document.getElementById('client-search-r8s9');
+  var search = searchEl ? (searchEl.value||'').toLowerCase() : '';
+  var sortEl = document.getElementById('client-sort-t0u1');
+  var sort = sortEl ? sortEl.value : 'modified';
+  var activeFilter = document.querySelector('.filter-pill.active');
+  var filter = activeFilter ? activeFilter.dataset.filter : 'all';
+  var filtered = clients.filter(function(c) {
+    var matchSearch = !search || c.firstName.toLowerCase().includes(search) || c.lastName.toLowerCase().includes(search) || (c.nameCode||'').toLowerCase().includes(search);
+    var matchFilter = filter === 'all' || c.status === filter;
+    return matchSearch && matchFilter;
+  });
+  filtered.sort(function(a, b) {
+    if (sort==='name') return (a.firstName+a.lastName).localeCompare(b.firstName+b.lastName);
+    if (sort==='age') return new Date(a.dob) - new Date(b.dob);
+    return (b.lastModified||0) - (a.lastModified||0);
+  });
+  var countEl = document.getElementById('active-clients-count-d4e5');
+  if (countEl) countEl.textContent = clients.filter(function(c) { return c.status==='Active'; }).length + ' active clients';
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="card text-center py-12" style="color:var(--color-muted);"><p class="text-sm">No clients found.</p></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(function(c) {
+    var age = window.calcAge(c.dob);
+    var statusColors = {Active:'badge-green',DQ:'badge-red',Transitioned:'badge-amber',Closed:'badge-navy'};
+    var statusLabels = {Active:'Active',DQ:'Did Not Qualify',Transitioned:'Transitioned',Closed:'Closed'};
+    return '<div class="card flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-md transition-shadow" style="border-left:4px solid var(--bg-btn-primary);"><div class="name-code">'+(c.nameCode||'--')+'</div><div class="flex-1 min-w-0"><div class="font-semibold" style="color:var(--color-primary);">'+c.firstName+' '+c.lastName+'</div><div class="text-xs" style="color:var(--color-secondary);">DOB: '+(c.dob||'N/A')+' · '+(age.text||'')+'</div></div><span class="badge '+(statusColors[c.status]||'badge-navy')+'">'+(statusLabels[c.status]||c.status)+'</span><div class="flex gap-2 flex-shrink-0"><button class="btn btn-primary text-xs" data-action="open-client" data-param="'+c.id+'"><i data-lucide="pencil" class="w-3 h-3"></i> Continue</button><button class="btn btn-outline text-xs" data-action="delete-client" data-param="'+c.id+'" title="Delete"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>';
+  }).join('');
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+};
+
+window.renderRecentClients = function() {
+  var clients = window.getClients().sort(function(a,b) { return (b.lastModified||0)-(a.lastModified||0); }).slice(0,5);
+  var ctr = document.getElementById('recent-clients-ctr-h8i9');
+  if (!ctr) return;
+  if (clients.length === 0) {
+    ctr.innerHTML = '<div class="card text-center py-8 col-span-full" style="color:var(--color-muted);"><i data-lucide="users" class="w-8 h-8 mx-auto mb-2 opacity-40"></i><p class="text-sm">No recent clients — click Write a Report to get started</p></div>';
+    if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+    return;
+  }
+  ctr.innerHTML = clients.map(function(c) {
+    return '<div class="card p-4 cursor-pointer hover:shadow-md transition-shadow" data-action="open-client" data-param="'+c.id+'" style="border-left:4px solid var(--bg-btn-primary);"><div class="flex items-center gap-3"><div class="name-code name-code-sm">'+(c.nameCode||'--')+'</div><div><div class="font-semibold text-sm" style="color:var(--color-primary);">'+c.firstName+'</div><div class="text-[10px]" style="color:var(--color-muted);">'+(c.lastReportType||'No report')+'</div></div></div></div>';
+  }).join('');
+};
+
+// ─── DEMOGRAPHICS ───────────────────────────────────────────────
+window.loadClientToDemographics = function(id) {
+  var c = window.getClients().find(function(x) { return x.id === id; });
+  if (!c) return;
+  document.getElementById('demo-title-b8c9').textContent = c.firstName+' '+c.lastName;
+  document.getElementById('demo-firstName-d0e1').value = c.firstName||'';
+  document.getElementById('demo-lastName-h4i5').value = c.lastName||'';
+  document.getElementById('demo-dob-j6k7').value = c.dob||'';
+  document.getElementById('demo-language-n0o1').value = c.language||'English';
+  document.getElementById('demo-serviceCoord-v8w9').value = c.serviceCoord||'';
+  document.getElementById('demo-clinician-x0y1').value = c.therapist||'';
+  document.getElementById('demo-credentials-z2a3').value = c.credentials||'';
+  document.getElementById('demo-discipline-b4c5').value = c.discipline||'';
+  document.getElementById('demo-org-d6e7').value = c.org||'emmé';
+  document.getElementById('demo-ccb-f8g9').value = c.ccb||'';
+  document.getElementById('demo-medDiag-j2k3').value = c.medDiag||'';
+  document.getElementById('demo-medHistory-n6o7').value = c.medHistory||'';
+  document.getElementById('demo-medications-p8q9').value = c.medications||'';
+  document.getElementById('demo-allergies-l4m5').value = c.allergies||'';
+  document.getElementById('demo-specialists-r0s1').value = c.specialists||'';
+  window.updateNameCodePreview();
+  window.updateAgeDisplay();
+};
+window.saveDemographics = function() {
+  var data = {
+    firstName: document.getElementById('demo-firstName-d0e1').value,
+    lastName: document.getElementById('demo-lastName-h4i5').value,
+    dob: document.getElementById('demo-dob-j6k7').value,
+    language: document.getElementById('demo-language-n0o1').value,
+    serviceCoord: document.getElementById('demo-serviceCoord-v8w9').value,
+    therapist: document.getElementById('demo-clinician-x0y1').value,
+    credentials: document.getElementById('demo-credentials-z2a3').value,
+    discipline: document.getElementById('demo-discipline-b4c5').value,
+    org: document.getElementById('demo-org-d6e7').value,
+    ccb: document.getElementById('demo-ccb-f8g9').value,
+    reportDate: document.getElementById('demo-reportDate-h0i1').value,
+    medDiag: document.getElementById('demo-medDiag-j2k3').value,
+    medHistory: document.getElementById('demo-medHistory-n6o7').value,
+    medications: document.getElementById('demo-medications-p8q9').value,
+    allergies: document.getElementById('demo-allergies-l4m5').value,
+    specialists: document.getElementById('demo-specialists-r0s1').value,
+    nameCode: window.genNameCode(document.getElementById('demo-firstName-d0e1').value, document.getElementById('demo-lastName-h4i5').value),
+    status: 'Active',
+    lastModified: Date.now(),
+    gestAge: document.getElementById('demo-gestAge-r4s5') ? document.getElementById('demo-gestAge-r4s5').value : '',
+    premature: document.querySelector('input[name="premature"]:checked') ? document.querySelector('input[name="premature"]:checked').value : 'no',
+    ifspExp: document.getElementById('demo-ifspExp-x6y7') ? document.getElementById('demo-ifspExp-x6y7').value : '',
+    eval2Name: document.getElementById('demo-eval2Name-b0c1') ? document.getElementById('demo-eval2Name-b0c1').value : '',
+    eval2Cred: document.getElementById('demo-eval2Cred-d2e3') ? document.getElementById('demo-eval2Cred-d2e3').value : '',
+    eval2Org: document.getElementById('demo-eval2Org-f4g5') ? document.getElementById('demo-eval2Org-f4g5').value : ''
+  };
+  var sel = document.querySelector('input[name="reportType"]:checked');
+  window.currentReportType = sel ? sel.value : 'initial';
+  data.lastReportType = window.currentReportType;
+  var clients = window.getClients();
+  if (window.currentClientId) {
+    var idx = clients.findIndex(function(c) { return c.id === window.currentClientId; });
+    if (idx >= 0) clients[idx] = Object.assign({}, clients[idx], data);
+  } else {
+    window.currentClientId = window.uuid();
+    data.id = window.currentClientId;
+    data.createdAt = Date.now();
+    data.reports = [];
+    clients.push(data);
+  }
+  window.saveClients(clients);
+  window.reportData = Object.assign({}, data, {reportType: window.currentReportType});
+  window.saveCurrentReport(window.reportData);
+  return data;
+};
+window.updateNameCodePreview = function() {
+  var f = document.getElementById('demo-firstName-d0e1').value;
+  var l = document.getElementById('demo-lastName-h4i5').value;
+  var el = document.getElementById('name-code-preview-f2g3');
+  if (el) {
+    if (f.length >= 2 && l.length >= 2) el.textContent = 'Folder code: '+window.genNameCode(f, l);
+    else el.textContent = '';
+  }
+};
+window.updateAgeDisplay = function() {
+  var dob = document.getElementById('demo-dob-j6k7').value;
+  var el = document.getElementById('age-display-l8m9');
+  if (el) {
+    if (dob) el.textContent = 'Age: '+window.calcAge(dob).text;
+    else el.textContent = '';
+  }
+};
+
+// ─── TAB SYSTEM ─────────────────────────────────────────────────
+window.tabDefs = {
+  'ei-launch':{name:'EI Launch Screening',icon:'file-text'},
+  'dayc2':{name:'DAYC-2 Assessment',icon:'bar-chart-3'},
+  'hear':{name:'H.E.A.R. Checklist',icon:'ear'},
+  'vision':{name:'Vision Screening',icon:'eye'},
+  'global-outcomes':{name:'Global Outcomes',icon:'target'},
+  'medicaid':{name:'Medicaid Evaluation',icon:'receipt'},
+  'transition':{name:'Transition Report',icon:'arrow-right-circle'},
+  'sleep':{name:'Sleep Evaluation',icon:'moon'},
+  'sos-feeding':{name:'SOS Feeding Skills',icon:'utensils'},
+  'medicaid-poc':{name:'Medicaid Plan of Care',icon:'clipboard-list'},
+  'care-plan':{name:'emmé Care Plan',icon:'heart'},
+  'pcp-referral':{name:'PCP Referral Letter',icon:'mail'}
+};
+window.reportTypeTabs = {
+  initial:['ei-launch','dayc2','hear','vision'],
+  annual:['ei-launch','dayc2','hear','vision','global-outcomes'],
+  global:['global-outcomes'],
+  medicaid:['medicaid'],
+  transition:['transition'],
+  'medicaid-poc':['medicaid-poc'],
+  'care-plan':['care-plan'],
+  'pcp-referral':['pcp-referral']
+};
+window.getTabsForReport = function(type) { return window.reportTypeTabs[type] || ['ei-launch']; };
+window.renderSidebar = function() {
+  var container = document.getElementById('sidebar-tabs-r6s7');
+  if (!container) return;
+  var nc = window.reportData.nameCode || '--';
+  document.getElementById('sidebar-namecode-l0m1').textContent = nc;
+  document.getElementById('sidebar-name-n2o3').textContent = (window.reportData.firstName||'')+' '+(window.reportData.lastName||'');
+  var typeLabels = {initial:'Initial Eval',annual:'Annual Review',global:'Global Outcomes',medicaid:'Medicaid',transition:'Transition','medicaid-poc':'Medicaid POC','care-plan':'Care Plan','pcp-referral':'PCP Referral'};
+  document.getElementById('sidebar-reporttype-p4q5').textContent = typeLabels[window.currentReportType]||'';
+  var optSection = document.getElementById('sidebar-optional-t8u9');
+  if (window.currentReportType === 'initial') optSection.classList.remove('hidden');
+  else optSection.classList.add('hidden');
+  container.innerHTML = window.activeTabs.map(function(tabId) {
+    var def = window.tabDefs[tabId];
+    if (!def) return '';
+    var status = window.tabStatus[tabId] || 'not-started';
+    var dotClass = status==='complete' ? 'dot-green' : status==='in-progress' ? 'dot-amber' : 'dot-red';
+    var isActive = tabId === window.activeTabId;
+    return '<div class="tab-item px-4 py-3 cursor-pointer flex items-center gap-3 '+(isActive?'active':'')+'" data-action="switch-sidebar-tab" data-param="'+tabId+'"><span class="status-dot '+dotClass+'"></span><div class="flex-1 min-w-0"><div class="text-sm font-medium truncate">'+def.name+'</div></div></div>';
+  }).join('');
+  var complete = window.activeTabs.filter(function(t) { return window.tabStatus[t]==='complete'; }).length;
+  document.getElementById('tab-progress-z4a5').textContent = complete+' of '+window.activeTabs.length+' tabs completed';
+};
+window.setupReportBuilder = function() {
+  window.activeTabs = window.getTabsForReport(window.currentReportType);
+  window.activeTabId = window.activeTabs[0];
+  window.tabStatus = {};
+  window.activeTabs.forEach(function(t) { window.tabStatus[t] = 'not-started'; });
+  window.renderSidebar();
+  window.renderActiveTab();
+};
+window.getReferenceAge = function() {
+  var dob = window.reportData.dob;
+  if (!dob) return {months:0, days:0, text:'N/A', label:'N/A'};
+  var isPrem = window.reportData.premature === 'yes';
+  var gestAge = parseInt(window.reportData.gestAge);
+  if (isPrem && gestAge && gestAge < 40) {
+    var adj = window.calcAdjustedAge(dob, gestAge);
+    if (adj) return Object.assign({}, adj, {label:'Adjusted Age', isAdjusted:true});
+  }
+  var chrono = window.calcAge(dob);
+  return Object.assign({}, chrono, {label:'Chronological Age', isAdjusted:false});
+};
+
+// ─── FIELD BUILDERS ─────────────────────────────────────────────
+window.fieldVal = function(key) { return window.reportData[key] || ''; };
+window.makeField = function(label, id, type, val, opts) {
+  var req = opts && opts.required ? ' required' : '';
+  var rows = opts && opts.rows ? opts.rows : 3;
+  var ph = opts && opts.placeholder ? opts.placeholder : '';
+  if (type==='textarea') return '<div class="'+(opts && opts.full ? 'md:col-span-2' : '')+'"><label class="form-label'+req+'">'+label+'</label><textarea class="form-input tab-field" data-key="'+id+'" rows="'+rows+'" placeholder="'+ph+'">'+(val||'')+'</textarea></div>';
+  if (type==='date') return '<div><label class="form-label'+req+'">'+label+'</label><input type="date" class="form-input tab-field" data-key="'+id+'" value="'+(val||'')+'" /></div>';
+  if (type==='number') return '<div><label class="form-label'+req+'">'+label+'</label><input type="number" class="form-input tab-field" data-key="'+id+'" value="'+(val||'')+'" /></div>';
+  return '<div><label class="form-label'+req+'">'+label+'</label><input type="text" class="form-input tab-field" data-key="'+id+'" value="'+(val||'')+'" placeholder="'+ph+'" /></div>';
+};
+window.makeYesNo = function(label, id, val) {
+  return '<div><label class="form-label">'+label+'</label><div class="flex gap-4 mt-1"><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="'+id+'" value="yes" class="tab-radio" data-key="'+id+'" '+(val==='yes'?'checked':'')+' /> Yes</label><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="'+id+'" value="no" class="tab-radio" data-key="'+id+'" '+(val==='no'||!val?'checked':'')+' /> No</label></div></div>';
+};
+
+// ─── TAB CONTENT RENDERING ─────────────────────────────────────
+window.renderActiveTab = function() {
+  var area = document.getElementById('tab-content-area-j4k5');
+  if (!area) return;
+  var def = window.tabDefs[window.activeTabId];
+  if (!def) { area.innerHTML = '<p style="color:var(--color-muted);">Select a tab.</p>'; return; }
+  var html = '<div class="flex items-center justify-between mb-6"><div class="flex items-center gap-3"><i data-lucide="'+def.icon+'" class="w-6 h-6" style="color:var(--bg-btn-primary);"></i><h2 class="text-xl font-bold">'+def.name+'</h2></div><button class="btn btn-copy" data-action="copy-tab"><i data-lucide="clipboard" class="w-3 h-3"></i> Copy Tab</button></div>';
+  switch(window.activeTabId) {
+    case 'ei-launch': html += window.renderEILaunchTab(); break;
+    case 'dayc2': html += window.renderDAYC2Tab(); break;
+    case 'hear': html += window.renderHEARTab(); break;
+    case 'vision': html += window.renderVisionTab(); break;
+    case 'global-outcomes': html += window.renderGlobalOutcomesTab(); break;
+    case 'medicaid': html += window.renderMedicaidTab(); break;
+    case 'transition': html += window.renderTransitionTab(); break;
+    case 'sleep': html += window.renderSleepTab(); break;
+    case 'sos-feeding': html += window.renderSOSFeedingTab(); break;
+    case 'medicaid-poc': html += window.renderMedicaidPOCTab(); break;
+    case 'care-plan': html += window.renderCarePlanTab(); break;
+    case 'pcp-referral': html += window.renderPCPReferralTab(); break;
+    default: html += '<p style="color:var(--color-muted);">Tab content not available.</p>';
+  }
+  area.innerHTML = html;
+  window.attachTabListeners();
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+};
+
+// ─── TAB RENDERERS ──────────────────────────────────────────────
+window.renderEILaunchTab = function() {
+  var d = window.reportData;
+  var h = '<div class="space-y-6">';
+  h += '<div class="card"><h3 class="form-section-title">Background Information</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">'+window.makeField('Service Coordinator','ei_serviceCoord','text',d.serviceCoord||'')+window.makeField('Family Preferred Language','ei_language','text',d.language||'English')+window.makeYesNo('Born Prematurely?','ei_premature',d.premature)+'</div></div>';
+  h += '<div class="card"><h3 class="form-section-title">Child\'s General Health</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">'+window.makeField('Primary Diagnosis','ei_diagnosis','text',d.medDiag||'')+window.makeField('Medical Specialists','ei_specialists','text',d.specialists||'')+window.makeField('Relevant Medical History','ei_medHistory','textarea',d.medHistory||'',{full:true,rows:3})+window.makeField('Reason for Referral','ei_referralReason','textarea','',{full:true,rows:3})+'</div></div>';
+  h += '<div class="card"><h3 class="form-section-title">Evaluation Comments</h3>'+window.makeField('','ei_evalComments','textarea','',{rows:5,full:true})+'</div>';
+  var domains = ['Adaptive','Cognitive','Communication','Social and Emotional','Physical'];
+  h += '<div class="card"><h3 class="form-section-title">Developmental Domain Summary</h3><div class="overflow-x-auto"><table class="w-full text-sm border-collapse"><thead><tr><th class="p-2 text-left font-medium text-xs">Domain</th><th class="p-2 text-xs font-medium">Range of Delay</th><th class="p-2 text-xs font-medium">Dev Level Min</th><th class="p-2 text-xs font-medium">Dev Level Max</th><th class="p-2 text-xs font-medium text-left">Results Summary</th></tr></thead><tbody>'+domains.map(function(dom) { return '<tr class="border-t" style="border-color:var(--color-border);"><td class="p-2 font-medium text-sm" style="color:var(--color-primary);">'+dom+'</td><td class="p-2 score-cell"><input class="form-input text-sm tab-field" data-key="ei_domain_delay_'+dom+'" style="width:80px" /></td><td class="p-2 score-cell"><input class="form-input text-sm tab-field" data-key="ei_domain_min_'+dom+'" style="width:80px" /></td><td class="p-2 score-cell"><input class="form-input text-sm tab-field" data-key="ei_domain_max_'+dom+'" style="width:80px" /></td><td class="p-2"><input class="form-input text-sm tab-field" data-key="ei_domain_summary_'+dom+'" /></td></tr>'; }).join('')+'</tbody></table></div></div>';
+  h += '<div class="card"><h3 class="form-section-title">Eligibility Determination</h3>'+window.makeField('Date of Eligibility Determination','ei_eligDate','date','')+'<div class="mt-4"><label class="form-label">Eligibility Result</label><div class="flex gap-4 mt-1"><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="ei_elig" value="eligible" class="tab-radio" data-key="ei_eligibility" /> Eligible</label><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="ei_elig" value="not-eligible" class="tab-radio" data-key="ei_eligibility" /> Not Eligible</label></div></div></div>';
+  h += '</div>';
+  return h;
+};
+window.DAYC_DOMAINS = ['Adaptive','Cognitive','Receptive Language','Expressive Language','Social-Emotional','Gross Motor','Fine Motor'];
+window.DAYC_DOMAIN_KEYS = ['Adaptive','Cognitive','Receptive_Language','Expressive_Language','Social_Emotional','Gross_Motor','Fine_Motor'];
+window.classifyScore = function(ss) {
+  if (!ss || isNaN(ss)) return {label:'\u2014',bg:'#EEF5F0',color:'#7A9E92'};
+  if (ss<70) return {label:'Significantly Below Average',bg:'#fee2e2',color:'#991b1b'};
+  if (ss<=84) return {label:'Below Average',bg:'#ffedd5',color:'#9a3412'};
+  if (ss<=89) return {label:'Low Average',bg:'#fef9c3',color:'#854d0e'};
+  if (ss<=110) return {label:'Average',bg:'#d1fae5',color:'#065f46'};
+  if (ss<=115) return {label:'High Average',bg:'#dbeafe',color:'#1e40af'};
+  if (ss<=130) return {label:'Above Average',bg:'#e0e7ff',color:'#3730a3'};
+  return {label:'Very Superior',bg:'#f3e8ff',color:'#6b21a8'};
+};
+window.renderDAYC2Tab = function() {
+  var refAge = window.getReferenceAge();
+  var h = '<div class="space-y-6">';
+  h += '<div class="flex items-center gap-2 flex-wrap"><span class="badge" style="background:#EEF5F0;color:#186849;padding:6px 14px;font-size:12px;">Using: '+refAge.label+' — '+refAge.text+'</span></div>';
+  h += '<div class="card"><h3 class="form-section-title">Subtest Scores</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="p-2 text-left text-xs font-medium">Domain</th><th class="p-2 text-xs font-medium">RS</th><th class="p-2 text-xs font-medium">SS</th><th class="p-2 text-xs font-medium">PR</th><th class="p-2 text-xs font-medium">AE (mo)</th><th class="p-2 text-xs font-medium">Classification</th></tr></thead><tbody>'+window.DAYC_DOMAINS.map(function(d,i) {
+    var key = window.DAYC_DOMAIN_KEYS[i];
+    return '<tr class="border-t" style="border-color:var(--color-border);"><td class="p-2 font-medium" style="color:var(--color-primary);">'+d+'</td><td class="p-2 score-cell"><input class="form-input text-sm tab-field" data-key="dayc_rs_'+key+'" style="width:70px" /></td><td class="p-2 score-cell"><input class="form-input text-sm tab-field dayc-ss-input" data-key="dayc_ss_'+key+'" data-domain="'+key+'" style="width:70px" /></td><td class="p-2 score-cell"><input class="form-input text-sm tab-field" data-key="dayc_pr_'+key+'" style="width:70px" /></td><td class="p-2 score-cell"><input class="form-input text-sm tab-field" data-key="dayc_ae_'+key+'" data-domain="'+key+'" style="width:70px" /></td><td class="p-2"><span class="classification-badge" id="dayc-class-'+key+'">\u2014</span></td></tr>';
+  }).join('')+'</tbody></table></div></div></div>';
+  return h;
+};
+window.renderHEARTab = function() {
+  var h = '<div class="space-y-6">';
+  var sections = [
+    {letter:'H',title:'Health',color:'#dc2626',items:['Large number of episodes of ear infections','Problems during pregnancy or delivery','NICU stay of five or more days','Family history of permanent childhood hearing loss']},
+    {letter:'E',title:'Education',color:'#d97706',items:['Delayed in speech, language, or phonics development','Difficulty following directions','Failing grades or retention']},
+    {letter:'A',title:'Appearance',color:'#186849',items:['Outer ear abnormalities','Craniofacial anomalies','Syndromes associated with hearing loss']},
+    {letter:'R',title:'Report',color:'#1B4D3E',items:['Teacher or caregiver reports concerns regarding hearing','Teacher or caregiver reports concern regarding behavior or attention']}
+  ];
+  sections.forEach(function(s) {
+    h += '<div class="hear-card" style="border-left-color:'+s.color+'"><h3 class="font-bold text-lg mb-3" style="font-family:var(--font-display);"><span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold mr-2" style="background:'+s.color+'">'+s.letter+'</span> '+s.title+'</h3><div class="space-y-1">'+s.items.map(function(item, i) {
+      return '<label class="checkbox-item"><input type="checkbox" class="tab-checkbox hear-checkbox" data-key="hear_'+s.letter+'_'+i+'" /><span>'+item+'</span></label>';
+    }).join('')+'</div></div>';
+  });
+  h += '<div class="card"><span class="font-semibold text-sm" style="color:var(--color-primary);">Indicators Checked: <span id="hear-count-e5f6" style="color:var(--bg-btn-primary);">0</span></span>'+window.makeField('Additional Comments','hear_comments','textarea','',{rows:3,full:true})+'</div>';
+  h += '</div>';
+  return h;
+};
+window.renderVisionTab = function() {
+  var h = '<div class="space-y-6">';
+  h += '<div class="card"><h3 class="form-section-title">Chief Complaint</h3>'+window.makeField('','vis_chiefComplaint','textarea','',{rows:3})+'</div>';
+  h += '<div class="card"><h3 class="form-section-title">Referral Decision</h3>'+window.makeYesNo('Referral recommended?','vis_referral','')+window.makeField('Referral details','vis_referralDetails','textarea','',{rows:3})+'</div>';
+  h += '</div>';
+  return h;
+};
+window.renderGlobalOutcomesTab = function() {
+  var h = '<div class="space-y-6">';
+  h += '<div class="card" style="background:#EEF5F0;border-color:var(--bg-btn-primary);"><div class="flex items-center justify-between flex-wrap gap-3"><p class="text-sm font-medium" style="color:var(--color-primary);">Global Outcomes Summary</p><button class="btn btn-outline text-xs" data-action="go-reference-library"><i data-lucide="library" class="w-3 h-3"></i> Open Reference Library</button></div></div>';
+  var outcomes = [{num:1,title:'Developing Positive Social-Emotional Skills'},{num:2,title:'Acquiring and Using Knowledge and Skills'},{num:3,title:'Taking Appropriate Actions to Meet Needs'}];
+  outcomes.forEach(function(o) {
+    h += '<div class="card"><h3 class="form-section-title">Outcome '+o.num+': '+o.title+'</h3>'+window.makeField('Strengths','go_strengths_'+o.num,'textarea','',{rows:4})+window.makeField('Needs or Next Steps','go_needs_'+o.num,'textarea','',{rows:4})+'<div class="mb-3"><label class="form-label">Rating (1-7)</label><div class="flex items-center gap-3"><input type="number" class="form-input tab-field" data-key="go_rating_'+o.num+'" min="1" max="7" style="width:80px" /><span class="text-xs" style="color:var(--color-muted);">1=Does not yet function · 7=Above age-expected</span></div></div></div>';
+  });
+  h += '</div>';
+  return h;
+};
+window.renderMedicaidTab = function() { return '<div class="space-y-6"><div class="card"><h3 class="form-section-title">Evaluation Information</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">'+window.makeField('CPT Procedure Code','med_cptCode','text','')+window.makeField('Duration (minutes)','med_duration','number','')+'</div></div><div class="card"><h3 class="form-section-title">Referral Information</h3>'+window.makeField('','med_referralInfo','textarea','',{rows:3})+'</div></div>'; };
+window.renderTransitionTab = function() { var d=window.reportData; var h='<div class="space-y-6">'; ['Social-Emotional','Cognitive','Physical Motor','Communication','Adaptive'].forEach(function(dom){h+='<div class="card"><h3 class="form-section-title">'+dom+'</h3>'+window.makeField('','trans_domain_'+dom.replace(/\W/g,'_'),'textarea','',{rows:5})+'</div>';}); h+='</div>'; return h; };
+window.renderSleepTab = function() { return '<div class="space-y-6"><div class="card"><h3 class="form-section-title">Sleep Evaluation</h3>'+window.makeField('Current sleep goal','sleep_goal','textarea','',{rows:2})+window.makeField('Current sleep schedule','sleep_schedule','textarea','',{rows:2})+window.makeYesNo('Difficulty falling asleep?','sleep_diffFall','')+'</div></div>'; };
+window.renderSOSFeedingTab = function() { return '<div class="space-y-6"><div class="card"><h3 class="form-section-title">Notes</h3>'+window.makeField('','sos_notes','textarea','',{rows:6})+'</div></div>'; };
+window.renderMedicaidPOCTab = function() { var h='<div class="space-y-6">'; for(var i=1;i<=4;i++) h+='<div class="card"><h3 class="form-section-title">Goal '+i+'</h3>'+window.makeField('Treatment Goal','poc_goal_'+i,'textarea','',{rows:3})+window.makeField('Proposed Interventions','poc_interventions_'+i,'textarea','',{rows:3})+'</div>'; h+='</div>'; return h; };
+window.renderCarePlanTab = function() { var h='<div class="space-y-6">'; for(var i=1;i<=4;i++) h+='<div class="card"><h3 class="form-section-title">Goal '+i+'</h3>'+window.makeField('Goal Description','cp_goal_'+i,'textarea','',{rows:3})+window.makeField('Progress Notes','cp_progress_'+i,'textarea','',{rows:3})+'</div>'; h+='</div>'; return h; };
+window.renderPCPReferralTab = function() { return '<div class="space-y-6"><div class="card"><h3 class="form-section-title">Letter Details</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">'+window.makeField('TO: PCP Name','pcp_toName','text','')+window.makeField('Subject','pcp_subject','text','Early Intervention Services Summary')+'</div></div><div class="card"><h3 class="form-section-title">Qualifying Information</h3>'+window.makeField('This child qualifies due to:','pcp_qualifyReason','textarea','',{rows:3})+'</div></div>'; };
+
+// ─── TAB LISTENERS ──────────────────────────────────────────────
+window.attachTabListeners = function() {
+  document.querySelectorAll('.tab-field').forEach(function(el) {
+    el.addEventListener('input', function() {
+      window.reportData[el.dataset.key] = el.value;
+      if (window.tabStatus[window.activeTabId] === 'not-started') { window.tabStatus[window.activeTabId] = 'in-progress'; window.renderSidebar(); }
+      window.triggerAutoSave();
+    });
+  });
+  document.querySelectorAll('.tab-radio').forEach(function(el) {
+    el.addEventListener('change', function() {
+      window.reportData[el.dataset.key] = el.value;
+      if (window.tabStatus[window.activeTabId] === 'not-started') { window.tabStatus[window.activeTabId] = 'in-progress'; window.renderSidebar(); }
+      window.triggerAutoSave();
+    });
+  });
+  document.querySelectorAll('.tab-checkbox').forEach(function(el) {
+    el.addEventListener('change', function() {
+      window.reportData[el.dataset.key] = el.checked;
+      if (window.tabStatus[window.activeTabId] === 'not-started') { window.tabStatus[window.activeTabId] = 'in-progress'; window.renderSidebar(); }
+      window.triggerAutoSave();
+      window.updateHEARCount();
+    });
+  });
+  document.querySelectorAll('.dayc-ss-input').forEach(function(el) {
+    el.addEventListener('input', function() {
+      var key = el.dataset.domain;
+      var ss = parseInt(el.value);
+      var badge = document.getElementById('dayc-class-'+key);
+      if (badge) { var cls = window.classifyScore(ss); badge.textContent = cls.label; badge.style.background = cls.bg; badge.style.color = cls.color; }
+    });
+  });
+};
+window.updateHEARCount = function() {
+  var checked = document.querySelectorAll('.hear-checkbox:checked').length;
+  var countEl = document.getElementById('hear-count-e5f6');
+  if (countEl) countEl.textContent = checked;
+};
+
+// ─── REPORT OUTPUT ──────────────────────────────────────────────
+window.reportDownloadBar = function() {
+  return '<div class="report-download-bar no-print"><div style="flex:1;"><div style="font-family:\'Comfortaa\',cursive;font-weight:700;font-size:15px;color:#1B4D3E;">Ready to export?</div></div><button class="btn-primary btn text-sm" data-action="download-pdf"><i data-lucide="printer" class="w-4 h-4"></i> Beautiful PDF</button><button class="btn btn-outline text-sm" data-action="download-txt"><i data-lucide="file-text" class="w-4 h-4"></i> Plain Text</button></div>';
+};
+window.reportHeaderBlock = function(title, extraBadge) {
+  var d = window.reportData;
+  var age = d.dob ? window.calcAge(d.dob) : {text:'N/A'};
+  var badgeHtml = extraBadge || '';
+  return '<div class="report-header-block"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"><img src="'+window.LOGO_LIGHT+'" alt="emmé" style="height:40px;object-fit:contain;display:block;" /><div style="flex:1;"><div style="font-family:\'Comfortaa\',cursive;font-size:22px;font-weight:700;color:#1B4D3E;">'+title+'</div><div style="font-size:13px;color:#4A7C6B;margin-top:2px;">emmé Therapy Services | referrals@emmeco.org | 720-960-2134</div></div>'+badgeHtml+'</div><div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div>'+window.reportField('Child',(d.firstName||'')+' '+(d.lastName||''))+'</div><div>'+window.reportField('Date of Birth',d.dob)+'</div><div>'+window.reportField('Chronological Age',age.text)+'</div><div>'+window.reportField('Clinician',(d.therapist||'')+(d.credentials?', '+d.credentials:''))+'</div></div></div>';
+};
+window.sectionCard = function(title, content) {
+  return '<div class="report-section-card"><h3 style="font-family:\'Comfortaa\',cursive;color:#1B4D3E;font-size:15px;font-weight:700;margin:0 0 16px 0;padding-bottom:10px;border-bottom:2px solid #E2D9C5;">'+title+'</h3>'+content+'</div>';
+};
+window.signatureBlock = function() {
+  return '<div class="report-section-card"><h3 style="font-family:\'Comfortaa\',cursive;color:#1B4D3E;font-size:15px;font-weight:700;margin:0 0 16px 0;padding-bottom:10px;border-bottom:2px solid #E2D9C5;">Provider Attestation & Signature</h3><div class="report-sig-block"><div><div style="border-bottom:1px solid #1B4D3E;min-height:40px;margin-bottom:6px;"></div><div style="font-size:12px;color:#4A7C6B;">Provider Signature</div></div><div><div style="border-bottom:1px solid #E2D9C5;min-height:40px;margin-bottom:6px;"></div><div style="font-size:12px;color:#4A7C6B;">Parent / Guardian Signature</div></div></div></div>';
+};
+window.confidenceNote = function() {
+  return '<div class="report-confidence">Generated by emmé EI Documentation System. Please review all content for clinical accuracy before submitting. All data is stored locally on this device.</div>';
+};
+window.getReportTitle = function() {
+  var titles = {initial:'Early Intervention Launch Screening',annual:'Annual Developmental Results Summary',global:'Global Outcomes Summary',medicaid:'Medicaid Evaluation Report',transition:'Provider Transition Report','medicaid-poc':'Medicaid Plan of Care','care-plan':'emmé Care Plan','pcp-referral':'PCP Referral Letter'};
+  return titles[window.currentReportType] || 'Evaluation Report';
+};
+window.generateReportOutput = function() {
+  var container = document.getElementById('report-output-content-r2s3');
+  if (!container) return;
+  var html = '';
+  html += window.reportDownloadBar();
+  html += window.reportHeaderBlock(window.getReportTitle());
+  var d = window.reportData;
+  html += window.sectionCard('Medical Background', '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+window.reportField('Medical Diagnosis',d.ei_diagnosis||d.medDiag)+window.reportField('Specialists',d.ei_specialists||d.specialists)+'</div>');
+  if (d.ei_evalComments) html += window.sectionCard('Evaluation Comments', '<p style="font-size:14px;color:#1B4D3E;line-height:1.7;">'+d.ei_evalComments+'</p>');
+  html += window.signatureBlock();
+  html += window.confidenceNote();
+  container.innerHTML = html;
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+};
+
+// ─── REF LIBRARY ────────────────────────────────────────────────
+window.renderRefLibContent = function() {
+  var area = document.getElementById('ref-lib-content-area');
+  if (!area) return;
+  var tab = window.activeRefTab || 'decision-tree';
+  if (tab === 'decision-tree') {
+    area.innerHTML = '<div class="card"><h3 class="form-section-title">COSF Decision Tree</h3><p class="text-sm" style="color:var(--color-secondary);">Use this interactive decision tree to determine the appropriate COSF rating for each global outcome.</p><div class="mt-6 p-8 rounded-xl text-center" style="background:#FAF8F2;border:1px solid var(--color-border);"><i data-lucide="git-branch" class="w-12 h-12 mx-auto mb-3" style="color:var(--color-border-dark);"></i><p class="text-sm" style="color:var(--color-muted);">Decision tree visualization — use the rating scale (1-7) in the Global Outcomes tab.</p></div></div>';
+  } else if (tab === 'age-anchoring') {
+    area.innerHTML = '<div class="card"><h3 class="form-section-title">Age Anchoring Tool</h3><p class="text-sm" style="color:var(--color-secondary);">Reference developmental milestones by age range to support COSF ratings.</p></div>';
+  } else if (tab === 'guiding-questions') {
+    area.innerHTML = '<div class="card"><h3 class="form-section-title">Guiding Questions</h3><p class="text-sm" style="color:var(--color-secondary);">Questions to help determine COSF ratings for each outcome area.</p></div>';
+  } else {
+    area.innerHTML = '<div class="card"><h3 class="form-section-title">DDRC Resources</h3><p class="text-sm" style="color:var(--color-secondary);">Additional resources from DDRC.</p></div>';
+  }
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+};
+
+// ═══════════════════════════════════════════════════════════════
+// COPILOT AI REPORT WRITER — Full Implementation
+// ═══════════════════════════════════════════════════════════════
+window.copilotHistory = [];
+
+window.resetCopilot = function() {
+  window.copilotHistory = [];
+  var chat = document.getElementById('copilot-chat');
+  if (chat) chat.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px;"><div style="font-size:10px;color:#7A9E92;font-weight:600;">✨ emmé Copilot</div><div style="background:#EEF5F0;border-left:3px solid #186849;border-radius:0 12px 12px 12px;padding:14px 16px;font-size:13px;color:#1B4D3E;line-height:1.6;max-width:90%;">Hi! I\'m your emmé Copilot. 🌿<br><br>Tell me about your client — paste your session notes, DAYC-2 scores, referral info, or just describe what you know. I\'ll extract the details and build a complete clinical report for you.<br><br><strong>Example:</strong> "14-month-old girl Sofia, DOB 4/3/2025, referred for speech. DAYC-2: Receptive SS 78, Expressive SS 71..."</div></div>';
+  var input = document.getElementById('copilot-input');
+  if (input) input.value = '';
+  var empty = document.getElementById('copilot-empty');
+  var loading = document.getElementById('copilot-loading');
+  var output = document.getElementById('copilot-report-output');
+  var bar = document.getElementById('copilot-download-bar');
+  if (empty) empty.style.display = 'flex';
+  if (loading) loading.style.display = 'none';
+  if (output) { output.style.display = 'none'; output.innerHTML = ''; }
+  if (bar) bar.classList.remove('visible');
+};
+
+window.addChatBubble = function(role, text) {
+  var chat = document.getElementById('copilot-chat');
+  if (!chat) return;
+  var isUser = role === 'user';
+  var bubble = document.createElement('div');
+  bubble.style.cssText = 'display:flex;flex-direction:column;gap:4px;align-items:' + (isUser ? 'flex-end' : 'flex-start') + ';';
+  var safeText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  bubble.innerHTML = (isUser ? '' : '<div style="font-size:10px;color:#7A9E92;font-weight:600;">✨ emmé Copilot</div>') +
+    '<div style="background:' + (isUser ? '#1B4D3E' : '#EEF5F0') + ';border-left:' + (isUser ? 'none' : '3px solid #186849') + ';border-radius:' + (isUser ? '12px 12px 0 12px' : '0 12px 12px 12px') + ';padding:12px 16px;font-size:13px;color:' + (isUser ? 'white' : '#1B4D3E') + ';line-height:1.6;max-width:90%;white-space:pre-wrap;">' + safeText + '</div><!--element content stripped-->

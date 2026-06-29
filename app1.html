@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emmé Therapy Services — Provider Guidebook 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,400;1,700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: { DEFAULT: '#F5EDD8', card: '#FBF7EE', light: '#FFFCF5' },
+            forest: { DEFAULT: '#2C5530', dark: '#1E3D22', medium: '#4A7C59', light: '#8FB49A', faint: '#e8f0ea' },
+            gold: { DEFAULT: '#C8973A', light: '#E3B15B', dark: '#9B6E24', faint: '#f5ecd3' },
+            pink: { DEFAULT: '#D4869B', light: '#F2D0DA', dark: '#B5607A' },
+            yellow: { DEFAULT: '#F2C94C', light: '#FDF5D0', dark: '#D4A82E' },
+            body: { DEFAULT: '#2A2A2A', secondary: '#4A4A4A', muted: '#6B6B6B' },
+          },
+          fontFamily: {
+            display: ['Nunito', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --cream: #F5EDD8;
+      --cream-card: #FBF7EE;
+      --cream-light: #FFFCF5;
+      --forest: #2C5530;
+      --forest-dark: #1E3D22;
+      --forest-medium: #4A7C59;
+      --forest-light: #8FB49A;
+      --gold: #C8973A;
+      --gold-light: #E3B15B;
+      --gold-dark: #9B6E24;
+      --pink: #D4869B;
+      --pink-light: #F2D0DA;
+      --yellow: #F2C94C;
+      --yellow-light: #FDF5D0;
+      --body: #2A2A2A;
+      --body-secondary: #4A4A4A;
+      --body-muted: #6B6B6B;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; color: var(--body); line-height: 1.7; background: var(--cream); }
+
+    /* Progress bar */
+    #progress-bar-emme { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--forest), var(--gold), var(--pink)); z-index: 100; transition: width 0.15s ease-out; width: 0%; }
+
+    /* Sidebar */
+    #sidebar-emme { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: var(--forest-dark); z-index: 50; display: flex; flex-direction: column; overflow-y: auto; }
+    #sidebar-emme::-webkit-scrollbar { width: 4px; }
+    #sidebar-emme::-webkit-scrollbar-thumb { background: var(--forest-medium); border-radius: 4px; }
+
+    .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 20px; color: #c5d8c8; font-size: 13.5px; font-weight: 500; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease; cursor: pointer; }
+    .sidebar-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .sidebar-link.active { border-left-color: var(--yellow); background: rgba(143,180,154,0.15); color: #fff; font-weight: 600; }
+    .sidebar-link .nav-icon { font-size: 15px; width: 22px; text-align: center; flex-shrink: 0; }
+
+    /* Main content */
+    #main-content-emme { margin-left: 280px; min-height: 100vh; }
+
+    /* Section numbers watermark */
+    .section-number-watermark { position: absolute; top: -20px; right: 20px; font-family: 'Nunito', sans-serif; font-size: 120px; font-weight: 700; line-height: 1; pointer-events: none; z-index: 0; }
+    .watermark-gold { color: rgba(200,151,58,0.12); }
+    .watermark-pink { color: rgba(212,134,155,0.14); }
+    .watermark-yellow { color: rgba(242,201,76,0.16); }
+
+    /* Photo placeholders */
+    .photo-placeholder { background: var(--forest-medium); border: 2px dashed var(--forest-light); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--cream); gap: 8px; }
+    .photo-placeholder .ph-icon { font-size: 28px; opacity: 0.7; }
+    .photo-placeholder .ph-label { font-size: 13px; font-weight: 500; opacity: 0.85; }
+    .photo-placeholder .ph-dims { font-size: 11px; opacity: 0.55; }
+
+    /* Link placeholders */
+    .link-placeholder { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: 1.5px solid var(--gold); color: var(--gold); border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
+    .link-placeholder:hover { background: var(--gold); color: #fff; }
+
+    /* Pull quotes */
+    .pull-quote { background: var(--forest); color: var(--cream); border-left: 4px solid var(--gold); padding: 24px 28px; border-radius: 0 12px 12px 0; font-family: 'Nunito', sans-serif; font-style: italic; font-weight: 400; font-size: 17px; line-height: 1.7; }
+    .pull-quote.pq-pink { border-left-color: var(--pink); }
+    .pull-quote .pq-attribution { font-family: 'Inter', sans-serif; font-style: normal; font-size: 13px; margin-top: 12px; color: var(--gold-light); }
+
+    /* Info callout */
+    .info-callout { background: var(--cream-card); border-left: 4px solid var(--gold); padding: 20px 24px; border-radius: 0 12px 12px 0; font-size: 14.5px; line-height: 1.7; }
+    .info-callout.callout-pink { border-left-color: var(--pink); }
+    .info-callout strong { color: var(--forest); }
+
+    /* Checklist */
+    .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: background 0.15s; user-select: none; }
+    .checklist-item:hover { background: rgba(143,180,154,0.08); }
+    .checklist-item .check-box { width: 22px; height: 22px; border: 2px solid var(--forest-medium); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-top: 1px; }
+    .checklist-item.checked .check-box { background: var(--forest); border-color: var(--forest); }
+    .checklist-item.checked .check-box::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 700; }
+    /* Gold check variant */
+    .checklist-gold.checked .check-box { background: var(--gold); border-color: var(--gold); }
+    /* Pink check variant */
+    .checklist-pink.checked .check-box { background: var(--pink); border-color: var(--pink); }
+    .checklist-item.checked .check-label { text-decoration: line-through; color: var(--body-muted); }
+    .check-label { font-size: 14.5px; line-height: 1.5; }
+
+    /* Tables */
+    .emme-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; font-size: 14px; }
+    .emme-table thead th { background: var(--forest); color: #fff; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .emme-table tbody tr:nth-child(even) { background: var(--cream-card); }
+    .emme-table tbody tr:nth-child(odd) { background: #fff; }
+    .emme-table tbody td { padding: 11px 16px; border-bottom: 1px solid #eee7d4; }
+
+    /* Value cards */
+    .value-card-new { border-radius: 16px; padding: 32px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+    .value-card-new h4 { font-family: 'Nunito', sans-serif; font-size: 36px; font-weight: 700; margin: 0; line-height: 1.2; }
+    .value-card-new .vc-icon-new { font-size: 24px; opacity: 0.8; }
+
+    /* Specialty tag */
+    .specialty-tag { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: #fff; border-radius: 12px; border-left: 4px solid var(--forest-medium); }
+    .specialty-tag .st-icon { color: var(--forest); }
+
+    /* Gold numbered list */
+    .gold-number { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--gold); color: #fff; border-radius: 50%; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+
+    /* Crisis card */
+    .crisis-card { background: #fff; border-radius: 12px; padding: 18px 20px; text-align: center; border: 1px solid #eee7d4; }
+    .crisis-card .cc-name { font-weight: 600; color: var(--forest); font-size: 14px; margin-bottom: 4px; }
+    .crisis-card .cc-number { font-size: 18px; font-weight: 700; color: var(--gold-dark); }
+
+    /* Icon cards */
+    .icon-card { background: #fff; border-radius: 14px; padding: 24px; border: 1px solid #eee7d4; }
+    .icon-card h4 { font-weight: 600; color: var(--forest); margin-bottom: 6px; }
+    .icon-card p { font-size: 13.5px; color: var(--body-secondary); line-height: 1.6; }
+
+    /* Resource link */
+    .resource-link { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-radius: 10px; border: 1px solid #eee7d4; color: var(--gold-dark); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+    .resource-link:hover { background: var(--gold); color: #fff; border-color: var(--gold); }
+
+    /* Modality tags */
+    .modality-tag { background: var(--forest); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 500; text-align: center; }
+
+    /* Back to top */
+    #back-to-top-emme { position: fixed; bottom: 30px; right: 30px; width: 46px; height: 46px; background: var(--yellow); color: var(--forest-dark); border: none; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 60; box-shadow: 0 4px 16px rgba(242,201,76,0.45); transition: all 0.2s; font-size: 18px; font-weight: 700; }
+    #back-to-top-emme:hover { background: #d4a82e; transform: translateY(-2px); }
+
+    /* Botanical SVG decoration */
+    .botanical-leaf { opacity: 0.15; }
+
+    /* Section header icon badges */
+    .section-badge { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; font-size: 20px; }
+    .badge-gold { background: rgba(200,151,58,0.15); }
+    .badge-pink { background: rgba(212,134,155,0.15); }
+    .badge-yellow { background: rgba(242,201,76,0.2); }
+
+    /* Print styles */
+    @media print {
+      #sidebar-emme, #progress-bar-emme, #back-to-top-emme, #mobile-header-emme { display: none !important; }
+      #main-content-emme { margin-left: 0 !important; }
+      .pull-quote { break-inside: avoid; }
+      .info-callout { break-inside: avoid; }
+      body { background: #fff; }
+    }
+
+    /* Mobile */
+    @media (max-width: 767px) {
+      #sidebar-emme { display: none; }
+      #sidebar-emme.mobile-open { display: flex; width: 100%; z-index: 90; }
+      #main-content-emme { margin-left: 0; }
+      #mobile-header-emme { display: flex !important; }
+      .section-number-watermark { font-size: 70px; top: -10px; right: 10px; }
+      #back-to-top-emme { bottom: 20px; right: 20px; }
+    }
+
+    /* Section fade-in */
+    .section-block { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .section-block.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body data-id="0">
+  <app-icon data-id="1" hidden data-icon="heart-pulse" data-palette="Green"></app-icon>
+
+  <!-- Progress Bar -->
+  <div data-id="2" id="progress-bar-emme"></div>
+
+  <!-- Mobile Header -->
+  <header data-id="3" id="mobile-header-emme" class="fixed top-0 left-0 right-0 z-50 hidden items-center justify-between px-4 py-3" style="background:var(--forest-dark);">
+    <div data-id="4" class="flex items-center gap-3">
+      <img data-id="5" src="data:image/png;base64,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" alt="Emmé Therapy Services logo" style="width: 100px; height: auto;" />
+    </div>
+    <button data-id="6" id="mobile-menu-btn-emme" class="p-2" style="color:var(--cream);">
+      <i data-id="7" data-lucide="menu" class="w-6 h-6"></i>
+    </button>
+  </header>
+
+  <!-- Sidebar -->
+  <nav data-id="8" id="sidebar-emme" aria-label="Guidebook navigation">
+    <div data-id="9" class="p-6 pb-4 border-b border-white/10">
+      <button data-id="10" id="mobile-close-btn-emme" class="md:hidden absolute top-4 right-4 p-2" style="color:var(--cream);">
+        <i data-id="11" data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <div data-id="12" class="flex flex-col items-center mb-2">
+        <img data-id="13" src="data:image/png;base64,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" alt="Emmé Therapy Services logo" style="width: 200px; display: block; margin: 0 auto 8px; max-width: 100%; height: auto;" />
+      </div>
+      <p data-id="14" class="text-xs font-sans font-medium tracking-widest uppercase text-center" style="color:var(--forest-light);">Provider Guidebook · 2026</p>
+    </div>
+
+    <div data-id="15" class="flex-1 py-3 overflow-y-auto">
+      <div data-id="16" class="sidebar-link active" data-section="hero-section">
+        <span data-id="17" class="nav-icon">🏠</span> <span data-id="18">Cover</span>
+      </div>
+      <div data-id="19" class="sidebar-link" data-section="section-1">
+        <span data-id="20" class="nav-icon">🌿</span> <span data-id="21">Welcome to Emmé</span>
+      </div>
+      <div data-id="22" class="sidebar-link" data-section="section-2">
+        <span data-id="23" class="nav-icon">🏡</span> <span data-id="24">About Emmé</span>
+      </div>
+      <div data-id="25" class="sidebar-link" data-section="section-3">
+        <span data-id="26" class="nav-icon">📋</span> <span data-id="27">Getting Started</span>
+      </div>
+      <div data-id="28" class="sidebar-link" data-section="section-4">
+        <span data-id="29" class="nav-icon">⚖️</span> <span data-id="30">Clinical Standards</span>
+      </div>
+      <div data-id="31" class="sidebar-link" data-section="section-5">
+        <span data-id="32" class="nav-icon">📝</span> <span data-id="33">Documentation</span>
+      </div>
+      <div data-id="34" class="sidebar-link" data-section="section-6">
+        <span data-id="35" class="nav-icon">👤</span> <span data-id="36">Client Management</span>
+      </div>
+      <div data-id="37" class="sidebar-link" data-section="section-7">
+        <span data-id="38" class="nav-icon">💼</span> <span data-id="39">Billing & Compensation</span>
+      </div>
+      <div data-id="40" class="sidebar-link" data-section="section-8">
+        <span data-id="41" class="nav-icon">🗣️</span> <span data-id="42">Team & Supervision</span>
+      </div>
+      <div data-id="43" class="sidebar-link" data-section="section-9">
+        <span data-id="44" class="nav-icon">🔒</span> <span data-id="45">Policies & Compliance</span>
+      </div>
+      <div data-id="46" class="sidebar-link" data-section="section-10">
+        <span data-id="47" class="nav-icon">📚</span> <span data-id="48">Resources & Directory</span>
+      </div>
+    </div>
+
+    <div data-id="49" class="p-4 space-y-3 border-t border-white/10">
+      <button data-id="50" id="print-btn-emme" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all" style="border: 1.5px solid var(--forest-light); color: var(--forest-light);">
+        <i data-id="51" data-lucide="printer" class="w-4 h-4"></i> Print Guidebook
+      </button>
+      <button data-id="52" id="download-btn-emme" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all" style="border: 1.5px solid var(--forest-light); color: var(--forest-light);">
+        <i data-id="53" data-lucide="download" class="w-4 h-4"></i> Download PDF
+      </button>
+      <p data-id="54" class="text-center text-xs pt-1" style="color:var(--forest-light); opacity: 0.5;">emmé therapy services</p>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div data-id="55" id="main-content-emme">
+
+    <!-- ===== HERO / COVER ===== -->
+    <section data-id="56" id="hero-section" class="relative overflow-hidden" style="background: linear-gradient(135deg, var(--forest-dark) 0%, var(--forest) 50%, var(--forest-medium) 100%); min-height: 100vh;">
+      <!-- Botanical SVG decoration -->
+      <svg data-id="57" class="absolute top-0 right-0 botanical-leaf" width="500" height="500" viewBox="0 0 500 500" fill="none" style="opacity:0.06;">
+        <path data-id="58" d="M400 50c-50 30-100 80-130 150-20 50-25 100-10 150 30-20 70-50 100-90 40-50 60-110 50-170-2-15-5-28-10-40z" fill="#8FB49A"/>
+        <path data-id="59" d="M350 100c-40 40-70 100-80 160-5 40 0 80 15 110 25-30 50-70 65-110 20-50 25-100 15-150-3-5-8-8-15-10z" fill="#F2C94C"/>
+        <path data-id="60" d="M450 200c-30 20-60 60-80 110-15 35-20 70-15 100 20-15 45-40 65-75 25-40 40-85 35-130-1-3-3-5-5-5z" fill="#D4869B"/>
+        <path data-id="61" d="M100 400c30-20 70-60 100-110 20-35 30-75 25-110-25 15-55 40-80 80-30 45-45 90-45 140z" fill="#C8973A"/>
+        <path data-id="62" d="M50 350c20-10 50-40 75-80 15-30 25-60 20-90-20 10-40 30-60 60-25 35-35 70-35 110z" fill="#8FB49A"/>
+      </svg>
+      <svg data-id="63" class="absolute bottom-0 left-0 botanical-leaf" width="400" height="400" viewBox="0 0 400 400" fill="none" style="opacity:0.05;">
+        <path data-id="64" d="M50 350c30-40 80-90 140-120 40-20 85-25 120-15-15 30-40 65-80 95-45 35-100 50-150 50-10-2-22-5-30-10z" fill="#8FB49A"/>
+        <path data-id="65" d="M100 300c30-30 70-60 120-75 35-10 70-5 95 10-20 25-50 50-85 65-40 18-85 20-120 12-5-3-8-7-10-12z" fill="#F2C94C"/>
+      </svg>
+
+      <div data-id="66" class="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center pt-16 md:pt-0">
+        <div data-id="67" class="mb-6">
+          <img data-id="68" src="data:image/png;base64,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" alt="Emmé Therapy Services logo" style="width: 380px; max-width: 90%; display: block; margin: 0 auto 24px; height: auto;" />
+        </div>
+        <div data-id="69" class="w-24 h-px mb-8" style="background:var(--gold);"></div>
+        <h2 data-id="70" class="font-display text-3xl md:text-4xl mb-4" style="color:var(--cream); font-weight:700;">Provider Guidebook</h2>
+        <p data-id="71" class="text-sm font-medium tracking-[0.3em] uppercase mb-12" style="color:var(--gold-light);">2026 Edition</p>
+
+        <div data-id="72" class="photo-placeholder w-full max-w-5xl mx-auto" style="height: 300px; md:height: 400px;">
+          <span data-id="73" class="ph-icon"><i data-id="74" data-lucide="camera" class="w-8 h-8"></i></span>
+          <span data-id="75" class="ph-label">Cover Photo Placeholder</span>
+          <span data-id="76" class="ph-dims">1920 × 400px</span>
+        </div>
+
+        <div data-id="77" class="mt-12 animate-bounce" style="color:var(--gold-light);">
+          <i data-id="78" data-lucide="chevron-down" class="w-7 h-7"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 1: Welcome ===== -->
+    <section data-id="79" id="section-1" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream);">
+      <div data-id="80" class="max-w-4xl mx-auto relative">
+        <span data-id="81" class="section-number-watermark watermark-gold">01</span>
+        <div data-id="82" class="flex justify-center md:justify-end mb-4">
+          <img data-id="83" src="data:image/png;base64,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" alt="Emmé Therapy Services logo" style="width: 160px; border-radius: 8px; max-width: 100%; height: auto;" />
+        </div>
+        <div data-id="84" class="flex items-center gap-3 mb-2">
+          <span data-id="85" class="section-badge badge-gold">🌿</span>
+          <p data-id="86" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 1</p>
+        </div>
+        <h2 data-id="87" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Welcome to Emmé</h2>
+
+        <!-- Welcome Letter -->
+        <h3 data-id="88" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Welcome Letter</h3>
+        <div data-id="89" class="pull-quote pq-pink mb-8">
+          <p data-id="90">"We are so glad you're here. Emmé was built on the belief that great therapists deserve a great place to practice — and that the care we give ourselves makes us better for our clients."</p>
+          <div data-id="91" class="pq-attribution">— The Emmé Leadership Team</div>
+        </div>
+
+        <div data-id="92" class="photo-placeholder w-full mb-8" style="height:300px;">
+          <span data-id="93" class="ph-icon"><i data-id="94" data-lucide="camera" class="w-7 h-7"></i></span>
+          <span data-id="95" class="ph-label">Team Photo Placeholder</span>
+          <span data-id="96" class="ph-dims">800 × 400px</span>
+        </div>
+
+        <div data-id="97" class="prose max-w-none mb-10">
+          <p data-id="98" class="mb-4 text-base" style="color:var(--body);">Welcome to the Emmé Therapy Services provider team. This guidebook is your go-to reference for everything you need to thrive in your role — from clinical standards and documentation to billing, communication, and resources. We encourage you to read it fully during your onboarding and return to it often.</p>
+          <p data-id="99" class="mb-4 text-base" style="color:var(--body);">Our practice was founded on the values of <strong data-id="100" style="color:var(--forest);">warmth, excellence, and sustainability</strong>. We believe that great clinical care begins with a team that feels supported, clear in their expectations, and aligned with a shared purpose.</p>
+          <p data-id="101" class="text-base" style="color:var(--body);">If you ever have questions not answered here, please reach out to your assigned supervisor or the administrative team. We are always happy to help.</p>
+        </div>
+
+        <!-- Mission -->
+        <h3 data-id="102" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Our Mission</h3>
+        <div data-id="103" class="info-callout callout-pink mb-8">
+          <strong data-id="104">Mission:</strong> To provide exceptional, evidence-informed mental health services in a warm, affirming environment — for clients and providers alike.
+        </div>
+
+        <!-- Vision -->
+        <h3 data-id="105" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Our Vision</h3>
+        <p data-id="106" class="text-base mb-10" style="color:var(--body);">To be a recognized leader in ethical, trauma-informed, community-centered therapy — where every provider feels valued and every client feels seen.</p>
+
+        <!-- Values -->
+        <h3 data-id="107" class="font-display text-xl mb-6" style="color:var(--forest); font-weight:700;">Our Values</h3>
+        <div data-id="108" class="grid grid-cols-2 md:grid-cols-3 gap-5 mb-6">
+          <div data-id="109" class="value-card-new" style="background:#2C5530; color:#F5EDD8;">
+            <i data-id="110" data-lucide="eye" class="w-6 h-6" style="opacity:0.7;"></i>
+            <h4 data-id="111">Honest</h4>
+          </div>
+          <div data-id="112" class="value-card-new" style="background:#D4869B; color:#fff;">
+            <i data-id="113" data-lucide="heart-handshake" class="w-6 h-6" style="opacity:0.85;"></i>
+            <h4 data-id="114">Kind</h4>
+          </div>
+          <div data-id="115" class="value-card-new" style="background:#F2C94C; color:#2C5530;">
+            <i data-id="116" data-lucide="smile" class="w-6 h-6" style="opacity:0.75;"></i>
+            <h4 data-id="117">Fun</h4>
+          </div>
+          <div data-id="118" class="value-card-new" style="background:#4A7C59; color:#F5EDD8;">
+            <i data-id="119" data-lucide="shield-check" class="w-6 h-6" style="opacity:0.7;"></i>
+            <h4 data-id="120">Accountable</h4>
+          </div>
+          <div data-id="121" class="value-card-new" style="background:#E8A4B8; color:#2C5530;">
+            <i data-id="122" data-lucide="lightbulb" class="w-6 h-6" style="opacity:0.75;"></i>
+            <h4 data-id="123">Creative</h4>
+          </div>
+          <div data-id="124" class="value-card-new" style="background:#C8973A; color:#F5EDD8;">
+            <i data-id="125" data-lucide="book-open" class="w-6 h-6" style="opacity:0.7;"></i>
+            <h4 data-id="126">Reflective</h4>
+          </div>
+        </div>
+
+        <div data-id="127" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 2: About ===== -->
+    <section data-id="128" id="section-2" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream-light);">
+      <div data-id="129" class="max-w-4xl mx-auto relative">
+        <span data-id="130" class="section-number-watermark watermark-pink">02</span>
+        <div data-id="131" class="flex items-center gap-3 mb-2">
+          <span data-id="132" class="section-badge badge-pink">🏡</span>
+          <p data-id="133" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 2</p>
+        </div>
+        <h2 data-id="134" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">About Emmé</h2>
+
+        <h3 data-id="135" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Who We Are</h3>
+        <p data-id="136" class="text-base mb-6" style="color:var(--body);">Emmé Therapy Services is a group private practice offering individual, couples, and family therapy to adults, adolescents, and children. We provide both in-person and telehealth services across Colorado, with a focus on trauma-informed, culturally affirming, and evidence-based care.</p>
+
+        <div data-id="137" class="photo-placeholder w-full mb-10" style="height:280px;">
+          <span data-id="138" class="ph-icon"><i data-id="139" data-lucide="camera" class="w-7 h-7"></i></span>
+          <span data-id="140" class="ph-label">Office / Space Photo Placeholder</span>
+          <span data-id="141" class="ph-dims">800 × 350px</span>
+        </div>
+
+        <h3 data-id="142" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">What We Treat</h3>
+        <div data-id="143" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
+          <div data-id="144" class="specialty-tag"><span data-id="145" class="st-icon"><i data-id="146" data-lucide="heart" class="w-5 h-5"></i></span><span data-id="147" class="text-sm font-medium">Trauma &amp; PTSD</span></div>
+          <div data-id="148" class="specialty-tag"><span data-id="149" class="st-icon"><i data-id="150" data-lucide="cloud" class="w-5 h-5"></i></span><span data-id="151" class="text-sm font-medium">Anxiety &amp; Depression</span></div>
+          <div data-id="152" class="specialty-tag"><span data-id="153" class="st-icon"><i data-id="154" data-lucide="users" class="w-5 h-5"></i></span><span data-id="155" class="text-sm font-medium">Relationship &amp; Attachment Issues</span></div>
+          <div data-id="156" class="specialty-tag"><span data-id="157" class="st-icon"><i data-id="158" data-lucide="compass" class="w-5 h-5"></i></span><span data-id="159" class="text-sm font-medium">Life Transitions</span></div>
+          <div data-id="160" class="specialty-tag"><span data-id="161" class="st-icon"><i data-id="162" data-lucide="flower-2" class="w-5 h-5"></i></span><span data-id="163" class="text-sm font-medium">Grief &amp; Loss</span></div>
+          <div data-id="164" class="specialty-tag"><span data-id="165" class="st-icon"><i data-id="166" data-lucide="sparkles" class="w-5 h-5"></i></span><span data-id="167" class="text-sm font-medium">Identity &amp; Self-Worth</span></div>
+          <div data-id="168" class="specialty-tag"><span data-id="169" class="st-icon"><i data-id="170" data-lucide="baby" class="w-5 h-5"></i></span><span data-id="171" class="text-sm font-medium">Perinatal Mental Health</span></div>
+          <div data-id="172" class="specialty-tag"><span data-id="173" class="st-icon"><i data-id="174" data-lucide="rainbow" class="w-5 h-5"></i></span><span data-id="175" class="text-sm font-medium">LGBTQ+ Affirming Care</span></div>
+          <div data-id="176" class="specialty-tag"><span data-id="177" class="st-icon"><i data-id="178" data-lucide="brain" class="w-5 h-5"></i></span><span data-id="179" class="text-sm font-medium">Neurodivergent-Affirming Therapy</span></div>
+        </div>
+
+        <h3 data-id="180" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Our Care Philosophy</h3>
+        <div data-id="181" class="pull-quote mb-6">
+          <p data-id="182">"We don't just treat symptoms — we walk alongside our clients as they rebuild trust in themselves and the world around them."</p>
+        </div>
+        <p data-id="183" class="text-base mb-10" style="color:var(--body);">Emmé providers are trained in and expected to integrate <strong data-id="184" style="color:var(--forest);">trauma-informed care principles</strong> across all modalities. We prioritize safety, trustworthiness, choice, collaboration, and empowerment in every therapeutic relationship.</p>
+
+        <h3 data-id="185" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Service Delivery</h3>
+        <div data-id="186" class="overflow-x-auto mb-6">
+          <table data-id="187" class="emme-table">
+            <thead data-id="188"><tr data-id="189"><th data-id="190">Service Type</th><th data-id="191">Details</th></tr></thead>
+            <tbody data-id="192">
+              <tr data-id="193"><td data-id="194" class="font-medium">In-Person Therapy</td><td data-id="195">Available at our Aurora, CO location</td></tr>
+              <tr data-id="196"><td data-id="197" class="font-medium">Telehealth</td><td data-id="198">Available to clients in Colorado via HIPAA-compliant platform</td></tr>
+              <tr data-id="199"><td data-id="200" class="font-medium">Individual Therapy</td><td data-id="201">Ages 5 and up</td></tr>
+              <tr data-id="202"><td data-id="203" class="font-medium">Couples Therapy</td><td data-id="204">Adults</td></tr>
+              <tr data-id="205"><td data-id="206" class="font-medium">Family Therapy</td><td data-id="207">All ages</td></tr>
+              <tr data-id="208"><td data-id="209" class="font-medium">Group Therapy</td><td data-id="210">Per provider specialty; schedule coordinated with admin</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div data-id="211" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--pink), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 3: Getting Started ===== -->
+    <section data-id="212" id="section-3" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream);">
+      <div data-id="213" class="max-w-4xl mx-auto relative">
+        <span data-id="214" class="section-number-watermark watermark-yellow">03</span>
+        <div data-id="215" class="flex items-center gap-3 mb-2">
+          <span data-id="216" class="section-badge badge-yellow">📋</span>
+          <p data-id="217" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 3</p>
+        </div>
+        <h2 data-id="218" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Getting Started</h2>
+
+        <h3 data-id="219" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Before Your First Session</h3>
+        <div data-id="220" class="info-callout mb-6">
+          All items below must be completed before you see clients. Your onboarding coordinator will walk you through each step.
+        </div>
+
+        <h4 data-id="221" class="font-semibold text-base mb-4" style="color:var(--forest);">Onboarding Checklist</h4>
+        <div data-id="222" class="bg-white rounded-2xl p-5 md:p-6 mb-8 space-y-1" style="border:1px solid #eee7d4;">
+          <div data-id="223" class="checklist-item checklist-gold" data-check><div data-id="224" class="check-box"></div><span data-id="225" class="check-label">Signed Independent Contractor or Employment Agreement</span></div>
+          <div data-id="226" class="checklist-item checklist-gold" data-check><div data-id="227" class="check-box"></div><span data-id="228" class="check-label">W-9 or Tax Information Form submitted</span></div>
+          <div data-id="229" class="checklist-item checklist-gold" data-check><div data-id="230" class="check-box"></div><span data-id="231" class="check-label">NPI number verified and on file</span></div>
+          <div data-id="232" class="checklist-item checklist-gold" data-check><div data-id="233" class="check-box"></div><span data-id="234" class="check-label">Malpractice insurance certificate submitted (minimum $1M/$3M)</span></div>
+          <div data-id="235" class="checklist-item checklist-gold" data-check><div data-id="236" class="check-box"></div><span data-id="237" class="check-label">Copy of active license submitted</span></div>
+          <div data-id="238" class="checklist-item checklist-gold" data-check><div data-id="239" class="check-box"></div><span data-id="240" class="check-label">Background check completed (if applicable)</span></div>
+          <div data-id="241" class="checklist-item checklist-gold" data-check><div data-id="242" class="check-box"></div><span data-id="243" class="check-label">HIPAA training completed and attestation signed</span></div>
+          <div data-id="244" class="checklist-item checklist-gold" data-check><div data-id="245" class="check-box"></div><span data-id="246" class="check-label">EHR (Electronic Health Record) access set up</span></div>
+          <div data-id="247" class="checklist-item checklist-gold" data-check><div data-id="248" class="check-box"></div><span data-id="249" class="check-label">Telehealth platform access set up</span></div>
+          <div data-id="250" class="checklist-item checklist-gold" data-check><div data-id="251" class="check-box"></div><span data-id="252" class="check-label">Billing system orientation completed</span></div>
+          <div data-id="253" class="checklist-item checklist-gold" data-check><div data-id="254" class="check-box"></div><span data-id="255" class="check-label">Emergency procedures reviewed and signed</span></div>
+          <div data-id="256" class="checklist-item checklist-gold" data-check><div data-id="257" class="check-box"></div><span data-id="258" class="check-label">Provider profile submitted (bio, photo, specialties)</span></div>
+          <div data-id="259" class="checklist-item checklist-gold" data-check><div data-id="260" class="check-box"></div><span data-id="261" class="check-label">Intake forms reviewed</span></div>
+          <div data-id="262" class="checklist-item checklist-gold" data-check><div data-id="263" class="check-box"></div><span data-id="264" class="check-label">Supervision schedule confirmed (if pre-licensed)</span></div>
+        </div>
+
+        <div data-id="265" class="flex flex-wrap gap-3 mb-8">
+          <a data-id="266" class="link-placeholder"><i data-id="267" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — EHR Login</a>
+          <a data-id="268" class="link-placeholder"><i data-id="269" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Telehealth Platform</a>
+          <a data-id="270" class="link-placeholder"><i data-id="271" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Provider Profile Form</a>
+        </div>
+
+        <div data-id="272" class="photo-placeholder w-full mb-10" style="height:240px;">
+          <span data-id="273" class="ph-icon"><i data-id="274" data-lucide="camera" class="w-7 h-7"></i></span>
+          <span data-id="275" class="ph-label">Onboarding / Workspace Photo Placeholder</span>
+          <span data-id="276" class="ph-dims">800 × 300px</span>
+        </div>
+
+        <h3 data-id="277" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Required Training</h3>
+        <div data-id="278" class="overflow-x-auto mb-6">
+          <table data-id="279" class="emme-table">
+            <thead data-id="280"><tr data-id="281"><th data-id="282">Training</th><th data-id="283">Completion Deadline</th><th data-id="284">Renewal</th></tr></thead>
+            <tbody data-id="285">
+              <tr data-id="286"><td data-id="287">HIPAA Privacy &amp; Security</td><td data-id="288">Before first session</td><td data-id="289">Annually</td></tr>
+              <tr data-id="290"><td data-id="291">Mandatory Reporting (Colorado)</td><td data-id="292">Before first session</td><td data-id="293">Every 3 years</td></tr>
+              <tr data-id="294"><td data-id="295">Trauma-Informed Care Foundations</td><td data-id="296">Within 30 days</td><td data-id="297">Biannually</td></tr>
+              <tr data-id="298"><td data-id="299">Telehealth Best Practices</td><td data-id="300">Before first telehealth session</td><td data-id="301">Annually</td></tr>
+              <tr data-id="302"><td data-id="303">Cultural Humility &amp; Affirming Care</td><td data-id="304">Within 60 days</td><td data-id="305">Biannually</td></tr>
+              <tr data-id="306"><td data-id="307">Suicide Risk Assessment (CAMS or QPR)</td><td data-id="308">Before first session</td><td data-id="309">Annually</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div data-id="310" class="mb-10">
+          <a data-id="311" class="link-placeholder"><i data-id="312" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Training Portal</a>
+        </div>
+
+        <h3 data-id="313" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Technology Setup</h3>
+        <div data-id="314" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div data-id="315" class="icon-card">
+            <div data-id="316" class="flex items-center gap-2 mb-3"><i data-id="317" data-lucide="monitor" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="318">EHR System</h4></div>
+            <p data-id="319">We use [EHR Name] for scheduling, notes, and client records.</p>
+            <a data-id="320" class="link-placeholder mt-3 text-xs"><i data-id="321" data-lucide="link" class="w-3 h-3"></i> EHR Support</a>
+          </div>
+          <div data-id="322" class="icon-card">
+            <div data-id="323" class="flex items-center gap-2 mb-3"><i data-id="324" data-lucide="video" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="325">Telehealth Platform</h4></div>
+            <p data-id="326">Sessions are conducted via [Platform Name].</p>
+            <a data-id="327" class="link-placeholder mt-3 text-xs"><i data-id="328" data-lucide="link" class="w-3 h-3"></i> Telehealth Setup Guide</a>
+          </div>
+          <div data-id="329" class="icon-card">
+            <div data-id="330" class="flex items-center gap-2 mb-3"><i data-id="331" data-lucide="message-square" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="332">Communication</h4></div>
+            <p data-id="333">All internal team communication is via [Platform — e.g., Slack or Teams].</p>
+            <a data-id="334" class="link-placeholder mt-3 text-xs"><i data-id="335" data-lucide="link" class="w-3 h-3"></i> Team Channel</a>
+          </div>
+        </div>
+
+        <div data-id="336" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--yellow), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 4: Clinical Standards ===== -->
+    <section data-id="337" id="section-4" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream-light);">
+      <div data-id="338" class="max-w-4xl mx-auto relative">
+        <span data-id="339" class="section-number-watermark watermark-gold">04</span>
+        <div data-id="340" class="flex items-center gap-3 mb-2">
+          <span data-id="341" class="section-badge badge-gold">⚖️</span>
+          <p data-id="342" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 4</p>
+        </div>
+        <h2 data-id="343" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Clinical Standards &amp; Ethics</h2>
+
+        <h3 data-id="344" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Code of Ethics</h3>
+        <p data-id="345" class="text-base mb-4" style="color:var(--body);">All Emmé providers are expected to uphold the ethical standards of their respective licensing board (LPC, LCSW, MFT, Psychologist, etc.) as well as those of any relevant national associations (ACA, NASW, AAMFT, APA).</p>
+        <p data-id="346" class="text-base mb-6" style="color:var(--body);">Violations of ethical standards are grounds for immediate contract review and possible termination.</p>
+        <div data-id="347" class="info-callout mb-10">
+          A copy of your licensing board's code of ethics should be reviewed annually. If you have a question about ethical decision-making, bring it to supervision immediately — not after.
+        </div>
+
+        <h3 data-id="348" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Scope of Practice</h3>
+        <p data-id="349" class="text-base mb-4" style="color:var(--body);">Providers are expected to practice <strong data-id="350" style="color:var(--forest);">only within their scope of licensure and competence</strong>. If a client presents with needs beyond your current competencies, consult your supervisor and facilitate a referral as needed.</p>
+        <p data-id="351" class="text-base mb-2" style="color:var(--body);">You are <strong data-id="352">not permitted</strong> to:</p>
+        <ul data-id="353" class="mb-10 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="354" class="flex items-start gap-2"><span data-id="355" style="color:var(--gold);">•</span> Provide services for which you are not trained or licensed</li>
+          <li data-id="356" class="flex items-start gap-2"><span data-id="357" style="color:var(--gold);">•</span> Diagnose outside your scope</li>
+          <li data-id="358" class="flex items-start gap-2"><span data-id="359" style="color:var(--gold);">•</span> Enter into dual relationships with clients</li>
+          <li data-id="360" class="flex items-start gap-2"><span data-id="361" style="color:var(--gold);">•</span> Provide services while impaired</li>
+        </ul>
+
+        <h3 data-id="362" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Trauma-Informed Practice</h3>
+        <div data-id="363" class="pull-quote pq-pink mb-6">
+          <p data-id="364">"Every intake, every session, every administrative touchpoint is an opportunity to communicate safety."</p>
+        </div>
+        <p data-id="365" class="text-base mb-5" style="color:var(--body);">Emmé's clinical approach is rooted in the <strong data-id="366" style="color:var(--forest);">six core principles of trauma-informed care</strong>:</p>
+        <div data-id="367" class="space-y-3 mb-10">
+          <div data-id="368" class="flex items-center gap-4"><span data-id="369" class="gold-number">1</span><span data-id="370" class="text-base font-medium">Safety</span></div>
+          <div data-id="371" class="flex items-center gap-4"><span data-id="372" class="gold-number">2</span><span data-id="373" class="text-base font-medium">Trustworthiness &amp; Transparency</span></div>
+          <div data-id="374" class="flex items-center gap-4"><span data-id="375" class="gold-number">3</span><span data-id="376" class="text-base font-medium">Peer Support</span></div>
+          <div data-id="377" class="flex items-center gap-4"><span data-id="378" class="gold-number">4</span><span data-id="379" class="text-base font-medium">Collaboration &amp; Mutuality</span></div>
+          <div data-id="380" class="flex items-center gap-4"><span data-id="381" class="gold-number">5</span><span data-id="382" class="text-base font-medium">Empowerment &amp; Choice</span></div>
+          <div data-id="383" class="flex items-center gap-4"><span data-id="384" class="gold-number">6</span><span data-id="385" class="text-base font-medium">Cultural, Historical &amp; Gender Awareness</span></div>
+        </div>
+
+        <h3 data-id="386" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Evidence-Based Practices Supported</h3>
+        <div data-id="387" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div data-id="388" class="modality-tag">EMDR</div>
+          <div data-id="389" class="modality-tag">CBT / TF-CBT</div>
+          <div data-id="390" class="modality-tag">DBT Skills</div>
+          <div data-id="391" class="modality-tag">ACT</div>
+          <div data-id="392" class="modality-tag">CPT</div>
+          <div data-id="393" class="modality-tag">Somatic Approaches</div>
+          <div data-id="394" class="modality-tag">Play Therapy</div>
+          <div data-id="395" class="modality-tag">Gottman Method</div>
+        </div>
+        <p data-id="396" class="text-sm mb-6" style="color:var(--body-secondary);">If you use a modality not listed, please discuss with your supervisor to ensure alignment with our clinical framework.</p>
+
+        <div data-id="397" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 5: Documentation ===== -->
+    <section data-id="398" id="section-5" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream);">
+      <div data-id="399" class="max-w-4xl mx-auto relative">
+        <span data-id="400" class="section-number-watermark watermark-pink">05</span>
+        <div data-id="401" class="flex items-center gap-3 mb-2">
+          <span data-id="402" class="section-badge badge-pink">📝</span>
+          <p data-id="403" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 5</p>
+        </div>
+        <h2 data-id="404" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Documentation</h2>
+
+        <h3 data-id="405" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Why Documentation Matters</h3>
+        <p data-id="406" class="text-base mb-6" style="color:var(--body);">Accurate, timely documentation protects your clients, your license, and the practice. All documentation must be completed in our EHR system. Handwritten or external notes are not accepted as the primary record.</p>
+        <div data-id="407" class="info-callout callout-pink mb-10">
+          <strong data-id="408">⚠ Important:</strong> Late or missing documentation may result in a hold on billing and payroll disbursement.
+        </div>
+
+        <h3 data-id="409" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Documentation Timeline</h3>
+        <div data-id="410" class="overflow-x-auto mb-10">
+          <table data-id="411" class="emme-table">
+            <thead data-id="412"><tr data-id="413"><th data-id="414">Document</th><th data-id="415">Completion Deadline</th></tr></thead>
+            <tbody data-id="416">
+              <tr data-id="417"><td data-id="418">Intake / Biopsychosocial Assessment</td><td data-id="419">Within 24 hours of first session</td></tr>
+              <tr data-id="420"><td data-id="421">Diagnosis (DSM-5-TR)</td><td data-id="422">Within first session or as clinically appropriate</td></tr>
+              <tr data-id="423"><td data-id="424">Treatment Plan</td><td data-id="425">Within 3 sessions (30 days for children)</td></tr>
+              <tr data-id="426"><td data-id="427">Progress Notes (SOAP or DAP format)</td><td data-id="428">Within 24 hours of session</td></tr>
+              <tr data-id="429"><td data-id="430">Treatment Plan Review</td><td data-id="431">Every 90 days</td></tr>
+              <tr data-id="432"><td data-id="433">Crisis / Safety Plan</td><td data-id="434">Same day as risk assessment</td></tr>
+              <tr data-id="435"><td data-id="436">Discharge Summary</td><td data-id="437">Within 5 business days of last session</td></tr>
+              <tr data-id="438"><td data-id="439">Release of Information</td><td data-id="440">Before any communication with collateral contacts</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-id="441" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Progress Note Format</h3>
+        <p data-id="442" class="text-base mb-4" style="color:var(--body);">Emmé uses <strong data-id="443" style="color:var(--forest);">SOAP notes</strong> (Subjective, Objective, Assessment, Plan) as the standard format. Notes must include:</p>
+        <div data-id="444" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid #eee7d4;">
+          <div data-id="445" class="checklist-item checklist-pink" data-check><div data-id="446" class="check-box"></div><span data-id="447" class="check-label">Session date, duration, modality (in-person/telehealth)</span></div>
+          <div data-id="448" class="checklist-item checklist-pink" data-check><div data-id="449" class="check-box"></div><span data-id="450" class="check-label">Client presentation (affect, engagement, themes discussed)</span></div>
+          <div data-id="451" class="checklist-item checklist-pink" data-check><div data-id="452" class="check-box"></div><span data-id="453" class="check-label">Clinical observations (objective findings)</span></div>
+          <div data-id="454" class="checklist-item checklist-pink" data-check><div data-id="455" class="check-box"></div><span data-id="456" class="check-label">Assessment of progress toward treatment goals</span></div>
+          <div data-id="457" class="checklist-item checklist-pink" data-check><div data-id="458" class="check-box"></div><span data-id="459" class="check-label">Plan for next session</span></div>
+          <div data-id="460" class="checklist-item checklist-pink" data-check><div data-id="461" class="check-box"></div><span data-id="462" class="check-label">Risk assessment notation (when applicable)</span></div>
+          <div data-id="463" class="checklist-item checklist-pink" data-check><div data-id="464" class="check-box"></div><span data-id="465" class="check-label">Homework or between-session tasks assigned</span></div>
+        </div>
+        <div data-id="466" class="mb-10">
+          <a data-id="467" class="link-placeholder"><i data-id="468" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Progress Note Template</a>
+        </div>
+
+        <h3 data-id="469" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Treatment Plans</h3>
+        <p data-id="470" class="text-base mb-3" style="color:var(--body);">Treatment plans must include:</p>
+        <ul data-id="471" class="mb-4 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="472" class="flex items-start gap-2"><span data-id="473" style="color:var(--pink);">•</span> Presenting problem and diagnostic impressions</li>
+          <li data-id="474" class="flex items-start gap-2"><span data-id="475" style="color:var(--pink);">•</span> Measurable goals (minimum 2, maximum 5)</li>
+          <li data-id="476" class="flex items-start gap-2"><span data-id="477" style="color:var(--pink);">•</span> Targeted interventions for each goal</li>
+          <li data-id="478" class="flex items-start gap-2"><span data-id="479" style="color:var(--pink);">•</span> Estimated frequency and duration of treatment</li>
+          <li data-id="480" class="flex items-start gap-2"><span data-id="481" style="color:var(--pink);">•</span> Client signature or documented verbal consent</li>
+        </ul>
+        <p data-id="482" class="text-base mb-6" style="color:var(--body);">Treatment plans must be <strong data-id="483" style="color:var(--forest);">reviewed and updated every 90 days</strong>, or sooner if there is a significant change in the client's presentation or goals.</p>
+        <div data-id="484" class="mb-8">
+          <a data-id="485" class="link-placeholder"><i data-id="486" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Treatment Plan Template</a>
+        </div>
+
+        <div data-id="487" class="photo-placeholder w-full mb-6" style="height:240px;">
+          <span data-id="488" class="ph-icon"><i data-id="489" data-lucide="camera" class="w-7 h-7"></i></span>
+          <span data-id="490" class="ph-label">Documentation / EHR Screenshot Placeholder</span>
+          <span data-id="491" class="ph-dims">800 × 300px</span>
+        </div>
+
+        <div data-id="492" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--pink), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 6: Client Management ===== -->
+    <section data-id="493" id="section-6" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream-light);">
+      <div data-id="494" class="max-w-4xl mx-auto relative">
+        <span data-id="495" class="section-number-watermark watermark-yellow">06</span>
+        <div data-id="496" class="flex items-center gap-3 mb-2">
+          <span data-id="497" class="section-badge badge-yellow">👤</span>
+          <p data-id="498" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 6</p>
+        </div>
+        <h2 data-id="499" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Client Management</h2>
+
+        <h3 data-id="500" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">The Intake Process</h3>
+        <p data-id="501" class="text-base mb-4" style="color:var(--body);">The intake process at Emmé is designed to be warm, thorough, and efficient. Clients complete online intake paperwork before their first appointment.</p>
+        <h4 data-id="502" class="font-semibold text-base mb-3" style="color:var(--forest);">Provider responsibilities at intake:</h4>
+        <div data-id="503" class="bg-white rounded-2xl p-5 md:p-6 mb-10 space-y-1" style="border:1px solid #eee7d4;">
+          <div data-id="504" class="checklist-item" data-check><div data-id="505" class="check-box"></div><span data-id="506" class="check-label">Confirm intake paperwork is complete in EHR before session</span></div>
+          <div data-id="507" class="checklist-item" data-check><div data-id="508" class="check-box"></div><span data-id="509" class="check-label">Review consents (therapy, telehealth if applicable, release of information)</span></div>
+          <div data-id="510" class="checklist-item" data-check><div data-id="511" class="check-box"></div><span data-id="512" class="check-label">Conduct biopsychosocial assessment</span></div>
+          <div data-id="513" class="checklist-item" data-check><div data-id="514" class="check-box"></div><span data-id="515" class="check-label">Complete initial risk screen</span></div>
+          <div data-id="516" class="checklist-item" data-check><div data-id="517" class="check-box"></div><span data-id="518" class="check-label">Establish initial rapport and explain your approach</span></div>
+          <div data-id="519" class="checklist-item" data-check><div data-id="520" class="check-box"></div><span data-id="521" class="check-label">Discuss fee structure (if relevant to your role)</span></div>
+          <div data-id="522" class="checklist-item" data-check><div data-id="523" class="check-box"></div><span data-id="524" class="check-label">Assign diagnosis and begin treatment plan</span></div>
+        </div>
+
+        <h3 data-id="525" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Scheduling Policies</h3>
+        <div data-id="526" class="info-callout mb-4">
+          All scheduling is managed through our EHR. Providers are responsible for keeping their availability updated at all times.
+        </div>
+        <ul data-id="527" class="mb-10 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="528" class="flex items-start gap-2"><span data-id="529" style="color:var(--gold);">•</span> Providers must maintain a minimum of <strong data-id="530">[X] client hours per week</strong> as specified in their contract.</li>
+          <li data-id="531" class="flex items-start gap-2"><span data-id="532" style="color:var(--gold);">•</span> Schedule changes of more than 2 consecutive weeks must be communicated to admin <strong data-id="533">at least 2 weeks in advance</strong>.</li>
+          <li data-id="534" class="flex items-start gap-2"><span data-id="535" style="color:var(--gold);">•</span> Holidays and planned leave must be entered into the EHR calendar and communicated to your supervisor.</li>
+        </ul>
+
+        <h3 data-id="536" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Cancellation &amp; No-Show Policy</h3>
+        <div data-id="537" class="overflow-x-auto mb-10">
+          <table data-id="538" class="emme-table">
+            <thead data-id="539"><tr data-id="540"><th data-id="541">Situation</th><th data-id="542">Required Action</th></tr></thead>
+            <tbody data-id="543">
+              <tr data-id="544"><td data-id="545">Client cancels with 24+ hours notice</td><td data-id="546">Offer to reschedule; mark in EHR</td></tr>
+              <tr data-id="547"><td data-id="548">Client cancels with less than 24 hours</td><td data-id="549">Late cancellation fee applies per client agreement; document in EHR</td></tr>
+              <tr data-id="550"><td data-id="551">Client no-shows</td><td data-id="552">No-show fee applies per client agreement; document in EHR; attempt outreach</td></tr>
+              <tr data-id="553"><td data-id="554">3 consecutive no-shows</td><td data-id="555">Consult supervisor; consider holding appointment slot</td></tr>
+              <tr data-id="556"><td data-id="557">Provider cancels</td><td data-id="558">Give as much notice as possible; admin must be notified; offer reschedule</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-id="559" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Telehealth Guidelines</h3>
+        <div data-id="560" class="photo-placeholder w-full mb-6" style="height:240px;">
+          <span data-id="561" class="ph-icon"><i data-id="562" data-lucide="camera" class="w-7 h-7"></i></span>
+          <span data-id="563" class="ph-label">Telehealth Setup Photo Placeholder</span>
+          <span data-id="564" class="ph-dims">600 × 300px</span>
+        </div>
+        <div data-id="565" class="pull-quote mb-6">
+          <p data-id="566">"Telehealth is not a lesser version of therapy — it is a different modality that requires its own set of intentional practices."</p>
+        </div>
+        <h4 data-id="567" class="font-semibold text-base mb-3" style="color:var(--forest);">Requirements for telehealth sessions:</h4>
+        <div data-id="568" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid #eee7d4;">
+          <div data-id="569" class="checklist-item checklist-gold" data-check><div data-id="570" class="check-box"></div><span data-id="571" class="check-label">Use only the Emmé-approved HIPAA-compliant platform</span></div>
+          <div data-id="572" class="checklist-item checklist-gold" data-check><div data-id="573" class="check-box"></div><span data-id="574" class="check-label">Conduct sessions from a private, professional location</span></div>
+          <div data-id="575" class="checklist-item checklist-gold" data-check><div data-id="576" class="check-box"></div><span data-id="577" class="check-label">Confirm client location at the start of every session (required for emergency protocol)</span></div>
+          <div data-id="578" class="checklist-item checklist-gold" data-check><div data-id="579" class="check-box"></div><span data-id="580" class="check-label">Verify client identity at each session</span></div>
+          <div data-id="581" class="checklist-item checklist-gold" data-check><div data-id="582" class="check-box"></div><span data-id="583" class="check-label">Have emergency contact and local emergency services information accessible</span></div>
+          <div data-id="584" class="checklist-item checklist-gold" data-check><div data-id="585" class="check-box"></div><span data-id="586" class="check-label">Do not record sessions without explicit written consent</span></div>
+        </div>
+        <div data-id="587" class="mb-10">
+          <a data-id="588" class="link-placeholder"><i data-id="589" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Telehealth Platform</a>
+        </div>
+
+        <h3 data-id="590" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Communication with Clients</h3>
+        <ul data-id="591" class="mb-6 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="592" class="flex items-start gap-2"><span data-id="593" style="color:var(--gold);">•</span> All client communication must occur through the EHR messaging system or approved HIPAA-compliant channels.</li>
+          <li data-id="594" class="flex items-start gap-2"><span data-id="595" style="color:var(--gold);">•</span> <strong data-id="596">Do not text, email, or communicate with clients via personal devices or accounts.</strong></li>
+          <li data-id="597" class="flex items-start gap-2"><span data-id="598" style="color:var(--gold);">•</span> Response time for client messages: within <strong data-id="599">one business day</strong>.</li>
+          <li data-id="600" class="flex items-start gap-2"><span data-id="601" style="color:var(--gold);">•</span> After-hours crisis support: direct clients to 988 (Suicide &amp; Crisis Lifeline) or 911 for emergencies.</li>
+        </ul>
+
+        <div data-id="602" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--yellow), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 7: Billing ===== -->
+    <section data-id="603" id="section-7" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream);">
+      <div data-id="604" class="max-w-4xl mx-auto relative">
+        <span data-id="605" class="section-number-watermark watermark-gold">07</span>
+        <div data-id="606" class="flex items-center gap-3 mb-2">
+          <span data-id="607" class="section-badge badge-gold">💼</span>
+          <p data-id="608" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 7</p>
+        </div>
+        <h2 data-id="609" class="font-display text-3xl md:text-4xl mb-6" style="color:var(--forest); font-weight:700;">Billing &amp; Compensation</h2>
+
+        <div data-id="610" class="info-callout mb-10">
+          This section provides a general overview. Your specific compensation structure is outlined in your individual contract. If you have billing questions, contact the billing team directly.
+        </div>
+
+        <h3 data-id="611" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">How Billing Works</h3>
+        <p data-id="612" class="text-base mb-4" style="color:var(--body);">Emmé handles all billing on behalf of providers. You are responsible for:</p>
+        <div data-id="613" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid #eee7d4;">
+          <div data-id="614" class="checklist-item checklist-pink" data-check><div data-id="615" class="check-box"></div><span data-id="616" class="check-label">Accurate session documentation (date, time, CPT code, modality)</span></div>
+          <div data-id="617" class="checklist-item checklist-pink" data-check><div data-id="618" class="check-box"></div><span data-id="619" class="check-label">Correct diagnosis codes (ICD-10/DSM-5-TR)</span></div>
+          <div data-id="620" class="checklist-item checklist-pink" data-check><div data-id="621" class="check-box"></div><span data-id="622" class="check-label">Timely note completion (within 24 hours)</span></div>
+          <div data-id="623" class="checklist-item checklist-pink" data-check><div data-id="624" class="check-box"></div><span data-id="625" class="check-label">Reporting any billing concerns or errors immediately</span></div>
+        </div>
+        <p data-id="626" class="text-sm mb-10" style="color:var(--body-secondary);">Do not discuss specific fees or insurance rates directly with clients unless you are instructed to by the admin team.</p>
+
+        <h3 data-id="627" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Common CPT Codes</h3>
+        <div data-id="628" class="overflow-x-auto mb-8">
+          <table data-id="629" class="emme-table">
+            <thead data-id="630"><tr data-id="631"><th data-id="632">CPT Code</th><th data-id="633">Description</th><th data-id="634">Duration</th></tr></thead>
+            <tbody data-id="635">
+              <tr data-id="636"><td data-id="637" class="font-semibold" style="color:var(--forest);">90791</td><td data-id="638">Psychiatric Diagnostic Evaluation (Intake)</td><td data-id="639">60–90 min</td></tr>
+              <tr data-id="640"><td data-id="641" class="font-semibold" style="color:var(--forest);">90837</td><td data-id="642">Individual Therapy</td><td data-id="643">60 min</td></tr>
+              <tr data-id="644"><td data-id="645" class="font-semibold" style="color:var(--forest);">90834</td><td data-id="646">Individual Therapy</td><td data-id="647">45 min</td></tr>
+              <tr data-id="648"><td data-id="649" class="font-semibold" style="color:var(--forest);">90832</td><td data-id="650">Individual Therapy</td><td data-id="651">30 min</td></tr>
+              <tr data-id="652"><td data-id="653" class="font-semibold" style="color:var(--forest);">90847</td><td data-id="654">Family Therapy with Patient Present</td><td data-id="655">60 min</td></tr>
+              <tr data-id="656"><td data-id="657" class="font-semibold" style="color:var(--forest);">90846</td><td data-id="658">Family Therapy without Patient Present</td><td data-id="659">60 min</td></tr>
+              <tr data-id="660"><td data-id="661" class="font-semibold" style="color:var(--forest);">90853</td><td data-id="662">Group Psychotherapy</td><td data-id="663">60–90 min</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-id="664" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Insurance Panels</h3>
+        <div data-id="665" class="flex flex-wrap gap-3 mb-10">
+          <a data-id="666" class="link-placeholder"><i data-id="667" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Current Insurance Panels &amp; Rates</a>
+          <a data-id="668" class="link-placeholder"><i data-id="669" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Out-of-Network Superbill Process</a>
+        </div>
+
+        <h3 data-id="670" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Compensation &amp; Payroll</h3>
+        <ul data-id="671" class="mb-6 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="672" class="flex items-start gap-2"><span data-id="673" style="color:var(--gold);">•</span> Compensation is disbursed on a <strong data-id="674">[bi-weekly / monthly]</strong> basis per your contract.</li>
+          <li data-id="675" class="flex items-start gap-2"><span data-id="676" style="color:var(--gold);">•</span> Providers must have all notes signed and submitted before payroll processing.</li>
+          <li data-id="677" class="flex items-start gap-2"><span data-id="678" style="color:var(--gold);">•</span> Disputed or missing sessions must be reported within <strong data-id="679">5 business days</strong> of payroll.</li>
+        </ul>
+        <div data-id="680" class="flex flex-wrap gap-3 mb-6">
+          <a data-id="681" class="link-placeholder"><i data-id="682" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Payroll &amp; Compensation Schedule</a>
+          <a data-id="683" class="link-placeholder"><i data-id="684" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Invoice Submission Form (if applicable)</a>
+        </div>
+
+        <div data-id="685" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 8: Team & Supervision ===== -->
+    <section data-id="686" id="section-8" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream-light);">
+      <div data-id="687" class="max-w-4xl mx-auto relative">
+        <span data-id="688" class="section-number-watermark watermark-pink">08</span>
+        <div data-id="689" class="flex items-center gap-3 mb-2">
+          <span data-id="690" class="section-badge badge-pink">🗣️</span>
+          <p data-id="691" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 8</p>
+        </div>
+        <h2 data-id="692" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Team &amp; Supervision</h2>
+
+        <h3 data-id="693" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Supervision Structure</h3>
+        <p data-id="694" class="text-base mb-5" style="color:var(--body);">Emmé provides <strong data-id="695" style="color:var(--forest);">individual and group supervision</strong> for all pre-licensed providers. Fully licensed providers are encouraged (and at times required) to participate in consultation.</p>
+        <div data-id="696" class="overflow-x-auto mb-10">
+          <table data-id="697" class="emme-table">
+            <thead data-id="698"><tr data-id="699"><th data-id="700">Provider Level</th><th data-id="701">Required Supervision</th></tr></thead>
+            <tbody data-id="702">
+              <tr data-id="703"><td data-id="704">Pre-Licensed (LPCC, LSW, MFTC)</td><td data-id="705">Minimum 1 hr individual + 1 hr group per week</td></tr>
+              <tr data-id="706"><td data-id="707">Licensed (LPC, LCSW, MFT)</td><td data-id="708">Monthly group consultation minimum</td></tr>
+              <tr data-id="709"><td data-id="710">Specialized roles</td><td data-id="711">Per contract and clinical need</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-id="712" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Meeting Structure</h3>
+        <div data-id="713" class="info-callout callout-pink mb-5">
+          All team meetings are mandatory unless a conflict is reported in advance.
+        </div>
+        <ul data-id="714" class="mb-10 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="715" class="flex items-start gap-2"><span data-id="716" style="color:var(--pink);">•</span> <strong data-id="717">All-Team Meeting:</strong> [Frequency — e.g., Monthly]</li>
+          <li data-id="718" class="flex items-start gap-2"><span data-id="719" style="color:var(--pink);">•</span> <strong data-id="720">Clinical Consultation Group:</strong> [Frequency] — open case discussion, ethics review</li>
+          <li data-id="721" class="flex items-start gap-2"><span data-id="722" style="color:var(--pink);">•</span> <strong data-id="723">Provider Check-ins:</strong> Bi-weekly individual meeting with supervisor</li>
+          <li data-id="724" class="flex items-start gap-2"><span data-id="725" style="color:var(--pink);">•</span> <strong data-id="726">Training Sessions:</strong> Quarterly; schedule announced in advance</li>
+        </ul>
+        <div data-id="727" class="mb-10">
+          <a data-id="728" class="link-placeholder"><i data-id="729" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Meeting Schedule</a>
+        </div>
+
+        <h3 data-id="730" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Communication Channels</h3>
+        <div data-id="731" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          <div data-id="732" class="icon-card">
+            <div data-id="733" class="flex items-center gap-2 mb-3"><i data-id="734" data-lucide="phone" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="735">Clinical Urgencies</h4></div>
+            <p data-id="736">Contact your supervisor by phone or designated urgent channel immediately.</p>
+          </div>
+          <div data-id="737" class="icon-card">
+            <div data-id="738" class="flex items-center gap-2 mb-3"><i data-id="739" data-lucide="mail" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="740">Administrative Questions</h4></div>
+            <p data-id="741">Use the EHR internal messaging or email.</p>
+            <a data-id="742" class="link-placeholder mt-3 text-xs"><i data-id="743" data-lucide="link" class="w-3 h-3"></i> Admin Contact</a>
+          </div>
+          <div data-id="744" class="icon-card">
+            <div data-id="745" class="flex items-center gap-2 mb-3"><i data-id="746" data-lucide="message-circle" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="747">Team Updates</h4></div>
+            <p data-id="748">Shared via [platform name].</p>
+            <a data-id="749" class="link-placeholder mt-3 text-xs"><i data-id="750" data-lucide="link" class="w-3 h-3"></i> Team Channel</a>
+          </div>
+        </div>
+
+        <h3 data-id="751" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Conflict &amp; Grievance Process</h3>
+        <p data-id="752" class="text-base mb-4" style="color:var(--body);">If you experience a conflict with a colleague, client, or administrative decision:</p>
+        <div data-id="753" class="space-y-3 mb-6">
+          <div data-id="754" class="flex items-start gap-4"><span data-id="755" class="gold-number">1</span><span data-id="756" class="text-base">Attempt direct, professional resolution first.</span></div>
+          <div data-id="757" class="flex items-start gap-4"><span data-id="758" class="gold-number">2</span><span data-id="759" class="text-base">Bring the concern to your supervisor within 5 business days.</span></div>
+          <div data-id="760" class="flex items-start gap-4"><span data-id="761" class="gold-number">3</span><span data-id="762" class="text-base">If unresolved, submit a formal written grievance to leadership.</span></div>
+          <div data-id="763" class="flex items-start gap-4"><span data-id="764" class="gold-number">4</span><span data-id="765" class="text-base">Leadership will respond in writing within 10 business days.</span></div>
+        </div>
+        <div data-id="766" class="mb-6">
+          <a data-id="767" class="link-placeholder"><i data-id="768" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Grievance Form</a>
+        </div>
+
+        <div data-id="769" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--pink), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 9: Policies & Compliance ===== -->
+    <section data-id="770" id="section-9" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream);">
+      <div data-id="771" class="max-w-4xl mx-auto relative">
+        <span data-id="772" class="section-number-watermark watermark-yellow">09</span>
+        <div data-id="773" class="flex items-center gap-3 mb-2">
+          <span data-id="774" class="section-badge badge-yellow">🔒</span>
+          <p data-id="775" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 9</p>
+        </div>
+        <h2 data-id="776" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Policies &amp; Compliance</h2>
+
+        <h3 data-id="777" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">HIPAA &amp; Confidentiality</h3>
+        <p data-id="778" class="text-base mb-5" style="color:var(--body);">All providers must comply with HIPAA Privacy and Security Rules. You signed a Business Associate Agreement (BAA) at onboarding.</p>
+        <div data-id="779" class="info-callout mb-6" style="border-left-color: #cc3a38;">
+          <strong data-id="780">🚨 Critical:</strong> <strong data-id="781">Never</strong> share client information — including name, diagnosis, or session details — via unsecured channels (personal email, text message, social media, or non-HIPAA-compliant platforms).
+        </div>
+
+        <h4 data-id="782" class="font-semibold text-base mb-3" style="color:var(--forest);">Permitted disclosures without client consent include:</h4>
+        <div data-id="783" class="bg-white rounded-2xl p-5 md:p-6 mb-8 space-y-1" style="border:1px solid #eee7d4;">
+          <div data-id="784" class="checklist-item" data-check><div data-id="785" class="check-box"></div><span data-id="786" class="check-label">When the client is at imminent risk of harm to self or others</span></div>
+          <div data-id="787" class="checklist-item" data-check><div data-id="788" class="check-box"></div><span data-id="789" class="check-label">When required by court order or law</span></div>
+          <div data-id="790" class="checklist-item" data-check><div data-id="791" class="check-box"></div><span data-id="792" class="check-label">For treatment, payment, or healthcare operations (within the team)</span></div>
+          <div data-id="793" class="checklist-item" data-check><div data-id="794" class="check-box"></div><span data-id="795" class="check-label">When required for mandatory reporting</span></div>
+        </div>
+        <p data-id="796" class="text-base mb-4" style="color:var(--body);">All other disclosures require a signed <strong data-id="797" style="color:var(--forest);">Release of Information (ROI)</strong>.</p>
+        <div data-id="798" class="mb-10">
+          <a data-id="799" class="link-placeholder"><i data-id="800" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — ROI Form</a>
+        </div>
+
+        <h3 data-id="801" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Mandatory Reporting (Colorado)</h3>
+        <p data-id="802" class="text-base mb-3" style="color:var(--body);">Colorado law requires all mental health professionals to report:</p>
+        <ul data-id="803" class="mb-4 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="804" class="flex items-start gap-2"><span data-id="805" style="color:var(--yellow);">•</span> Suspected child abuse or neglect</li>
+          <li data-id="806" class="flex items-start gap-2"><span data-id="807" style="color:var(--yellow);">•</span> Suspected elder or dependent adult abuse</li>
+          <li data-id="808" class="flex items-start gap-2"><span data-id="809" style="color:var(--yellow);">•</span> Imminent risk of harm to an identifiable third party (duty to warn)</li>
+        </ul>
+        <div data-id="810" class="info-callout mb-6">
+          <strong data-id="811">When in doubt, consult your supervisor before making a report — but never delay a report if a child is in immediate danger.</strong>
+        </div>
+        <div data-id="812" class="mb-10">
+          <a data-id="813" class="link-placeholder"><i data-id="814" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Colorado Mandatory Reporting Guidelines</a>
+        </div>
+
+        <h3 data-id="815" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Crisis &amp; Emergency Procedures</h3>
+        <div data-id="816" class="pull-quote pq-pink mb-6">
+          <p data-id="817">"Every provider should know the crisis protocol before they need it."</p>
+        </div>
+        <h4 data-id="818" class="font-semibold text-base mb-4" style="color:var(--forest);">If a client is in immediate danger:</h4>
+        <div data-id="819" class="space-y-3 mb-8">
+          <div data-id="820" class="flex items-start gap-4"><span data-id="821" class="gold-number">1</span><span data-id="822" class="text-base"><strong data-id="823">Stay on the phone or video call</strong> with the client.</span></div>
+          <div data-id="824" class="flex items-start gap-4"><span data-id="825" class="gold-number">2</span><span data-id="826" class="text-base"><strong data-id="827">Attempt to get their current location.</strong></span></div>
+          <div data-id="828" class="flex items-start gap-4"><span data-id="829" class="gold-number">3</span><span data-id="830" class="text-base"><strong data-id="831">Call 911</strong> and request a wellness check if you cannot maintain contact.</span></div>
+          <div data-id="832" class="flex items-start gap-4"><span data-id="833" class="gold-number">4</span><span data-id="834" class="text-base"><strong data-id="835">Notify your supervisor immediately</strong> (same day, even after hours).</span></div>
+          <div data-id="836" class="flex items-start gap-4"><span data-id="837" class="gold-number">5</span><span data-id="838" class="text-base"><strong data-id="839">Document the crisis in EHR</strong> within 2 hours.</span></div>
+          <div data-id="840" class="flex items-start gap-4"><span data-id="841" class="gold-number">6</span><span data-id="842" class="text-base"><strong data-id="843">Complete a Safety Plan</strong> with the client at the next available session.</span></div>
+        </div>
+
+        <h4 data-id="844" class="font-semibold text-base mb-4" style="color:var(--forest);">Crisis Resources</h4>
+        <div data-id="845" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          <div data-id="846" class="crisis-card">
+            <div data-id="847" class="cc-name">988 Suicide &amp; Crisis Lifeline</div>
+            <div data-id="848" class="cc-number">Call or text 988</div>
+          </div>
+          <div data-id="849" class="crisis-card">
+            <div data-id="850" class="cc-name">Colorado Crisis Services</div>
+            <div data-id="851" class="cc-number">1-844-493-8255</div>
+          </div>
+          <div data-id="852" class="crisis-card">
+            <div data-id="853" class="cc-name">National Domestic Violence Hotline</div>
+            <div data-id="854" class="cc-number">1-800-799-7233</div>
+          </div>
+          <div data-id="855" class="crisis-card">
+            <div data-id="856" class="cc-name">Crisis Text Line</div>
+            <div data-id="857" class="cc-number">Text HOME to 741741</div>
+          </div>
+        </div>
+
+        <h3 data-id="858" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Social Media &amp; Public Conduct</h3>
+        <ul data-id="859" class="mb-6 space-y-2 pl-5" style="color:var(--body);">
+          <li data-id="860" class="flex items-start gap-2"><span data-id="861" style="color:var(--gold);">•</span> Do not post about clients, sessions, or clinical content in any identifiable way.</li>
+          <li data-id="862" class="flex items-start gap-2"><span data-id="863" style="color:var(--gold);">•</span> Your public-facing social media represents Emmé's values. Be mindful of content that could harm the reputation of the practice or the profession.</li>
+          <li data-id="864" class="flex items-start gap-2"><span data-id="865" style="color:var(--gold);">•</span> For questions about public or marketing content, contact leadership.</li>
+        </ul>
+        <div data-id="866" class="mb-10">
+          <a data-id="867" class="link-placeholder"><i data-id="868" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Social Media Policy Full Document</a>
+        </div>
+
+        <h3 data-id="869" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Professional Boundaries</h3>
+        <div data-id="870" class="info-callout callout-pink mb-6">
+          <strong data-id="871">Dual relationships</strong> — including romantic, financial, or overly personal relationships with current or former clients — are prohibited and may constitute an ethics violation.
+        </div>
+
+        <div data-id="872" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--yellow), transparent);"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 10: Resources ===== -->
+    <section data-id="873" id="section-10" class="section-block py-16 md:py-24 px-6 md:px-12 lg:px-20 relative" style="background:var(--cream-light);">
+      <div data-id="874" class="max-w-4xl mx-auto relative">
+        <span data-id="875" class="section-number-watermark watermark-gold">10</span>
+        <div data-id="876" class="flex items-center gap-3 mb-2">
+          <span data-id="877" class="section-badge badge-gold">📚</span>
+          <p data-id="878" class="text-xs font-semibold tracking-[0.2em] uppercase" style="color:var(--gold);">Section 10</p>
+        </div>
+        <h2 data-id="879" class="font-display text-3xl md:text-4xl mb-10" style="color:var(--forest); font-weight:700;">Resources &amp; Directory</h2>
+
+        <div data-id="880" class="photo-placeholder w-full mb-10" style="height:220px;">
+          <span data-id="881" class="ph-icon"><i data-id="882" data-lucide="camera" class="w-7 h-7"></i></span>
+          <span data-id="883" class="ph-label">Resources / Community Photo Placeholder</span>
+          <span data-id="884" class="ph-dims">800 × 280px</span>
+        </div>
+
+        <h3 data-id="885" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Forms &amp; Templates</h3>
+        <div data-id="886" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
+          <a data-id="887" class="resource-link"><i data-id="888" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Intake Paperwork Template</a>
+          <a data-id="889" class="resource-link"><i data-id="890" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Biopsychosocial Assessment Template</a>
+          <a data-id="891" class="resource-link"><i data-id="892" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Treatment Plan Template</a>
+          <a data-id="893" class="resource-link"><i data-id="894" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Progress Note (SOAP) Template</a>
+          <a data-id="895" class="resource-link"><i data-id="896" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Safety Plan Template</a>
+          <a data-id="897" class="resource-link"><i data-id="898" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Discharge Summary Template</a>
+          <a data-id="899" class="resource-link"><i data-id="900" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Release of Information Form</a>
+          <a data-id="901" class="resource-link"><i data-id="902" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Grievance Form</a>
+          <a data-id="903" class="resource-link"><i data-id="904" data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i> Supervision Log (Pre-Licensed)</a>
+        </div>
+
+        <h3 data-id="905" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Training &amp; Professional Development</h3>
+        <div data-id="906" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
+          <a data-id="907" class="resource-link"><i data-id="908" data-lucide="graduation-cap" class="w-4 h-4 flex-shrink-0"></i> HIPAA Training Portal</a>
+          <a data-id="909" class="resource-link"><i data-id="910" data-lucide="graduation-cap" class="w-4 h-4 flex-shrink-0"></i> Mandatory Reporting Training</a>
+          <a data-id="911" class="resource-link"><i data-id="912" data-lucide="graduation-cap" class="w-4 h-4 flex-shrink-0"></i> Trauma-Informed Care Training</a>
+          <a data-id="913" class="resource-link"><i data-id="914" data-lucide="graduation-cap" class="w-4 h-4 flex-shrink-0"></i> Cultural Humility Resources</a>
+          <a data-id="915" class="resource-link"><i data-id="916" data-lucide="heart" class="w-4 h-4 flex-shrink-0"></i> Provider Wellness Resources</a>
+        </div>
+
+        <h3 data-id="917" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Community Referral Network</h3>
+        <div data-id="918" class="info-callout mb-4">
+          We maintain a referral list for specialty services outside our scope. Contact admin for the most current version.
+        </div>
+        <div data-id="919" class="mb-10">
+          <a data-id="920" class="resource-link inline-flex"><i data-id="921" data-lucide="external-link" class="w-4 h-4 flex-shrink-0"></i> Community Referral Directory</a>
+        </div>
+
+        <h3 data-id="922" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Contact Directory</h3>
+        <div data-id="923" class="overflow-x-auto mb-8">
+          <table data-id="924" class="emme-table">
+            <thead data-id="925"><tr data-id="926"><th data-id="927">Role</th><th data-id="928">Contact</th><th data-id="929">How to Reach</th></tr></thead>
+            <tbody data-id="930">
+              <tr data-id="931"><td data-id="932">Clinical Director / Supervisor</td><td data-id="933">[Name Placeholder]</td><td data-id="934"><a data-id="935" class="link-placeholder text-xs py-1 px-3"><i data-id="936" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="937"><td data-id="938">Administrative Lead</td><td data-id="939">[Name Placeholder]</td><td data-id="940"><a data-id="941" class="link-placeholder text-xs py-1 px-3"><i data-id="942" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="943"><td data-id="944">Billing Team</td><td data-id="945">[Name Placeholder]</td><td data-id="946"><a data-id="947" class="link-placeholder text-xs py-1 px-3"><i data-id="948" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="949"><td data-id="950">HR / Onboarding</td><td data-id="951">[Name Placeholder]</td><td data-id="952"><a data-id="953" class="link-placeholder text-xs py-1 px-3"><i data-id="954" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="955"><td data-id="956">Technology Support</td><td data-id="957">[Name Placeholder]</td><td data-id="958"><a data-id="959" class="link-placeholder text-xs py-1 px-3"><i data-id="960" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="961"><td data-id="962">Practice Owner</td><td data-id="963">[Name Placeholder]</td><td data-id="964"><a data-id="965" class="link-placeholder text-xs py-1 px-3"><i data-id="966" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer data-id="967" class="relative py-16 px-6 text-center" style="background: linear-gradient(135deg, var(--forest-dark), var(--forest));">
+      <svg data-id="968" class="absolute top-0 right-0" width="200" height="200" viewBox="0 0 200 200" fill="none" style="opacity:0.05;">
+        <path data-id="969" d="M160 20c-20 15-40 40-55 70-10 20-12 45-5 65 15-10 35-25 50-45 18-22 28-50 22-75-1-6-5-12-12-15z" fill="#F2C94C"/>
+        <path data-id="970" d="M140 60c-15 15-30 40-35 70-3 18 0 35 8 48 12-12 25-30 32-50 10-22 12-45 7-62-1-3-6-5-12-6z" fill="#D4869B"/>
+      </svg>
+      <svg data-id="971" class="absolute bottom-0 left-0" width="160" height="160" viewBox="0 0 160 160" fill="none" style="opacity:0.04;">
+        <path data-id="972" d="M30 140c15-20 40-50 70-65 20-10 45-12 60-5-8 15-20 35-40 50-22 18-50 25-75 25-5-1-12-3-15-5z" fill="#F2C94C"/>
+        <path data-id="973" d="M50 120c10-15 30-35 55-45 18-8 35-5 48 3-10 12-25 28-45 38-22 12-45 15-55 8-1-1-3-3-3-4z" fill="#8FB49A"/>
+      </svg>
+
+      <div data-id="974" class="relative z-10">
+        <div data-id="975" class="flex justify-center mb-4">
+          <div data-id="976" style="background: #FBF7EE; border-radius: 12px; padding: 12px 24px; display: inline-block;">
+            <img data-id="977" src="data:image/png;base64,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" alt="Emmé Therapy Services logo" style="width: 260px; display: block; margin: 0 auto; max-width: 100%; height: auto;" />
+          </div>
+        </div>
+
+        <p data-id="978" class="text-sm mb-6 max-w-xl mx-auto" style="color:var(--forest-light); opacity: 0.8;">This guidebook is intended for Emmé Therapy Services providers only and is subject to change. Last updated: June 2026.</p>
+
+        <a data-id="979" class="link-placeholder inline-flex" style="border-color: var(--gold-light); color: var(--gold-light);"><i data-id="980" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Provider Portal</a>
+
+        <div data-id="981" class="mt-10 pt-6" style="border-top: 1px solid rgba(143,180,154,0.2);">
+          <p data-id="982" class="text-xs" style="color:var(--forest-light); opacity: 0.5;">Made by Copilot</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Back to Top Button -->
+  <button data-id="983" id="back-to-top-emme" aria-label="Back to top">↑</button>
+
+  <script>
+    // Guard Lucide initialization
+    if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+      lucide.createIcons();
+    }
+
+    // === Sidebar Navigation ===
+    var sidebarLinks = document.querySelectorAll('.sidebar-link');
+    var sections = [];
+    sidebarLinks.forEach(function(link) {
+      var sectionId = link.getAttribute('data-section');
+      if (sectionId) {
+        var el = document.getElementById(sectionId);
+        if (el) sections.push({ link: link, el: el, id: sectionId });
+      }
+    });
+
+    // Smooth scroll on click
+    sidebarLinks.forEach(function(link) {
+      link.addEventListener('click', function() {
+        var sectionId = this.getAttribute('data-section');
+        var target = document.getElementById(sectionId);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+          // Close mobile menu
+          var sidebar = document.getElementById('sidebar-emme');
+          if (sidebar.classList.contains('mobile-open')) {
+            sidebar.classList.remove('mobile-open');
+          }
+        }
+      });
+    });
+
+    // Active state on scroll
+    function updateActiveSection() {
+      var scrollPos = window.scrollY + 200;
+      var active = null;
+      for (var i = sections.length - 1; i >= 0; i--) {
+        if (sections[i].el.offsetTop <= scrollPos) {
+          active = sections[i];
+          break;
+        }
+      }
+      sidebarLinks.forEach(function(l) { l.classList.remove('active'); });
+      if (active) active.link.classList.add('active');
+    }
+
+    // Progress bar
+    var progressBar = document.getElementById('progress-bar-emme');
+    function updateProgress() {
+      var scrollTop = window.scrollY;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      progressBar.style.width = Math.min(progress, 100) + '%';
+    }
+
+    // Back to top button
+    var backToTopBtn = document.getElementById('back-to-top-emme');
+    function updateBackToTop() {
+      if (window.scrollY > 600) {
+        backToTopBtn.style.display = 'flex';
+      } else {
+        backToTopBtn.style.display = 'none';
+      }
+    }
+    backToTopBtn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Scroll event handler
+    var ticking = false;
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        window.requestAnimationFrame(function() {
+          updateActiveSection();
+          updateProgress();
+          updateBackToTop();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // Initialize
+    updateActiveSection();
+    updateProgress();
+    updateBackToTop();
+
+    // === Section Fade-in Animation ===
+    var sectionBlocks = document.querySelectorAll('.section-block');
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.05 });
+    sectionBlocks.forEach(function(block) { observer.observe(block); });
+
+    // === Checklist Toggle ===
+    var checklistItems = document.querySelectorAll('[data-check]');
+    checklistItems.forEach(function(item) {
+      item.addEventListener('click', function() {
+        this.classList.toggle('checked');
+      });
+    });
+
+    // === Mobile Menu Toggle ===
+    var mobileMenuBtn = document.getElementById('mobile-menu-btn-emme');
+    var mobileCloseBtn = document.getElementById('mobile-close-btn-emme');
+    var sidebar = document.getElementById('sidebar-emme');
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', function() {
+        sidebar.classList.add('mobile-open');
+      });
+    }
+    if (mobileCloseBtn) {
+      mobileCloseBtn.addEventListener('click', function() {
+        sidebar.classList.remove('mobile-open');
+      });
+    }
+
+    // === Print Button ===
+    var printBtn = document.getElementById('print-btn-emme');
+    if (printBtn) {
+      printBtn.addEventListener('click', function() {
+        window.print();
+      });
+    }
+
+    // === Download PDF placeholder ===
+    var downloadBtn = document.getElementById('download-btn-emme');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function() {
+        window.print();
+      });
+    }
+  </script>
+</body>
+</html>
