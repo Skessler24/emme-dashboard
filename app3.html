@@ -10,14 +10,14 @@
         theme: {
           extend: {
             colors: {
-              primary: '#0d5f6e',
+              primary: '#084339',
               'primary-dark': '#094e5b',
               'primary-light': '#1a7a8c',
-              secondary: '#4a9e8c',
+              secondary: '#f8cacb',
               'secondary-light': '#5fbaa6',
-              cream: '#faf7f2',
+              cream: '#fef7ec',
               'cream-dark': '#f0ebe3',
-              accent: '#f4a261',
+              accent: '#ffca34',
               'accent-dark': '#e08c3e',
               'accent-light': '#f7b97a',
             }
@@ -29,11 +29,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --primary: #0d5f6e;
+        --primary: #084339;
         --primary-dark: #094e5b;
-        --secondary: #4a9e8c;
-        --cream: #faf7f2;
-        --accent: #f4a261;
+        --secondary: #f8cacb;
+        --cream: #fef7ec;
+        --accent: #ffca34;
       }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html { scroll-behavior: smooth; font-family: 'Inter', system-ui, sans-serif; }
@@ -120,7 +120,7 @@
       .fav-star-btn:hover { transform: scale(1.15); }
       .fav-star-btn .star-icon { width: 22px; height: 22px; transition: all 0.2s ease; }
       .fav-star-btn .star-icon.unfav { color: #c0c0c0; }
-      .fav-star-btn .star-icon.fav { color: #f4a261; fill: #f4a261; }
+      .fav-star-btn .star-icon.fav { color: #ffca34; fill: #ffca34; }
       @keyframes starPop { 0% { transform: scale(1); } 50% { transform: scale(1.35); } 100% { transform: scale(1); } }
       .star-pop { animation: starPop 0.3s ease; }
 
@@ -174,8 +174,38 @@
     <app-icon data-id="1" hidden data-icon="book-open" data-palette="Green"></app-icon>
 
     <!-- BACK TO HOME NAV BAR -->
-    <div data-id="2" class="back-to-home-bar no-print">
-      <a data-id="3" id="back-home-link" href="https://copilot.microsoft.com/shares/artifacts/H8tAgPeYVRcGK8gnoUsZT" target="_blank" rel="noopener noreferrer" class="back-link">← Home Dashboard</a>
+    <div class="back-to-home-bar no-print">
+
+  <a href="index.html" class="back-link">
+    🏠 Dashboard
+  </a>
+
+  <div style="display:flex; gap:18px; align-items:center;">
+
+    <a href="app1.html" class="back-link">
+      📖 Guidebook
+    </a>
+
+    <a href="app2.html" class="back-link">
+      🧰 Reference Toolkit
+    </a>
+
+    <a href="app4.html" class="back-link">
+      📊 Report Creator
+    </a>
+
+  </div>
+
+  <a href="https://www.emmeco.org/"
+     target="_blank"
+     rel="noopener noreferrer"
+     class="emme-logo-link">
+     Emme Co.
+  </a>
+
+</div>
+      <a data-id="3" id="back-home-link" href="https://app3.html
+
       <a data-id="4" id="emme-logo-link" href="https://www.emmeco.org/" target="_blank" rel="noopener noreferrer" class="emme-logo-link">Emme</a>
     </div>
 
@@ -192,10 +222,38 @@
             <p data-id="13" class="text-[11px] md:text-xs text-teal-200 -mt-0.5 hidden sm:block">Your centralized therapy resource library</p>
           </div>
         </div>
-        <nav data-id="14" class="hidden md:flex items-center gap-1 text-sm font-medium">
-          <a data-id="15" id="nav-dash-lk01" href="#dashboard" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-primary-light transition">🏠 Dashboard</a>
-          <a data-id="16" id="nav-guide-lk02" href="https://emmeco031-my.sharepoint.com/personal/jenriat_emmeco_org/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjenriat%5Femmeco%5Forg%2FDocuments%2FEMME%20TEAM&viewid=f9ae0229%2D0179%2D44b8%2D8daf%2D31cc549769ca" target="_blank" rel="noopener" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-primary-light transition">📖 Guidebook</a>
-          <span data-id="17" class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-light/40">👤 Samantha</span>
+        <nav class="hidden md:flex items-center gap-3 text-sm font-medium">
+
+  <a href="index.html"
+     class="px-3 py-2 rounded-lg hover:bg-primary-light transition">
+     🏠 Dashboard
+  </a>
+
+  <a href="app1.html"
+     class="px-3 py-2 rounded-lg hover:bg-primary-light transition">
+     📖 Guidebook
+  </a>
+
+  <a href="app2.html"
+     class="px-3 py-2 rounded-lg hover:bg-primary-light transition">
+     🧰 Reference Toolkit
+  </a>
+
+  <a href="app3.html"
+     class="px-3 py-2 rounded-lg bg-primary-light/40">
+     📚 Resource Hub
+  </a>
+
+  <a href="app4.html"
+     class="px-3 py-2 rounded-lg hover:bg-primary-light transition">
+     📊 Report Creator
+  </a>
+
+  <span class="px-3 py-2 rounded-lg bg-primary-light/40">
+     👤 Samantha
+  </span>
+
+</nav>
         </nav>
         <div data-id="18" class="md:hidden flex items-center gap-2">
           <span data-id="19" class="text-xs font-medium bg-primary-light/40 px-2.5 py-1 rounded-full">👤 Samantha</span>
@@ -313,7 +371,7 @@
     <!-- FOOTER -->
     <footer data-id="80" id="footer-ft01" class="bg-primary text-white text-center py-5 mt-4 no-print">
       <p data-id="81" class="text-sm opacity-90">📚 EMME Resource Hub · Built for the EMME Team · June 2026</p>
-      <p data-id="82" class="text-xs opacity-60 mt-1">Made by Copilot</p>
+      <p data-id="82" class="text-xs opacity-60 mt-1">Emme Co. Operations Platform</p>
     </footer>
 
     <!-- SHARE MODAL -->
@@ -484,7 +542,7 @@
         if (isFavorite(id)) {
           svg.classList.remove('unfav');
           svg.classList.add('fav');
-          svg.setAttribute('fill', '#f4a261');
+          svg.setAttribute('fill', '#ffca34');
         } else {
           svg.classList.remove('fav');
           svg.classList.add('unfav');
@@ -573,8 +631,8 @@
       }
       printArea.innerHTML = `
         <div style="max-width:700px;margin:0 auto;">
-          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0d5f6e;padding-bottom:12px;margin-bottom:24px;">
-            <div style="font-size:14pt;font-weight:bold;color:#0d5f6e;">EMME Co | Therapy Resource</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #084339;padding-bottom:12px;margin-bottom:24px;">
+            <div style="font-size:14pt;font-weight:bold;color:#084339;">EMME Co | Therapy Resource</div>
             <div style="font-size:10pt;color:#666;">${dateStr}</div>
           </div>
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
