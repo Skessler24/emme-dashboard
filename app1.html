@@ -6,7 +6,7 @@
   <title>Emmé Therapy Services — Provider Guidebook 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,400;1,700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Nunito:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,400;1,700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script>
@@ -14,15 +14,15 @@
       theme: {
         extend: {
           colors: {
-            cream: { DEFAULT: '#F5EDD8', card: '#FBF7EE', light: '#FFFCF5' },
-            forest: { DEFAULT: '#2C5530', dark: '#1E3D22', medium: '#4A7C59', light: '#8FB49A', faint: '#e8f0ea' },
-            gold: { DEFAULT: '#C8973A', light: '#E3B15B', dark: '#9B6E24', faint: '#f5ecd3' },
-            pink: { DEFAULT: '#D4869B', light: '#F2D0DA', dark: '#B5607A' },
-            yellow: { DEFAULT: '#F2C94C', light: '#FDF5D0', dark: '#D4A82E' },
-            body: { DEFAULT: '#2A2A2A', secondary: '#4A4A4A', muted: '#6B6B6B' },
+            cream: { DEFAULT: '#fef7fc', card: '#fdf3fb', light: '#ffffff' },
+            forest: { DEFAULT: '#084339', dark: '#052a24', medium: '#245E4D', light: '#4A7C6B', faint: 'rgba(8,67,57,0.07)' },
+            gold: { DEFAULT: '#ffca34', light: '#ffd966', dark: '#e6b320', faint: 'rgba(255,202,52,0.15)' },
+            pink: { DEFAULT: '#dd9fa3', light: '#f8cacb', dark: '#c98a8e' },
+            yellow: { DEFAULT: '#ffca34', light: 'rgba(255,202,52,0.15)', dark: '#e6b320' },
+            body: { DEFAULT: '#2a3a38', secondary: '#084339', muted: 'rgba(8,67,57,0.50)' },
           },
           fontFamily: {
-            display: ['Nunito', 'sans-serif'],
+            display: ['Comfortaa', 'Nunito', 'sans-serif'],
             sans: ['Inter', 'sans-serif'],
           },
         },
@@ -31,23 +31,23 @@
   </script>
   <style>
     :root {
-      --cream: #F5EDD8;
-      --cream-card: #FBF7EE;
-      --cream-light: #FFFCF5;
-      --forest: #2C5530;
-      --forest-dark: #1E3D22;
-      --forest-medium: #4A7C59;
-      --forest-light: #8FB49A;
-      --gold: #C8973A;
-      --gold-light: #E3B15B;
-      --gold-dark: #9B6E24;
-      --pink: #D4869B;
-      --pink-light: #F2D0DA;
-      --yellow: #F2C94C;
-      --yellow-light: #FDF5D0;
-      --body: #2A2A2A;
-      --body-secondary: #4A4A4A;
-      --body-muted: #6B6B6B;
+      --cream: #fef7fc;
+      --cream-card: #fdf3fb;
+      --cream-light: #ffffff;
+      --forest: #084339;
+      --forest-dark: #052a24;
+      --forest-medium: #245E4D;
+      --forest-light: #4A7C6B;
+      --gold: #ffca34;
+      --gold-light: #ffd966;
+      --gold-dark: #e6b320;
+      --pink: #dd9fa3;
+      --pink-light: #f8cacb;
+      --yellow: #ffca34;
+      --yellow-light: rgba(255, 202, 52, 0.15);
+      --body: #2a3a38;
+      --body-secondary: #084339;
+      --body-muted: rgba(8, 67, 57, 0.50);
     }
 
     html { scroll-behavior: smooth; }
@@ -63,7 +63,7 @@
 
     .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 20px; color: #c5d8c8; font-size: 13.5px; font-weight: 500; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s ease; cursor: pointer; }
     .sidebar-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
-    .sidebar-link.active { border-left-color: var(--yellow); background: rgba(143,180,154,0.15); color: #fff; font-weight: 600; }
+    .sidebar-link.active { border-left-color: var(--yellow); background: rgba(74,124,107,0.20); color: #fff; font-weight: 600; }
     .sidebar-link .nav-icon { font-size: 15px; width: 22px; text-align: center; flex-shrink: 0; }
 
     /* Main content */
@@ -71,9 +71,9 @@
 
     /* Section numbers watermark */
     .section-number-watermark { position: absolute; top: -20px; right: 20px; font-family: 'Nunito', sans-serif; font-size: 120px; font-weight: 700; line-height: 1; pointer-events: none; z-index: 0; }
-    .watermark-gold { color: rgba(200,151,58,0.12); }
-    .watermark-pink { color: rgba(212,134,155,0.14); }
-    .watermark-yellow { color: rgba(242,201,76,0.16); }
+    .watermark-gold { color: rgba(255,202,52,0.18); }
+    .watermark-pink { color: rgba(248,202,203,0.35); }
+    .watermark-yellow { color: rgba(255,202,52,0.22); }
 
     /* Photo placeholders */
     .photo-placeholder { background: var(--forest-medium); border: 2px dashed var(--forest-light); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--cream); gap: 8px; }
@@ -82,8 +82,8 @@
     .photo-placeholder .ph-dims { font-size: 11px; opacity: 0.55; }
 
     /* Link placeholders */
-    .link-placeholder { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: 1.5px solid var(--gold); color: var(--gold); border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
-    .link-placeholder:hover { background: var(--gold); color: #fff; }
+    .link-placeholder { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: 1.5px solid var(--gold-dark); color: var(--forest); background: rgba(255,202,52,0.12); border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
+    .link-placeholder:hover { background: var(--gold); color: var(--forest-dark); border-color: var(--gold); }
 
     /* Pull quotes */
     .pull-quote { background: var(--forest); color: var(--cream); border-left: 4px solid var(--gold); padding: 24px 28px; border-radius: 0 12px 12px 0; font-family: 'Nunito', sans-serif; font-style: italic; font-weight: 400; font-size: 17px; line-height: 1.7; }
@@ -97,7 +97,7 @@
 
     /* Checklist */
     .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: background 0.15s; user-select: none; }
-    .checklist-item:hover { background: rgba(143,180,154,0.08); }
+    .checklist-item:hover { background: rgba(8,67,57,0.07); }
     .checklist-item .check-box { width: 22px; height: 22px; border: 2px solid var(--forest-medium); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-top: 1px; }
     .checklist-item.checked .check-box { background: var(--forest); border-color: var(--forest); }
     .checklist-item.checked .check-box::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 700; }
@@ -113,7 +113,7 @@
     .emme-table thead th { background: var(--forest); color: #fff; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
     .emme-table tbody tr:nth-child(even) { background: var(--cream-card); }
     .emme-table tbody tr:nth-child(odd) { background: #fff; }
-    .emme-table tbody td { padding: 11px 16px; border-bottom: 1px solid #eee7d4; }
+    .emme-table tbody td { padding: 11px 16px; border-bottom: 1px solid rgba(8,67,57,0.10); }
 
     /* Value cards */
     .value-card-new { border-radius: 16px; padding: 32px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
@@ -125,37 +125,37 @@
     .specialty-tag .st-icon { color: var(--forest); }
 
     /* Gold numbered list */
-    .gold-number { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--gold); color: #fff; border-radius: 50%; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .gold-number { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--gold); color: var(--forest-dark); border-radius: 50%; font-weight: 700; font-size: 14px; flex-shrink: 0; }
 
     /* Crisis card */
-    .crisis-card { background: #fff; border-radius: 12px; padding: 18px 20px; text-align: center; border: 1px solid #eee7d4; }
+    .crisis-card { background: #fff; border-radius: 12px; padding: 18px 20px; text-align: center; border: 1px solid rgba(8,67,57,0.10); }
     .crisis-card .cc-name { font-weight: 600; color: var(--forest); font-size: 14px; margin-bottom: 4px; }
     .crisis-card .cc-number { font-size: 18px; font-weight: 700; color: var(--gold-dark); }
 
     /* Icon cards */
-    .icon-card { background: #fff; border-radius: 14px; padding: 24px; border: 1px solid #eee7d4; }
+    .icon-card { background: #fff; border-radius: 14px; padding: 24px; border: 1px solid rgba(8,67,57,0.10); }
     .icon-card h4 { font-weight: 600; color: var(--forest); margin-bottom: 6px; }
     .icon-card p { font-size: 13.5px; color: var(--body-secondary); line-height: 1.6; }
 
     /* Resource link */
-    .resource-link { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-radius: 10px; border: 1px solid #eee7d4; color: var(--gold-dark); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; }
-    .resource-link:hover { background: var(--gold); color: #fff; border-color: var(--gold); }
+    .resource-link { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-radius: 10px; border: 1px solid rgba(8,67,57,0.10); color: var(--gold-dark); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+    .resource-link:hover { background: var(--gold); color: var(--forest-dark); border-color: var(--gold); }
 
     /* Modality tags */
     .modality-tag { background: var(--forest); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 500; text-align: center; }
 
     /* Back to top */
-    #back-to-top-emme { position: fixed; bottom: 30px; right: 30px; width: 46px; height: 46px; background: var(--yellow); color: var(--forest-dark); border: none; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 60; box-shadow: 0 4px 16px rgba(242,201,76,0.45); transition: all 0.2s; font-size: 18px; font-weight: 700; }
-    #back-to-top-emme:hover { background: #d4a82e; transform: translateY(-2px); }
+    #back-to-top-emme { position: fixed; bottom: 30px; right: 30px; width: 46px; height: 46px; background: var(--yellow); color: var(--forest-dark); border: none; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 60; box-shadow: 0 4px 16px rgba(255,202,52,0.45); transition: all 0.2s; font-size: 18px; font-weight: 700; }
+    #back-to-top-emme:hover { background: #e6b320; transform: translateY(-2px); }
 
     /* Botanical SVG decoration */
     .botanical-leaf { opacity: 0.15; }
 
     /* Section header icon badges */
     .section-badge { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; font-size: 20px; }
-    .badge-gold { background: rgba(200,151,58,0.15); }
-    .badge-pink { background: rgba(212,134,155,0.15); }
-    .badge-yellow { background: rgba(242,201,76,0.2); }
+    .badge-gold { background: rgba(255,202,52,0.20); }
+    .badge-pink { background: rgba(221,159,163,0.25); }
+    .badge-yellow { background: rgba(255,202,52,0.25); }
 
     /* Print styles */
     @media print {
@@ -207,6 +207,9 @@
         <img data-id="13" src="data:image/png;base64,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" alt="Emmé Therapy Services logo" style="width: 200px; display: block; margin: 0 auto 8px; max-width: 100%; height: auto;" />
       </div>
       <p data-id="14" class="text-xs font-sans font-medium tracking-widest uppercase text-center" style="color:var(--forest-light);">Provider Guidebook · 2026</p>
+      <a href="index.html" class="mt-3 flex items-center justify-center gap-2 text-xs font-semibold py-2 px-3 rounded-lg transition-all" style="color:var(--yellow); border:1px solid rgba(255,202,52,0.35);" aria-label="Back to Emme Dashboard">
+        ← Dashboard Home
+      </a>
     </div>
 
     <div data-id="15" class="flex-1 py-3 overflow-y-auto">
@@ -249,7 +252,7 @@
       <button data-id="50" id="print-btn-emme" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all" style="border: 1.5px solid var(--forest-light); color: var(--forest-light);">
         <i data-id="51" data-lucide="printer" class="w-4 h-4"></i> Print Guidebook
       </button>
-      <button data-id="52" id="download-btn-emme" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all" style="border: 1.5px solid var(--forest-light); color: var(--forest-light);">
+      <button data-id="52" id="download-btn-emme" title="Opens the print dialog — choose Save as PDF" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all" style="border: 1.5px solid var(--forest-light); color: var(--forest-light);">
         <i data-id="53" data-lucide="download" class="w-4 h-4"></i> Download PDF
       </button>
       <p data-id="54" class="text-center text-xs pt-1" style="color:var(--forest-light); opacity: 0.5;">emmé therapy services</p>
@@ -263,15 +266,15 @@
     <section data-id="56" id="hero-section" class="relative overflow-hidden" style="background: linear-gradient(135deg, var(--forest-dark) 0%, var(--forest) 50%, var(--forest-medium) 100%); min-height: 100vh;">
       <!-- Botanical SVG decoration -->
       <svg data-id="57" class="absolute top-0 right-0 botanical-leaf" width="500" height="500" viewBox="0 0 500 500" fill="none" style="opacity:0.06;">
-        <path data-id="58" d="M400 50c-50 30-100 80-130 150-20 50-25 100-10 150 30-20 70-50 100-90 40-50 60-110 50-170-2-15-5-28-10-40z" fill="#8FB49A"/>
-        <path data-id="59" d="M350 100c-40 40-70 100-80 160-5 40 0 80 15 110 25-30 50-70 65-110 20-50 25-100 15-150-3-5-8-8-15-10z" fill="#F2C94C"/>
-        <path data-id="60" d="M450 200c-30 20-60 60-80 110-15 35-20 70-15 100 20-15 45-40 65-75 25-40 40-85 35-130-1-3-3-5-5-5z" fill="#D4869B"/>
-        <path data-id="61" d="M100 400c30-20 70-60 100-110 20-35 30-75 25-110-25 15-55 40-80 80-30 45-45 90-45 140z" fill="#C8973A"/>
-        <path data-id="62" d="M50 350c20-10 50-40 75-80 15-30 25-60 20-90-20 10-40 30-60 60-25 35-35 70-35 110z" fill="#8FB49A"/>
+        <path data-id="58" d="M400 50c-50 30-100 80-130 150-20 50-25 100-10 150 30-20 70-50 100-90 40-50 60-110 50-170-2-15-5-28-10-40z" fill="#4A7C6B"/>
+        <path data-id="59" d="M350 100c-40 40-70 100-80 160-5 40 0 80 15 110 25-30 50-70 65-110 20-50 25-100 15-150-3-5-8-8-15-10z" fill="#ffca34"/>
+        <path data-id="60" d="M450 200c-30 20-60 60-80 110-15 35-20 70-15 100 20-15 45-40 65-75 25-40 40-85 35-130-1-3-3-5-5-5z" fill="#dd9fa3"/>
+        <path data-id="61" d="M100 400c30-20 70-60 100-110 20-35 30-75 25-110-25 15-55 40-80 80-30 45-45 90-45 140z" fill="#ffca34"/>
+        <path data-id="62" d="M50 350c20-10 50-40 75-80 15-30 25-60 20-90-20 10-40 30-60 60-25 35-35 70-35 110z" fill="#4A7C6B"/>
       </svg>
       <svg data-id="63" class="absolute bottom-0 left-0 botanical-leaf" width="400" height="400" viewBox="0 0 400 400" fill="none" style="opacity:0.05;">
-        <path data-id="64" d="M50 350c30-40 80-90 140-120 40-20 85-25 120-15-15 30-40 65-80 95-45 35-100 50-150 50-10-2-22-5-30-10z" fill="#8FB49A"/>
-        <path data-id="65" d="M100 300c30-30 70-60 120-75 35-10 70-5 95 10-20 25-50 50-85 65-40 18-85 20-120 12-5-3-8-7-10-12z" fill="#F2C94C"/>
+        <path data-id="64" d="M50 350c30-40 80-90 140-120 40-20 85-25 120-15-15 30-40 65-80 95-45 35-100 50-150 50-10-2-22-5-30-10z" fill="#4A7C6B"/>
+        <path data-id="65" d="M100 300c30-30 70-60 120-75 35-10 70-5 95 10-20 25-50 50-85 65-40 18-85 20-120 12-5-3-8-7-10-12z" fill="#ffca34"/>
       </svg>
 
       <div data-id="66" class="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center pt-16 md:pt-0">
@@ -339,27 +342,27 @@
         <!-- Values -->
         <h3 data-id="107" class="font-display text-xl mb-6" style="color:var(--forest); font-weight:700;">Our Values</h3>
         <div data-id="108" class="grid grid-cols-2 md:grid-cols-3 gap-5 mb-6">
-          <div data-id="109" class="value-card-new" style="background:#2C5530; color:#F5EDD8;">
+          <div data-id="109" class="value-card-new" style="background:#084339; color:#fef7fc;">
             <i data-id="110" data-lucide="eye" class="w-6 h-6" style="opacity:0.7;"></i>
             <h4 data-id="111">Honest</h4>
           </div>
-          <div data-id="112" class="value-card-new" style="background:#D4869B; color:#fff;">
+          <div data-id="112" class="value-card-new" style="background:#dd9fa3; color:#fff;">
             <i data-id="113" data-lucide="heart-handshake" class="w-6 h-6" style="opacity:0.85;"></i>
             <h4 data-id="114">Kind</h4>
           </div>
-          <div data-id="115" class="value-card-new" style="background:#F2C94C; color:#2C5530;">
+          <div data-id="115" class="value-card-new" style="background:#ffca34; color:#084339;">
             <i data-id="116" data-lucide="smile" class="w-6 h-6" style="opacity:0.75;"></i>
             <h4 data-id="117">Fun</h4>
           </div>
-          <div data-id="118" class="value-card-new" style="background:#4A7C59; color:#F5EDD8;">
+          <div data-id="118" class="value-card-new" style="background:#245E4D; color:#fef7fc;">
             <i data-id="119" data-lucide="shield-check" class="w-6 h-6" style="opacity:0.7;"></i>
             <h4 data-id="120">Accountable</h4>
           </div>
-          <div data-id="121" class="value-card-new" style="background:#E8A4B8; color:#2C5530;">
+          <div data-id="121" class="value-card-new" style="background:#f8cacb; color:#084339;">
             <i data-id="122" data-lucide="lightbulb" class="w-6 h-6" style="opacity:0.75;"></i>
             <h4 data-id="123">Creative</h4>
           </div>
-          <div data-id="124" class="value-card-new" style="background:#C8973A; color:#F5EDD8;">
+          <div data-id="124" class="value-card-new" style="background:#e6b320; color:#fef7fc;">
             <i data-id="125" data-lucide="book-open" class="w-6 h-6" style="opacity:0.7;"></i>
             <h4 data-id="126">Reflective</h4>
           </div>
@@ -442,7 +445,7 @@
         </div>
 
         <h4 data-id="221" class="font-semibold text-base mb-4" style="color:var(--forest);">Onboarding Checklist</h4>
-        <div data-id="222" class="bg-white rounded-2xl p-5 md:p-6 mb-8 space-y-1" style="border:1px solid #eee7d4;">
+        <div data-id="222" class="bg-white rounded-2xl p-5 md:p-6 mb-8 space-y-1" style="border:1px solid rgba(8,67,57,0.10);">
           <div data-id="223" class="checklist-item checklist-gold" data-check><div data-id="224" class="check-box"></div><span data-id="225" class="check-label">Signed Independent Contractor or Employment Agreement</span></div>
           <div data-id="226" class="checklist-item checklist-gold" data-check><div data-id="227" class="check-box"></div><span data-id="228" class="check-label">W-9 or Tax Information Form submitted</span></div>
           <div data-id="229" class="checklist-item checklist-gold" data-check><div data-id="230" class="check-box"></div><span data-id="231" class="check-label">NPI number verified and on file</span></div>
@@ -460,9 +463,9 @@
         </div>
 
         <div data-id="265" class="flex flex-wrap gap-3 mb-8">
-          <a data-id="266" class="link-placeholder"><i data-id="267" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — EHR Login</a>
-          <a data-id="268" class="link-placeholder"><i data-id="269" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Telehealth Platform</a>
-          <a data-id="270" class="link-placeholder"><i data-id="271" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Provider Profile Form</a>
+          <a data-id="266" class="link-placeholder" href="https://intakeq.com" target="_blank" rel="noopener noreferrer"><i data-id="267" data-lucide="link" class="w-4 h-4"></i> EHR Login (IntakeQ)</a>
+          <a data-id="268" class="link-placeholder" href="https://zoom.us" target="_blank" rel="noopener noreferrer"><i data-id="269" data-lucide="link" class="w-4 h-4"></i> Telehealth Platform (Zoom)</a>
+          <a data-id="270" class="link-placeholder" href="mailto:skessler@emmeco.org?subject=Provider%20Profile%20Form"><i data-id="271" data-lucide="link" class="w-4 h-4"></i> Provider Profile Form</a>
         </div>
 
         <div data-id="272" class="photo-placeholder w-full mb-10" style="height:240px;">
@@ -486,7 +489,7 @@
           </table>
         </div>
         <div data-id="310" class="mb-10">
-          <a data-id="311" class="link-placeholder"><i data-id="312" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Training Portal</a>
+          <a data-id="311" class="link-placeholder" href="app3.html"><i data-id="312" data-lucide="link" class="w-4 h-4"></i> Training Portal / Resource Hub</a>
         </div>
 
         <h3 data-id="313" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Technology Setup</h3>
@@ -494,17 +497,17 @@
           <div data-id="315" class="icon-card">
             <div data-id="316" class="flex items-center gap-2 mb-3"><i data-id="317" data-lucide="monitor" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="318">EHR System</h4></div>
             <p data-id="319">We use [EHR Name] for scheduling, notes, and client records.</p>
-            <a data-id="320" class="link-placeholder mt-3 text-xs"><i data-id="321" data-lucide="link" class="w-3 h-3"></i> EHR Support</a>
+            <a data-id="320" class="link-placeholder mt-3 text-xs" href="https://intakeq.com" target="_blank" rel="noopener noreferrer"><i data-id="321" data-lucide="link" class="w-3 h-3"></i> EHR Support</a>
           </div>
           <div data-id="322" class="icon-card">
             <div data-id="323" class="flex items-center gap-2 mb-3"><i data-id="324" data-lucide="video" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="325">Telehealth Platform</h4></div>
             <p data-id="326">Sessions are conducted via [Platform Name].</p>
-            <a data-id="327" class="link-placeholder mt-3 text-xs"><i data-id="328" data-lucide="link" class="w-3 h-3"></i> Telehealth Setup Guide</a>
+            <a data-id="327" class="link-placeholder mt-3 text-xs" href="https://zoom.us/docs/en-us/getting-started-with-zoom.html" target="_blank" rel="noopener noreferrer"><i data-id="328" data-lucide="link" class="w-3 h-3"></i> Telehealth Setup Guide</a>
           </div>
           <div data-id="329" class="icon-card">
             <div data-id="330" class="flex items-center gap-2 mb-3"><i data-id="331" data-lucide="message-square" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="332">Communication</h4></div>
             <p data-id="333">All internal team communication is via [Platform — e.g., Slack or Teams].</p>
-            <a data-id="334" class="link-placeholder mt-3 text-xs"><i data-id="335" data-lucide="link" class="w-3 h-3"></i> Team Channel</a>
+            <a data-id="334" class="link-placeholder mt-3 text-xs" href="https://outlook.office365.com" target="_blank" rel="noopener noreferrer"><i data-id="335" data-lucide="link" class="w-3 h-3"></i> Team Channel</a>
           </div>
         </div>
 
@@ -605,7 +608,7 @@
 
         <h3 data-id="441" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Progress Note Format</h3>
         <p data-id="442" class="text-base mb-4" style="color:var(--body);">Emmé uses <strong data-id="443" style="color:var(--forest);">SOAP notes</strong> (Subjective, Objective, Assessment, Plan) as the standard format. Notes must include:</p>
-        <div data-id="444" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid #eee7d4;">
+        <div data-id="444" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid rgba(8,67,57,0.10);">
           <div data-id="445" class="checklist-item checklist-pink" data-check><div data-id="446" class="check-box"></div><span data-id="447" class="check-label">Session date, duration, modality (in-person/telehealth)</span></div>
           <div data-id="448" class="checklist-item checklist-pink" data-check><div data-id="449" class="check-box"></div><span data-id="450" class="check-label">Client presentation (affect, engagement, themes discussed)</span></div>
           <div data-id="451" class="checklist-item checklist-pink" data-check><div data-id="452" class="check-box"></div><span data-id="453" class="check-label">Clinical observations (objective findings)</span></div>
@@ -615,7 +618,7 @@
           <div data-id="463" class="checklist-item checklist-pink" data-check><div data-id="464" class="check-box"></div><span data-id="465" class="check-label">Homework or between-session tasks assigned</span></div>
         </div>
         <div data-id="466" class="mb-10">
-          <a data-id="467" class="link-placeholder"><i data-id="468" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Progress Note Template</a>
+          <a data-id="467" class="link-placeholder" href="app4.html"><i data-id="468" data-lucide="link" class="w-4 h-4"></i> Progress Note Template (Report Center)</a>
         </div>
 
         <h3 data-id="469" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Treatment Plans</h3>
@@ -629,7 +632,7 @@
         </ul>
         <p data-id="482" class="text-base mb-6" style="color:var(--body);">Treatment plans must be <strong data-id="483" style="color:var(--forest);">reviewed and updated every 90 days</strong>, or sooner if there is a significant change in the client's presentation or goals.</p>
         <div data-id="484" class="mb-8">
-          <a data-id="485" class="link-placeholder"><i data-id="486" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Treatment Plan Template</a>
+          <a data-id="485" class="link-placeholder" href="app4.html"><i data-id="486" data-lucide="link" class="w-4 h-4"></i> Treatment Plan Template (Report Center)</a>
         </div>
 
         <div data-id="487" class="photo-placeholder w-full mb-6" style="height:240px;">
@@ -655,7 +658,7 @@
         <h3 data-id="500" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">The Intake Process</h3>
         <p data-id="501" class="text-base mb-4" style="color:var(--body);">The intake process at Emmé is designed to be warm, thorough, and efficient. Clients complete online intake paperwork before their first appointment.</p>
         <h4 data-id="502" class="font-semibold text-base mb-3" style="color:var(--forest);">Provider responsibilities at intake:</h4>
-        <div data-id="503" class="bg-white rounded-2xl p-5 md:p-6 mb-10 space-y-1" style="border:1px solid #eee7d4;">
+        <div data-id="503" class="bg-white rounded-2xl p-5 md:p-6 mb-10 space-y-1" style="border:1px solid rgba(8,67,57,0.10);">
           <div data-id="504" class="checklist-item" data-check><div data-id="505" class="check-box"></div><span data-id="506" class="check-label">Confirm intake paperwork is complete in EHR before session</span></div>
           <div data-id="507" class="checklist-item" data-check><div data-id="508" class="check-box"></div><span data-id="509" class="check-label">Review consents (therapy, telehealth if applicable, release of information)</span></div>
           <div data-id="510" class="checklist-item" data-check><div data-id="511" class="check-box"></div><span data-id="512" class="check-label">Conduct biopsychosocial assessment</span></div>
@@ -699,7 +702,7 @@
           <p data-id="566">"Telehealth is not a lesser version of therapy — it is a different modality that requires its own set of intentional practices."</p>
         </div>
         <h4 data-id="567" class="font-semibold text-base mb-3" style="color:var(--forest);">Requirements for telehealth sessions:</h4>
-        <div data-id="568" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid #eee7d4;">
+        <div data-id="568" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid rgba(8,67,57,0.10);">
           <div data-id="569" class="checklist-item checklist-gold" data-check><div data-id="570" class="check-box"></div><span data-id="571" class="check-label">Use only the Emmé-approved HIPAA-compliant platform</span></div>
           <div data-id="572" class="checklist-item checklist-gold" data-check><div data-id="573" class="check-box"></div><span data-id="574" class="check-label">Conduct sessions from a private, professional location</span></div>
           <div data-id="575" class="checklist-item checklist-gold" data-check><div data-id="576" class="check-box"></div><span data-id="577" class="check-label">Confirm client location at the start of every session (required for emergency protocol)</span></div>
@@ -708,7 +711,7 @@
           <div data-id="584" class="checklist-item checklist-gold" data-check><div data-id="585" class="check-box"></div><span data-id="586" class="check-label">Do not record sessions without explicit written consent</span></div>
         </div>
         <div data-id="587" class="mb-10">
-          <a data-id="588" class="link-placeholder"><i data-id="589" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Telehealth Platform</a>
+          <a data-id="588" class="link-placeholder" href="https://zoom.us" target="_blank" rel="noopener noreferrer"><i data-id="589" data-lucide="link" class="w-4 h-4"></i> Telehealth Platform (Zoom)</a>
         </div>
 
         <h3 data-id="590" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Communication with Clients</h3>
@@ -739,7 +742,7 @@
 
         <h3 data-id="611" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">How Billing Works</h3>
         <p data-id="612" class="text-base mb-4" style="color:var(--body);">Emmé handles all billing on behalf of providers. You are responsible for:</p>
-        <div data-id="613" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid #eee7d4;">
+        <div data-id="613" class="bg-white rounded-2xl p-5 md:p-6 mb-6 space-y-1" style="border:1px solid rgba(8,67,57,0.10);">
           <div data-id="614" class="checklist-item checklist-pink" data-check><div data-id="615" class="check-box"></div><span data-id="616" class="check-label">Accurate session documentation (date, time, CPT code, modality)</span></div>
           <div data-id="617" class="checklist-item checklist-pink" data-check><div data-id="618" class="check-box"></div><span data-id="619" class="check-label">Correct diagnosis codes (ICD-10/DSM-5-TR)</span></div>
           <div data-id="620" class="checklist-item checklist-pink" data-check><div data-id="621" class="check-box"></div><span data-id="622" class="check-label">Timely note completion (within 24 hours)</span></div>
@@ -765,8 +768,8 @@
 
         <h3 data-id="664" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Insurance Panels</h3>
         <div data-id="665" class="flex flex-wrap gap-3 mb-10">
-          <a data-id="666" class="link-placeholder"><i data-id="667" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Current Insurance Panels &amp; Rates</a>
-          <a data-id="668" class="link-placeholder"><i data-id="669" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Out-of-Network Superbill Process</a>
+          <a data-id="666" class="link-placeholder" href="mailto:skessler@emmeco.org?subject=Insurance%20Panels%20%26%20Rates"><i data-id="667" data-lucide="link" class="w-4 h-4"></i> Insurance Panels &amp; Rates</a>
+          <a data-id="668" class="link-placeholder" href="mailto:skessler@emmeco.org?subject=Out-of-Network%20Superbill%20Process"><i data-id="669" data-lucide="link" class="w-4 h-4"></i> Out-of-Network Superbill Process</a>
         </div>
 
         <h3 data-id="670" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Compensation &amp; Payroll</h3>
@@ -776,8 +779,8 @@
           <li data-id="677" class="flex items-start gap-2"><span data-id="678" style="color:var(--gold);">•</span> Disputed or missing sessions must be reported within <strong data-id="679">5 business days</strong> of payroll.</li>
         </ul>
         <div data-id="680" class="flex flex-wrap gap-3 mb-6">
-          <a data-id="681" class="link-placeholder"><i data-id="682" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Payroll &amp; Compensation Schedule</a>
-          <a data-id="683" class="link-placeholder"><i data-id="684" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Invoice Submission Form (if applicable)</a>
+          <a data-id="681" class="link-placeholder" href="mailto:skessler@emmeco.org?subject=Payroll%20%26%20Compensation"><i data-id="682" data-lucide="link" class="w-4 h-4"></i> Payroll &amp; Compensation Schedule</a>
+          <a data-id="683" class="link-placeholder" href="mailto:skessler@emmeco.org?subject=Invoice%20Submission"><i data-id="684" data-lucide="link" class="w-4 h-4"></i> Invoice Submission Form</a>
         </div>
 
         <div data-id="685" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
@@ -818,7 +821,7 @@
           <li data-id="724" class="flex items-start gap-2"><span data-id="725" style="color:var(--pink);">•</span> <strong data-id="726">Training Sessions:</strong> Quarterly; schedule announced in advance</li>
         </ul>
         <div data-id="727" class="mb-10">
-          <a data-id="728" class="link-placeholder"><i data-id="729" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Meeting Schedule</a>
+          <a data-id="728" class="link-placeholder" href="https://outlook.office365.com/calendar" target="_blank" rel="noopener noreferrer"><i data-id="729" data-lucide="link" class="w-4 h-4"></i> Meeting Schedule (Outlook)</a>
         </div>
 
         <h3 data-id="730" class="font-display text-xl mb-5" style="color:var(--forest); font-weight:700;">Communication Channels</h3>
@@ -830,12 +833,12 @@
           <div data-id="737" class="icon-card">
             <div data-id="738" class="flex items-center gap-2 mb-3"><i data-id="739" data-lucide="mail" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="740">Administrative Questions</h4></div>
             <p data-id="741">Use the EHR internal messaging or email.</p>
-            <a data-id="742" class="link-placeholder mt-3 text-xs"><i data-id="743" data-lucide="link" class="w-3 h-3"></i> Admin Contact</a>
+            <a data-id="742" class="link-placeholder mt-3 text-xs" href="mailto:skessler@emmeco.org"><i data-id="743" data-lucide="link" class="w-3 h-3"></i> Admin Contact</a>
           </div>
           <div data-id="744" class="icon-card">
             <div data-id="745" class="flex items-center gap-2 mb-3"><i data-id="746" data-lucide="message-circle" class="w-5 h-5" style="color:var(--forest);"></i><h4 data-id="747">Team Updates</h4></div>
             <p data-id="748">Shared via [platform name].</p>
-            <a data-id="749" class="link-placeholder mt-3 text-xs"><i data-id="750" data-lucide="link" class="w-3 h-3"></i> Team Channel</a>
+            <a data-id="749" class="link-placeholder mt-3 text-xs" href="https://outlook.office365.com" target="_blank" rel="noopener noreferrer"><i data-id="750" data-lucide="link" class="w-3 h-3"></i> Team Channel</a>
           </div>
         </div>
 
@@ -848,7 +851,7 @@
           <div data-id="763" class="flex items-start gap-4"><span data-id="764" class="gold-number">4</span><span data-id="765" class="text-base">Leadership will respond in writing within 10 business days.</span></div>
         </div>
         <div data-id="766" class="mb-6">
-          <a data-id="767" class="link-placeholder"><i data-id="768" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Grievance Form</a>
+          <a data-id="767" class="link-placeholder" href="mailto:skessler@emmeco.org?subject=Grievance%20Form%20Request"><i data-id="768" data-lucide="link" class="w-4 h-4"></i> Grievance Form</a>
         </div>
 
         <div data-id="769" class="w-full h-px mt-12" style="background: linear-gradient(90deg, transparent, var(--pink), transparent);"></div>
@@ -872,7 +875,7 @@
         </div>
 
         <h4 data-id="782" class="font-semibold text-base mb-3" style="color:var(--forest);">Permitted disclosures without client consent include:</h4>
-        <div data-id="783" class="bg-white rounded-2xl p-5 md:p-6 mb-8 space-y-1" style="border:1px solid #eee7d4;">
+        <div data-id="783" class="bg-white rounded-2xl p-5 md:p-6 mb-8 space-y-1" style="border:1px solid rgba(8,67,57,0.10);">
           <div data-id="784" class="checklist-item" data-check><div data-id="785" class="check-box"></div><span data-id="786" class="check-label">When the client is at imminent risk of harm to self or others</span></div>
           <div data-id="787" class="checklist-item" data-check><div data-id="788" class="check-box"></div><span data-id="789" class="check-label">When required by court order or law</span></div>
           <div data-id="790" class="checklist-item" data-check><div data-id="791" class="check-box"></div><span data-id="792" class="check-label">For treatment, payment, or healthcare operations (within the team)</span></div>
@@ -880,7 +883,7 @@
         </div>
         <p data-id="796" class="text-base mb-4" style="color:var(--body);">All other disclosures require a signed <strong data-id="797" style="color:var(--forest);">Release of Information (ROI)</strong>.</p>
         <div data-id="798" class="mb-10">
-          <a data-id="799" class="link-placeholder"><i data-id="800" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — ROI Form</a>
+          <a data-id="799" class="link-placeholder" href="app3.html"><i data-id="800" data-lucide="link" class="w-4 h-4"></i> ROI Form (Resource Hub)</a>
         </div>
 
         <h3 data-id="801" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Mandatory Reporting (Colorado)</h3>
@@ -894,7 +897,7 @@
           <strong data-id="811">When in doubt, consult your supervisor before making a report — but never delay a report if a child is in immediate danger.</strong>
         </div>
         <div data-id="812" class="mb-10">
-          <a data-id="813" class="link-placeholder"><i data-id="814" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Colorado Mandatory Reporting Guidelines</a>
+          <a data-id="813" class="link-placeholder" href="https://cdhs.colorado.gov/protection-and-prevention/child-abuse-and-neglect" target="_blank" rel="noopener noreferrer"><i data-id="814" data-lucide="link" class="w-4 h-4"></i> Colorado Mandatory Reporting Guidelines</a>
         </div>
 
         <h3 data-id="815" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Crisis &amp; Emergency Procedures</h3>
@@ -938,7 +941,7 @@
           <li data-id="864" class="flex items-start gap-2"><span data-id="865" style="color:var(--gold);">•</span> For questions about public or marketing content, contact leadership.</li>
         </ul>
         <div data-id="866" class="mb-10">
-          <a data-id="867" class="link-placeholder"><i data-id="868" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Social Media Policy Full Document</a>
+          <a data-id="867" class="link-placeholder" href="mailto:skessler@emmeco.org?subject=Social%20Media%20Policy"><i data-id="868" data-lucide="link" class="w-4 h-4"></i> Social Media Policy</a>
         </div>
 
         <h3 data-id="869" class="font-display text-xl mb-4" style="color:var(--forest); font-weight:700;">Professional Boundaries</h3>
@@ -1001,12 +1004,12 @@
           <table data-id="924" class="emme-table">
             <thead data-id="925"><tr data-id="926"><th data-id="927">Role</th><th data-id="928">Contact</th><th data-id="929">How to Reach</th></tr></thead>
             <tbody data-id="930">
-              <tr data-id="931"><td data-id="932">Clinical Director / Supervisor</td><td data-id="933">[Name Placeholder]</td><td data-id="934"><a data-id="935" class="link-placeholder text-xs py-1 px-3"><i data-id="936" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
-              <tr data-id="937"><td data-id="938">Administrative Lead</td><td data-id="939">[Name Placeholder]</td><td data-id="940"><a data-id="941" class="link-placeholder text-xs py-1 px-3"><i data-id="942" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
-              <tr data-id="943"><td data-id="944">Billing Team</td><td data-id="945">[Name Placeholder]</td><td data-id="946"><a data-id="947" class="link-placeholder text-xs py-1 px-3"><i data-id="948" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
-              <tr data-id="949"><td data-id="950">HR / Onboarding</td><td data-id="951">[Name Placeholder]</td><td data-id="952"><a data-id="953" class="link-placeholder text-xs py-1 px-3"><i data-id="954" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
-              <tr data-id="955"><td data-id="956">Technology Support</td><td data-id="957">[Name Placeholder]</td><td data-id="958"><a data-id="959" class="link-placeholder text-xs py-1 px-3"><i data-id="960" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
-              <tr data-id="961"><td data-id="962">Practice Owner</td><td data-id="963">[Name Placeholder]</td><td data-id="964"><a data-id="965" class="link-placeholder text-xs py-1 px-3"><i data-id="966" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="931"><td data-id="932">Clinical Director / Supervisor</td><td data-id="933">[Name Placeholder]</td><td data-id="934"><a data-id="935" class="link-placeholder text-xs py-1 px-3" href="mailto:skessler@emmeco.org?subject=Clinical%20Director"><i data-id="936" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="937"><td data-id="938">Administrative Lead</td><td data-id="939">[Name Placeholder]</td><td data-id="940"><a data-id="941" class="link-placeholder text-xs py-1 px-3" href="mailto:skessler@emmeco.org?subject=Administrative%20Lead"><i data-id="942" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="943"><td data-id="944">Billing Team</td><td data-id="945">[Name Placeholder]</td><td data-id="946"><a data-id="947" class="link-placeholder text-xs py-1 px-3" href="mailto:skessler@emmeco.org?subject=Billing%20Team"><i data-id="948" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="949"><td data-id="950">HR / Onboarding</td><td data-id="951">[Name Placeholder]</td><td data-id="952"><a data-id="953" class="link-placeholder text-xs py-1 px-3" href="mailto:skessler@emmeco.org?subject=HR%20%2F%20Onboarding"><i data-id="954" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="955"><td data-id="956">Technology Support</td><td data-id="957">[Name Placeholder]</td><td data-id="958"><a data-id="959" class="link-placeholder text-xs py-1 px-3" href="mailto:skessler@emmeco.org?subject=Technology%20Support"><i data-id="960" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
+              <tr data-id="961"><td data-id="962">Practice Owner</td><td data-id="963">[Name Placeholder]</td><td data-id="964"><a data-id="965" class="link-placeholder text-xs py-1 px-3" href="mailto:skessler@emmeco.org?subject=Practice%20Owner"><i data-id="966" data-lucide="link" class="w-3 h-3"></i> Email</a></td></tr>
             </tbody>
           </table>
         </div>
@@ -1016,12 +1019,12 @@
     <!-- ===== FOOTER ===== -->
     <footer data-id="967" class="relative py-16 px-6 text-center" style="background: linear-gradient(135deg, var(--forest-dark), var(--forest));">
       <svg data-id="968" class="absolute top-0 right-0" width="200" height="200" viewBox="0 0 200 200" fill="none" style="opacity:0.05;">
-        <path data-id="969" d="M160 20c-20 15-40 40-55 70-10 20-12 45-5 65 15-10 35-25 50-45 18-22 28-50 22-75-1-6-5-12-12-15z" fill="#F2C94C"/>
-        <path data-id="970" d="M140 60c-15 15-30 40-35 70-3 18 0 35 8 48 12-12 25-30 32-50 10-22 12-45 7-62-1-3-6-5-12-6z" fill="#D4869B"/>
+        <path data-id="969" d="M160 20c-20 15-40 40-55 70-10 20-12 45-5 65 15-10 35-25 50-45 18-22 28-50 22-75-1-6-5-12-12-15z" fill="#ffca34"/>
+        <path data-id="970" d="M140 60c-15 15-30 40-35 70-3 18 0 35 8 48 12-12 25-30 32-50 10-22 12-45 7-62-1-3-6-5-12-6z" fill="#dd9fa3"/>
       </svg>
       <svg data-id="971" class="absolute bottom-0 left-0" width="160" height="160" viewBox="0 0 160 160" fill="none" style="opacity:0.04;">
-        <path data-id="972" d="M30 140c15-20 40-50 70-65 20-10 45-12 60-5-8 15-20 35-40 50-22 18-50 25-75 25-5-1-12-3-15-5z" fill="#F2C94C"/>
-        <path data-id="973" d="M50 120c10-15 30-35 55-45 18-8 35-5 48 3-10 12-25 28-45 38-22 12-45 15-55 8-1-1-3-3-3-4z" fill="#8FB49A"/>
+        <path data-id="972" d="M30 140c15-20 40-50 70-65 20-10 45-12 60-5-8 15-20 35-40 50-22 18-50 25-75 25-5-1-12-3-15-5z" fill="#ffca34"/>
+        <path data-id="973" d="M50 120c10-15 30-35 55-45 18-8 35-5 48 3-10 12-25 28-45 38-22 12-45 15-55 8-1-1-3-3-3-4z" fill="#4A7C6B"/>
       </svg>
 
       <div data-id="974" class="relative z-10">
@@ -1033,9 +1036,9 @@
 
         <p data-id="978" class="text-sm mb-6 max-w-xl mx-auto" style="color:var(--forest-light); opacity: 0.8;">This guidebook is intended for Emmé Therapy Services providers only and is subject to change. Last updated: June 2026.</p>
 
-        <a data-id="979" class="link-placeholder inline-flex" style="border-color: var(--gold-light); color: var(--gold-light);"><i data-id="980" data-lucide="link" class="w-4 h-4"></i> Link Placeholder — Provider Portal</a>
+        <a data-id="979" class="link-placeholder inline-flex" style="border-color: var(--gold-light); color: var(--gold-light);" href="index.html"><i data-id="980" data-lucide="link" class="w-4 h-4"></i> Provider Portal (Dashboard)</a>
 
-        <div data-id="981" class="mt-10 pt-6" style="border-top: 1px solid rgba(143,180,154,0.2);">
+        <div data-id="981" class="mt-10 pt-6" style="border-top: 1px solid rgba(8,67,57,0.15);">
           <p data-id="982" class="text-xs" style="color:var(--forest-light); opacity: 0.5;">Made by Copilot</p>
         </div>
       </div>
