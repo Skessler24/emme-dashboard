@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="https://alcdn.msauth.net/browser/3.27.0/js/msal-browser.min.js"></script>
 
   <style>
     /* ── TOKENS ── */
@@ -609,6 +610,195 @@
 
     .cal-cell--overflow { color: var(--color-text-faint); }
 
+    .cal-cell--has-event {
+      box-shadow: inset 0 -3px 0 0 var(--color-pink-dark);
+      font-weight: 700;
+    }
+
+    .cal-cell--today.cal-cell--has-event {
+      box-shadow: inset 0 -3px 0 0 var(--color-yellow);
+    }
+
+    .cal-cell--selected {
+      outline: 2px solid var(--color-pink-dark);
+      outline-offset: -2px;
+    }
+
+    .cal-events {
+      margin-top: var(--space-5);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--color-border-input);
+    }
+
+    .cal-events__title {
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-green);
+      margin-bottom: var(--space-3);
+    }
+
+    .cal-events__list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .cal-events__item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: var(--space-3) var(--space-4);
+      background: var(--color-green-subtle);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: inherit;
+      transition: background-color var(--transition-fast);
+    }
+
+    .cal-events__item:hover { background: rgba(8 67 57 / 0.12); }
+
+    .cal-events__time {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+
+    .cal-events__subject {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-body);
+    }
+
+    .cal-events__empty {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin: 0;
+    }
+
+    .ms-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+      padding: var(--space-3) var(--space-4);
+      background: var(--color-bg-card, #fff);
+      border: 1px solid var(--color-border-input);
+      border-radius: var(--radius-lg);
+    }
+
+    .ms-bar__status {
+      flex: 1;
+      min-width: 12rem;
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+    }
+
+    .ms-bar__status strong { color: var(--color-green); }
+
+    .ms-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      background: rgba(0 0 0 / 0.4);
+    }
+
+    .ms-modal.is-hidden { display: none !important; }
+
+    .ms-modal__panel {
+      width: 100%;
+      max-width: 32rem;
+      background: #fff;
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      box-shadow: 0 16px 40px rgba(0 0 0 / 0.18);
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    .ms-modal__title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--color-green);
+      margin: 0 0 var(--space-3);
+    }
+
+    .ms-modal__text {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      line-height: 1.5;
+      margin: 0 0 var(--space-4);
+    }
+
+    .ms-modal__text ol {
+      margin: var(--space-3) 0 0;
+      padding-left: 1.25rem;
+    }
+
+    .ms-modal__text code {
+      font-size: 0.85em;
+      background: var(--color-green-subtle);
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+
+    .ms-field { margin-bottom: var(--space-4); }
+
+    .ms-field label {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ms-field input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      border: 1.5px solid var(--color-border-input);
+      border-radius: var(--radius-md);
+    }
+
+    .ms-field input:focus {
+      outline: none;
+      border-color: var(--color-green);
+      box-shadow: 0 0 0 3px var(--color-green-subtle);
+    }
+
+    .ms-modal__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+
+    .ms-msg {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: var(--space-3);
+      min-height: 1.2em;
+    }
+
+    .site-header__actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-left: auto;
+    }
+
     /* ── COMPONENTS — TASKS ── */
     .task-form {
       display: flex;
@@ -860,7 +1050,12 @@
     <a href="https://www.emmeco.org/" class="site-header__logo" target="_blank" rel="noopener noreferrer">
       Emme
     </a>
-    <time class="site-header__date" id="js-date" aria-live="polite"></time>
+    <div class="site-header__actions">
+      <time class="site-header__date" id="js-date" aria-live="polite"></time>
+      <button type="button" class="btn btn--yellow" id="js-ms-connect" style="display:none">Connect Microsoft</button>
+      <button type="button" class="btn btn--outline" id="js-ms-settings" style="color:#fff;border-color:rgba(255,255,255,.4)">MS Setup</button>
+      <button type="button" class="btn btn--outline" id="js-ms-signout" style="display:none;color:#fff;border-color:rgba(255,255,255,.4)">Sign out</button>
+    </div>
   </header>
 
   <nav class="tab-nav" aria-label="Dashboard navigation">
@@ -1006,6 +1201,12 @@
           </ul>
         </section>
 
+        <div class="ms-bar" id="js-ms-bar" role="status">
+          <p class="ms-bar__status" id="js-ms-status">Microsoft Calendar &amp; To Do are not connected. Open <strong>MS Setup</strong>, add your Azure app Client ID, then sign in with <strong>skessler@emmeco.org</strong>.</p>
+          <button type="button" class="btn btn--green" id="js-ms-connect-bar">Connect Microsoft</button>
+          <button type="button" class="btn btn--outline" id="js-ms-setup-bar">MS Setup</button>
+        </div>
+
         <section class="widget" role="region" aria-labelledby="cal-heading">
           <header class="widget__header">
             <div class="widget__heading-group">
@@ -1013,6 +1214,7 @@
               <h2 class="widget__heading" id="cal-heading">Calendar</h2>
             </div>
             <div class="widget__actions">
+              <button type="button" class="btn btn--outline" id="js-cal-refresh" style="display:none">Refresh</button>
               <a class="btn btn--green" href="https://outlook.office365.com/calendar" target="_blank" rel="noopener noreferrer">Open Outlook Calendar →</a>
               <a class="btn btn--pink" href="https://outlook.office365.com/calendar/action/compose" target="_blank" rel="noopener noreferrer">New Event +</a>
             </div>
@@ -1028,6 +1230,11 @@
                 <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
               </div>
               <div class="cal-grid" id="js-cal-grid" role="grid" aria-label="Calendar"></div>
+              <div class="cal-events" id="js-cal-events">
+                <h3 class="cal-events__title" id="js-cal-events-title">Select a day</h3>
+                <p class="cal-events__empty" id="js-cal-events-empty">Connect Microsoft to see Outlook events here.</p>
+                <ul class="cal-events__list is-hidden" id="js-cal-events-list"></ul>
+              </div>
             </div>
           </div>
         </section>
@@ -1039,6 +1246,7 @@
               <h2 class="widget__heading" id="tasks-heading">Tasks</h2>
             </div>
             <div class="widget__actions">
+              <button type="button" class="btn btn--outline" id="js-tasks-refresh" style="display:none">Refresh</button>
               <a class="btn btn--green" href="https://to.microsoft.com" target="_blank" rel="noopener noreferrer">Open Microsoft To‑Do →</a>
             </div>
           </header>
@@ -1051,7 +1259,7 @@
               <button type="submit" class="task-form__submit btn btn--green" aria-label="Add task">+</button>
             </form>
             <ul class="task-list" id="js-task-list" aria-label="Task list" aria-live="polite"></ul>
-            <p class="task-list__empty is-hidden" id="js-task-empty" role="status">No tasks yet — add one above ✨</p>
+            <p class="task-list__empty is-hidden" id="js-task-empty" role="status">No tasks yet — add one above</p>
             <footer class="task-footer">
               <span class="task-footer__count" id="js-task-count" aria-live="polite"></span>
               <button type="button" class="task-footer__clear" id="js-task-clear">Clear completed</button>
@@ -1063,39 +1271,309 @@
     </div>
   </div>
 
+  <!-- Microsoft Graph Setup Modal -->
+  <div class="ms-modal is-hidden" id="js-ms-modal" role="dialog" aria-modal="true" aria-labelledby="js-ms-modal-title">
+    <div class="ms-modal__panel">
+      <h2 class="ms-modal__title" id="js-ms-modal-title">Connect Emme Microsoft account</h2>
+      <div class="ms-modal__text">
+        <p>One-time setup in Azure (use your Emme admin access, or ask IT). Sign in later as <strong>skessler@emmeco.org</strong>.</p>
+        <ol>
+          <li>Go to <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener">App registrations</a> → <strong>New registration</strong></li>
+          <li>Name: <code>Emme Dashboard</code></li>
+          <li>Supported accounts: <strong>Accounts in this organizational directory only</strong> (Emme)</li>
+          <li>Redirect URI → platform <strong>Single-page application (SPA)</strong> → paste the URL shown below</li>
+          <li>After create → <strong>API permissions</strong> → Add: <code>Calendars.Read</code>, <code>Tasks.ReadWrite</code>, <code>User.Read</code> (Microsoft Graph) → Grant admin consent if available</li>
+          <li>Copy <strong>Application (client) ID</strong> and paste it here. Optional: Directory (tenant) ID</li>
+        </ol>
+        <p style="margin-top:1rem"><strong>Redirect URI to register:</strong><br><code id="js-ms-redirect-hint"></code></p>
+      </div>
+      <div class="ms-field">
+        <label for="js-ms-client-id">Application (client) ID</label>
+        <input id="js-ms-client-id" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" />
+      </div>
+      <div class="ms-field">
+        <label for="js-ms-tenant-id">Directory (tenant) ID (recommended for Emme)</label>
+        <input id="js-ms-tenant-id" type="text" placeholder="Emme tenant GUID" autocomplete="off" />
+      </div>
+      <div class="ms-modal__actions">
+        <button type="button" class="btn btn--green" id="js-ms-save">Save &amp; Sign in</button>
+        <button type="button" class="btn btn--outline" id="js-ms-close">Close</button>
+      </div>
+      <p class="ms-msg" id="js-ms-msg"></p>
+    </div>
+  </div>
+
   <footer role="contentinfo" class="site-footer">
     <p class="site-footer__copy">© 2026 Emme Therapy · Built with ❤️ for Samantha</p>
-    <p class="site-footer__note">To update links, edit the LINKS registry at the top of the script block.</p>
+    <p class="site-footer__note">Calendar &amp; Tasks sync via Microsoft Graph when connected.</p>
   </footer>
 
   <script>
     (function () {
       'use strict';
 
-      /* ── LINKS REGISTRY ── */
       const LINKS = Object.freeze({
-        APP1:        'app1.html',
-        APP2:        'app2.html',
-        APP3:        'app3.html',
-        APP4:        'app4.html',
-        ZOOM:        'https://zoom.us',
-        INTAKEQ:     'https://intakeq.com',
-        OUTLOOK:     'https://outlook.office365.com',
+        APP1: 'app1.html', APP2: 'app2.html', APP3: 'app3.html', APP4: 'app4.html',
+        ZOOM: 'https://zoom.us', INTAKEQ: 'https://intakeq.com',
+        OUTLOOK: 'https://outlook.office365.com',
         OUTLOOK_CAL: 'https://outlook.office365.com/calendar',
         OUTLOOK_NEW: 'https://outlook.office365.com/calendar/action/compose',
-        TODO:        'https://to.microsoft.com',
-        NEWSLETTER:  'https://us21.campaign-archive.com/home/?u=54bb5fc10696a96b13af5922e&id=b04caf0d7e',
-        EMMECO:      'https://www.emmeco.org/',
+        TODO: 'https://to.microsoft.com',
+        NEWSLETTER: 'https://us21.campaign-archive.com/home/?u=54bb5fc10696a96b13af5922e&id=b04caf0d7e',
+        EMMECO: 'https://www.emmeco.org/',
       });
 
-      /* ── LUCIDE HELPER ── */
       const refreshIcons = function () {
         if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
           lucide.createIcons();
         }
       };
 
-      /* ── HEADER MODULE ── */
+      function pad(n) { return String(n).padStart(2, '0'); }
+      function ymd(y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); }
+      function isHttpsHost() {
+        return location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      }
+      function redirectUri() {
+        return location.href.split('#')[0].split('?')[0];
+      }
+
+      /* ── MICROSOFT GRAPH ── */
+      const MsGraph = {
+        CONFIG_KEY: 'emme_ms_graph_config',
+        SCOPES: ['User.Read', 'Calendars.Read', 'Tasks.ReadWrite'],
+        pca: null,
+        account: null,
+        eventsByDay: {},
+        todoListId: null,
+        ready: false,
+
+        getConfig: function () {
+          try {
+            const raw = localStorage.getItem(MsGraph.CONFIG_KEY);
+            if (!raw) return null;
+            const cfg = JSON.parse(raw);
+            if (!cfg.clientId) return null;
+            return { clientId: cfg.clientId.trim(), tenantId: (cfg.tenantId || '').trim() };
+          } catch (_) { return null; }
+        },
+
+        saveConfig: function (clientId, tenantId) {
+          localStorage.setItem(MsGraph.CONFIG_KEY, JSON.stringify({
+            clientId: (clientId || '').trim(),
+            tenantId: (tenantId || '').trim()
+          }));
+        },
+
+        isSignedIn: function () { return !!MsGraph.account; },
+
+        updateUI: function () {
+          const status = document.getElementById('js-ms-status');
+          const connectBtn = document.getElementById('js-ms-connect');
+          const connectBar = document.getElementById('js-ms-connect-bar');
+          const signout = document.getElementById('js-ms-signout');
+          const calRefresh = document.getElementById('js-cal-refresh');
+          const tasksRefresh = document.getElementById('js-tasks-refresh');
+          const cfg = MsGraph.getConfig();
+
+          if (MsGraph.account) {
+            const name = MsGraph.account.name || MsGraph.account.username || 'Emme account';
+            if (status) status.innerHTML = 'Connected as <strong>' + name + '</strong> — live Outlook calendar &amp; Microsoft To Do.';
+            if (connectBtn) connectBtn.style.display = 'none';
+            if (connectBar) connectBar.style.display = 'none';
+            if (signout) signout.style.display = '';
+            if (calRefresh) calRefresh.style.display = '';
+            if (tasksRefresh) tasksRefresh.style.display = '';
+          } else {
+            if (status) {
+              status.innerHTML = cfg
+                ? 'App configured. Click <strong>Connect Microsoft</strong> and sign in as <strong>skessler@emmeco.org</strong>.'
+                : 'Microsoft Calendar &amp; To Do are not connected. Open <strong>MS Setup</strong>, add your Azure app Client ID, then sign in with <strong>skessler@emmeco.org</strong>.';
+            }
+            if (connectBtn) connectBtn.style.display = cfg ? '' : 'none';
+            if (connectBar) { connectBar.style.display = ''; connectBar.textContent = cfg ? 'Connect Microsoft' : 'Start MS Setup'; }
+            if (signout) signout.style.display = 'none';
+            if (calRefresh) calRefresh.style.display = 'none';
+            if (tasksRefresh) tasksRefresh.style.display = 'none';
+          }
+        },
+
+        ensureMsal: async function () {
+          if (typeof msal === 'undefined') throw new Error('Microsoft sign-in library failed to load. Check your network.');
+          if (!isHttpsHost() && location.protocol === 'file:') {
+            throw new Error('Microsoft sign-in needs the dashboard hosted on https (or localhost). Open via your GitHub / Azure site, not a local file.');
+          }
+          const cfg = MsGraph.getConfig();
+          if (!cfg) throw new Error('Add your Application (client) ID in MS Setup first.');
+
+          const tenant = cfg.tenantId || 'organizations';
+          MsGraph.pca = new msal.PublicClientApplication({
+            auth: {
+              clientId: cfg.clientId,
+              authority: 'https://login.microsoftonline.com/' + tenant,
+              redirectUri: redirectUri(),
+              postLogoutRedirectUri: redirectUri(),
+            },
+            cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false },
+          });
+          await MsGraph.pca.initialize();
+          const result = await MsGraph.pca.handleRedirectPromise();
+          if (result && result.account) MsGraph.account = result.account;
+          else {
+            const accounts = MsGraph.pca.getAllAccounts();
+            MsGraph.account = accounts[0] || null;
+          }
+          MsGraph.ready = true;
+          return MsGraph.pca;
+        },
+
+        login: async function () {
+          await MsGraph.ensureMsal();
+          const result = await MsGraph.pca.loginPopup({
+            scopes: MsGraph.SCOPES,
+            prompt: 'select_account',
+            loginHint: 'skessler@emmeco.org',
+          });
+          MsGraph.account = result.account;
+          MsGraph.updateUI();
+          await MsGraph.syncAll();
+        },
+
+        logout: async function () {
+          if (!MsGraph.pca) await MsGraph.ensureMsal().catch(function () {});
+          const account = MsGraph.account;
+          MsGraph.account = null;
+          MsGraph.eventsByDay = {};
+          MsGraph.todoListId = null;
+          MsGraph.updateUI();
+          Calendar.render();
+          Calendar.renderDayEvents();
+          Tasks.loadLocal();
+          Tasks.render();
+          if (MsGraph.pca && account) {
+            await MsGraph.pca.logoutPopup({ account: account }).catch(function () {});
+          }
+        },
+
+        getToken: async function () {
+          await MsGraph.ensureMsal();
+          if (!MsGraph.account) throw new Error('Not signed in');
+          try {
+            const silent = await MsGraph.pca.acquireTokenSilent({
+              account: MsGraph.account,
+              scopes: MsGraph.SCOPES,
+            });
+            return silent.accessToken;
+          } catch (_) {
+            const popup = await MsGraph.pca.acquireTokenPopup({
+              account: MsGraph.account,
+              scopes: MsGraph.SCOPES,
+            });
+            return popup.accessToken;
+          }
+        },
+
+        graph: async function (path, options) {
+          options = options || {};
+          const token = await MsGraph.getToken();
+          const headers = Object.assign({
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+          }, options.headers || {});
+          const res = await fetch('https://graph.microsoft.com/v1.0' + path, {
+            method: options.method || 'GET',
+            headers: headers,
+            body: options.body ? JSON.stringify(options.body) : undefined,
+          });
+          if (!res.ok) {
+            const errText = await res.text().catch(function () { return ''; });
+            throw new Error('Graph ' + res.status + ': ' + errText.slice(0, 180));
+          }
+          if (res.status === 204) return null;
+          return res.json();
+        },
+
+        syncAll: async function () {
+          if (!MsGraph.isSignedIn()) return;
+          await Promise.all([Calendar.loadEvents(), Tasks.loadFromGraph()]);
+        },
+
+        openSetup: function () {
+          const cfg = MsGraph.getConfig() || {};
+          document.getElementById('js-ms-client-id').value = cfg.clientId || '';
+          document.getElementById('js-ms-tenant-id').value = cfg.tenantId || '';
+          document.getElementById('js-ms-redirect-hint').textContent = redirectUri();
+          document.getElementById('js-ms-msg').textContent = '';
+          document.getElementById('js-ms-modal').classList.remove('is-hidden');
+        },
+
+        closeSetup: function () {
+          document.getElementById('js-ms-modal').classList.add('is-hidden');
+        },
+
+        saveAndConnect: async function () {
+          const clientId = document.getElementById('js-ms-client-id').value.trim();
+          const tenantId = document.getElementById('js-ms-tenant-id').value.trim();
+          const msg = document.getElementById('js-ms-msg');
+          if (!clientId) {
+            msg.textContent = 'Client ID is required.';
+            return;
+          }
+          MsGraph.saveConfig(clientId, tenantId);
+          MsGraph.pca = null;
+          MsGraph.ready = false;
+          msg.textContent = 'Saved. Opening Microsoft sign-in…';
+          try {
+            await MsGraph.login();
+            MsGraph.closeSetup();
+          } catch (err) {
+            msg.textContent = err.message || 'Sign-in failed.';
+            MsGraph.updateUI();
+          }
+        },
+
+        init: async function () {
+          MsGraph.updateUI();
+          const hint = document.getElementById('js-ms-redirect-hint');
+          if (hint) hint.textContent = redirectUri();
+
+          ['js-ms-settings', 'js-ms-setup-bar'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', MsGraph.openSetup);
+          });
+          document.getElementById('js-ms-close').addEventListener('click', MsGraph.closeSetup);
+          document.getElementById('js-ms-modal').addEventListener('click', function (e) {
+            if (e.target.id === 'js-ms-modal') MsGraph.closeSetup();
+          });
+          document.getElementById('js-ms-save').addEventListener('click', function () {
+            MsGraph.saveAndConnect();
+          });
+
+          const connect = function () {
+            if (!MsGraph.getConfig()) { MsGraph.openSetup(); return; }
+            MsGraph.login().catch(function (err) {
+              alert(err.message || 'Microsoft sign-in failed');
+              MsGraph.updateUI();
+            });
+          };
+          document.getElementById('js-ms-connect').addEventListener('click', connect);
+          document.getElementById('js-ms-connect-bar').addEventListener('click', connect);
+          document.getElementById('js-ms-signout').addEventListener('click', function () {
+            MsGraph.logout();
+          });
+
+          if (MsGraph.getConfig()) {
+            try {
+              await MsGraph.ensureMsal();
+              MsGraph.updateUI();
+              if (MsGraph.isSignedIn()) await MsGraph.syncAll();
+            } catch (_) {
+              MsGraph.updateUI();
+            }
+          }
+        },
+      };
+
       const Header = {
         init: function () {
           const el = document.getElementById('js-date');
@@ -1103,15 +1581,11 @@
           const now = new Date();
           el.setAttribute('datetime', now.toISOString().split('T')[0]);
           el.textContent = now.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year:    'numeric',
-            month:   'long',
-            day:     'numeric',
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
           });
         },
       };
 
-      /* ── GREETING MODULE ── */
       const Greeting = {
         QUOTES: [
           '"The wound is the place where the Light enters you." — Rumi',
@@ -1123,68 +1597,99 @@
           const titleEl = document.getElementById('js-greeting');
           const quoteEl = document.getElementById('js-quote');
           if (!titleEl || !quoteEl) return;
-
           const hour = new Date().getHours();
           const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-          titleEl.textContent = 'Good ' + period + ', Samantha 🌿';
+          titleEl.textContent = 'Good ' + period + ', Samantha';
           quoteEl.textContent = Greeting.QUOTES[Math.floor(Math.random() * Greeting.QUOTES.length)];
         },
       };
 
-      /* ── CALENDAR MODULE ── */
+      /* ── CALENDAR ── */
       const Calendar = {
-        state: { year: 0, month: 0 },
+        state: { year: 0, month: 0, selectedKey: null },
         MONTHS: ['January','February','March','April','May','June','July','August','September','October','November','December'],
 
         init: function () {
           const now = new Date();
-          Calendar.state.year  = now.getFullYear();
+          Calendar.state.year = now.getFullYear();
           Calendar.state.month = now.getMonth();
+          Calendar.state.selectedKey = ymd(now.getFullYear(), now.getMonth(), now.getDate());
 
-          const prevBtn = document.getElementById('js-cal-prev');
-          const nextBtn = document.getElementById('js-cal-next');
-
-          if (prevBtn) {
-            prevBtn.addEventListener('click', function () {
-              Calendar.state.month -= 1;
-              if (Calendar.state.month < 0) { Calendar.state.month = 11; Calendar.state.year -= 1; }
-              Calendar.render();
-            });
-          }
-
-          if (nextBtn) {
-            nextBtn.addEventListener('click', function () {
-              Calendar.state.month += 1;
-              if (Calendar.state.month > 11) { Calendar.state.month = 0; Calendar.state.year += 1; }
-              Calendar.render();
-            });
-          }
+          document.getElementById('js-cal-prev').addEventListener('click', function () {
+            Calendar.state.month -= 1;
+            if (Calendar.state.month < 0) { Calendar.state.month = 11; Calendar.state.year -= 1; }
+            Calendar.render();
+            Calendar.loadEvents();
+          });
+          document.getElementById('js-cal-next').addEventListener('click', function () {
+            Calendar.state.month += 1;
+            if (Calendar.state.month > 11) { Calendar.state.month = 0; Calendar.state.year += 1; }
+            Calendar.render();
+            Calendar.loadEvents();
+          });
+          document.getElementById('js-cal-refresh').addEventListener('click', function () {
+            Calendar.loadEvents();
+          });
 
           Calendar.render();
+          Calendar.renderDayEvents();
+        },
+
+        loadEvents: async function () {
+          if (!MsGraph.isSignedIn()) {
+            MsGraph.eventsByDay = {};
+            Calendar.render();
+            Calendar.renderDayEvents();
+            return;
+          }
+          const { year, month } = Calendar.state;
+          const start = new Date(year, month, 1);
+          const end = new Date(year, month + 1, 1);
+          const startISO = start.toISOString();
+          const endISO = end.toISOString();
+          try {
+            const data = await MsGraph.graph(
+              '/me/calendarView?startDateTime=' + encodeURIComponent(startISO) +
+              '&endDateTime=' + encodeURIComponent(endISO) +
+              '&$select=subject,start,end,isAllDay,webLink&$orderby=start/dateTime&$top=200',
+              { headers: { Prefer: 'outlook.timezone="America/Denver"' } }
+            );
+            const map = {};
+            (data.value || []).forEach(function (ev) {
+              const raw = (ev.start && (ev.start.dateTime || ev.start.date)) || '';
+              const dayKey = raw.slice(0, 10);
+              if (!dayKey) return;
+              if (!map[dayKey]) map[dayKey] = [];
+              map[dayKey].push(ev);
+            });
+            MsGraph.eventsByDay = map;
+            Calendar.render();
+            Calendar.renderDayEvents();
+          } catch (err) {
+            console.warn(err);
+            const empty = document.getElementById('js-cal-events-empty');
+            if (empty) empty.textContent = 'Could not load calendar: ' + (err.message || 'error');
+          }
         },
 
         render: function () {
-          const grid  = document.getElementById('js-cal-grid');
+          const grid = document.getElementById('js-cal-grid');
           const label = document.getElementById('js-cal-label');
           if (!grid || !label) return;
-
           const { year, month } = Calendar.state;
           label.textContent = Calendar.MONTHS[month] + ' ' + year;
           grid.innerHTML = '';
 
-          const firstDay      = new Date(year, month, 1).getDay();
-          const daysInMonth   = new Date(year, month + 1, 0).getDate();
-          const daysInPrev    = new Date(year, month, 0).getDate();
-          const now           = new Date();
-          const todayY        = now.getFullYear();
-          const todayM        = now.getMonth();
-          const todayD        = now.getDate();
+          const firstDay = new Date(year, month, 1).getDay();
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const daysInPrev = new Date(year, month, 0).getDate();
+          const now = new Date();
 
           for (let i = firstDay - 1; i >= 0; i--) {
             grid.appendChild(Calendar.createCell(daysInPrev - i, true, false, year, month - 1));
           }
           for (let d = 1; d <= daysInMonth; d++) {
-            const isToday = year === todayY && month === todayM && d === todayD;
+            const isToday = year === now.getFullYear() && month === now.getMonth() && d === now.getDate();
             grid.appendChild(Calendar.createCell(d, false, isToday, year, month));
           }
           const remaining = (7 - (grid.children.length % 7)) % 7;
@@ -1198,67 +1703,132 @@
           btn.type = 'button';
           btn.className = 'cal-cell';
           btn.textContent = day;
+          const key = ymd(year, month, day);
+          btn.dataset.date = key;
           const labelDate = new Date(year, month, day);
           btn.setAttribute('aria-label', labelDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
           if (isOverflow) btn.classList.add('cal-cell--overflow');
-          if (isToday)    { btn.classList.add('cal-cell--today'); btn.setAttribute('aria-current', 'date'); }
+          if (isToday) { btn.classList.add('cal-cell--today'); btn.setAttribute('aria-current', 'date'); }
+          if (MsGraph.eventsByDay[key] && MsGraph.eventsByDay[key].length) btn.classList.add('cal-cell--has-event');
+          if (Calendar.state.selectedKey === key) btn.classList.add('cal-cell--selected');
           btn.addEventListener('click', function () {
-            window.open(LINKS.OUTLOOK_CAL, '_blank', 'noopener,noreferrer');
+            Calendar.state.selectedKey = key;
+            Calendar.render();
+            Calendar.renderDayEvents();
           });
           return btn;
         },
+
+        renderDayEvents: function () {
+          const title = document.getElementById('js-cal-events-title');
+          const empty = document.getElementById('js-cal-events-empty');
+          const list = document.getElementById('js-cal-events-list');
+          const key = Calendar.state.selectedKey;
+          if (!title || !empty || !list) return;
+
+          if (!key) {
+            title.textContent = 'Select a day';
+            empty.classList.remove('is-hidden');
+            list.classList.add('is-hidden');
+            empty.textContent = MsGraph.isSignedIn() ? 'Select a day to see events.' : 'Connect Microsoft to see Outlook events here.';
+            return;
+          }
+
+          const parts = key.split('-').map(Number);
+          const pretty = new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('en-US', {
+            weekday: 'long', month: 'long', day: 'numeric',
+          });
+          title.textContent = pretty;
+
+          const events = MsGraph.eventsByDay[key] || [];
+          if (!MsGraph.isSignedIn()) {
+            empty.textContent = 'Connect Microsoft to see Outlook events here.';
+            empty.classList.remove('is-hidden');
+            list.classList.add('is-hidden');
+            list.innerHTML = '';
+            return;
+          }
+          if (!events.length) {
+            empty.textContent = 'No events this day.';
+            empty.classList.remove('is-hidden');
+            list.classList.add('is-hidden');
+            list.innerHTML = '';
+            return;
+          }
+
+          empty.classList.add('is-hidden');
+          list.classList.remove('is-hidden');
+          list.innerHTML = '';
+          events.forEach(function (ev) {
+            const a = document.createElement('a');
+            a.className = 'cal-events__item';
+            a.href = ev.webLink || LINKS.OUTLOOK_CAL;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            const time = document.createElement('span');
+            time.className = 'cal-events__time';
+            if (ev.isAllDay) time.textContent = 'All day';
+            else {
+              const dt = new Date(ev.start.dateTime + (ev.start.dateTime.endsWith('Z') ? '' : 'Z'));
+              // Graph may return local time without Z when Prefer timezone is set
+              const startStr = ev.start.dateTime;
+              const localish = startStr.includes('T') ? startStr.split('T')[1].slice(0, 5) : '';
+              time.textContent = localish || dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            }
+            const sub = document.createElement('span');
+            sub.className = 'cal-events__subject';
+            sub.textContent = ev.subject || '(No title)';
+            a.appendChild(time);
+            a.appendChild(sub);
+            list.appendChild(a);
+          });
+        },
       };
 
-      /* ── TASKS MODULE ── */
+      /* ── TASKS ── */
       const Tasks = {
         KEY: 'emme_tasks',
         DEFAULT_TASKS: [
-          { id: 1, text: "Review today's session notes",    completed: false },
-          { id: 2, text: 'Send intake form to new client',  completed: false },
-          { id: 3, text: 'Update weekly progress report',   completed: false },
+          { id: 'local-1', text: "Review today's session notes", completed: false },
+          { id: 'local-2', text: 'Send intake form to new client', completed: false },
+          { id: 'local-3', text: 'Update weekly progress report', completed: false },
         ],
         items: [],
 
         init: function () {
-          Tasks.load();
+          Tasks.loadLocal();
           Tasks.render();
 
-          const form = document.getElementById('js-task-form');
-          if (form) {
-            form.addEventListener('submit', function (e) {
-              e.preventDefault();
-              const input = document.getElementById('js-task-input');
-              if (!input) return;
-              const text = input.value.trim();
-              if (!text) return;
-              Tasks.add(text);
-              input.value = '';
-              input.focus();
-            });
-          }
+          document.getElementById('js-task-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const input = document.getElementById('js-task-input');
+            const text = input.value.trim();
+            if (!text) return;
+            Tasks.add(text);
+            input.value = '';
+            input.focus();
+          });
+          document.getElementById('js-task-clear').addEventListener('click', Tasks.clearCompleted);
+          document.getElementById('js-tasks-refresh').addEventListener('click', function () {
+            Tasks.loadFromGraph();
+          });
 
-          const clearBtn = document.getElementById('js-task-clear');
-          if (clearBtn) clearBtn.addEventListener('click', Tasks.clearCompleted);
-
-          const list = document.getElementById('js-task-list');
-          if (list) {
-            list.addEventListener('click', function (e) {
-              const cb = e.target.closest('.task-item__checkbox');
-              if (cb) {
-                const li = cb.closest('.task-item');
-                if (li && li.dataset.id) Tasks.toggle(Number(li.dataset.id));
-                return;
-              }
-              const del = e.target.closest('.task-item__delete');
-              if (del) {
-                const li = del.closest('.task-item');
-                if (li && li.dataset.id) Tasks.remove(Number(li.dataset.id));
-              }
-            });
-          }
+          document.getElementById('js-task-list').addEventListener('click', function (e) {
+            const cb = e.target.closest('.task-item__checkbox');
+            if (cb) {
+              const li = cb.closest('.task-item');
+              if (li && li.dataset.id) Tasks.toggle(li.dataset.id);
+              return;
+            }
+            const del = e.target.closest('.task-item__delete');
+            if (del) {
+              const li = del.closest('.task-item');
+              if (li && li.dataset.id) Tasks.remove(li.dataset.id);
+            }
+          });
         },
 
-        load: function () {
+        loadLocal: function () {
           try {
             const raw = localStorage.getItem(Tasks.KEY);
             if (raw) {
@@ -1269,57 +1839,141 @@
           Tasks.items = Tasks.DEFAULT_TASKS.map(function (t) {
             return { id: t.id, text: t.text, completed: t.completed };
           });
-          Tasks.save();
+          Tasks.saveLocal();
         },
 
-        save: function () {
+        saveLocal: function () {
+          if (MsGraph.isSignedIn()) return;
           try { localStorage.setItem(Tasks.KEY, JSON.stringify(Tasks.items)); } catch (_) {}
         },
 
+        loadFromGraph: async function () {
+          if (!MsGraph.isSignedIn()) return;
+          try {
+            const lists = await MsGraph.graph('/me/todo/lists');
+            const listsArr = lists.value || [];
+            let list = listsArr.find(function (l) { return l.wellknownListName === 'defaultList'; });
+            if (!list) list = listsArr.find(function (l) { return /tasks/i.test(l.displayName || ''); });
+            if (!list) list = listsArr[0];
+            if (!list) throw new Error('No Microsoft To Do list found');
+            MsGraph.todoListId = list.id;
+
+            const data = await MsGraph.graph(
+              '/me/todo/lists/' + encodeURIComponent(list.id) +
+              '/tasks?$top=50&$orderby=createdDateTime desc'
+            );
+            Tasks.items = (data.value || []).map(function (t) {
+              return {
+                id: t.id,
+                text: t.title || '(Untitled)',
+                completed: t.status === 'completed',
+              };
+            });
+            Tasks.render();
+          } catch (err) {
+            console.warn(err);
+            alert('Could not load To Do: ' + (err.message || 'error'));
+          }
+        },
+
         render: function () {
-          const list    = document.getElementById('js-task-list');
+          const list = document.getElementById('js-task-list');
           const emptyEl = document.getElementById('js-task-empty');
           const countEl = document.getElementById('js-task-count');
           if (!list) return;
-
           list.innerHTML = '';
-
           if (Tasks.items.length === 0) {
             if (emptyEl) emptyEl.classList.remove('is-hidden');
           } else {
             if (emptyEl) emptyEl.classList.add('is-hidden');
             Tasks.items.forEach(function (task) { list.appendChild(Tasks.buildItem(task)); });
           }
-
           if (countEl) {
             const remaining = Tasks.items.filter(function (t) { return !t.completed; }).length;
-            countEl.textContent = remaining + ' of ' + Tasks.items.length + ' remaining';
+            countEl.textContent = remaining + ' of ' + Tasks.items.length + ' remaining' +
+              (MsGraph.isSignedIn() ? ' · synced with Microsoft To Do' : '');
           }
-
           refreshIcons();
         },
 
-        add: function (text) {
-          const maxId = Tasks.items.reduce(function (max, t) { return t.id > max ? t.id : max; }, 0);
-          Tasks.items.push({ id: maxId + 1, text: text, completed: false });
-          Tasks.save();
+        add: async function (text) {
+          if (MsGraph.isSignedIn()) {
+            try {
+              if (!MsGraph.todoListId) await Tasks.loadFromGraph();
+              const created = await MsGraph.graph(
+                '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks',
+                { method: 'POST', body: { title: text } }
+              );
+              Tasks.items.unshift({ id: created.id, text: created.title || text, completed: false });
+              Tasks.render();
+            } catch (err) {
+              alert('Could not add To Do task: ' + (err.message || 'error'));
+            }
+            return;
+          }
+          Tasks.items.push({ id: 'local-' + Date.now(), text: text, completed: false });
+          Tasks.saveLocal();
           Tasks.render();
         },
 
-        toggle: function (id) {
-          const task = Tasks.items.find(function (t) { return t.id === id; });
-          if (task) { task.completed = !task.completed; Tasks.save(); Tasks.render(); }
-        },
-
-        remove: function (id) {
-          Tasks.items = Tasks.items.filter(function (t) { return t.id !== id; });
-          Tasks.save();
+        toggle: async function (id) {
+          const task = Tasks.items.find(function (t) { return String(t.id) === String(id); });
+          if (!task) return;
+          const next = !task.completed;
+          if (MsGraph.isSignedIn()) {
+            try {
+              await MsGraph.graph(
+                '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks/' + encodeURIComponent(id),
+                { method: 'PATCH', body: { status: next ? 'completed' : 'notStarted' } }
+              );
+              task.completed = next;
+              Tasks.render();
+            } catch (err) {
+              alert('Could not update task: ' + (err.message || 'error'));
+            }
+            return;
+          }
+          task.completed = next;
+          Tasks.saveLocal();
           Tasks.render();
         },
 
-        clearCompleted: function () {
+        remove: async function (id) {
+          if (MsGraph.isSignedIn()) {
+            try {
+              await MsGraph.graph(
+                '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks/' + encodeURIComponent(id),
+                { method: 'DELETE' }
+              );
+              Tasks.items = Tasks.items.filter(function (t) { return String(t.id) !== String(id); });
+              Tasks.render();
+            } catch (err) {
+              alert('Could not delete task: ' + (err.message || 'error'));
+            }
+            return;
+          }
+          Tasks.items = Tasks.items.filter(function (t) { return String(t.id) !== String(id); });
+          Tasks.saveLocal();
+          Tasks.render();
+        },
+
+        clearCompleted: async function () {
+          const done = Tasks.items.filter(function (t) { return t.completed; });
+          if (MsGraph.isSignedIn()) {
+            for (let i = 0; i < done.length; i++) {
+              try {
+                await MsGraph.graph(
+                  '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks/' + encodeURIComponent(done[i].id),
+                  { method: 'DELETE' }
+                );
+              } catch (_) {}
+            }
+            Tasks.items = Tasks.items.filter(function (t) { return !t.completed; });
+            Tasks.render();
+            return;
+          }
           Tasks.items = Tasks.items.filter(function (t) { return !t.completed; });
-          Tasks.save();
+          Tasks.saveLocal();
           Tasks.render();
         },
 
@@ -1334,7 +1988,6 @@
           checkbox.setAttribute('role', 'checkbox');
           checkbox.setAttribute('aria-checked', String(task.completed));
           checkbox.setAttribute('aria-label', 'Mark complete: ' + task.text);
-          checkbox.setAttribute('tabindex', '0');
 
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
           svg.setAttribute('width', '12'); svg.setAttribute('height', '12');
@@ -1368,13 +2021,13 @@
         },
       };
 
-      /* ── APP INIT ── */
       const App = {
-        init: function () {
+        init: async function () {
           Header.init();
           Greeting.init();
           Calendar.init();
           Tasks.init();
+          await MsGraph.init();
           refreshIcons();
         },
       };

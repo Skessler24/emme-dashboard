@@ -174,6 +174,8 @@
                 <button data-id="23" class="nav-pill" data-nav="templates">Download Templates</button>
                 <button data-id="24" class="nav-pill" data-nav="create">Create a Report</button>
                 <button data-id="25" class="nav-pill" data-nav="copilot">Copilot Report Gen</button>
+                <button type="button" id="ai-settings-btn" class="nav-pill ml-auto" title="OpenAI API settings">⚙ AI Settings</button>
+                <span id="ai-status-badge" class="text-[11px] font-bold px-2 py-1 rounded-full bg-white/15 text-white/80">AI: Offline</span>
             </div>
         </div>
     </header>
@@ -191,6 +193,7 @@
             <button data-id="34" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="templates">📥 Download Templates</button>
             <button data-id="35" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="create">📝 Create a Report</button>
             <button data-id="36" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="copilot">🤖 Copilot Report Gen</button>
+            <button type="button" id="ai-settings-btn-mobile" class="text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition">⚙ AI Settings</button>
         </div>
         <div data-id="37" class="p-4 border-t mt-auto">
             <p data-id="38" class="text-xs font-bold text-muted mb-2">Age Calculator</p>
@@ -497,6 +500,33 @@
         </div>
     </div>
 
+    <!-- OpenAI Settings Modal -->
+    <div id="ai-settings-modal" class="hidden fixed inset-0 z-[85] flex items-center justify-center bg-black/40 p-4">
+        <div class="bg-white rounded-card card-shadow w-full max-w-lg p-6 relative">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-lg text-txt">OpenAI Settings</h3>
+                <button type="button" id="ai-settings-close" class="text-muted hover:text-txt text-2xl leading-none px-1">&times;</button>
+            </div>
+            <p class="text-sm text-muted mb-4">From <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="text-primary font-bold underline">platform.openai.com/api-keys</a> — create a secret key. Values stay in this browser only (not on GitHub).</p>
+            <div class="space-y-3 field-group">
+                <div>
+                    <label for="ai-key">API key</label>
+                    <input id="ai-key" type="password" placeholder="sk-..." autocomplete="off" />
+                </div>
+                <div>
+                    <label for="ai-model">Model</label>
+                    <input id="ai-model" type="text" placeholder="gpt-4.1-mini" value="gpt-4.1-mini" autocomplete="off" />
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-5">
+                <button type="button" id="ai-settings-save" class="bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-btn transition">Save</button>
+                <button type="button" id="ai-settings-test" class="border-2 border-primary text-primary hover:bg-primary/10 font-bold px-5 py-2.5 rounded-btn transition">Test connection</button>
+                <button type="button" id="ai-settings-clear" class="text-muted hover:text-txt font-semibold px-3 py-2.5 transition">Clear</button>
+            </div>
+            <p id="ai-settings-msg" class="text-xs text-muted mt-3"></p>
+        </div>
+    </div>
+
     <!-- OneDrive Modal -->
     <div data-id="270" id="onedrive-modal-q1r2" class="hidden fixed inset-0 z-[80] flex items-center justify-center bg-black/40">
         <div data-id="271" class="bg-white rounded-card card-shadow p-6 max-w-md w-full mx-4">
@@ -548,15 +578,101 @@ const TEMPLATES = [
     ]
   },
   {
-    id: 'ei-launch-screening', name: 'Early Intervention Launch Screening', description: 'Initial EI intake screening covering background, developmental history, health, vision, hearing, and evaluation methods.', category: 'Screening', color: '#084339',
+    id: 'redetermine-eligibility', name: 'Redetermining Eligibility Evaluation', description: 'IntakeQ form for annual eligibility redetermination — child info, medical updates, nutrition/dental/vision/hearing, DAYC-2 delay domains, and evaluators.', category: 'Evaluation', color: '#084339',
     sections: [
-      { title: '1. Background Information', fields: [{ label: 'Service Coordinator Name', type: 'text' },{ label: 'Family Preferred Language', type: 'text' },{ label: 'Was Your Child Born Prematurely?', type: 'radio', options: ['No', 'Yes'] },{ label: 'How many weeks early was your child born?', type: 'text' },{ label: 'Child Adjusted Age', type: 'text' }] },
-      { title: '2. Child Name & Contact', fields: [{ label: 'Child First Name', type: 'text' },{ label: 'Child Last Name', type: 'text' },{ label: "Child's Date of Birth", type: 'date' },{ label: "Today's Date", type: 'date' },{ label: 'Child Age (in months)', type: 'text' },{ label: 'Practice or Clinic Name', type: 'text' },{ label: 'Physician Mailing Address', type: 'textarea' },{ label: 'Physician Name', type: 'text' },{ label: 'Physician Phone', type: 'text' }] },
-      { title: '3. Medical Information', fields: [{ label: "Child's General Health", type: 'textarea' },{ label: 'Does your child have a medical diagnosis?', type: 'radio', options: ['No', 'Yes'] },{ label: 'Primary Diagnosis', type: 'text' },{ label: 'Does your child see any medical specialists?', type: 'radio', options: ['No', 'Yes'] },{ label: 'Relevant Medical History', type: 'textarea' },{ label: 'Reason for Referral', type: 'textarea' }] },
-      { title: '4. Nutrition, Dental, Vision & Hearing', fields: [{ label: 'Concerns about nutrition or growth?', type: 'textarea' },{ label: 'Has your child seen a dentist?', type: 'radio', options: ['No', 'Yes'] },{ label: 'Dental health concerns?', type: 'textarea' },{ label: "Has your child's vision been screened in the last 6 months?", type: 'radio', options: ['No', 'Yes'] },{ label: 'Vision screening date', type: 'date' },{ label: 'Vision screened by', type: 'text' },{ label: 'Vision results', type: 'textarea' },{ label: "Was your child's hearing screened at birth?", type: 'radio', options: ['No', 'Yes'] },{ label: 'Birth hearing screening results', type: 'text' },{ label: "Has your child's hearing been screened in the last 12 months?", type: 'radio', options: ['No', 'Yes'] },{ label: 'Left Ear Results', type: 'text' },{ label: 'Right Ear Results', type: 'text' },{ label: 'Comments regarding hearing follow up', type: 'textarea' }] },
-      { title: '5. Methods and Tools', fields: [{ label: 'Methods selected:', type: 'checkboxes', options: ['Review of Pertinent Medical Records',"Parent Interview about Child's History",'Observation of the Child','Evaluation Instrument(s)','No Pertinent Medical Records Provided'] },{ label: 'Evaluation tools selected:', type: 'checkboxes', options: ['Ages and Stages (ASQ)','AEPS','Battelle Developmental Inventory','Bayley Scales of Infant and Toddler Dev','DAYC-2','IED-II','CCITSN','CDI','HELP Birth-3','Mullen Scales of Early Learning','TPBA II','MEISR-COSF','Denver II','Goldman Fristoe 2 Test of Articulation','Vineland','Rosetti Infant Toddler Language Scale','PLS-5'] },{ label: 'Additional notes on methods/tools:', type: 'textarea' }] }
+      { title: '1. Child Name', fields: [
+        { label: 'Child First Name', type: 'text' },
+        { label: 'Child Last Name', type: 'text' },
+        { label: "Child's DOB", type: 'date' },
+        { label: "Today's Date", type: 'date' },
+        { label: 'Child Age (in months)', type: 'text' }
+      ]},
+      { title: '2. Important Contact Information', fields: [
+        { label: 'Have there been any changes to the health care practice or clinic your child goes to for checkups, shots, or when sick?', type: 'radio', options: ['No', 'Yes'] },
+        { label: 'Practice or Clinic Name', type: 'text' },
+        { label: 'Physician Mailing Address', type: 'textarea' },
+        { label: 'Physician Name', type: 'text' },
+        { label: 'Physician Phone', type: 'text' }
+      ]},
+      { title: '3. Child Evaluation / Assessment & Medical Information', fields: [
+        { label: "Child's General Health", type: 'textarea' },
+        { label: 'Does your child have any new medical diagnoses?', type: 'radio', options: ['No', 'Yes'] },
+        { label: 'Primary Diagnosis or Diagnoses', type: 'text' },
+        { label: 'Does your child see any new medical specialists?', type: 'radio', options: ['No', 'Yes'] },
+        { label: 'Health information the team should know (equipment, medications, allergies, behavioral/physical info, diagnoses)', type: 'textarea' },
+        { label: 'Relevant Medical History Updates', type: 'textarea' },
+        { label: 'Reason for Referral', type: 'textarea' }
+      ]},
+      { title: '4. Nutrition and Growth', fields: [
+        { label: "Are there any new concerns about your child's nutrition or growth?", type: 'radio', options: ['No', 'Yes'] },
+        { label: 'Nutrition / growth details', type: 'textarea' }
+      ]},
+      { title: '5. Dental', fields: [
+        { label: 'Has your child seen a dentist?', type: 'radio', options: ['No', 'Yes'] },
+        { label: "Are there any concerns about your child's dental health?", type: 'radio', options: ['No', 'Yes'] },
+        { label: 'Dental health details', type: 'textarea' }
+      ]},
+      { title: '6. Vision', fields: [
+        { label: "Has your child's vision been screened or tested in the last 6 months?", type: 'radio', options: ['No', 'Yes'] },
+        { label: 'Vision screening date', type: 'date' },
+        { label: 'Vision screened by', type: 'text' },
+        { label: 'Vision results', type: 'textarea' },
+        { label: 'Comments regarding vision follow up', type: 'textarea' }
+      ]},
+      { title: '7. Hearing', fields: [
+        { label: "Has your child's hearing been screened or tested in the last 12 months?", type: 'radio', options: ['No', 'Yes'] },
+        { label: 'Left Ear Results', type: 'text' },
+        { label: 'Right Ear Results', type: 'text' },
+        { label: 'Comments regarding hearing follow up', type: 'textarea' },
+        { label: 'Vision & Hearing Screening Form notes / file reference', type: 'textarea' }
+      ]},
+      { title: '8. Methods and Procedures Used', fields: [
+        { label: 'Methods Selected', type: 'checkboxes', options: ['Review of Pertinent Medical Records',"Parent Interview about Child's History",'Observation of the Child','Evaluation Instrument(s)','No Pertinent Medical Records Provided'] },
+        { label: 'Tools Selected', type: 'checkboxes', options: ['Ages and Stages (ASQ)','AEPS','Battelle Developmental Inventory','Bayley Scales of Infant and Toddler Dev','DAYC-2','IED-II','CCITSN','CDI','HELP Birth-3','Mullen Scales of Early Learning','TPBA II','MEISR-COSF','Denver II','Goldman Fristoe 2 Test of Articulation','Vineland','Rosetti Infant Toddler Language Scale','PLS-5'] },
+        { label: 'Percentage of Delay (overall notes)', type: 'textarea' },
+        { label: 'DAYC-2 notes / login reference', type: 'textarea' }
+      ]},
+      { title: '9. DAYC-2 Domain Results — Adaptive', fields: [
+        { label: 'Adaptive — Range of Delay', type: 'text' },
+        { label: 'Adaptive — Developmental Level Min Age', type: 'text' },
+        { label: 'Adaptive — Developmental Level Max Age', type: 'text' },
+        { label: 'Adaptive — Results Summary (qualitative)', type: 'textarea' }
+      ]},
+      { title: '10. DAYC-2 Domain Results — Cognitive', fields: [
+        { label: 'Cognitive — Range of Delay', type: 'text' },
+        { label: 'Cognitive — Developmental Level Min Age', type: 'text' },
+        { label: 'Cognitive — Developmental Level Max Age', type: 'text' },
+        { label: 'Cognitive — Results Summary (qualitative)', type: 'textarea' }
+      ]},
+      { title: '11. DAYC-2 Domain Results — Communication', fields: [
+        { label: 'Communication — Range of Delay', type: 'text' },
+        { label: 'Communication — Developmental Level Min Age', type: 'text' },
+        { label: 'Communication — Developmental Level Max Age', type: 'text' },
+        { label: 'Communication — Results Summary (qualitative)', type: 'textarea' }
+      ]},
+      { title: '12. DAYC-2 Domain Results — Social and Emotional', fields: [
+        { label: 'Social/Emotional — Range of Delay', type: 'text' },
+        { label: 'Social/Emotional — Developmental Level Min Age', type: 'text' },
+        { label: 'Social/Emotional — Developmental Level Max Age', type: 'text' },
+        { label: 'Social/Emotional — Results Summary (qualitative)', type: 'textarea' }
+      ]},
+      { title: '13. DAYC-2 Domain Results — Physical', fields: [
+        { label: 'Physical — Range of Delay', type: 'text' },
+        { label: 'Physical — Developmental Level Min Age', type: 'text' },
+        { label: 'Physical — Developmental Level Max Age', type: 'text' },
+        { label: 'Physical — Results Summary (qualitative)', type: 'textarea' }
+      ]},
+      { title: '14. Evaluator(s) / Assessor(s)', fields: [
+        { label: 'Participant Name', type: 'text' },
+        { label: 'Role', type: 'text' },
+        { label: 'Discipline', type: 'text' },
+        { label: 'Participation Statement', type: 'textarea' },
+        { label: 'Additional evaluators (name / role / discipline / statement)', type: 'textarea' },
+        { label: 'Provider Signature (typed name)', type: 'text' }
+      ]}
     ]
   },
+
   {
     id: 'medicaid-eval', name: 'Medicaid Evaluation Report', description: 'Medicaid billing evaluation report with CPT codes, clinical history, assessment findings, and diagnosis codes.', category: 'Medicaid', color: '#dd9fa3',
     sections: [
@@ -1178,6 +1294,96 @@ function hasAppSDK() {
     return typeof AppSDK !== 'undefined' && AppSDK && AppSDK.ai && typeof AppSDK.ai.chat === 'function';
 }
 
+const AI_CONFIG_KEY = 'emme_openai_config';
+
+function getOpenAIConfig() {
+    try {
+        const raw = localStorage.getItem(AI_CONFIG_KEY);
+        if (!raw) return null;
+        const cfg = JSON.parse(raw);
+        if (!cfg.apiKey) return null;
+        return {
+            apiKey: cfg.apiKey,
+            model: cfg.model || 'gpt-4.1-mini'
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
+function hasOpenAI() {
+    return !!getOpenAIConfig();
+}
+
+function updateAIStatusBadge() {
+    const badge = document.getElementById('ai-status-badge');
+    if (!badge) return;
+    if (hasAppSDK()) {
+        badge.textContent = 'AI: Copilot SDK';
+        badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
+    } else if (hasOpenAI()) {
+        badge.textContent = 'AI: OpenAI Connected';
+        badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
+    } else {
+        badge.textContent = 'AI: Offline';
+        badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-white/15 text-white/80';
+    }
+}
+
+function openAISettings() {
+    let cfg = {};
+    try { cfg = JSON.parse(localStorage.getItem(AI_CONFIG_KEY) || '{}'); } catch (e) { cfg = {}; }
+    document.getElementById('ai-key').value = cfg.apiKey || '';
+    document.getElementById('ai-model').value = cfg.model || 'gpt-4.1-mini';
+    document.getElementById('ai-settings-msg').textContent = '';
+    document.getElementById('ai-settings-modal').classList.remove('hidden');
+    closeMobileMenu();
+}
+
+function closeAISettings() {
+    document.getElementById('ai-settings-modal').classList.add('hidden');
+}
+
+function saveAISettings() {
+    const apiKey = document.getElementById('ai-key').value.trim();
+    const model = document.getElementById('ai-model').value.trim() || 'gpt-4.1-mini';
+    if (!apiKey) {
+        document.getElementById('ai-settings-msg').textContent = 'API key is required.';
+        return false;
+    }
+    localStorage.setItem(AI_CONFIG_KEY, JSON.stringify({ apiKey, model }));
+    updateAIStatusBadge();
+    document.getElementById('ai-settings-msg').textContent = 'Saved in this browser.';
+    showToast('OpenAI settings saved');
+    return true;
+}
+
+async function callOpenAI(messages) {
+    const cfg = getOpenAIConfig();
+    if (!cfg) throw new Error('OpenAI is not configured');
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cfg.apiKey}`
+        },
+        body: JSON.stringify({
+            model: cfg.model,
+            messages,
+            temperature: 0.3,
+            max_tokens: 4000
+        })
+    });
+    if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        throw new Error(`OpenAI error ${res.status}: ${errText.slice(0, 240)}`);
+    }
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) throw new Error('OpenAI returned an empty response');
+    return { content };
+}
+
 function generateLocalReport({ tpl, formData, clientFirst, clientLast, provider, reportDate }) {
     const dateLabel = formatDate(reportDate) || new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
     const lines = [];
@@ -1216,32 +1422,32 @@ function generateLocalReport({ tpl, formData, clientFirst, clientLast, provider,
     return lines.join('\n');
 }
 
-async function generateReportAI(messages) {
+async function generateReportAI(input) {
+    const messages = Array.isArray(input) ? input : (input && input.messages) || [];
     if (hasAppSDK()) {
         return AppSDK.ai.chat({ messages });
     }
-    // Local fallback: build structured report from the user message content
+    if (hasOpenAI()) {
+        window.__pendingLocalReport = null;
+        return callOpenAI(messages);
+    }
     const userMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
-    const systemMsg = messages.find(m => m.role === 'system')?.content || '';
-    // Prefer structured local generation when called from Report Builder
     if (window.__pendingLocalReport) {
         const report = generateLocalReport(window.__pendingLocalReport);
         window.__pendingLocalReport = null;
         return { content: report };
     }
-    // Copilot chat fallback: echo a guided clinical draft from the conversation
     const draft = [
         '## Emme Copilot Draft Report',
         '',
-        '**Note:** Live Copilot AI is not connected in this environment. Below is a structured draft from your notes. Fill gaps, then Download / Copy.',
+        '**Note:** OpenAI is not connected yet. Open **AI Settings** and paste your API key. Below is a structured draft from your notes.',
         '',
         '### Provider Notes Captured',
         userMsg.replace(/^\[Context:[^\]]*\]\s*/m, '').trim() || '_No notes yet._',
         '',
         '### Next Steps',
-        '1. Add missing client demographics and evaluation findings.',
-        '2. Confirm eligibility criteria (33% in one domain OR 25% in two+ domains) if applicable.',
-        '3. Use **Generate Report Now** after selecting a report type, or switch to **Create a Report** for the full form-based builder.',
+        '1. Connect OpenAI via AI Settings, or',
+        '2. Use **Create a Report** for the form-based builder (works offline).',
         '',
         '---',
         '*Generated by Emme Report Center (offline mode)*'
@@ -1298,7 +1504,7 @@ document.getElementById('generate-ai-btn-c5d6').addEventListener('click', async 
         document.getElementById('ai-loading-g9h0').classList.add('hidden');
         document.getElementById('ai-result-i1j2').classList.remove('hidden');
         renderAIReport(res.content);
-        showToast(hasAppSDK() ? 'Report generated' : 'Report assembled from your form entries');
+        showToast(hasOpenAI() || hasAppSDK() ? 'AI report generated' : 'Report assembled from your form entries');
     } catch (e) {
         document.getElementById('ai-loading-g9h0').classList.add('hidden');
         showToast('Report generation failed. Please try again.', 'error');
@@ -1677,6 +1883,42 @@ document.getElementById('resume-banner-btn-w7x8').addEventListener('click', resu
 document.getElementById('bb-home-i3j4').addEventListener('click', () => navigateTo('dashboard'));
 
 checkSavedReport();
+updateAIStatusBadge();
+
+// AI Settings UI
+const aiSettingsBtn = document.getElementById('ai-settings-btn');
+const aiSettingsBtnMobile = document.getElementById('ai-settings-btn-mobile');
+if (aiSettingsBtn) aiSettingsBtn.addEventListener('click', openAISettings);
+if (aiSettingsBtnMobile) aiSettingsBtnMobile.addEventListener('click', openAISettings);
+document.getElementById('ai-settings-close')?.addEventListener('click', closeAISettings);
+document.getElementById('ai-settings-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'ai-settings-modal') closeAISettings();
+});
+document.getElementById('ai-settings-save')?.addEventListener('click', () => saveAISettings());
+document.getElementById('ai-settings-clear')?.addEventListener('click', () => {
+    localStorage.removeItem(AI_CONFIG_KEY);
+    document.getElementById('ai-key').value = '';
+    document.getElementById('ai-model').value = 'gpt-4.1-mini';
+    document.getElementById('ai-settings-msg').textContent = 'Cleared.';
+    updateAIStatusBadge();
+    showToast('OpenAI settings cleared');
+});
+document.getElementById('ai-settings-test')?.addEventListener('click', async () => {
+    if (!saveAISettings()) return;
+    const msg = document.getElementById('ai-settings-msg');
+    msg.textContent = 'Testing…';
+    try {
+        const res = await callOpenAI([
+            { role: 'system', content: 'Reply with exactly: OK' },
+            { role: 'user', content: 'ping' }
+        ]);
+        msg.textContent = res.content ? 'Connection successful.' : 'Connected, but empty response.';
+        showToast('OpenAI connected', 'success');
+    } catch (err) {
+        msg.textContent = err.message || 'Connection failed.';
+        showToast('OpenAI connection failed', 'error');
+    }
+});
 
 // Dashboard cards already use data-nav — no extra handlers needed
 </script>
