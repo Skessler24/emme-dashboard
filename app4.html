@@ -32,6 +32,41 @@
     <style>
         * { font-family: 'Nunito', sans-serif; }
         body { background: #fef7fc; color: #1A2733; margin: 0; }
+        .hidden { display: none !important; }
+        #mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: rgba(0,0,0,0.4);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #mobile-menu-overlay.is-open {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #mobile-menu-nav-q8r7 {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 18rem;
+            z-index: 70;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+        #mobile-menu-nav-q8r7.is-open {
+            transform: translateX(0);
+            pointer-events: auto;
+        }
         :root {
             --primary: #084339; --secondary: #dd9fa3; --accent: #ffca34;
             --success: #57CC99; --bg: #fef7fc; --card: #FFFFFF;
@@ -87,8 +122,9 @@
         .nav-pill:not(.active) { background: transparent; color: rgba(255,255,255,0.7); }
         .nav-pill:hover:not(.active) { background: rgba(255,255,255,0.12); }
         .mobile-sidebar { transition: transform 0.3s ease; }
-        .mobile-sidebar.closed { transform: translateX(100%); }
+        .mobile-sidebar.closed { transform: translateX(100%); pointer-events: none; }
         #mobile-menu-overlay { transition: opacity 0.3s; }
+        #mobile-menu-overlay.hidden { pointer-events: none !important; }
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; background: #f9f5f3; border-radius: var(--radius-btn); padding: 12px; }
         .checkbox-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; color: var(--txt); }
         .checkbox-group input[type="checkbox"] { accent-color: #084339; width: 16px; height: 16px; border-radius: 4px; }
@@ -143,15 +179,15 @@
     </header>
 
     <!-- Mobile Menu Overlay -->
-    <div data-id="26" id="mobile-menu-overlay" class="fixed inset-0 bg-black/40 z-[60] hidden opacity-0"></div>
-    <nav data-id="27" id="mobile-menu-nav-q8r7" class="fixed top-0 right-0 h-full w-72 bg-white z-[70] mobile-sidebar closed flex flex-col shadow-2xl">
+    <div data-id="26" id="mobile-menu-overlay" class="no-print" aria-hidden="true"></div>
+    <nav data-id="27" id="mobile-menu-nav-q8r7" class="no-print" aria-label="Mobile menu">
         <div data-id="28" class="flex items-center justify-between p-4 header-gradient">
             <span data-id="29" class="text-white font-bold">✦ Menu</span>
             <button data-id="30" id="mobile-menu-close-s9t8" class="text-white p-1"><i data-id="31" data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <div data-id="32" class="flex flex-col p-4 gap-2">
             <button data-id="33" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="dashboard">🏠 Report Dashboard</button>
-            <a href="index.html" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition">🏡 Practice Home</a>
+            <a href="index.html" class="text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition block">🏡 Practice Home</a>
             <button data-id="34" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="templates">📥 Download Templates</button>
             <button data-id="35" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="create">📝 Create a Report</button>
             <button data-id="36" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="copilot">🤖 Copilot Report Gen</button>
@@ -179,29 +215,29 @@
                 <p data-id="48" class="text-muted text-base md:text-lg font-medium">Emme Report Center — Colorado Early Intervention Services</p>
             </div>
             <div data-id="49" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div data-id="50" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-primary cursor-pointer" id="dash-card-create-e5f6">
+                <div data-id="50" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-primary cursor-pointer" id="dash-card-create-e5f6" data-nav="create" role="button" tabindex="0">
                     <div data-id="51" class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                         <i data-id="52" data-lucide="clipboard-pen" class="w-8 h-8 text-primary"></i>
                     </div>
                     <h2 data-id="53" class="font-black text-lg text-txt mb-2">Create a Report</h2>
                     <p data-id="54" class="text-muted text-sm leading-relaxed mb-5">Fill out structured EI report templates with guided forms. AI transforms your data into a polished, professional report.</p>
-                    <button data-id="55" class="mt-auto bg-primary hover:bg-primary-dark text-white font-bold px-6 py-2.5 rounded-btn transition w-full" data-nav="create">Open Report Builder →</button>
+                    <button type="button" data-id="55" class="mt-auto bg-primary hover:bg-primary-dark text-white font-bold px-6 py-2.5 rounded-btn transition w-full" data-nav="create">Open Report Builder →</button>
                 </div>
-                <div data-id="56" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-secondary cursor-pointer" id="dash-card-templates-g7h8">
+                <div data-id="56" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-secondary cursor-pointer" id="dash-card-templates-g7h8" data-nav="templates" role="button" tabindex="0">
                     <div data-id="57" class="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mb-4">
                         <i data-id="58" data-lucide="download" class="w-8 h-8 text-secondary-dark"></i>
                     </div>
                     <h2 data-id="59" class="font-black text-lg text-txt mb-2">Download a Template</h2>
                     <p data-id="60" class="text-muted text-sm leading-relaxed mb-5">Access all official Emme templates. Download as fillable PDF or plain text for use in IntakeQ and other platforms.</p>
-                    <button data-id="61" class="mt-auto bg-secondary hover:bg-secondary-dark text-white font-bold px-6 py-2.5 rounded-btn transition w-full" data-nav="templates">Browse Templates →</button>
+                    <button type="button" data-id="61" class="mt-auto bg-secondary hover:bg-secondary-dark text-white font-bold px-6 py-2.5 rounded-btn transition w-full" data-nav="templates">Browse Templates →</button>
                 </div>
-                <div data-id="62" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-success cursor-pointer" id="dash-card-copilot-i9j0">
+                <div data-id="62" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-success cursor-pointer" id="dash-card-copilot-i9j0" data-nav="copilot" role="button" tabindex="0">
                     <div data-id="63" class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-4">
                         <i data-id="64" data-lucide="sparkles" class="w-8 h-8 text-success"></i>
                     </div>
-                    <h2 data-id="65" class="font-black text-lg text-txt mb-2">Copilot Report Generation</h2>
-                    <p data-id="66" class="text-muted text-sm leading-relaxed mb-5">Upload any data or notes and let AI automatically generate a complete, formatted EI report — fully automated.</p>
-                    <button data-id="67" class="mt-auto bg-success hover:bg-success-dark text-white font-bold px-6 py-2.5 rounded-btn transition w-full" data-nav="copilot">Launch Copilot →</button>
+                    <h2 data-id="65" class="font-black text-lg text-txt mb-2">Copilot Report Gen</h2>
+                    <p data-id="66" class="text-muted text-sm leading-relaxed mb-5">Chat with Copilot to build reports from notes. Generate, edit, and download when ready.</p>
+                    <button type="button" data-id="67" class="mt-auto bg-success hover:bg-success-dark text-white font-bold px-6 py-2.5 rounded-btn transition w-full" data-nav="copilot">Launch Copilot →</button>
                 </div>
             </div>
             <div data-id="68" class="rounded-card px-5 py-3 text-center" style="background:#ffca34;border:1.5px solid #e0b020;">
@@ -292,7 +328,7 @@
                     <div data-id="133" id="report-fields-y1z2" class="space-y-5"></div>
                     <div data-id="134" class="flex justify-between mt-8 flex-wrap gap-3">
                         <button data-id="135" id="back-to-step1-a3b4" class="border border-gray-200 text-muted hover:text-txt font-bold px-6 py-2.5 rounded-btn transition flex items-center gap-2"><i data-id="136" data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
-                        <button data-id="137" id="generate-ai-btn-c5d6" class="bg-success hover:bg-success-dark text-white font-bold px-8 py-2.5 rounded-btn transition flex items-center gap-2"><i data-id="138" data-lucide="sparkles" class="w-4 h-4"></i> Generate AI Report</button>
+                        <button data-id="137" id="generate-ai-btn-c5d6" class="bg-success hover:bg-success-dark text-white font-bold px-8 py-2.5 rounded-btn transition flex items-center gap-2"><i data-id="138" data-lucide="sparkles" class="w-4 h-4"></i> Generate Report</button>
                     </div>
                 </div>
             </div>
@@ -768,6 +804,7 @@ setInterval(updateClock, 1000);
 
 // ========== NAVIGATION ==========
 function navigateTo(page) {
+    if (!page || !getPageSuffix(page)) return;
     currentPage = page;
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + page + '-' + getPageSuffix(page));
@@ -776,9 +813,13 @@ function navigateTo(page) {
         p.classList.toggle('active', p.dataset.nav === page);
     });
     const bb = document.getElementById('bottom-bar-g1h2');
-    if (page === 'dashboard') { bb.classList.add('hidden'); } else { bb.classList.remove('hidden'); }
+    if (bb) {
+        if (page === 'dashboard') { bb.classList.add('hidden'); } else { bb.classList.remove('hidden'); }
+    }
     const footer = document.getElementById('app-footer-a1b1');
-    if (page === 'dashboard') { footer.classList.remove('hidden'); } else { footer.classList.add('hidden'); }
+    if (footer) {
+        if (page === 'dashboard') { footer.classList.remove('hidden'); } else { footer.classList.add('hidden'); }
+    }
     closeMobileMenu();
     window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -789,27 +830,45 @@ function getPageSuffix(page) {
 }
 
 document.querySelectorAll('[data-nav]').forEach(el => {
-    el.addEventListener('click', () => navigateTo(el.dataset.nav));
+    el.addEventListener('click', (e) => {
+        const nav = el.dataset.nav;
+        if (!nav) return;
+        e.preventDefault();
+        navigateTo(nav);
+    });
+    el.addEventListener('keydown', (e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && el.dataset.nav) {
+            e.preventDefault();
+            navigateTo(el.dataset.nav);
+        }
+    });
 });
 document.querySelectorAll('.mobile-nav-btn').forEach(el => {
-    el.addEventListener('click', () => navigateTo(el.dataset.nav));
+    el.addEventListener('click', () => {
+        if (el.dataset.nav) navigateTo(el.dataset.nav);
+    });
 });
-document.getElementById('logo-home-btn-x9z1').addEventListener('click', () => navigateTo('dashboard'));
+const logoHome = document.getElementById('logo-home-btn-x9z1');
+if (logoHome) logoHome.addEventListener('click', () => navigateTo('dashboard'));
 
 // ========== MOBILE MENU ==========
 function openMobileMenu() {
     const overlay = document.getElementById('mobile-menu-overlay');
     const nav = document.getElementById('mobile-menu-nav-q8r7');
-    overlay.classList.remove('hidden');
-    setTimeout(() => overlay.style.opacity = '1', 10);
-    nav.classList.remove('closed');
+    if (overlay) {
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+    if (nav) nav.classList.add('is-open');
 }
 function closeMobileMenu() {
     const overlay = document.getElementById('mobile-menu-overlay');
     const nav = document.getElementById('mobile-menu-nav-q8r7');
-    overlay.style.opacity = '0';
-    nav.classList.add('closed');
-    setTimeout(() => overlay.classList.add('hidden'), 300);
+    if (overlay) {
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+    if (nav) nav.classList.remove('is-open');
 }
 document.getElementById('mobile-menu-btn-m4v2').addEventListener('click', openMobileMenu);
 document.getElementById('mobile-menu-close-s9t8').addEventListener('click', closeMobileMenu);
@@ -1114,6 +1173,82 @@ document.getElementById('go-to-step4-q9r0').addEventListener('click', () => {
 // ========== AI SYSTEM PROMPT ==========
 const AI_SYSTEM_PROMPT = `You are Copilot, an AI assistant for Emme Therapy Services — an Early Intervention provider in Colorado. You help generate professional clinical EI reports. Colorado EI regulations updated July 1, 2026: Annual eligibility redetermination is now required for delay-based eligibility. Criteria: 33% delay in one domain OR 25% delay in two or more domains. Exception: children with established diagnosed conditions do NOT require annual redetermination. Preferred evaluation tool: DAYC-2. Retain protocols 6 years. Natural environments required. Transition planning begins at 27 months. Services include: Speech-Language Therapy, OT, PT, Developmental Intervention, Service Coordination. File naming convention: first 3 letters of first name + first 3 of last name (e.g., SAMKes). Always write in professional clinical language appropriate for Colorado Part C IDEA documentation.`;
 
+// ========== LOCAL REPORT ENGINE (works without Copilot AppSDK) ==========
+function hasAppSDK() {
+    return typeof AppSDK !== 'undefined' && AppSDK && AppSDK.ai && typeof AppSDK.ai.chat === 'function';
+}
+
+function generateLocalReport({ tpl, formData, clientFirst, clientLast, provider, reportDate }) {
+    const dateLabel = formatDate(reportDate) || new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+    const lines = [];
+    lines.push(`# ${tpl.name}`);
+    lines.push('');
+    lines.push(`**Emme Therapy Services — Colorado Early Intervention**`);
+    lines.push(`**Date:** ${dateLabel}`);
+    lines.push(`**Client:** ${[clientFirst, clientLast].filter(Boolean).join(' ') || 'Pending'}`);
+    lines.push(`**Provider:** ${provider || 'Pending'}`);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+
+    tpl.sections.forEach(section => {
+        lines.push(`## ${section.title}`);
+        lines.push('');
+        section.fields.forEach(field => {
+            const val = (formData[field.label] || '').toString().trim();
+            lines.push(`### ${field.label}`);
+            lines.push(val || '_Information pending — to be completed._');
+            lines.push('');
+        });
+    });
+
+    lines.push('## Clinical Summary');
+    lines.push('');
+    lines.push('This report was assembled from the Report Builder form fields. Review all sections for accuracy before finalizing. Colorado EI documentation standards apply (Part C IDEA; annual eligibility redetermination effective July 1, 2026 where applicable).');
+    lines.push('');
+    lines.push('## Provider Attestation');
+    lines.push('');
+    lines.push(`Provider: ${provider || '________________'}`);
+    lines.push(`Date: ${dateLabel}`);
+    lines.push('');
+    lines.push('---');
+    lines.push('*Generated by Emme Report Center — emmeco.org*');
+    return lines.join('\n');
+}
+
+async function generateReportAI(messages) {
+    if (hasAppSDK()) {
+        return AppSDK.ai.chat({ messages });
+    }
+    // Local fallback: build structured report from the user message content
+    const userMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
+    const systemMsg = messages.find(m => m.role === 'system')?.content || '';
+    // Prefer structured local generation when called from Report Builder
+    if (window.__pendingLocalReport) {
+        const report = generateLocalReport(window.__pendingLocalReport);
+        window.__pendingLocalReport = null;
+        return { content: report };
+    }
+    // Copilot chat fallback: echo a guided clinical draft from the conversation
+    const draft = [
+        '## Emme Copilot Draft Report',
+        '',
+        '**Note:** Live Copilot AI is not connected in this environment. Below is a structured draft from your notes. Fill gaps, then Download / Copy.',
+        '',
+        '### Provider Notes Captured',
+        userMsg.replace(/^\[Context:[^\]]*\]\s*/m, '').trim() || '_No notes yet._',
+        '',
+        '### Next Steps',
+        '1. Add missing client demographics and evaluation findings.',
+        '2. Confirm eligibility criteria (33% in one domain OR 25% in two+ domains) if applicable.',
+        '3. Use **Generate Report Now** after selecting a report type, or switch to **Create a Report** for the full form-based builder.',
+        '',
+        '---',
+        '*Generated by Emme Report Center (offline mode)*'
+    ].join('\n');
+    return { content: draft };
+}
+
 // AI Generate
 document.getElementById('generate-ai-btn-c5d6').addEventListener('click', async () => {
     const type = document.getElementById('report-type-sel-e1f2').value;
@@ -1150,8 +1285,10 @@ document.getElementById('generate-ai-btn-c5d6').addEventListener('click', async 
 
     const systemPrompt = AI_SYSTEM_PROMPT + `\n\nWrite a comprehensive, professionally formatted clinical report based on the provided data. Format the report with clear section headings using markdown (##). The report type is: ${tpl.name}. Client: ${clientFirst} ${clientLast}. Provider: ${provider}. Date: ${formatDate(reportDate)}. If fields are empty, write appropriate placeholder text noting information is pending. Always maintain professional clinical tone.`;
 
+    window.__pendingLocalReport = { tpl, formData, clientFirst, clientLast, provider, reportDate };
+
     try {
-        const res = await AppSDK.ai.chat({
+        const res = await generateReportAI({
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: `Please generate the full ${tpl.name} report using this data:\n\n${fieldSummary || 'No data provided yet — please generate a template with appropriate clinical placeholder language.'}` }
@@ -1161,9 +1298,10 @@ document.getElementById('generate-ai-btn-c5d6').addEventListener('click', async 
         document.getElementById('ai-loading-g9h0').classList.add('hidden');
         document.getElementById('ai-result-i1j2').classList.remove('hidden');
         renderAIReport(res.content);
+        showToast(hasAppSDK() ? 'Report generated' : 'Report assembled from your form entries');
     } catch (e) {
         document.getElementById('ai-loading-g9h0').classList.add('hidden');
-        showToast('AI generation failed. Please try again.', 'error');
+        showToast('Report generation failed. Please try again.', 'error');
         setCreateStep(2);
     }
 });
@@ -1332,14 +1470,14 @@ async function sendChatMessage() {
 
     addTypingIndicator();
     try {
-        const res = await AppSDK.ai.chat({ messages: chatHistory });
+        const res = await generateReportAI({ messages: chatHistory });
         removeTypingIndicator();
         chatHistory.push({ role: 'assistant', content: res.content });
         const isReport = res.content.length > 600 && (res.content.includes('##') || res.content.toLowerCase().includes('report'));
         addChatBubble('assistant', res.content, isReport);
     } catch (e) {
         removeTypingIndicator();
-        addChatBubble('assistant', "I'm sorry, I encountered an issue. Please try again.");
+        addChatBubble('assistant', "I'm sorry, I encountered an issue. Please try again, or use Create a Report for the form-based builder.");
     }
 }
 
@@ -1363,7 +1501,7 @@ document.getElementById('copilot-gen-now-w1x2').addEventListener('click', async 
     addTypingIndicator();
 
     try {
-        const res = await AppSDK.ai.chat({
+        const res = await generateReportAI({
             messages: [
                 { role: 'system', content: COPILOT_SYSTEM + '\n\nGenerate a complete, professionally formatted clinical report now. Use all information gathered from the conversation. If information is missing, use appropriate clinical placeholder language. Format with markdown headings (##).' },
                 { role: 'user', content: `Generate a complete ${tpl ? tpl.name : 'EI'} report.\nClient: ${fname} ${lname}\nProvider: ${provider}\nDate: ${formatDate(date)}\n\nConversation context:\n${conversationText || 'No conversation data yet. Generate a complete template report.'}` }
@@ -1374,7 +1512,7 @@ document.getElementById('copilot-gen-now-w1x2').addEventListener('click', async 
         addChatBubble('assistant', res.content, true);
     } catch (e) {
         removeTypingIndicator();
-        addChatBubble('assistant', "Report generation failed. Please try again.");
+        addChatBubble('assistant', "Report generation failed. Please try again, or use Create a Report for the form builder.");
     }
 });
 
@@ -1393,7 +1531,7 @@ document.getElementById('chat-attach-a5b6').addEventListener('click', () => {
                 addChatBubble('user', `📎 Uploaded: ${file.name}\n\n${text}`);
                 chatHistory.push({ role: 'user', content: `[User uploaded file: ${file.name}]\n\n${text}` });
                 addTypingIndicator();
-                AppSDK.ai.chat({ messages: chatHistory }).then(res => {
+                generateReportAI({ messages: chatHistory }).then(res => {
                     removeTypingIndicator();
                     chatHistory.push({ role: 'assistant', content: res.content });
                     const isReport = res.content.length > 600;
@@ -1540,16 +1678,7 @@ document.getElementById('bb-home-i3j4').addEventListener('click', () => navigate
 
 checkSavedReport();
 
-// Dashboard card click nav
-document.getElementById('dash-card-create-e5f6').addEventListener('click', (e) => {
-    if (e.target.tagName !== 'BUTTON') navigateTo('create');
-});
-document.getElementById('dash-card-templates-g7h8').addEventListener('click', (e) => {
-    if (e.target.tagName !== 'BUTTON') navigateTo('templates');
-});
-document.getElementById('dash-card-copilot-i9j0').addEventListener('click', (e) => {
-    if (e.target.tagName !== 'BUTTON') navigateTo('copilot');
-});
+// Dashboard cards already use data-nav — no extra handlers needed
 </script>
 </body>
 </html>
