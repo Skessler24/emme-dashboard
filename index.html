@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/lucide@latest" defer></script>
-  <script src="https://alcdn.msauth.net/browser/3.27.0/js/msal-browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.0/lib/msal-browser.min.js"></script>
 
   <style>
     /* ── TOKENS ── */
@@ -1335,7 +1335,15 @@
         return location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       }
       function redirectUri() {
-        return location.href.split('#')[0].split('?')[0];
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          return location.protocol + '//' + location.host + '/';
+        }
+        const path = location.pathname || '/';
+        if (path.endsWith('.html')) {
+          const dir = path.replace(/\/[^/]*$/, '/');
+          return location.origin + (dir || '/');
+        }
+        return location.origin + (path.endsWith('/') ? path : path + '/');
       }
 
       /* ── MICROSOFT GRAPH ── */
@@ -1429,14 +1437,26 @@
 
         login: async function () {
           await MsGraph.ensureMsal();
-          const result = await MsGraph.pca.loginPopup({
-            scopes: MsGraph.SCOPES,
-            prompt: 'select_account',
-            loginHint: 'skessler@emmeco.org',
-          });
-          MsGraph.account = result.account;
-          MsGraph.updateUI();
-          await MsGraph.syncAll();
+          try {
+            const result = await MsGraph.pca.loginPopup({
+              scopes: MsGraph.SCOPES,
+              prompt: 'select_account',
+              loginHint: 'skessler@emmeco.org',
+            });
+            MsGraph.account = result.account;
+            MsGraph.updateUI();
+            await MsGraph.syncAll();
+          } catch (err) {
+            const code = err && (err.errorCode || err.code);
+            const msg = (err && err.message) || String(err);
+            if (code === 'popup_window_error' || /popup/i.test(msg)) {
+              throw new Error('Pop-up blocked. Allow pop-ups for localhost, then try Connect again.');
+            }
+            if (code === 'network_error' || /network/i.test(msg)) {
+              throw new Error('Sign-in network failed. Check that Azure Redirect URI is exactly http://localhost:5500/ (SPA), then hard-refresh and try again.');
+            }
+            throw err;
+          }
         },
 
         logout: async function () {
