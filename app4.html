@@ -1572,7 +1572,7 @@ document.getElementById('generate-ai-btn-c5d6').addEventListener('click', async 
         showToast(hasOpenAI() || hasAppSDK() ? 'AI report generated' : 'Report assembled from your form entries');
     } catch (e) {
         document.getElementById('ai-loading-g9h0').classList.add('hidden');
-        showToast('Report generation failed. Please try again.', 'error');
+        showToast((e && e.message) ? e.message : 'Report generation failed.', 'error');
         setCreateStep(2);
     }
 });
@@ -1784,7 +1784,7 @@ document.getElementById('copilot-gen-now-w1x2').addEventListener('click', async 
         addChatBubble('assistant', res.content, true);
     } catch (e) {
         removeTypingIndicator();
-        addChatBubble('assistant', "Report generation failed. Please try again, or use Create a Report for the form builder.");
+        addChatBubble('assistant', 'AI error: ' + (e.message || 'Report generation failed.') + '\n\nYou can still use Create a Report (form builder).');
     }
 });
 
@@ -1808,9 +1808,9 @@ document.getElementById('chat-attach-a5b6').addEventListener('click', () => {
                     chatHistory.push({ role: 'assistant', content: res.content });
                     const isReport = res.content.length > 600;
                     addChatBubble('assistant', res.content, isReport);
-                }).catch(() => {
+                }).catch((err) => {
                     removeTypingIndicator();
-                    addChatBubble('assistant', "I received your file but had trouble processing it. Can you paste the key information?");
+                    addChatBubble('assistant', 'AI error processing file: ' + ((err && err.message) || 'unknown') + '\n\nYou can paste the key information instead.');
                 });
             };
             reader.readAsText(file);
