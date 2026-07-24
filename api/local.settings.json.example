@@ -1,0 +1,9 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "OPENAI_API_KEY": "sk-your-org-key-here",
+    "OPENAI_MODEL": "gpt-4.1-mini"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "emme-dashboard-api",
+  "version": "1.0.0",
+  "description": "Emme Dashboard Azure Functions API",
+  "engines": {
+    "node": ">=18"
+  }
+}

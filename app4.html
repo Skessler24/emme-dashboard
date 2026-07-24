@@ -507,21 +507,22 @@
                 <h3 class="font-black text-lg text-txt">OpenAI Settings</h3>
                 <button type="button" id="ai-settings-close" class="text-muted hover:text-txt text-2xl leading-none px-1">&times;</button>
             </div>
-            <p class="text-sm text-muted mb-4">From <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="text-primary font-bold underline">platform.openai.com/api-keys</a> — create a secret key. Values stay in this browser only (not on GitHub).</p>
+            <p id="ai-org-status" class="text-sm text-muted mb-4">Checking Emme org AI…</p>
+            <p class="text-xs text-muted mb-3">Optional personal key (local override only). Org AI uses the key stored in Azure — no key needed for staff once configured.</p>
             <div class="space-y-3 field-group">
                 <div>
-                    <label for="ai-key">API key</label>
-                    <input id="ai-key" type="password" placeholder="sk-..." autocomplete="off" />
+                    <label for="ai-key">Personal API key (optional)</label>
+                    <input id="ai-key" type="password" placeholder="sk-... only if bypassing org AI" autocomplete="off" />
                 </div>
                 <div>
-                    <label for="ai-model">Model</label>
+                    <label for="ai-model">Model (personal override)</label>
                     <input id="ai-model" type="text" placeholder="gpt-4.1-mini" value="gpt-4.1-mini" autocomplete="off" />
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 mt-5">
-                <button type="button" id="ai-settings-save" class="bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-btn transition">Save</button>
+                <button type="button" id="ai-settings-save" class="bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-btn transition">Save personal</button>
                 <button type="button" id="ai-settings-test" class="border-2 border-primary text-primary hover:bg-primary/10 font-bold px-5 py-2.5 rounded-btn transition">Test connection</button>
-                <button type="button" id="ai-settings-clear" class="text-muted hover:text-txt font-semibold px-3 py-2.5 transition">Clear</button>
+                <button type="button" id="ai-settings-clear" class="text-muted hover:text-txt font-semibold px-3 py-2.5 transition">Clear personal</button>
             </div>
             <p id="ai-settings-msg" class="text-xs text-muted mt-3"></p>
         </div>
@@ -1295,6 +1296,7 @@ function hasAppSDK() {
 }
 
 const AI_CONFIG_KEY = 'emme_openai_config';
+let orgAI = { checked: false, configured: false, model: 'gpt-4.1-mini' };
 
 function getOpenAIConfig() {
     try {
@@ -1312,7 +1314,7 @@ function getOpenAIConfig() {
 }
 
 function hasOpenAI() {
-    return !!getOpenAIConfig();
+    return orgAI.configured || !!getOpenAIConfig();
 }
 
 function updateAIStatusBadge() {
@@ -1321,13 +1323,48 @@ function updateAIStatusBadge() {
     if (hasAppSDK()) {
         badge.textContent = 'AI: Copilot SDK';
         badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
-    } else if (hasOpenAI()) {
-        badge.textContent = 'AI: OpenAI Connected';
+    } else if (orgAI.configured) {
+        badge.textContent = 'AI: Emme Org Connected';
+        badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
+    } else if (getOpenAIConfig()) {
+        badge.textContent = 'AI: Personal Key';
         badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
     } else {
         badge.textContent = 'AI: Offline';
         badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-white/15 text-white/80';
     }
+}
+
+async function refreshOrgAIStatus() {
+    const statusEl = document.getElementById('ai-org-status');
+    try {
+        const res = await fetch('/api/openai-chat', { method: 'GET', credentials: 'include' });
+        if (res.status === 401 || res.status === 302) {
+            orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini' };
+            if (statusEl) statusEl.innerHTML = 'Sign in with your Emme Microsoft account to use org AI.';
+            updateAIStatusBadge();
+            return orgAI;
+        }
+        if (!res.ok) throw new Error('status ' + res.status);
+        const data = await res.json();
+        orgAI = {
+            checked: true,
+            configured: !!data.configured,
+            model: data.model || 'gpt-4.1-mini'
+        };
+        if (statusEl) {
+            statusEl.innerHTML = orgAI.configured
+                ? '<strong class="text-primary">Emme org AI is on</strong> — all signed-in staff can generate reports. Model: ' + orgAI.model
+                : 'Org AI API is deployed, but <strong>OPENAI_API_KEY</strong> is not set yet in Azure Static Web App → Configuration.';
+        }
+    } catch (e) {
+        orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini' };
+        if (statusEl) {
+            statusEl.textContent = 'Org AI not available on this host (local file / API not deployed). You can still use a personal key below.';
+        }
+    }
+    updateAIStatusBadge();
+    return orgAI;
 }
 
 function openAISettings() {
@@ -1338,6 +1375,7 @@ function openAISettings() {
     document.getElementById('ai-settings-msg').textContent = '';
     document.getElementById('ai-settings-modal').classList.remove('hidden');
     closeMobileMenu();
+    refreshOrgAIStatus();
 }
 
 function closeAISettings() {
@@ -1348,17 +1386,32 @@ function saveAISettings() {
     const apiKey = document.getElementById('ai-key').value.trim();
     const model = document.getElementById('ai-model').value.trim() || 'gpt-4.1-mini';
     if (!apiKey) {
-        document.getElementById('ai-settings-msg').textContent = 'API key is required.';
+        document.getElementById('ai-settings-msg').textContent = 'Enter a personal key to save, or rely on Emme org AI when the badge says Org Connected.';
         return false;
     }
     localStorage.setItem(AI_CONFIG_KEY, JSON.stringify({ apiKey, model }));
     updateAIStatusBadge();
-    document.getElementById('ai-settings-msg').textContent = 'Saved in this browser.';
-    showToast('OpenAI settings saved');
+    document.getElementById('ai-settings-msg').textContent = 'Personal key saved in this browser only.';
+    showToast('Personal OpenAI key saved');
     return true;
 }
 
-async function callOpenAI(messages) {
+async function callOrgOpenAI(messages, model) {
+    const res = await fetch('/api/openai-chat', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages, model: model || orgAI.model })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+        throw new Error(data.error || ('Org AI error ' + res.status));
+    }
+    if (!data.content) throw new Error('Org AI returned an empty response');
+    return { content: data.content };
+}
+
+async function callPersonalOpenAI(messages) {
     const cfg = getOpenAIConfig();
     if (!cfg) throw new Error('OpenAI is not configured');
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1382,6 +1435,14 @@ async function callOpenAI(messages) {
     const content = data?.choices?.[0]?.message?.content;
     if (!content) throw new Error('OpenAI returned an empty response');
     return { content };
+}
+
+async function callOpenAI(messages) {
+    if (!orgAI.checked) await refreshOrgAIStatus();
+    if (orgAI.configured) {
+        return callOrgOpenAI(messages);
+    }
+    return callPersonalOpenAI(messages);
 }
 
 function generateLocalReport({ tpl, formData, clientFirst, clientLast, provider, reportDate }) {
@@ -1440,14 +1501,15 @@ async function generateReportAI(input) {
     const draft = [
         '## Emme Copilot Draft Report',
         '',
-        '**Note:** OpenAI is not connected yet. Open **AI Settings** and paste your API key. Below is a structured draft from your notes.',
+        '**Note:** OpenAI is not connected yet. On the live Emme site, ask admin to set OPENAI_API_KEY in Azure. Or open **AI Settings** for a personal key. Below is a structured draft from your notes.',
         '',
         '### Provider Notes Captured',
         userMsg.replace(/^\[Context:[^\]]*\]\s*/m, '').trim() || '_No notes yet._',
         '',
         '### Next Steps',
-        '1. Connect OpenAI via AI Settings, or',
-        '2. Use **Create a Report** for the form-based builder (works offline).',
+        '1. Use Emme org AI on the live site (badge: Emme Org Connected), or',
+        '2. Connect a personal key via AI Settings, or',
+        '3. Use **Create a Report** for the form-based builder (works offline).',
         '',
         '---',
         '*Generated by Emme Report Center (offline mode)*'
@@ -1884,6 +1946,7 @@ document.getElementById('bb-home-i3j4').addEventListener('click', () => navigate
 
 checkSavedReport();
 updateAIStatusBadge();
+refreshOrgAIStatus();
 
 // AI Settings UI
 const aiSettingsBtn = document.getElementById('ai-settings-btn');
@@ -1899,21 +1962,29 @@ document.getElementById('ai-settings-clear')?.addEventListener('click', () => {
     localStorage.removeItem(AI_CONFIG_KEY);
     document.getElementById('ai-key').value = '';
     document.getElementById('ai-model').value = 'gpt-4.1-mini';
-    document.getElementById('ai-settings-msg').textContent = 'Cleared.';
+    document.getElementById('ai-settings-msg').textContent = 'Personal key cleared.';
     updateAIStatusBadge();
-    showToast('OpenAI settings cleared');
+    showToast('Personal OpenAI key cleared');
 });
 document.getElementById('ai-settings-test')?.addEventListener('click', async () => {
-    if (!saveAISettings()) return;
     const msg = document.getElementById('ai-settings-msg');
     msg.textContent = 'Testing…';
     try {
+        await refreshOrgAIStatus();
+        const personalKey = document.getElementById('ai-key').value.trim();
+        if (personalKey) saveAISettings();
+        if (!orgAI.configured && !getOpenAIConfig()) {
+            throw new Error('No org AI and no personal key. Set OPENAI_API_KEY in Azure, or paste a personal key.');
+        }
         const res = await callOpenAI([
             { role: 'system', content: 'Reply with exactly: OK' },
             { role: 'user', content: 'ping' }
         ]);
-        msg.textContent = res.content ? 'Connection successful.' : 'Connected, but empty response.';
-        showToast('OpenAI connected', 'success');
+        msg.textContent = res.content
+            ? (orgAI.configured ? 'Org AI connection successful.' : 'Personal key connection successful.')
+            : 'Connected, but empty response.';
+        showToast(orgAI.configured ? 'Emme org AI connected' : 'Personal OpenAI connected', 'success');
+        updateAIStatusBadge();
     } catch (err) {
         msg.textContent = err.message || 'Connection failed.';
         showToast('OpenAI connection failed', 'error');
