@@ -1,7 +1,8 @@
 /**
- * Org-wide OpenAI proxy for Emme Dashboard.
- * Key lives in Azure App Setting OPENAI_API_KEY (never in the browser).
- * Protected by Static Web Apps auth (Emme Entra sign-in).
+ * Org-wide AI proxy for Emme Dashboard.
+ * Prefers Azure OpenAI resource (emme-openai), falls back to OpenAI.com.
+ * Secrets live in Static Web App Application settings — never in the browser.
+ * Protected by Static Web Apps Easy Auth (Emme Entra sign-in).
  */
 module.exports = async function (context, req) {
   const headers = {
@@ -14,7 +15,6 @@ module.exports = async function (context, req) {
     return;
   }
 
-  // SWA injects this when the user is signed in via Easy Auth
   const principal = req.headers['x-ms-client-principal'] || req.headers['X-MS-CLIENT-PRINCIPAL'];
   if (!principal) {
     context.res = {
@@ -25,28 +25,39 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const defaultModel = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+  const azureEndpoint = (process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/+$/, '');
+  const azureKey = process.env.AZURE_OPENAI_API_KEY || '';
+  const azureDeployment = process.env.AZURE_OPENAI_DEPLOYMENT || '';
+  const azureApiVersion = process.env.AZURE_OPENAI_API_VERSION || '2024-10-21';
+
+  const openAiKey = process.env.OPENAI_API_KEY || '';
+  const defaultModel = process.env.OPENAI_MODEL || azureDeployment || 'gpt-4.1-mini';
+
+  const useAzure = Boolean(azureEndpoint && azureKey && azureDeployment);
+  const useOpenAI = Boolean(openAiKey);
+  const configured = useAzure || useOpenAI;
+  const provider = useAzure ? 'azure' : (useOpenAI ? 'openai' : 'none');
 
   if (req.method === 'GET') {
     context.res = {
       status: 200,
       headers,
       body: {
-        configured: Boolean(apiKey),
-        model: defaultModel,
+        configured,
+        provider,
+        model: useAzure ? azureDeployment : defaultModel,
         org: true
       }
     };
     return;
   }
 
-  if (!apiKey) {
+  if (!configured) {
     context.res = {
       status: 503,
       headers,
       body: {
-        error: 'Org OpenAI is not configured yet. Add OPENAI_API_KEY in Azure Static Web App → Configuration → Application settings.'
+        error: 'Org AI is not configured. On Static Web App → Configuration, add AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT from your emme-openai resource (or OPENAI_API_KEY as a fallback).'
       }
     };
     return;
@@ -64,26 +75,47 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const model = (body.model || defaultModel).toString().trim() || defaultModel;
-
   try {
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + apiKey
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.3,
-        max_tokens: 4000
-      })
-    });
+    let openaiRes;
+    let modelLabel;
+
+    if (useAzure) {
+      modelLabel = azureDeployment;
+      const url = azureEndpoint +
+        '/openai/deployments/' + encodeURIComponent(azureDeployment) +
+        '/chat/completions?api-version=' + encodeURIComponent(azureApiVersion);
+      openaiRes = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': azureKey
+        },
+        body: JSON.stringify({
+          messages,
+          temperature: 0.3,
+          max_tokens: 4000
+        })
+      });
+    } else {
+      modelLabel = (body.model || defaultModel).toString().trim() || defaultModel;
+      openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + openAiKey
+        },
+        body: JSON.stringify({
+          model: modelLabel,
+          messages,
+          temperature: 0.3,
+          max_tokens: 4000
+        })
+      });
+    }
 
     const data = await openaiRes.json().catch(() => ({}));
     if (!openaiRes.ok) {
-      const errMsg = (data && data.error && data.error.message) || ('OpenAI error ' + openaiRes.status);
+      const errMsg = (data && data.error && data.error.message) || ('AI error ' + openaiRes.status);
       context.res = { status: openaiRes.status, headers, body: { error: errMsg } };
       return;
     }
@@ -93,16 +125,16 @@ module.exports = async function (context, req) {
       : null;
 
     if (!content) {
-      context.res = { status: 502, headers, body: { error: 'OpenAI returned an empty response.' } };
+      context.res = { status: 502, headers, body: { error: 'AI returned an empty response.' } };
       return;
     }
 
-    context.res = { status: 200, headers, body: { content, model } };
+    context.res = { status: 200, headers, body: { content, model: modelLabel, provider } };
   } catch (err) {
     context.res = {
       status: 502,
       headers,
-      body: { error: (err && err.message) || 'Failed to reach OpenAI.' }
+      body: { error: (err && err.message) || 'Failed to reach AI service.' }
     };
   }
 };

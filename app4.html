@@ -1296,7 +1296,7 @@ function hasAppSDK() {
 }
 
 const AI_CONFIG_KEY = 'emme_openai_config';
-let orgAI = { checked: false, configured: false, model: 'gpt-4.1-mini' };
+let orgAI = { checked: false, configured: false, model: 'gpt-4.1-mini', provider: 'none' };
 
 function getOpenAIConfig() {
     try {
@@ -1324,7 +1324,7 @@ function updateAIStatusBadge() {
         badge.textContent = 'AI: Copilot SDK';
         badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
     } else if (orgAI.configured) {
-        badge.textContent = 'AI: Emme Org Connected';
+        badge.textContent = orgAI.provider === 'azure' ? 'AI: Azure OpenAI (Org)' : 'AI: Emme Org Connected';
         badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
     } else if (getOpenAIConfig()) {
         badge.textContent = 'AI: Personal Key';
@@ -1340,7 +1340,7 @@ async function refreshOrgAIStatus() {
     try {
         const res = await fetch('/api/openai-chat', { method: 'GET', credentials: 'include' });
         if (res.status === 401 || res.status === 302) {
-            orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini' };
+            orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini', provider: 'none' };
             if (statusEl) statusEl.innerHTML = 'Sign in with your Emme Microsoft account to use org AI.';
             updateAIStatusBadge();
             return orgAI;
@@ -1350,15 +1350,20 @@ async function refreshOrgAIStatus() {
         orgAI = {
             checked: true,
             configured: !!data.configured,
-            model: data.model || 'gpt-4.1-mini'
+            model: data.model || 'gpt-4.1-mini',
+            provider: data.provider || 'none'
         };
         if (statusEl) {
-            statusEl.innerHTML = orgAI.configured
-                ? '<strong class="text-primary">Emme org AI is on</strong> — all signed-in staff can generate reports. Model: ' + orgAI.model
-                : 'Org AI API is deployed, but <strong>OPENAI_API_KEY</strong> is not set yet in Azure Static Web App → Configuration.';
+            if (orgAI.configured && orgAI.provider === 'azure') {
+                statusEl.innerHTML = '<strong class="text-primary">Emme Azure OpenAI is on</strong> — staff use your <code>emme-openai</code> resource. Deployment: ' + orgAI.model;
+            } else if (orgAI.configured) {
+                statusEl.innerHTML = '<strong class="text-primary">Emme org AI is on</strong> — model: ' + orgAI.model;
+            } else {
+                statusEl.innerHTML = 'Org AI API is deployed, but Azure settings are missing. Add <strong>AZURE_OPENAI_ENDPOINT</strong>, <strong>AZURE_OPENAI_API_KEY</strong>, and <strong>AZURE_OPENAI_DEPLOYMENT</strong> from <code>emme-openai</code> on the Static Web App → Configuration page.';
+            }
         }
     } catch (e) {
-        orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini' };
+        orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini', provider: 'none' };
         if (statusEl) {
             statusEl.textContent = 'Org AI not available on this host (local file / API not deployed). You can still use a personal key below.';
         }
