@@ -1338,14 +1338,18 @@ function updateAIStatusBadge() {
 async function refreshOrgAIStatus() {
     const statusEl = document.getElementById('ai-org-status');
     try {
-        const res = await fetch('/api/openai-chat', { method: 'GET', credentials: 'include' });
-        if (res.status === 401 || res.status === 302) {
+        const res = await fetch('/api/openai-chat', { method: 'GET', credentials: 'include', redirect: 'manual' });
+        if (res.status === 0 || res.type === 'opaqueredirect' || res.status === 301 || res.status === 302 || res.status === 401) {
             orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini', provider: 'none' };
             if (statusEl) statusEl.innerHTML = 'Sign in with your Emme Microsoft account to use org AI.';
             updateAIStatusBadge();
             return orgAI;
         }
+        const ctype = (res.headers.get('content-type') || '');
         if (!res.ok) throw new Error('status ' + res.status);
+        if (!ctype.includes('application/json')) {
+            throw new Error('API returned non-JSON (is /api deployed?)');
+        }
         const data = await res.json();
         orgAI = {
             checked: true,
@@ -1355,17 +1359,17 @@ async function refreshOrgAIStatus() {
         };
         if (statusEl) {
             if (orgAI.configured && orgAI.provider === 'azure') {
-                statusEl.innerHTML = '<strong class="text-primary">Emme Azure OpenAI is on</strong> — staff use your <code>emme-openai</code> resource. Deployment: ' + orgAI.model;
+                statusEl.innerHTML = '<strong class="text-primary">Emme Azure OpenAI is on</strong> — deployment: ' + orgAI.model;
             } else if (orgAI.configured) {
-                statusEl.innerHTML = '<strong class="text-primary">Emme org AI is on</strong> — model: ' + orgAI.model;
+                statusEl.innerHTML = '<strong class="text-primary">Emme org AI is on</strong> (PRISM / OpenAI key in Azure). Model: ' + orgAI.model;
             } else {
-                statusEl.innerHTML = 'Org AI API is deployed, but Azure settings are missing. Add <strong>AZURE_OPENAI_ENDPOINT</strong>, <strong>AZURE_OPENAI_API_KEY</strong>, and <strong>AZURE_OPENAI_DEPLOYMENT</strong> from <code>emme-openai</code> on the Static Web App → Configuration page.';
+                statusEl.innerHTML = 'Org AI API is live, but no key yet. Add <strong>OPENAI_API_KEY</strong> (PRISM key) on Static Web App → Configuration → Save.';
             }
         }
     } catch (e) {
         orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini', provider: 'none' };
         if (statusEl) {
-            statusEl.textContent = 'Org AI not available on this host (local file / API not deployed). You can still use a personal key below.';
+            statusEl.textContent = 'Org AI not reachable yet (' + (e.message || 'error') + '). Add OPENAI_API_KEY in Azure, or paste a personal key below.';
         }
     }
     updateAIStatusBadge();
@@ -1405,14 +1409,19 @@ async function callOrgOpenAI(messages, model) {
     const res = await fetch('/api/openai-chat', {
         method: 'POST',
         credentials: 'include',
+        redirect: 'manual',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages, model: model || orgAI.model })
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        throw new Error(data.error || ('Org AI error ' + res.status));
+    if (res.status === 0 || res.type === 'opaqueredirect' || res.status === 301 || res.status === 302 || res.status === 401) {
+        throw new Error('Not signed in to Emme (Microsoft). Refresh the page and sign in, then try again.');
     }
-    if (!data.content) throw new Error('Org AI returned an empty response');
+    const ctype = (res.headers.get('content-type') || '');
+    const data = ctype.includes('application/json') ? await res.json().catch(() => ({})) : {};
+    if (!res.ok) {
+        throw new Error(data.error || ('Org AI error ' + res.status + '. Check OPENAI_API_KEY in Azure Configuration.'));
+    }
+    if (!data.content) throw new Error(data.error || 'Org AI returned an empty response. Is OPENAI_API_KEY set on emme-dashboard?');
     return { content: data.content };
 }
 
@@ -1447,7 +1456,10 @@ async function callOpenAI(messages) {
     if (orgAI.configured) {
         return callOrgOpenAI(messages);
     }
-    return callPersonalOpenAI(messages);
+    if (getOpenAIConfig()) {
+        return callPersonalOpenAI(messages);
+    }
+    throw new Error('AI is offline. Add OPENAI_API_KEY (your PRISM key) in Azure → emme-dashboard → Configuration → Application settings → Save. Wait ~1 minute, hard-refresh, then try again. Or open AI Settings and paste a personal key.');
 }
 
 function generateLocalReport({ tpl, formData, clientFirst, clientLast, provider, reportDate }) {
@@ -1493,7 +1505,9 @@ async function generateReportAI(input) {
     if (hasAppSDK()) {
         return AppSDK.ai.chat({ messages });
     }
-    if (hasOpenAI()) {
+    // Prefer live AI when org or personal key exists; otherwise form-local or offline draft
+    if (!orgAI.checked) await refreshOrgAIStatus();
+    if (orgAI.configured || getOpenAIConfig()) {
         window.__pendingLocalReport = null;
         return callOpenAI(messages);
     }
@@ -1503,23 +1517,7 @@ async function generateReportAI(input) {
         window.__pendingLocalReport = null;
         return { content: report };
     }
-    const draft = [
-        '## Emme Copilot Draft Report',
-        '',
-        '**Note:** OpenAI is not connected yet. On the live Emme site, ask admin to set OPENAI_API_KEY in Azure. Or open **AI Settings** for a personal key. Below is a structured draft from your notes.',
-        '',
-        '### Provider Notes Captured',
-        userMsg.replace(/^\[Context:[^\]]*\]\s*/m, '').trim() || '_No notes yet._',
-        '',
-        '### Next Steps',
-        '1. Use Emme org AI on the live site (badge: Emme Org Connected), or',
-        '2. Connect a personal key via AI Settings, or',
-        '3. Use **Create a Report** for the form-based builder (works offline).',
-        '',
-        '---',
-        '*Generated by Emme Report Center (offline mode)*'
-    ].join('\n');
-    return { content: draft };
+    throw new Error('AI is offline. Add OPENAI_API_KEY (PRISM) in Azure → emme-dashboard → Configuration, Save, hard-refresh. Or use AI Settings for a personal key. Form-based Create a Report still works offline.');
 }
 
 // AI Generate
@@ -1750,7 +1748,8 @@ async function sendChatMessage() {
         addChatBubble('assistant', res.content, isReport);
     } catch (e) {
         removeTypingIndicator();
-        addChatBubble('assistant', "I'm sorry, I encountered an issue. Please try again, or use Create a Report for the form-based builder.");
+        addChatBubble('assistant', 'AI error: ' + (e.message || 'Unknown error') + '\n\nYou can still use Create a Report (form builder) meanwhile.');
+        showToast('AI error — see chat for details', 'error');
     }
 }
 
