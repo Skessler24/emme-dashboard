@@ -28,7 +28,7 @@ module.exports = async function (context, req) {
     (openAiKey.indexOf('sk-ant-') === 0 ? openAiKey : '');
   const openAiOnlyKey = (openAiKey && openAiKey.indexOf('sk-ant-') !== 0) ? openAiKey : '';
 
-  const defaultAnthropicModel = process.env.ANTHROPIC_MODEL || process.env.OPENAI_MODEL || 'claude-sonnet-4-20250514';
+  const defaultAnthropicModel = process.env.ANTHROPIC_MODEL || process.env.OPENAI_MODEL || 'claude-3-5-sonnet-20241022';
   const defaultOpenAiModel = process.env.OPENAI_MODEL || azureDeployment || 'gpt-4.1-mini';
 
   const useAzure = Boolean(azureEndpoint && azureKey && azureDeployment);
@@ -37,6 +37,27 @@ module.exports = async function (context, req) {
   const configured = useAzure || useAnthropic || useOpenAI;
   const provider = useAzure ? 'azure' : (useAnthropic ? 'anthropic' : (useOpenAI ? 'openai' : 'none'));
 
+  function normalizeAnthropicModel(name) {
+    const raw = (name || '').toString().trim();
+    if (!raw) return 'claude-3-5-sonnet-20241022';
+    // Common mix-ups from Azure env vars
+    const aliases = {
+      'claude-sonnet-3-5-20240620': 'claude-3-5-sonnet-20240620',
+      'claude-sonnet-3.5-20240620': 'claude-3-5-sonnet-20240620',
+      'claude-3.5-sonnet-20240620': 'claude-3-5-sonnet-20240620',
+      'claude-sonnet-3-5-20241022': 'claude-3-5-sonnet-20241022',
+      'claude-sonnet-3.5-20241022': 'claude-3-5-sonnet-20241022',
+      'claude-3.5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
+      'claude-sonnet-4': 'claude-sonnet-4-20250514',
+      'claude-4-sonnet': 'claude-sonnet-4-20250514',
+      'sonnet': 'claude-3-5-sonnet-20241022',
+      'claude-sonnet': 'claude-3-5-sonnet-20241022'
+    };
+    if (aliases[raw]) return aliases[raw];
+    if (/^gpt-|^o[0-9]/i.test(raw)) return 'claude-3-5-sonnet-20241022';
+    return raw;
+  }
+
   if (req.method === 'GET') {
     context.res = {
       status: 200,
@@ -44,7 +65,7 @@ module.exports = async function (context, req) {
       body: {
         configured,
         provider,
-        model: useAzure ? azureDeployment : (useAnthropic ? defaultAnthropicModel : defaultOpenAiModel),
+        model: useAzure ? azureDeployment : (useAnthropic ? normalizeAnthropicModel(defaultAnthropicModel) : defaultOpenAiModel),
         org: true
       }
     };
@@ -105,11 +126,7 @@ module.exports = async function (context, req) {
         ? data.choices[0].message.content
         : null;
     } else if (useAnthropic) {
-      modelLabel = (body.model || defaultAnthropicModel).toString().trim() || defaultAnthropicModel;
-      // Avoid sending OpenAI model names to Anthropic
-      if (/^gpt-|^o[0-9]/i.test(modelLabel)) {
-        modelLabel = defaultAnthropicModel;
-      }
+      modelLabel = normalizeAnthropicModel(body.model || defaultAnthropicModel);
 
       const systemParts = [];
       const anthMessages = [];
@@ -150,7 +167,15 @@ module.exports = async function (context, req) {
       const data = await anthRes.json().catch(() => ({}));
       if (!anthRes.ok) {
         const errMsg = (data && data.error && data.error.message) || ('Anthropic error ' + anthRes.status);
-        context.res = { status: anthRes.status, headers, body: { error: errMsg } };
+        context.res = {
+          status: anthRes.status,
+          headers,
+          body: {
+            error: errMsg + ( /model/i.test(errMsg)
+              ? ' Set OPENAI_MODEL to a valid Anthropic id, e.g. claude-3-5-sonnet-20241022'
+              : '')
+          }
+        };
         return;
       }
       if (data && Array.isArray(data.content)) {
