@@ -4,5 +4,8 @@
   "description": "Emme Dashboard Azure Functions API",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.26.0"
   }
 }

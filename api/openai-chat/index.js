@@ -172,14 +172,22 @@ module.exports = async function (context, req) {
       messages.forEach(function (m) {
         if (!m || !m.role) return;
         if (m.role === 'system') {
-          systemParts.push(String(m.content || ''));
+          if (Array.isArray(m.content)) {
+            m.content.forEach(function (part) {
+              if (part && part.type === 'text') systemParts.push(String(part.text || ''));
+            });
+          } else {
+            systemParts.push(String(m.content || ''));
+          }
           return;
         }
         if (m.role === 'user' || m.role === 'assistant') {
-          anthMessages.push({
-            role: m.role,
-            content: String(m.content || '')
-          });
+          // Pass through multimodal content arrays (images/PDFs) for Anthropic
+          if (Array.isArray(m.content)) {
+            anthMessages.push({ role: m.role, content: m.content });
+          } else {
+            anthMessages.push({ role: m.role, content: String(m.content || '') });
+          }
         }
       });
 

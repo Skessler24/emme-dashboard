@@ -6,6 +6,7 @@
     <title>Emme Report Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -174,6 +175,7 @@
                 <button data-id="23" class="nav-pill" data-nav="templates">Download Templates</button>
                 <button data-id="24" class="nav-pill" data-nav="create">Create a Report</button>
                 <button data-id="25" class="nav-pill" data-nav="copilot">Copilot Report Gen</button>
+                <button data-id="25b" class="nav-pill" data-nav="reports">My Reports</button>
                 <button type="button" id="ai-settings-btn" class="nav-pill ml-auto" title="OpenAI API settings">⚙ AI Settings</button>
                 <span id="ai-status-badge" class="text-[11px] font-bold px-2 py-1 rounded-full bg-white/15 text-white/80">AI: Offline</span>
             </div>
@@ -193,6 +195,7 @@
             <button data-id="34" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="templates">📥 Download Templates</button>
             <button data-id="35" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="create">📝 Create a Report</button>
             <button data-id="36" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="copilot">🤖 Copilot Report Gen</button>
+            <button data-id="36b" class="mobile-nav-btn text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition" data-nav="reports">☁ My Reports</button>
             <button type="button" id="ai-settings-btn-mobile" class="text-left px-4 py-3 rounded-btn font-semibold text-txt hover:bg-primary/10 transition">⚙ AI Settings</button>
         </div>
         <div data-id="37" class="p-4 border-t mt-auto">
@@ -217,7 +220,7 @@
                 <h1 data-id="47" id="welcome-h1-c3d4" class="text-2xl md:text-3xl font-black text-txt mb-1">Welcome back, Samantha! 👋</h1>
                 <p data-id="48" class="text-muted text-base md:text-lg font-medium">Emme Report Center — Colorado Early Intervention Services</p>
             </div>
-            <div data-id="49" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div data-id="49" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
                 <div data-id="50" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-primary cursor-pointer" id="dash-card-create-e5f6" data-nav="create" role="button" tabindex="0">
                     <div data-id="51" class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                         <i data-id="52" data-lucide="clipboard-pen" class="w-8 h-8 text-primary"></i>
@@ -242,6 +245,14 @@
                     <p data-id="66" class="text-muted text-sm leading-relaxed mb-5">Chat with Copilot to build reports from notes. Generate, edit, and download when ready.</p>
                     <button type="button" data-id="67" class="mt-auto bg-success hover:bg-success-dark text-white font-bold px-6 py-2.5 rounded-btn transition w-full" data-nav="copilot">Launch Copilot →</button>
                 </div>
+                <div data-id="62b" class="bg-card rounded-card card-shadow card-hover p-6 flex flex-col items-center text-center border-t-4 border-accent cursor-pointer" id="dash-card-reports-r1s2" data-nav="reports" role="button" tabindex="0">
+                    <div data-id="63b" class="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4">
+                        <i data-id="64b" data-lucide="folder-open" class="w-8 h-8 text-primary"></i>
+                    </div>
+                    <h2 data-id="65b" class="font-black text-lg text-txt mb-2">My Reports</h2>
+                    <p data-id="66b" class="text-muted text-sm leading-relaxed mb-5">Open reports you’ve already made. Saved in the cloud when available, or on this device until you need them.</p>
+                    <button type="button" data-id="67b" class="mt-auto font-bold px-6 py-2.5 rounded-btn transition w-full" style="background:#ffca34;color:#084339;" data-nav="reports">Open My Reports →</button>
+                </div>
             </div>
             <div data-id="68" class="rounded-card px-5 py-3 text-center" style="background:#ffca34;border:1.5px solid #e0b020;">
                 <span data-id="69" class="text-sm font-bold" style="color:#084339;">📋 Colorado EI Annual Eligibility Redetermination Now Required — Effective July 1, 2026 | 33% delay in 1 domain OR 25% in 2+ domains</span>
@@ -263,9 +274,9 @@
             <div data-id="80" class="border-2 border-dashed border-primary/30 rounded-card p-6 text-center bg-primary/5 mb-4">
                 <i data-id="81" data-lucide="upload" class="w-8 h-8 text-primary/50 mx-auto mb-2"></i>
                 <p data-id="82" class="font-bold text-sm text-primary mb-1">Upload New Template</p>
-                <p data-id="83" class="text-xs text-muted mb-3">Add your own templates (.pdf, .docx) to the library</p>
-                <input data-id="84" type="file" id="upload-template-q7r8" accept=".pdf,.docx,.doc" class="hidden" />
-                <button data-id="85" id="upload-template-btn-s9t0" class="bg-primary/10 text-primary font-bold text-sm px-5 py-2 rounded-btn hover:bg-primary/20 transition">Choose File</button>
+                <p data-id="83" class="text-xs text-muted mb-3">Add your own templates (.pdf, .docx, .jpg, .png, .svg) to the library</p>
+                <input data-id="84" type="file" id="upload-template-q7r8" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.svg" class="hidden" />
+                <button data-id="85" id="upload-template-btn-s9t0" class="bg-primary/10 text-primary font-bold text-sm px-5 py-2 rounded-btn transition">Choose File</button>
             </div>
             <div data-id="86" id="uploaded-templates-u1v2" class="hidden mb-4">
                 <h3 data-id="87" class="font-bold text-sm text-txt mb-2">My Uploaded Templates</h3>
@@ -368,12 +379,62 @@
                         <button data-id="164" id="dl-pdf-btn-w5x6" class="bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-btn transition flex items-center gap-2"><i data-id="165" data-lucide="file-text" class="w-4 h-4"></i> Download as PDF</button>
                         <button data-id="166" id="dl-txt-btn-y7z8" class="font-bold px-5 py-2.5 rounded-btn transition flex items-center gap-2" style="background:#ffca34;color:#084339;"><i data-id="167" data-lucide="file-down" class="w-4 h-4"></i> Download as Text</button>
                         <button data-id="168" id="dl-copy-btn-a9b0" class="bg-success hover:bg-success-dark text-white font-bold px-5 py-2.5 rounded-btn transition flex items-center gap-2"><i data-id="169" data-lucide="copy" class="w-4 h-4"></i> Copy All</button>
+                        <button data-id="168b" id="dl-library-btn-m3n4" class="bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-btn transition flex items-center gap-2"><i data-id="169b" data-lucide="cloud-upload" class="w-4 h-4"></i> Save to My Reports</button>
                         <button data-id="170" id="dl-onedrive-btn-c1d2" class="border-2 border-primary text-primary hover:bg-primary/10 font-bold px-5 py-2.5 rounded-btn transition flex items-center gap-2"><i data-id="171" data-lucide="cloud" class="w-4 h-4"></i> Save to OneDrive</button>
                     </div>
                     <button data-id="172" class="text-primary hover:text-primary-dark font-bold text-sm flex items-center gap-1 mx-auto" data-nav="dashboard"><i data-id="173" data-lucide="home" class="w-4 h-4"></i> Back to Dashboard</button>
                 </div>
             </div>
         </section>
+
+        <!-- PAGE: MY REPORTS -->
+        <section data-id="174a" id="page-reports-m9n0" class="page">
+            <div data-id="175a" class="flex items-center gap-3 mb-2">
+                <button data-id="176a" class="text-primary hover:text-primary-dark font-bold text-sm flex items-center gap-1" data-nav="dashboard"><i data-id="177a" data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+            </div>
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+                <div>
+                    <h1 data-id="178a" class="text-2xl font-black text-txt mb-1 flex items-center gap-2"><i data-id="179a" data-lucide="folder-open" class="w-6 h-6 text-primary"></i> My Reports</h1>
+                    <p data-id="180a" class="text-muted text-sm">Open reports you’ve saved. Cloud library when configured; otherwise saved on this device.</p>
+                </div>
+                <button type="button" id="reports-refresh-btn" class="border border-primary/20 text-primary hover:bg-primary/10 font-bold px-4 py-2 rounded-btn text-sm transition flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh
+                </button>
+            </div>
+            <p id="reports-status-line" class="text-xs text-muted mb-4"></p>
+            <div id="reports-list-empty" class="bg-card rounded-card card-shadow p-10 text-center hidden">
+                <div class="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="inbox" class="w-7 h-7 text-primary"></i>
+                </div>
+                <h2 class="font-black text-lg text-txt mb-2">No saved reports yet</h2>
+                <p class="text-muted text-sm mb-5 max-w-md mx-auto">After you generate a report in Create a Report or Copilot, tap <strong>Save to My Reports</strong> and it will show up here.</p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button type="button" class="bg-primary text-white font-bold px-5 py-2.5 rounded-btn" data-nav="create">Create a Report</button>
+                    <button type="button" class="bg-success text-white font-bold px-5 py-2.5 rounded-btn" data-nav="copilot">Open Copilot</button>
+                </div>
+            </div>
+            <div id="reports-list-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </section>
+
+        <!-- Modal: view saved report -->
+        <div id="report-view-modal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4" style="background:rgba(8,67,57,0.45);">
+            <div class="bg-card rounded-card card-shadow w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-gray-100">
+                    <div>
+                        <h2 id="report-view-title" class="font-black text-lg text-txt">Report</h2>
+                        <p id="report-view-meta" class="text-xs text-muted mt-0.5"></p>
+                    </div>
+                    <button type="button" id="report-view-close" class="text-muted hover:text-txt font-bold text-xl leading-none px-2">&times;</button>
+                </div>
+                <div id="report-view-body" class="flex-1 overflow-y-auto px-5 py-4 text-sm leading-relaxed whitespace-pre-wrap"></div>
+                <div class="flex flex-wrap gap-2 px-5 py-4 border-t border-gray-100">
+                    <button type="button" id="report-view-copy" class="bg-success text-white text-xs font-bold px-3 py-2 rounded-btn">Copy</button>
+                    <button type="button" id="report-view-txt" class="text-xs font-bold px-3 py-2 rounded-btn" style="background:#ffca34;color:#084339;">Download Text</button>
+                    <button type="button" id="report-view-delete" class="border border-red-200 text-red-600 text-xs font-bold px-3 py-2 rounded-btn">Delete</button>
+                    <button type="button" id="report-view-done" class="ml-auto bg-primary text-white text-xs font-bold px-4 py-2 rounded-btn">Done</button>
+                </div>
+            </div>
+        </div>
 
         <!-- PAGE: COPILOT -->
         <section data-id="174" id="page-copilot-e3f4" class="page">
@@ -481,11 +542,16 @@
                         <button data-id="252" id="copilot-gen-now-w1x2" class="bg-success hover:bg-success-dark text-white text-xs font-bold px-4 py-1.5 rounded-full transition flex items-center gap-1"><i data-id="253" data-lucide="zap" class="w-3 h-3"></i> Generate Report Now</button>
                     </div>
                     <div data-id="254" id="chat-messages-y3z4" class="flex-1 overflow-y-auto p-5 flex flex-col gap-2" style="max-height:420px;"></div>
-                    <div data-id="255" class="border-t p-4 flex items-center gap-2 bg-white">
-                        <button data-id="256" id="chat-attach-a5b6" class="text-muted hover:text-primary p-2 rounded transition" title="Attach file"><i data-id="257" data-lucide="paperclip" class="w-5 h-5"></i></button>
-                        <input data-id="258" id="chat-input-c7d8" type="text" placeholder="Type your message or paste notes..." class="flex-1 border border-gray-200 rounded-btn px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-                        <button data-id="259" id="chat-send-e9f0" class="bg-primary hover:bg-primary-dark text-white p-2.5 rounded-btn transition"><i data-id="260" data-lucide="send" class="w-4 h-4"></i></button>
+                    <div data-id="255" class="border-t p-4 flex items-center gap-2 bg-white flex-wrap">
+                        <input type="file" id="chat-file-input" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.svg,.docx,.doc,.txt,.csv,image/jpeg,image/png,image/svg+xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                        <button type="button" id="chat-upload-btn" class="border-2 border-primary text-primary hover:bg-primary/10 font-bold text-xs px-3 py-2 rounded-btn transition flex items-center gap-1.5" title="Upload PDF, JPG, PNG, SVG, or DOCX">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Upload
+                        </button>
+                        <button type="button" data-id="256" id="chat-attach-a5b6" class="text-muted hover:text-primary p-2 rounded transition" title="Attach file"><i data-id="257" data-lucide="paperclip" class="w-5 h-5"></i></button>
+                        <input data-id="258" id="chat-input-c7d8" type="text" placeholder="Type your message or paste notes..." class="flex-1 min-w-[12rem] border border-gray-200 rounded-btn px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+                        <button type="button" data-id="259" id="chat-send-e9f0" class="bg-primary hover:bg-primary-dark text-white p-2.5 rounded-btn transition"><i data-id="260" data-lucide="send" class="w-4 h-4"></i></button>
                     </div>
+                    <p class="text-[11px] text-muted px-4 pb-2">Upload: PDF, JPG, PNG, SVG, DOCX (max 8 MB)</p>
                 </div>
             </div>
         </section>
@@ -937,12 +1003,14 @@ function navigateTo(page) {
     if (footer) {
         if (page === 'dashboard') { footer.classList.remove('hidden'); } else { footer.classList.add('hidden'); }
     }
+    if (page === 'reports') loadMyReportsLibrary();
     closeMobileMenu();
     window.scrollTo({top:0,behavior:'smooth'});
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function getPageSuffix(page) {
-    const map = { dashboard:'a1b2', templates:'k1l2', create:'y5z6', copilot:'e3f4' };
+    const map = { dashboard:'a1b2', templates:'k1l2', create:'y5z6', copilot:'e3f4', reports:'m9n0' };
     return map[page] || '';
 }
 
@@ -1638,6 +1706,17 @@ document.getElementById('dl-copy-btn-a9b0').addEventListener('click', function()
     copyToClipboard(aiGeneratedReport, this);
 });
 
+document.getElementById('dl-library-btn-m3n4').addEventListener('click', function() {
+    const typeSel = document.getElementById('report-type-sel-e1f2');
+    saveReportToLibrary({
+        title: (typeSel && typeSel.selectedOptions[0] && typeSel.selectedOptions[0].textContent) || 'Emme Report',
+        client: [document.getElementById('client-first-i5j6').value, document.getElementById('client-last-k7l8').value].filter(Boolean).join(' ') || 'Client',
+        provider: document.getElementById('provider-name-m9n0').value || '',
+        reportType: (typeSel && typeSel.value) || '',
+        content: aiGeneratedReport
+    });
+});
+
 document.getElementById('dl-onedrive-btn-c1d2').addEventListener('click', () => {
     navigator.clipboard.writeText(aiGeneratedReport).then(() => {
         document.getElementById('onedrive-filename-u5v6').textContent = genFileName();
@@ -1652,12 +1731,280 @@ document.getElementById('onedrive-ok-w7x8').addEventListener('click', () => {
     showToast('Report copied! Save to OneDrive at emmeco.org');
 });
 
+// ========== MY REPORTS LIBRARY ==========
+const REPORT_LIBRARY_KEY = 'emme_report_library';
+let viewingReport = null;
+
+function localReportId() {
+    return 'local_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+function getLocalReportLibrary() {
+    try {
+        const raw = localStorage.getItem(REPORT_LIBRARY_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        return Array.isArray(list) ? list : [];
+    } catch (_) {
+        return [];
+    }
+}
+
+function setLocalReportLibrary(list) {
+    localStorage.setItem(REPORT_LIBRARY_KEY, JSON.stringify(list || []));
+}
+
+function saveReportLocally(report) {
+    const list = getLocalReportLibrary();
+    list.unshift(report);
+    setLocalReportLibrary(list.slice(0, 100));
+    return report;
+}
+
+async function saveReportToLibrary(meta) {
+    const content = (meta && meta.content) ? String(meta.content).trim() : '';
+    if (!content) {
+        showToast('Nothing to save yet — generate a report first.', 'error');
+        return;
+    }
+    const payload = {
+        title: (meta.title || 'Emme Report').slice(0, 200),
+        client: (meta.client || '').slice(0, 200),
+        provider: (meta.provider || '').slice(0, 200),
+        reportType: (meta.reportType || '').slice(0, 100),
+        content: content
+    };
+    try {
+        const res = await fetch('/api/reports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.report) {
+            showToast('Saved to My Reports (cloud)');
+            return data.report;
+        }
+        if (res.status === 503 || data.configured === false) {
+            const local = Object.assign({
+                id: localReportId(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                source: 'device'
+            }, payload);
+            saveReportLocally(local);
+            showToast('Saved on this device (cloud library not set up yet)');
+            return local;
+        }
+        throw new Error(data.error || ('Save failed (' + res.status + ')'));
+    } catch (err) {
+        const local = Object.assign({
+            id: localReportId(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            source: 'device'
+        }, payload);
+        saveReportLocally(local);
+        showToast('Saved on this device — cloud save unavailable');
+        return local;
+    }
+}
+
+function formatReportDate(iso) {
+    if (!iso) return '';
+    try {
+        return new Date(iso).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: 'numeric', minute: '2-digit'
+        });
+    } catch (_) {
+        return String(iso);
+    }
+}
+
+async function loadMyReportsLibrary() {
+    const grid = document.getElementById('reports-list-grid');
+    const empty = document.getElementById('reports-list-empty');
+    const status = document.getElementById('reports-status-line');
+    if (!grid || !empty) return;
+    grid.innerHTML = '<p class="text-sm text-muted col-span-full">Loading reports…</p>';
+    empty.classList.add('hidden');
+
+    let cloudItems = [];
+    let cloudConfigured = false;
+    let cloudNote = '';
+    try {
+        const res = await fetch('/api/reports', { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.configured) {
+            cloudConfigured = true;
+            cloudItems = (data.items || []).map(function (item) {
+                return Object.assign({}, item, { source: 'cloud' });
+            });
+            cloudNote = 'Cloud library connected.';
+        } else if (res.status === 503 || data.configured === false) {
+            cloudNote = 'Cloud library not configured yet — showing reports saved on this device.';
+        } else {
+            cloudNote = 'Could not reach cloud library — showing device saves.';
+        }
+    } catch (_) {
+        cloudNote = 'Offline or API unavailable — showing device saves.';
+    }
+
+    const localItems = getLocalReportLibrary().map(function (item) {
+        return Object.assign({}, item, { source: item.source || 'device' });
+    });
+
+    // Prefer cloud copy when same id exists in both
+    const byId = {};
+    localItems.concat(cloudItems).forEach(function (item) {
+        if (!item || !item.id) return;
+        if (!byId[item.id] || item.source === 'cloud') byId[item.id] = item;
+    });
+    const items = Object.keys(byId).map(function (k) { return byId[k]; });
+    items.sort(function (a, b) {
+        return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+    });
+
+    if (status) status.textContent = cloudNote + (items.length ? (' · ' + items.length + ' report' + (items.length === 1 ? '' : 's')) : '');
+
+    if (!items.length) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+    grid.innerHTML = items.map(function (item) {
+        const badge = item.source === 'cloud'
+            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">☁ Cloud</span>'
+            : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/30 text-primary">Device</span>';
+        return (
+            '<article class="bg-card rounded-card card-shadow p-5 border-l-4 border-primary flex flex-col gap-3">' +
+              '<div class="flex items-start justify-between gap-2">' +
+                '<div>' +
+                  '<h3 class="font-black text-txt text-base">' + escapeHtml(item.title || 'Untitled report') + '</h3>' +
+                  '<p class="text-xs text-muted mt-1">' + escapeHtml(item.client || 'No client') +
+                    (item.provider ? (' · ' + escapeHtml(item.provider)) : '') + '</p>' +
+                '</div>' + badge +
+              '</div>' +
+              '<p class="text-xs text-muted">' + escapeHtml(formatReportDate(item.createdAt)) + '</p>' +
+              '<div class="flex flex-wrap gap-2 mt-auto">' +
+                '<button type="button" class="rpt-open bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-btn" data-id="' + escapeHtml(item.id) + '" data-source="' + escapeHtml(item.source || 'device') + '">Open</button>' +
+                '<button type="button" class="rpt-delete border border-red-200 text-red-600 text-xs font-bold px-3 py-1.5 rounded-btn" data-id="' + escapeHtml(item.id) + '" data-source="' + escapeHtml(item.source || 'device') + '">Delete</button>' +
+              '</div>' +
+            '</article>'
+        );
+    }).join('');
+
+    grid.querySelectorAll('.rpt-open').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openSavedReport(btn.dataset.id, btn.dataset.source);
+        });
+    });
+    grid.querySelectorAll('.rpt-delete').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            deleteSavedReport(btn.dataset.id, btn.dataset.source);
+        });
+    });
+}
+
+function escapeHtml(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+async function openSavedReport(id, source) {
+    let report = null;
+    if (source === 'cloud') {
+        try {
+            const res = await fetch('/api/reports/' + encodeURIComponent(id), { credentials: 'include' });
+            if (res.ok) report = await res.json();
+        } catch (_) { /* fall through */ }
+    }
+    if (!report) {
+        report = getLocalReportLibrary().find(function (r) { return r.id === id; }) || null;
+    }
+    if (!report) {
+        showToast('Report not found', 'error');
+        return;
+    }
+    viewingReport = Object.assign({ source: source || report.source || 'device' }, report);
+    const modal = document.getElementById('report-view-modal');
+    document.getElementById('report-view-title').textContent = report.title || 'Report';
+    document.getElementById('report-view-meta').textContent =
+        [report.client, report.provider, formatReportDate(report.createdAt)].filter(Boolean).join(' · ');
+    document.getElementById('report-view-body').textContent = report.content || '';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeReportViewModal() {
+    const modal = document.getElementById('report-view-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    viewingReport = null;
+}
+
+async function deleteSavedReport(id, source) {
+    if (!id || !confirm('Delete this saved report?')) return;
+    if (source === 'cloud') {
+        try {
+            await fetch('/api/reports/' + encodeURIComponent(id), {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+        } catch (_) { /* ignore */ }
+    }
+    setLocalReportLibrary(getLocalReportLibrary().filter(function (r) { return r.id !== id; }));
+    if (viewingReport && viewingReport.id === id) closeReportViewModal();
+    showToast('Report deleted');
+    loadMyReportsLibrary();
+}
+
+(function wireReportLibraryUi() {
+    const refresh = document.getElementById('reports-refresh-btn');
+    if (refresh) refresh.addEventListener('click', loadMyReportsLibrary);
+    const closeBtn = document.getElementById('report-view-close');
+    const doneBtn = document.getElementById('report-view-done');
+    if (closeBtn) closeBtn.addEventListener('click', closeReportViewModal);
+    if (doneBtn) doneBtn.addEventListener('click', closeReportViewModal);
+    const modal = document.getElementById('report-view-modal');
+    if (modal) modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeReportViewModal();
+    });
+    const copyBtn = document.getElementById('report-view-copy');
+    if (copyBtn) copyBtn.addEventListener('click', function () {
+        if (!viewingReport) return;
+        copyToClipboard(viewingReport.content || '', copyBtn);
+    });
+    const txtBtn = document.getElementById('report-view-txt');
+    if (txtBtn) txtBtn.addEventListener('click', function () {
+        if (!viewingReport) return;
+        const blob = new Blob([viewingReport.content || ''], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (viewingReport.title || 'Emme_Report').replace(/[^\w\-]+/g, '_') + '.txt';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('Downloaded');
+    });
+    const delBtn = document.getElementById('report-view-delete');
+    if (delBtn) delBtn.addEventListener('click', function () {
+        if (!viewingReport) return;
+        deleteSavedReport(viewingReport.id, viewingReport.source || 'device');
+    });
+})();
+
 // ========== COPILOT CHAT ==========
 const COPILOT_SYSTEM = AI_SYSTEM_PROMPT + `\n\nYou are warm, efficient, and knowledgeable. When the user provides client data or notes, ask clarifying questions to gather enough information for a complete report. When you have enough information, generate the full report in professional clinical language with proper formatting using markdown headings. Key services: ${CO_EI_REFERENCE.serviceTypes.join(', ')}.`;
 
 chatHistory = [{ role: 'system', content: COPILOT_SYSTEM }];
 
-function addChatBubble(role, content, isReport) {
+function addChatBubble(role, content, isReport, previewUrl) {
     const container = document.getElementById('chat-messages-y3z4');
     const bubble = document.createElement('div');
     bubble.className = role === 'user' ? 'chat-bubble chat-user' : 'chat-bubble chat-bot';
@@ -1677,12 +2024,14 @@ function addChatBubble(role, content, isReport) {
                 <button class="chat-dl-pdf text-white text-xs font-bold px-3 py-1.5 rounded-full transition" style="background:#084339;">📄 Download PDF</button>
                 <button class="chat-dl-txt text-xs font-bold px-3 py-1.5 rounded-full transition" style="background:#ffca34;color:#084339;">📝 Download Text</button>
                 <button class="chat-copy-all bg-success text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-success-dark transition">📋 Copy All</button>
+                <button class="chat-save-cloud bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-primary-dark transition">☁ Save to My Reports</button>
             </div>
         `;
         setTimeout(() => {
             const pdfBtn = bubble.querySelector('.chat-dl-pdf');
             const txtBtn = bubble.querySelector('.chat-dl-txt');
             const copyBtn = bubble.querySelector('.chat-copy-all');
+            const saveBtn = bubble.querySelector('.chat-save-cloud');
             if (pdfBtn) pdfBtn.addEventListener('click', () => {
                 const printArea = document.getElementById('print-area');
                 printArea.innerHTML = `<div style="font-family:Nunito,sans-serif;max-width:700px;margin:0 auto;padding:40px;">${html}</div>`;
@@ -1700,9 +2049,25 @@ function addChatBubble(role, content, isReport) {
                 showToast('Downloaded');
             });
             if (copyBtn) copyBtn.addEventListener('click', function() { copyToClipboard(content, this); });
+            if (saveBtn) saveBtn.addEventListener('click', function() {
+                saveReportToLibrary({
+                    title: (document.getElementById('copilot-type-g5h6').selectedOptions[0]?.textContent || 'Copilot Report'),
+                    client: [document.getElementById('copilot-fname-i7j8').value, document.getElementById('copilot-lname-k9l0').value].filter(Boolean).join(' ') || 'Client',
+                    provider: document.getElementById('copilot-provider-o3p4').value || '',
+                    reportType: document.getElementById('copilot-type-g5h6').value || '',
+                    content: content
+                });
+            });
         }, 50);
     } else {
         bubble.textContent = content;
+        if (previewUrl && /^data:image\//i.test(previewUrl)) {
+            const img = document.createElement('img');
+            img.src = previewUrl;
+            img.alt = 'Uploaded image';
+            img.className = 'mt-2 rounded-btn max-h-40 max-w-full border border-white/30';
+            bubble.appendChild(img);
+        }
     }
     container.appendChild(bubble);
     container.scrollTop = container.scrollHeight;
@@ -1792,38 +2157,199 @@ document.getElementById('copilot-gen-now-w1x2').addEventListener('click', async 
     }
 });
 
-// Attach file
-document.getElementById('chat-attach-a5b6').addEventListener('click', () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.txt,.pdf,.docx,.csv';
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.csv')) {
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const text = evt.target.result.substring(0, 8000);
-                addChatBubble('user', `📎 Uploaded: ${file.name}\n\n${text}`);
-                chatHistory.push({ role: 'user', content: `[User uploaded file: ${file.name}]\n\n${text}` });
-                addTypingIndicator();
-                generateReportAI({ messages: chatHistory }).then(res => {
-                    removeTypingIndicator();
-                    chatHistory.push({ role: 'assistant', content: res.content });
-                    const isReport = res.content.length > 600;
-                    addChatBubble('assistant', res.content, isReport);
-                }).catch((err) => {
-                    removeTypingIndicator();
-                    addChatBubble('assistant', 'AI error processing file: ' + ((err && err.message) || 'unknown') + '\n\nYou can paste the key information instead.');
-                });
-            };
-            reader.readAsText(file);
-        } else {
-            addChatBubble('user', `📎 Attached: ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
-            addChatBubble('assistant', `I see you've uploaded ${file.name}. For best results with non-text files, could you paste the key information from this document into the chat? I'll use it to build your report.`);
-        }
+// ========== CHAT FILE UPLOAD (PDF, JPG, PNG, SVG, DOCX) ==========
+const CHAT_UPLOAD_MAX_BYTES = 8 * 1024 * 1024;
+
+function fileExt(name) {
+    const parts = (name || '').toLowerCase().split('.');
+    return parts.length > 1 ? parts.pop() : '';
+}
+
+function readFileAsDataURL(file) {
+    return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () { resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     });
-    fileInput.click();
+}
+
+function readFileAsText(file) {
+    return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () { resolve(String(reader.result || '')); };
+        reader.onerror = reject;
+        reader.readAsText(file);
+    });
+}
+
+function readFileAsArrayBuffer(file) {
+    return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () { resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+function dataUrlToBase64(dataUrl) {
+    const idx = String(dataUrl).indexOf(',');
+    return idx >= 0 ? String(dataUrl).slice(idx + 1) : String(dataUrl);
+}
+
+async function buildUploadMessage(file) {
+    const ext = fileExt(file.name);
+    const sizeLabel = (file.size / 1024).toFixed(1) + ' KB';
+    const label = '📎 Uploaded: ' + file.name + ' (' + sizeLabel + ')';
+
+    // Plain text / CSV
+    if (ext === 'txt' || ext === 'csv' || file.type === 'text/plain' || file.type === 'text/csv') {
+        const text = (await readFileAsText(file)).substring(0, 12000);
+        return {
+            bubble: label + '\n\n' + text,
+            content: [
+                { type: 'text', text: '[User uploaded file: ' + file.name + ']\n\n' + text + '\n\nPlease use this content for the EI report.' }
+            ]
+        };
+    }
+
+    // SVG as text (Anthropic image API does not accept SVG)
+    if (ext === 'svg' || file.type === 'image/svg+xml') {
+        const svgText = (await readFileAsText(file)).substring(0, 12000);
+        return {
+            bubble: label + '\n\n(SVG markup attached as text)',
+            content: [
+                { type: 'text', text: '[User uploaded SVG: ' + file.name + ']\n\n```svg\n' + svgText + '\n```\n\nPlease use any relevant information from this SVG for the report.' }
+            ]
+        };
+    }
+
+    // Images → Anthropic image block
+    if (['jpg', 'jpeg', 'png'].includes(ext) || /^image\/(jpeg|png)$/i.test(file.type)) {
+        const dataUrl = await readFileAsDataURL(file);
+        const mediaType = (file.type && /^image\//.test(file.type))
+            ? file.type
+            : (ext === 'png' ? 'image/png' : 'image/jpeg');
+        return {
+            bubble: label + '\n\n(Image attached for AI review)',
+            previewUrl: dataUrl,
+            content: [
+                { type: 'text', text: '[User uploaded image: ' + file.name + ']\nPlease review this image and extract any clinical / report-relevant details for the EI report.' },
+                {
+                    type: 'image',
+                    source: {
+                        type: 'base64',
+                        media_type: mediaType,
+                        data: dataUrlToBase64(dataUrl)
+                    }
+                }
+            ]
+        };
+    }
+
+    // PDF → Anthropic document block
+    if (ext === 'pdf' || file.type === 'application/pdf') {
+        const dataUrl = await readFileAsDataURL(file);
+        return {
+            bubble: label + '\n\n(PDF attached for AI review)',
+            content: [
+                { type: 'text', text: '[User uploaded PDF: ' + file.name + ']\nPlease read this PDF and use the information for the EI report.' },
+                {
+                    type: 'document',
+                    source: {
+                        type: 'base64',
+                        media_type: 'application/pdf',
+                        data: dataUrlToBase64(dataUrl)
+                    }
+                }
+            ]
+        };
+    }
+
+    // DOCX → extract text with mammoth
+    if (ext === 'docx' || ext === 'doc' || /wordprocessingml|msword/i.test(file.type)) {
+        if (ext === 'doc') {
+            return {
+                bubble: label,
+                content: [
+                    { type: 'text', text: '[User uploaded legacy .doc file: ' + file.name + ']\nThis older Word format cannot be read in-browser. Please re-save as .docx or paste the text.' }
+                ],
+                warnOnly: true
+            };
+        }
+        if (typeof mammoth === 'undefined') {
+            throw new Error('DOCX reader failed to load. Please paste the text, or try again after refresh.');
+        }
+        const buffer = await readFileAsArrayBuffer(file);
+        const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+        const text = String(result.value || '').trim().substring(0, 12000);
+        if (!text) {
+            return {
+                bubble: label,
+                content: [
+                    { type: 'text', text: '[User uploaded DOCX: ' + file.name + ']\nNo extractable text found. Please paste key sections.' }
+                ],
+                warnOnly: true
+            };
+        }
+        return {
+            bubble: label + '\n\n' + text.substring(0, 1500) + (text.length > 1500 ? '…' : ''),
+            content: [
+                { type: 'text', text: '[User uploaded DOCX: ' + file.name + ']\n\n' + text + '\n\nPlease use this content for the EI report.' }
+            ]
+        };
+    }
+
+    throw new Error('Unsupported file type. Please upload PDF, JPG, PNG, SVG, or DOCX.');
+}
+
+async function handleChatFileUpload(file) {
+    if (!file) return;
+    if (file.size > CHAT_UPLOAD_MAX_BYTES) {
+        showToast('File too large (max 8 MB)', 'error');
+        return;
+    }
+
+    addChatBubble('user', '📎 Uploading ' + file.name + '…');
+    addTypingIndicator();
+    try {
+        const built = await buildUploadMessage(file);
+        removeTypingIndicator();
+
+        // Replace the temporary uploading bubble by appending real content
+        addChatBubble('user', built.bubble, false, built.previewUrl);
+        chatHistory.push({ role: 'user', content: built.content });
+
+        if (built.warnOnly) {
+            addChatBubble('assistant', 'I received the file, but need text I can read. Please paste the key sections or upload a PDF/DOCX/image instead.');
+            return;
+        }
+
+        addTypingIndicator();
+        const res = await generateReportAI({ messages: chatHistory });
+        removeTypingIndicator();
+        chatHistory.push({ role: 'assistant', content: res.content });
+        const isReport = res.content.length > 600 && (res.content.includes('##') || res.content.toLowerCase().includes('report'));
+        addChatBubble('assistant', res.content, isReport);
+        showToast('File uploaded', 'success');
+    } catch (err) {
+        removeTypingIndicator();
+        addChatBubble('assistant', 'Upload error: ' + ((err && err.message) || 'Could not process file') + '\n\nYou can paste the key information instead.');
+        showToast('Upload failed', 'error');
+    }
+}
+
+function openChatFilePicker() {
+    const input = document.getElementById('chat-file-input');
+    if (input) input.click();
+}
+
+document.getElementById('chat-upload-btn')?.addEventListener('click', openChatFilePicker);
+document.getElementById('chat-attach-a5b6')?.addEventListener('click', openChatFilePicker);
+document.getElementById('chat-file-input')?.addEventListener('change', function (e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (file) handleChatFileUpload(file);
 });
 
 // EI Reference toggle
