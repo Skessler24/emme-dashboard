@@ -28,7 +28,16 @@ module.exports = async function (context, req) {
     (openAiKey.indexOf('sk-ant-') === 0 ? openAiKey : '');
   const openAiOnlyKey = (openAiKey && openAiKey.indexOf('sk-ant-') !== 0) ? openAiKey : '';
 
-  const defaultAnthropicModel = process.env.ANTHROPIC_MODEL || process.env.OPENAI_MODEL || 'claude-3-5-sonnet-20241022';
+  // Current Anthropic IDs (2026). Older 3.5 / sonnet-4 dated IDs are retired.
+  const CURRENT_ANTHROPIC_DEFAULT = 'claude-sonnet-5';
+  const ANTHROPIC_FALLBACKS = [
+    'claude-sonnet-5',
+    'claude-sonnet-4-6',
+    'claude-sonnet-4-5',
+    'claude-sonnet-4-5-20250929'
+  ];
+
+  const defaultAnthropicModel = process.env.ANTHROPIC_MODEL || process.env.OPENAI_MODEL || CURRENT_ANTHROPIC_DEFAULT;
   const defaultOpenAiModel = process.env.OPENAI_MODEL || azureDeployment || 'gpt-4.1-mini';
 
   const useAzure = Boolean(azureEndpoint && azureKey && azureDeployment);
@@ -39,23 +48,50 @@ module.exports = async function (context, req) {
 
   function normalizeAnthropicModel(name) {
     const raw = (name || '').toString().trim();
-    if (!raw) return 'claude-3-5-sonnet-20241022';
-    // Common mix-ups from Azure env vars
+    if (!raw) return CURRENT_ANTHROPIC_DEFAULT;
     const aliases = {
-      'claude-sonnet-3-5-20240620': 'claude-3-5-sonnet-20240620',
-      'claude-sonnet-3.5-20240620': 'claude-3-5-sonnet-20240620',
-      'claude-3.5-sonnet-20240620': 'claude-3-5-sonnet-20240620',
-      'claude-sonnet-3-5-20241022': 'claude-3-5-sonnet-20241022',
-      'claude-sonnet-3.5-20241022': 'claude-3-5-sonnet-20241022',
-      'claude-3.5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
-      'claude-sonnet-4': 'claude-sonnet-4-20250514',
-      'claude-4-sonnet': 'claude-sonnet-4-20250514',
-      'sonnet': 'claude-3-5-sonnet-20241022',
-      'claude-sonnet': 'claude-3-5-sonnet-20241022'
+      // Retired / wrong → current
+      'claude-sonnet-3-5-20240620': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-sonnet-3.5-20240620': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-3.5-sonnet-20240620': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-3-5-sonnet-20240620': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-sonnet-3-5-20241022': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-sonnet-3.5-20241022': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-3.5-sonnet-20241022': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-3-5-sonnet-20241022': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-3-5-sonnet-latest': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-sonnet-4': 'claude-sonnet-4-6',
+      'claude-4-sonnet': 'claude-sonnet-4-6',
+      'claude-sonnet-4-20250514': 'claude-sonnet-4-6',
+      'sonnet': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-sonnet': CURRENT_ANTHROPIC_DEFAULT,
+      'claude-sonnet-5': 'claude-sonnet-5'
     };
     if (aliases[raw]) return aliases[raw];
-    if (/^gpt-|^o[0-9]/i.test(raw)) return 'claude-3-5-sonnet-20241022';
+    if (/^gpt-|^o[0-9]/i.test(raw)) return CURRENT_ANTHROPIC_DEFAULT;
+    // Any remaining 3.5 / old dated sonnet → current default
+    if (/claude-3-5-sonnet|claude-sonnet-3/i.test(raw)) return CURRENT_ANTHROPIC_DEFAULT;
     return raw;
+  }
+
+  async function callAnthropic(model, systemText, anthMessages) {
+    const anthRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: model,
+        max_tokens: 4000,
+        temperature: 0.3,
+        system: systemText || undefined,
+        messages: anthMessages
+      })
+    });
+    const data = await anthRes.json().catch(() => ({}));
+    return { anthRes: anthRes, data: data };
   }
 
   if (req.method === 'GET') {
@@ -63,8 +99,8 @@ module.exports = async function (context, req) {
       status: 200,
       headers,
       body: {
-        configured,
-        provider,
+        configured: configured,
+        provider: provider,
         model: useAzure ? azureDeployment : (useAnthropic ? normalizeAnthropicModel(defaultAnthropicModel) : defaultOpenAiModel),
         org: true
       }
@@ -111,7 +147,7 @@ module.exports = async function (context, req) {
           'api-key': azureKey
         },
         body: JSON.stringify({
-          messages,
+          messages: messages,
           temperature: 0.3,
           max_tokens: 4000
         })
@@ -126,7 +162,10 @@ module.exports = async function (context, req) {
         ? data.choices[0].message.content
         : null;
     } else if (useAnthropic) {
-      modelLabel = normalizeAnthropicModel(body.model || defaultAnthropicModel);
+      const requested = normalizeAnthropicModel(body.model || defaultAnthropicModel);
+      const tryModels = [requested].concat(
+        ANTHROPIC_FALLBACKS.filter(function (m) { return m !== requested; })
+      );
 
       const systemParts = [];
       const anthMessages = [];
@@ -144,47 +183,47 @@ module.exports = async function (context, req) {
         }
       });
 
-      // Anthropic requires alternating roles starting with user
       if (!anthMessages.length || anthMessages[0].role !== 'user') {
         anthMessages.unshift({ role: 'user', content: 'Please continue.' });
       }
 
-      const anthRes = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: modelLabel,
-          max_tokens: 4000,
-          temperature: 0.3,
-          system: systemParts.filter(Boolean).join('\n\n') || undefined,
-          messages: anthMessages
-        })
-      });
-      const data = await anthRes.json().catch(() => ({}));
-      if (!anthRes.ok) {
-        const errMsg = (data && data.error && data.error.message) || ('Anthropic error ' + anthRes.status);
+      const systemText = systemParts.filter(Boolean).join('\n\n');
+      let lastErr = '';
+      let succeeded = false;
+
+      for (let i = 0; i < tryModels.length; i++) {
+        const candidate = tryModels[i];
+        const result = await callAnthropic(candidate, systemText, anthMessages);
+        if (result.anthRes.ok) {
+          modelLabel = candidate;
+          if (result.data && Array.isArray(result.data.content)) {
+            content = result.data.content
+              .filter(function (part) { return part && part.type === 'text'; })
+              .map(function (part) { return part.text; })
+              .join('\n');
+          }
+          succeeded = true;
+          break;
+        }
+        lastErr = (result.data && result.data.error && result.data.error.message) ||
+          ('Anthropic error ' + result.anthRes.status);
+        // Only fall through on model-not-found style errors
+        if (!/model/i.test(lastErr)) {
+          context.res = { status: result.anthRes.status, headers, body: { error: lastErr } };
+          return;
+        }
+      }
+
+      if (!succeeded) {
         context.res = {
-          status: anthRes.status,
+          status: 400,
           headers,
           body: {
-            error: errMsg + ( /model/i.test(errMsg)
-              ? ' Set OPENAI_MODEL to a valid Anthropic id, e.g. claude-3-5-sonnet-20241022'
-              : '')
+            error: lastErr + ' Tried models: ' + tryModels.join(', ') +
+              '. Set OPENAI_MODEL to claude-sonnet-5 (or delete OPENAI_MODEL to use the default).'
           }
         };
         return;
-      }
-      if (data && Array.isArray(data.content)) {
-        content = data.content
-          .filter(function (part) { return part && part.type === 'text'; })
-          .map(function (part) { return part.text; })
-          .join('\n');
-      } else {
-        content = null;
       }
     } else {
       modelLabel = (body.model || defaultOpenAiModel).toString().trim() || defaultOpenAiModel;
@@ -196,7 +235,7 @@ module.exports = async function (context, req) {
         },
         body: JSON.stringify({
           model: modelLabel,
-          messages,
+          messages: messages,
           temperature: 0.3,
           max_tokens: 4000
         })
@@ -217,7 +256,7 @@ module.exports = async function (context, req) {
       return;
     }
 
-    context.res = { status: 200, headers, body: { content, model: modelLabel, provider } };
+    context.res = { status: 200, headers, body: { content: content, model: modelLabel, provider: provider } };
   } catch (err) {
     context.res = {
       status: 502,
