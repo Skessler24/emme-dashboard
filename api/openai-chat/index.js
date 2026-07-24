@@ -1,8 +1,8 @@
 /**
  * Org-wide AI proxy for Emme Dashboard.
- * Prefers Azure OpenAI resource (emme-openai), falls back to OpenAI.com.
- * Secrets live in Static Web App Application settings — never in the browser.
- * Protected by Static Web Apps Easy Auth (Emme Entra sign-in).
+ * Prefers Azure OpenAI, falls back to OpenAI.com (OPENAI_API_KEY / PRISM).
+ * Secrets live in Static Web App Environment variables — never in the browser.
+ * Route protection: staticwebapp.config.json requires authenticated users for /api/*.
  */
 module.exports = async function (context, req) {
   const headers = {
@@ -15,15 +15,13 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const principal = req.headers['x-ms-client-principal'] || req.headers['X-MS-CLIENT-PRINCIPAL'];
-  if (!principal) {
-    context.res = {
-      status: 401,
-      headers,
-      body: { error: 'Sign in to the Emme Dashboard (Emme Microsoft account) to use AI.' }
-    };
-    return;
-  }
+  // SWA Easy Auth already blocks anonymous callers via staticwebapp.config.json.
+  // Principal headers are best-effort (not always forwarded to managed functions).
+  const principal =
+    req.headers['x-ms-client-principal'] ||
+    req.headers['X-MS-CLIENT-PRINCIPAL'] ||
+    req.headers['x-ms-client-principal-id'] ||
+    req.headers['X-MS-CLIENT-PRINCIPAL-ID'];
 
   const azureEndpoint = (process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/+$/, '');
   const azureKey = process.env.AZURE_OPENAI_API_KEY || '';
@@ -46,7 +44,8 @@ module.exports = async function (context, req) {
         configured,
         provider,
         model: useAzure ? azureDeployment : defaultModel,
-        org: true
+        org: true,
+        signedInHint: Boolean(principal)
       }
     };
     return;
@@ -57,7 +56,7 @@ module.exports = async function (context, req) {
       status: 503,
       headers,
       body: {
-        error: 'Org AI is not configured. On Static Web App → Configuration, add AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT from your emme-openai resource (or OPENAI_API_KEY as a fallback).'
+        error: 'Org AI is not configured. On Static Web App → Environment variables, add OPENAI_API_KEY (PRISM) or AZURE_OPENAI_* settings, then Apply/Save.'
       }
     };
     return;

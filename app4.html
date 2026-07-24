@@ -1338,8 +1338,8 @@ function updateAIStatusBadge() {
 async function refreshOrgAIStatus() {
     const statusEl = document.getElementById('ai-org-status');
     try {
-        const res = await fetch('/api/openai-chat', { method: 'GET', credentials: 'include', redirect: 'manual' });
-        if (res.status === 0 || res.type === 'opaqueredirect' || res.status === 301 || res.status === 302 || res.status === 401) {
+        const res = await fetch('/api/openai-chat', { method: 'GET', credentials: 'include' });
+        if (res.redirected && /\/\.auth\//i.test(res.url)) {
             orgAI = { checked: true, configured: false, model: 'gpt-4.1-mini', provider: 'none' };
             if (statusEl) statusEl.innerHTML = 'Sign in with your Emme Microsoft account to use org AI.';
             updateAIStatusBadge();
@@ -1363,7 +1363,7 @@ async function refreshOrgAIStatus() {
             } else if (orgAI.configured) {
                 statusEl.innerHTML = '<strong class="text-primary">Emme org AI is on</strong> (PRISM / OpenAI key in Azure). Model: ' + orgAI.model;
             } else {
-                statusEl.innerHTML = 'Org AI API is live, but no key yet. Add <strong>OPENAI_API_KEY</strong> (PRISM key) on Static Web App → Configuration → Save.';
+                statusEl.innerHTML = 'Org AI API is live, but no key yet. Add <strong>OPENAI_API_KEY</strong> (PRISM key) on Static Web App → Environment variables → Apply/Save.';
             }
         }
     } catch (e) {
@@ -1409,17 +1409,17 @@ async function callOrgOpenAI(messages, model) {
     const res = await fetch('/api/openai-chat', {
         method: 'POST',
         credentials: 'include',
-        redirect: 'manual',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages, model: model || orgAI.model })
     });
-    if (res.status === 0 || res.type === 'opaqueredirect' || res.status === 301 || res.status === 302 || res.status === 401) {
-        throw new Error('Not signed in to Emme (Microsoft). Refresh the page and sign in, then try again.');
+    // Follow redirects only for same-origin auth edge cases; prefer JSON errors
+    if (res.redirected && /\/\.auth\//i.test(res.url)) {
+        throw new Error('Not signed in to Emme (Microsoft). Open the site home, sign in, then return to Report Center.');
     }
     const ctype = (res.headers.get('content-type') || '');
     const data = ctype.includes('application/json') ? await res.json().catch(() => ({})) : {};
     if (!res.ok) {
-        throw new Error(data.error || ('Org AI error ' + res.status + '. Check OPENAI_API_KEY in Azure Configuration.'));
+        throw new Error(data.error || ('Org AI error ' + res.status + '. Check OPENAI_API_KEY in Azure Environment variables.'));
     }
     if (!data.content) throw new Error(data.error || 'Org AI returned an empty response. Is OPENAI_API_KEY set on emme-dashboard?');
     return { content: data.content };
