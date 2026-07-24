@@ -3,9 +3,9 @@
   "Values": {
     "AzureWebJobsStorage": "",
     "FUNCTIONS_WORKER_RUNTIME": "node",
-    "AZURE_OPENAI_ENDPOINT": "https://YOUR-RESOURCE.openai.azure.com",
-    "AZURE_OPENAI_API_KEY": "your-azure-openai-key",
-    "AZURE_OPENAI_DEPLOYMENT": "gpt-4.1-mini",
-    "AZURE_OPENAI_API_VERSION": "2024-10-21"
+    "OPENAI_API_KEY": "sk-ant-your-anthropic-or-openai-key",
+    "OPENAI_MODEL": "claude-sonnet-4-20250514",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "claude-sonnet-4-20250514"
   }
 }

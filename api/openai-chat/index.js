@@ -1,6 +1,9 @@
 /**
  * Org-wide AI proxy for Emme Dashboard.
- * Prefers Azure OpenAI, falls back to OpenAI.com (OPENAI_API_KEY / PRISM).
+ * Supports:
+ *   - Anthropic (PRISM) via ANTHROPIC_API_KEY or OPENAI_API_KEY starting with sk-ant-
+ *   - Azure OpenAI via AZURE_OPENAI_*
+ *   - OpenAI.com via OPENAI_API_KEY (sk- / sk-proj-)
  * Secrets live in Static Web App Environment variables — never in the browser.
  * Route protection: staticwebapp.config.json requires authenticated users for /api/*.
  */
@@ -15,26 +18,24 @@ module.exports = async function (context, req) {
     return;
   }
 
-  // SWA Easy Auth already blocks anonymous callers via staticwebapp.config.json.
-  // Principal headers are best-effort (not always forwarded to managed functions).
-  const principal =
-    req.headers['x-ms-client-principal'] ||
-    req.headers['X-MS-CLIENT-PRINCIPAL'] ||
-    req.headers['x-ms-client-principal-id'] ||
-    req.headers['X-MS-CLIENT-PRINCIPAL-ID'];
-
   const azureEndpoint = (process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/+$/, '');
   const azureKey = process.env.AZURE_OPENAI_API_KEY || '';
   const azureDeployment = process.env.AZURE_OPENAI_DEPLOYMENT || '';
   const azureApiVersion = process.env.AZURE_OPENAI_API_VERSION || '2024-10-21';
 
   const openAiKey = process.env.OPENAI_API_KEY || '';
-  const defaultModel = process.env.OPENAI_MODEL || azureDeployment || 'gpt-4.1-mini';
+  const anthropicKey = process.env.ANTHROPIC_API_KEY ||
+    (openAiKey.indexOf('sk-ant-') === 0 ? openAiKey : '');
+  const openAiOnlyKey = (openAiKey && openAiKey.indexOf('sk-ant-') !== 0) ? openAiKey : '';
+
+  const defaultAnthropicModel = process.env.ANTHROPIC_MODEL || process.env.OPENAI_MODEL || 'claude-sonnet-4-20250514';
+  const defaultOpenAiModel = process.env.OPENAI_MODEL || azureDeployment || 'gpt-4.1-mini';
 
   const useAzure = Boolean(azureEndpoint && azureKey && azureDeployment);
-  const useOpenAI = Boolean(openAiKey);
-  const configured = useAzure || useOpenAI;
-  const provider = useAzure ? 'azure' : (useOpenAI ? 'openai' : 'none');
+  const useAnthropic = Boolean(anthropicKey);
+  const useOpenAI = Boolean(openAiOnlyKey);
+  const configured = useAzure || useAnthropic || useOpenAI;
+  const provider = useAzure ? 'azure' : (useAnthropic ? 'anthropic' : (useOpenAI ? 'openai' : 'none'));
 
   if (req.method === 'GET') {
     context.res = {
@@ -43,9 +44,8 @@ module.exports = async function (context, req) {
       body: {
         configured,
         provider,
-        model: useAzure ? azureDeployment : defaultModel,
-        org: true,
-        signedInHint: Boolean(principal)
+        model: useAzure ? azureDeployment : (useAnthropic ? defaultAnthropicModel : defaultOpenAiModel),
+        org: true
       }
     };
     return;
@@ -56,7 +56,7 @@ module.exports = async function (context, req) {
       status: 503,
       headers,
       body: {
-        error: 'Org AI is not configured. On Static Web App → Environment variables, add OPENAI_API_KEY (PRISM) or AZURE_OPENAI_* settings, then Apply/Save.'
+        error: 'Org AI is not configured. Add ANTHROPIC_API_KEY (or OPENAI_API_KEY with a sk-ant- / sk- key) in Static Web App → Environment variables.'
       }
     };
     return;
@@ -75,7 +75,7 @@ module.exports = async function (context, req) {
   }
 
   try {
-    let openaiRes;
+    let content;
     let modelLabel;
 
     if (useAzure) {
@@ -83,7 +83,7 @@ module.exports = async function (context, req) {
       const url = azureEndpoint +
         '/openai/deployments/' + encodeURIComponent(azureDeployment) +
         '/chat/completions?api-version=' + encodeURIComponent(azureApiVersion);
-      openaiRes = await fetch(url, {
+      const openaiRes = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,13 +95,79 @@ module.exports = async function (context, req) {
           max_tokens: 4000
         })
       });
-    } else {
-      modelLabel = (body.model || defaultModel).toString().trim() || defaultModel;
-      openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      const data = await openaiRes.json().catch(() => ({}));
+      if (!openaiRes.ok) {
+        const errMsg = (data && data.error && data.error.message) || ('Azure OpenAI error ' + openaiRes.status);
+        context.res = { status: openaiRes.status, headers, body: { error: errMsg } };
+        return;
+      }
+      content = data && data.choices && data.choices[0] && data.choices[0].message
+        ? data.choices[0].message.content
+        : null;
+    } else if (useAnthropic) {
+      modelLabel = (body.model || defaultAnthropicModel).toString().trim() || defaultAnthropicModel;
+      // Avoid sending OpenAI model names to Anthropic
+      if (/^gpt-|^o[0-9]/i.test(modelLabel)) {
+        modelLabel = defaultAnthropicModel;
+      }
+
+      const systemParts = [];
+      const anthMessages = [];
+      messages.forEach(function (m) {
+        if (!m || !m.role) return;
+        if (m.role === 'system') {
+          systemParts.push(String(m.content || ''));
+          return;
+        }
+        if (m.role === 'user' || m.role === 'assistant') {
+          anthMessages.push({
+            role: m.role,
+            content: String(m.content || '')
+          });
+        }
+      });
+
+      // Anthropic requires alternating roles starting with user
+      if (!anthMessages.length || anthMessages[0].role !== 'user') {
+        anthMessages.unshift({ role: 'user', content: 'Please continue.' });
+      }
+
+      const anthRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + openAiKey
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: modelLabel,
+          max_tokens: 4000,
+          temperature: 0.3,
+          system: systemParts.filter(Boolean).join('\n\n') || undefined,
+          messages: anthMessages
+        })
+      });
+      const data = await anthRes.json().catch(() => ({}));
+      if (!anthRes.ok) {
+        const errMsg = (data && data.error && data.error.message) || ('Anthropic error ' + anthRes.status);
+        context.res = { status: anthRes.status, headers, body: { error: errMsg } };
+        return;
+      }
+      if (data && Array.isArray(data.content)) {
+        content = data.content
+          .filter(function (part) { return part && part.type === 'text'; })
+          .map(function (part) { return part.text; })
+          .join('\n');
+      } else {
+        content = null;
+      }
+    } else {
+      modelLabel = (body.model || defaultOpenAiModel).toString().trim() || defaultOpenAiModel;
+      const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + openAiOnlyKey
         },
         body: JSON.stringify({
           model: modelLabel,
@@ -110,18 +176,16 @@ module.exports = async function (context, req) {
           max_tokens: 4000
         })
       });
+      const data = await openaiRes.json().catch(() => ({}));
+      if (!openaiRes.ok) {
+        const errMsg = (data && data.error && data.error.message) || ('OpenAI error ' + openaiRes.status);
+        context.res = { status: openaiRes.status, headers, body: { error: errMsg } };
+        return;
+      }
+      content = data && data.choices && data.choices[0] && data.choices[0].message
+        ? data.choices[0].message.content
+        : null;
     }
-
-    const data = await openaiRes.json().catch(() => ({}));
-    if (!openaiRes.ok) {
-      const errMsg = (data && data.error && data.error.message) || ('AI error ' + openaiRes.status);
-      context.res = { status: openaiRes.status, headers, body: { error: errMsg } };
-      return;
-    }
-
-    const content = data && data.choices && data.choices[0] && data.choices[0].message
-      ? data.choices[0].message.content
-      : null;
 
     if (!content) {
       context.res = { status: 502, headers, body: { error: 'AI returned an empty response.' } };

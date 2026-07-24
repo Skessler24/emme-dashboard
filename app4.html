@@ -1324,7 +1324,9 @@ function updateAIStatusBadge() {
         badge.textContent = 'AI: Copilot SDK';
         badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
     } else if (orgAI.configured) {
-        badge.textContent = orgAI.provider === 'azure' ? 'AI: Azure OpenAI (Org)' : 'AI: Emme Org Connected';
+        badge.textContent = orgAI.provider === 'azure'
+            ? 'AI: Azure OpenAI (Org)'
+            : (orgAI.provider === 'anthropic' ? 'AI: Anthropic (Org)' : 'AI: Emme Org Connected');
         badge.className = 'text-[11px] font-bold px-2 py-1 rounded-full bg-success/90 text-white';
     } else if (getOpenAIConfig()) {
         badge.textContent = 'AI: Personal Key';
@@ -1360,10 +1362,12 @@ async function refreshOrgAIStatus() {
         if (statusEl) {
             if (orgAI.configured && orgAI.provider === 'azure') {
                 statusEl.innerHTML = '<strong class="text-primary">Emme Azure OpenAI is on</strong> — deployment: ' + orgAI.model;
+            } else if (orgAI.configured && orgAI.provider === 'anthropic') {
+                statusEl.innerHTML = '<strong class="text-primary">Emme org AI is on</strong> (Anthropic / PRISM). Model: ' + orgAI.model;
             } else if (orgAI.configured) {
-                statusEl.innerHTML = '<strong class="text-primary">Emme org AI is on</strong> (PRISM / OpenAI key in Azure). Model: ' + orgAI.model;
+                statusEl.innerHTML = '<strong class="text-primary">Emme org AI is on</strong> (OpenAI). Model: ' + orgAI.model;
             } else {
-                statusEl.innerHTML = 'Org AI API is live, but no key yet. Add <strong>OPENAI_API_KEY</strong> (PRISM key) on Static Web App → Environment variables → Apply/Save.';
+                statusEl.innerHTML = 'Org AI API is live, but no key yet. Add <strong>OPENAI_API_KEY</strong> with your PRISM <code>sk-ant-...</code> key (or <strong>ANTHROPIC_API_KEY</strong>) in Environment variables.';
             }
         }
     } catch (e) {
