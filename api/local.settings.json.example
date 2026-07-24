@@ -3,9 +3,9 @@
   "Values": {
     "AzureWebJobsStorage": "",
     "FUNCTIONS_WORKER_RUNTIME": "node",
-    "OPENAI_API_KEY": "sk-ant-your-anthropic-or-openai-key",
-    "OPENAI_MODEL": "claude-sonnet-4-20250514",
+    "OPENAI_API_KEY": "sk-ant-your-anthropic-key",
+    "OPENAI_MODEL": "claude-3-5-sonnet-20241022",
     "ANTHROPIC_API_KEY": "",
-    "ANTHROPIC_MODEL": "claude-sonnet-4-20250514"
+    "ANTHROPIC_MODEL": "claude-3-5-sonnet-20241022"
   }
 }
