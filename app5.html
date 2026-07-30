@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Emme Schedule & Caseload — live weekly schedules and client info" />
+  <title>Emme — Schedule &amp; Caseload</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <style>
+    :root {
+      --green: #084339;
+      --green-mid: #245E4D;
+      --green-light: #4A7C6B;
+      --pink: #f8cacb;
+      --pink-dark: #dd9fa3;
+      --yellow: #ffca34;
+      --bg: #fef7fc;
+      --surface: #ffffff;
+      --border: rgba(8, 67, 57, 0.12);
+      --text: #084339;
+      --body: #2a3a38;
+      --muted: rgba(8, 67, 57, 0.55);
+      --faint: rgba(8, 67, 57, 0.28);
+      --day-blue: #1e3a5f;
+      --day-maroon: #6b2d3c;
+      --radius: 0.75rem;
+      --shadow: 0 4px 18px rgba(8, 67, 57, 0.08);
+      --font-display: 'Comfortaa', sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--body);
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    a { color: inherit; text-decoration: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+    .is-hidden { display: none !important; }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: 0.85rem 1.5rem;
+      background: var(--green); color: #fff;
+      box-shadow: 0 2px 14px rgba(8, 67, 57, 0.2);
+    }
+    .topbar__brand {
+      font-family: var(--font-display); font-weight: 700; font-size: 1.35rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .topbar__brand span { opacity: 0.7; font-weight: 500; font-size: 0.95rem; }
+    .topbar__actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .sync-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.35rem 0.7rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600;
+      background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9);
+    }
+    .sync-pill--live { background: rgba(255, 202, 52, 0.22); color: #fff; }
+    .sync-pill--local { background: rgba(248, 202, 203, 0.25); }
+    .sync-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #7dcea0;
+      box-shadow: 0 0 0 0 rgba(125, 206, 160, 0.5);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(125, 206, 160, 0.45); }
+      70% { box-shadow: 0 0 0 6px rgba(125, 206, 160, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(125, 206, 160, 0); }
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.45rem 0.85rem; border-radius: 0.55rem;
+      font-weight: 600; font-size: 0.85rem;
+      transition: background 0.15s, transform 0.15s, border-color 0.15s;
+    }
+    .btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+    .btn--yellow { background: var(--yellow); color: var(--green); }
+    .btn--yellow:hover { filter: brightness(0.97); }
+    .btn--ghost {
+      background: transparent; color: #fff;
+      border: 1px solid rgba(255,255,255,0.35);
+    }
+    .btn--ghost:hover { background: rgba(255,255,255,0.08); }
+    .btn--green { background: var(--green); color: #fff; }
+    .btn--green:hover { background: var(--green-mid); }
+    .btn--soft {
+      background: rgba(8, 67, 57, 0.07); color: var(--green);
+      border: 1px solid var(--border);
+    }
+    .btn--soft:hover { background: rgba(8, 67, 57, 0.12); }
+    .btn--danger { background: #fde8ea; color: #8b2e3a; }
+    .btn--danger:hover { background: #f9d0d5; }
+    .btn--sm { padding: 0.3rem 0.55rem; font-size: 0.78rem; }
+    .btn--icon { padding: 0.35rem; border-radius: 0.45rem; }
+
+    .shell { max-width: 1400px; margin: 0 auto; padding: 1.25rem 1.5rem 3rem; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.75rem;
+      align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .toolbar__left, .toolbar__right { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+    .board-tabs {
+      display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center;
+      padding: 0.25rem; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .board-tab {
+      padding: 0.45rem 0.85rem; border-radius: 0.5rem;
+      font-weight: 600; font-size: 0.85rem; color: var(--muted);
+    }
+    .board-tab:hover { color: var(--green); background: rgba(8,67,57,0.05); }
+    .board-tab--active {
+      background: var(--green); color: #fff;
+    }
+
+    .layout-switch {
+      display: inline-flex; padding: 0.2rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .layout-switch__btn {
+      padding: 0.4rem 0.75rem; border-radius: 0.45rem;
+      font-size: 0.8rem; font-weight: 600; color: var(--muted);
+      display: inline-flex; align-items: center; gap: 0.35rem;
+    }
+    .layout-switch__btn--active {
+      background: var(--green); color: #fff;
+    }
+
+    .toast {
+      position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 80;
+      background: var(--green); color: #fff;
+      padding: 0.75rem 1rem; border-radius: 0.65rem;
+      box-shadow: 0 8px 24px rgba(8,67,57,0.25);
+      font-size: 0.875rem; font-weight: 500;
+      opacity: 0; transform: translateY(8px); pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast--show { opacity: 1; transform: translateY(0); }
+
+    /* Status pills */
+    .status {
+      display: inline-flex; align-items: center;
+      padding: 0.2rem 0.55rem; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .status--full { background: #f8cacb; color: #7a2f38; }
+    .status--open4 { background: #d4edda; color: #1e5c33; }
+    .status--open2, .status--open1 { background: #ffe8a3; color: #6b4e00; }
+    .status--progress { background: #ffd0a8; color: #7a3d00; }
+    .status--lunch { background: #cfe8f5; color: #1a4d66; }
+    .status--makeup { background: #e4d4f5; color: #4b2d6b; }
+    .status--closed { background: #6b2d3c; color: #fff; }
+    .status--blank { background: #f0e8ef; color: var(--muted); }
+
+    /* Schedule layout (boss-friendly day stacks) */
+    .sched-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.7fr);
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .sched-layout { grid-template-columns: 1fr; }
+    }
+    .day-stack { display: flex; flex-direction: column; gap: 1rem; }
+    .day-block {
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .day-block__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.65rem 0.9rem; color: #fff; font-family: var(--font-display);
+      font-weight: 700; font-size: 0.95rem;
+    }
+    .day-block__header--blue { background: var(--day-blue); }
+    .day-block__header--maroon { background: var(--day-maroon); }
+    .day-block__header .btn { color: #fff; border-color: rgba(255,255,255,0.35); }
+    .slot-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .slot-table th {
+      text-align: left; padding: 0.45rem 0.7rem;
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--muted); background: rgba(8,67,57,0.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .slot-table td {
+      padding: 0.4rem 0.55rem; border-bottom: 1px solid rgba(8,67,57,0.06);
+      vertical-align: middle;
+    }
+    .slot-table tr:last-child td { border-bottom: none; }
+    .slot-table tr:hover td { background: rgba(8,67,57,0.025); }
+    .cell-input, .cell-select {
+      width: 100%; border: 1px solid transparent; background: transparent;
+      border-radius: 0.4rem; padding: 0.3rem 0.4rem; color: var(--body);
+    }
+    .cell-input:hover, .cell-select:hover { border-color: var(--border); background: #fff; }
+    .cell-input:focus, .cell-select:focus {
+      outline: none; border-color: var(--green-light); background: #fff;
+      box-shadow: 0 0 0 3px rgba(8,67,57,0.08);
+    }
+    .slot-actions { display: flex; gap: 0.2rem; opacity: 0.35; }
+    tr:hover .slot-actions { opacity: 1; }
+
+    .client-side {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+      position: sticky; top: 4.5rem;
+    }
+    .client-side__header {
+      background: var(--day-blue); color: #fff;
+      padding: 0.7rem 0.9rem; font-family: var(--font-display);
+      font-weight: 700; display: flex; justify-content: space-between; align-items: center;
+    }
+    .client-side__list { max-height: min(70vh, 720px); overflow: auto; }
+    .client-side__row {
+      display: grid; grid-template-columns: 1fr auto auto; gap: 0.5rem;
+      padding: 0.65rem 0.85rem; border-bottom: 1px solid rgba(8,67,57,0.06);
+      align-items: center; cursor: pointer;
+    }
+    .client-side__row:hover { background: rgba(8,67,57,0.03); }
+    .client-side__name { font-weight: 600; color: var(--green); font-size: 0.88rem; }
+    .client-side__meta { font-size: 0.75rem; color: var(--muted); }
+    .client-side__hours {
+      font-size: 0.78rem; font-weight: 700; color: var(--green-mid);
+      background: rgba(8,67,57,0.07); padding: 0.15rem 0.45rem; border-radius: 999px;
+    }
+
+    /* Spreadsheet layout */
+    .sheet-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow: auto;
+    }
+    .sheet-table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 0.86rem; }
+    .sheet-table th {
+      position: sticky; top: 0; z-index: 2;
+      background: var(--green); color: #fff; text-align: left;
+      padding: 0.55rem 0.7rem; font-size: 0.75rem; letter-spacing: 0.03em;
+    }
+    .sheet-day-row td {
+      background: var(--day-blue); color: #fff; font-weight: 700;
+      font-family: var(--font-display); padding: 0.5rem 0.7rem;
+    }
+    .sheet-day-row--maroon td { background: var(--day-maroon); }
+    .sheet-table td {
+      padding: 0.35rem 0.5rem; border-bottom: 1px solid rgba(8,67,57,0.07);
+    }
+
+    /* Clients layout */
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+    .client-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .client-card__head {
+      background: linear-gradient(135deg, var(--green), var(--green-mid));
+      color: #fff; padding: 0.85rem 1rem;
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;
+    }
+    .client-card__name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
+    .client-card__sessions { font-size: 0.78rem; opacity: 0.85; margin-top: 0.2rem; }
+    .client-card__body { padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
+    .info-row {
+      display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 0.4rem;
+      align-items: start; font-size: 0.84rem;
+    }
+    .info-row__label { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; padding-top: 0.15rem; }
+    .info-row__value { color: var(--body); word-break: break-word; }
+    .info-row__value a { color: var(--green-mid); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+    .copy-btn {
+      padding: 0.2rem; border-radius: 0.35rem; color: var(--muted);
+    }
+    .copy-btn:hover { background: rgba(8,67,57,0.07); color: var(--green); }
+    .client-card__tasks {
+      margin: 0 1rem 1rem; padding: 0.65rem 0.75rem;
+      background: rgba(221, 159, 163, 0.12); border-radius: 0.55rem;
+      border: 1px dashed rgba(221, 159, 163, 0.5);
+    }
+    .client-card__tasks h4 {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+      color: #8b4a52; margin-bottom: 0.35rem;
+    }
+    .client-card__tasks textarea {
+      width: 100%; border: none; background: transparent; resize: vertical;
+      min-height: 2.5rem; color: var(--body);
+    }
+    .client-card__tasks textarea:focus { outline: none; }
+
+    .empty {
+      text-align: center; padding: 2.5rem 1rem; color: var(--muted);
+    }
+    .empty h3 { font-family: var(--font-display); color: var(--green); margin-bottom: 0.35rem; }
+
+    /* Modal */
+    .modal {
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(8, 67, 57, 0.35);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .modal__panel {
+      background: var(--surface); border-radius: 1rem;
+      width: min(520px, 100%); max-height: 90vh; overflow: auto;
+      box-shadow: 0 16px 48px rgba(8,67,57,0.25); padding: 1.25rem;
+    }
+    .modal__title {
+      font-family: var(--font-display); font-size: 1.2rem; color: var(--green);
+      margin-bottom: 1rem;
+    }
+    .field { margin-bottom: 0.75rem; }
+    .field label {
+      display: block; font-size: 0.75rem; font-weight: 600;
+      color: var(--muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 0.55rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 0.5rem;
+      background: #fff; color: var(--body);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none; border-color: var(--green-light);
+      box-shadow: 0 0 0 3px rgba(8,67,57,0.08);
+    }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
+    .modal__actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+
+    .dx-panel {
+      margin-top: 1.25rem; padding: 1rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .dx-panel h3 {
+      font-family: var(--font-display); font-size: 0.95rem; color: var(--green);
+      margin-bottom: 0.5rem;
+    }
+    .dx-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .dx-chip {
+      font-size: 0.75rem; padding: 0.25rem 0.55rem;
+      background: rgba(8,67,57,0.06); border-radius: 999px; color: var(--green-mid);
+    }
+
+    .search-bar { margin-bottom: 1rem; }
+    .search-bar input {
+      width: min(420px, 100%); padding: 0.55rem 0.85rem;
+      border: 1px solid var(--border); border-radius: 0.55rem;
+      background: var(--surface); color: var(--body);
+      box-shadow: var(--shadow);
+    }
+    .search-bar input:focus {
+      outline: none; border-color: var(--green-light);
+      box-shadow: 0 0 0 3px rgba(8,67,57,0.08);
+    }
+
+    .cell-select.status-tint--full { background: #f8cacb; }
+    .cell-select.status-tint--open4 { background: #d4edda; }
+    .cell-select.status-tint--open2,
+    .cell-select.status-tint--open1 { background: #ffe8a3; }
+    .cell-select.status-tint--progress { background: #ffd0a8; }
+    .cell-select.status-tint--lunch { background: #cfe8f5; }
+    .cell-select.status-tint--makeup { background: #e4d4f5; }
+    .cell-select.status-tint--closed { background: #6b2d3c; color: #fff; }
+    .cell-select.status-tint--blank { background: transparent; }
+
+    [data-lucide] { width: 1rem; height: 1rem; display: block; }
+    .icon-sm [data-lucide], .icon-sm { width: 0.9rem; height: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="topbar__brand" href="index.html">
+      Emme <span>/ Schedule &amp; Caseload</span>
+    </a>
+    <div class="topbar__actions">
+      <span class="sync-pill" id="js-sync-pill" title="Sync status">
+        <span class="sync-dot" aria-hidden="true"></span>
+        <span id="js-sync-label">Loading…</span>
+      </span>
+      <button type="button" class="btn btn--ghost" id="js-export" title="Export JSON backup">Export</button>
+      <button type="button" class="btn btn--ghost" id="js-import">Import</button>
+      <input type="file" id="js-import-file" accept="application/json,.json" class="sr-only" />
+      <a class="btn btn--yellow" href="index.html">← Dashboard</a>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="toolbar">
+      <div class="toolbar__left">
+        <div class="board-tabs" id="js-board-tabs" role="tablist" aria-label="Schedules"></div>
+        <button type="button" class="btn btn--soft btn--sm" id="js-add-board" title="Add schedule board">+ Board</button>
+        <button type="button" class="btn btn--soft btn--sm" id="js-rename-board" title="Rename board">Rename</button>
+        <button type="button" class="btn btn--danger btn--sm" id="js-delete-board" title="Delete board">Delete</button>
+      </div>
+      <div class="toolbar__right">
+        <div class="layout-switch" role="group" aria-label="Layout">
+          <button type="button" class="layout-switch__btn layout-switch__btn--active" data-layout="schedule" id="js-layout-schedule">
+            <i data-lucide="calendar-days"></i> Schedule
+          </button>
+          <button type="button" class="layout-switch__btn" data-layout="sheet" id="js-layout-sheet">
+            <i data-lucide="table-2"></i> Spreadsheet
+          </button>
+          <button type="button" class="layout-switch__btn" data-layout="clients" id="js-layout-clients">
+            <i data-lucide="users"></i> Clients
+          </button>
+        </div>
+        <button type="button" class="btn btn--green btn--sm" id="js-add-slot">+ Slot</button>
+        <button type="button" class="btn btn--soft btn--sm" id="js-add-day">+ Day</button>
+        <button type="button" class="btn btn--soft btn--sm" id="js-add-client">+ Client</button>
+      </div>
+    </div>
+
+    <div class="search-bar is-hidden" id="js-client-search-wrap">
+      <input type="search" id="js-client-search" placeholder="Search clients by name, email, phone, agency…" aria-label="Search clients" />
+    </div>
+
+    <div id="js-view-schedule"></div>
+    <div id="js-view-sheet" class="is-hidden"></div>
+    <div id="js-view-clients" class="is-hidden"></div>
+
+    <section class="dx-panel" id="js-dx-panel" aria-label="Diagnostic codes">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+        <h3 style="margin:0">Diagnostic codes</h3>
+        <button type="button" class="btn btn--soft btn--sm" id="js-edit-dx">Edit codes</button>
+      </div>
+      <div class="dx-list" id="js-dx-list"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="js-toast" role="status" aria-live="polite"></div>
+
+  <div class="modal is-hidden" id="js-modal" role="dialog" aria-modal="true" aria-labelledby="js-modal-title">
+    <div class="modal__panel">
+      <h2 class="modal__title" id="js-modal-title">Edit</h2>
+      <div id="js-modal-body"></div>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--soft" id="js-modal-cancel">Cancel</button>
+        <button type="button" class="btn btn--green" id="js-modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'emme_schedule_workspace_v1';
+  var LAYOUT_KEY = 'emme_schedule_layout';
+  var BOARD_KEY = 'emme_schedule_board';
+  var POLL_MS = 6000;
+  var SAVE_DEBOUNCE_MS = 700;
+
+  var STATUS_OPTIONS = [
+    { value: '', label: '—', cls: 'blank' },
+    { value: 'Full', label: 'Full', cls: 'full' },
+    { value: 'Open 4x', label: 'Open 4x', cls: 'open4' },
+    { value: 'Open 2x (1&3)', label: 'Open 2x (1&3)', cls: 'open2' },
+    { value: 'Open 2x (2&4)', label: 'Open 2x (2&4)', cls: 'open2' },
+    { value: 'Open 1x (1)', label: 'Open 1x (1)', cls: 'open1' },
+    { value: 'Open 1x (2)', label: 'Open 1x (2)', cls: 'open1' },
+    { value: 'Open 1x (3)', label: 'Open 1x (3)', cls: 'open1' },
+    { value: 'Open 1x (4)', label: 'Open 1x (4)', cls: 'open1' },
+    { value: 'Scheduling In Progress', label: 'Scheduling In Progress', cls: 'progress' },
+    { value: 'Lunch', label: 'Lunch', cls: 'lunch' },
+    { value: 'Makeup', label: 'Makeup', cls: 'makeup' },
+    { value: 'Not Open', label: 'Not Open', cls: 'closed' }
+  ];
+
+  var DEFAULT_DX = [
+    'F80.0 — Phonological Disorder',
+    'F80.1 — Expressive Language Disorder',
+    'F80.2 — Mixed Receptive-Expressive Language Disorder',
+    'F80.81 — Childhood Onset Fluency Disorder',
+    'F80.9 — Developmental Disorder of Speech and Language, Unspecified',
+    'F84.0 — Autistic Disorder',
+    'R48.8 — Other Symbolic Dysfunctions (Pragmatic Language)'
+  ];
+
+  var state = {
+    workspace: null,
+    cloudConfigured: false,
+    layout: localStorage.getItem(LAYOUT_KEY) || 'schedule',
+    activeBoardId: localStorage.getItem(BOARD_KEY) || '',
+    clientQuery: '',
+    saving: false,
+    dirty: false,
+    lastRemoteUpdatedAt: null,
+    pollTimer: null,
+    saveTimer: null,
+    modalMode: null,
+    modalContext: null,
+    suppressPoll: false
+  };
+
+  var bc = null;
+  try { bc = new BroadcastChannel('emme_schedule_sync'); } catch (_) {}
+
+  function uid(prefix) {
+    return (prefix || 'id') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  function statusClass(value) {
+    var found = STATUS_OPTIONS.find(function (s) { return s.value === value; });
+    return found ? found.cls : 'blank';
+  }
+
+  function toast(msg) {
+    var el = document.getElementById('js-toast');
+    el.textContent = msg;
+    el.classList.add('toast--show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove('toast--show'); }, 2200);
+  }
+
+  async function copyText(text) {
+    var value = String(text || '').trim();
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      toast('Copied');
+    } catch (_) {
+      var ta = document.createElement('textarea');
+      ta.value = value;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      toast('Copied');
+    }
+  }
+
+  function iconize() {
+    if (window.lucide && lucide.createIcons) lucide.createIcons();
+  }
+
+  function defaultBoard(name) {
+    var days = [
+      { id: uid('day'), name: 'Monday', color: 'blue', slots: [] },
+      { id: uid('day'), name: 'Tuesday', color: 'maroon', slots: [] },
+      { id: uid('day'), name: 'Wednesday', color: 'blue', slots: [] },
+      { id: uid('day'), name: 'Thursday', color: 'maroon', slots: [] },
+      { id: uid('day'), name: 'Friday', color: 'blue', slots: [] }
+    ];
+    var starterTimes = {
+      Monday: ['4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM'],
+      Tuesday: ['4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM'],
+      Wednesday: ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '4:30 PM', '5:30 PM', '6:30 PM'],
+      Thursday: ['9:00 AM', '10:00 AM', '11:00 AM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM'],
+      Friday: ['4:30 PM', '5:30 PM', '6:30 PM']
+    };
+    days.forEach(function (day) {
+      (starterTimes[day.name] || []).forEach(function (time) {
+        day.slots.push({ id: uid('slot'), time: time, status: '', notes: '', lastDay: '' });
+      });
+    });
+    return { id: uid('board'), name: name || 'Current Schedule', days: days };
+  }
+
+  function seedWorkspace() {
+    return {
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      boards: [
+        defaultBoard('Current Schedule'),
+        { id: uid('board'), name: "Summer '26 Schedule", days: defaultBoard().days.map(function (d) {
+          return { id: uid('day'), name: d.name, color: d.color, slots: d.slots.map(function (s) {
+            return { id: uid('slot'), time: s.time, status: '', notes: '', lastDay: '' };
+          }) };
+        }) },
+        { id: uid('board'), name: 'Clients not in regular spot', days: [] }
+      ],
+      clients: [],
+      dxCodes: DEFAULT_DX.slice()
+    };
+  }
+
+  function activeBoard() {
+    var ws = state.workspace;
+    if (!ws || !ws.boards.length) return null;
+    var board = ws.boards.find(function (b) { return b.id === state.activeBoardId; });
+    if (!board) {
+      board = ws.boards[0];
+      state.activeBoardId = board.id;
+      localStorage.setItem(BOARD_KEY, board.id);
+    }
+    return board;
+  }
+
+  function setSyncLabel(text, mode) {
+    var pill = document.getElementById('js-sync-pill');
+    var label = document.getElementById('js-sync-label');
+    label.textContent = text;
+    pill.classList.toggle('sync-pill--live', mode === 'live');
+    pill.classList.toggle('sync-pill--local', mode === 'local');
+  }
+
+  function loadLocal() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) { return null; }
+  }
+
+  function saveLocal(workspace) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
+    if (bc) {
+      try { bc.postMessage({ type: 'workspace', updatedAt: workspace.updatedAt }); } catch (_) {}
+    }
+  }
+
+  async function loadCloud() {
+    var res = await fetch('/api/schedule', { credentials: 'include' });
+    var data = await res.json().catch(function () { return {}; });
+    if (res.status === 503 || data.configured === false) {
+      return { configured: false };
+    }
+    if (!res.ok) throw new Error(data.error || 'Could not load schedule');
+    return { configured: true, workspace: data.workspace };
+  }
+
+  async function saveCloud(workspace) {
+    var res = await fetch('/api/schedule', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspace: workspace })
+    });
+    var data = await res.json().catch(function () { return {}; });
+    if (res.status === 503 || data.configured === false) {
+      return { configured: false };
+    }
+    if (!res.ok) throw new Error(data.error || 'Could not save schedule');
+    return { configured: true, workspace: data.workspace };
+  }
+
+  async function pollMeta() {
+    if (!state.cloudConfigured || state.suppressPoll || state.dirty || state.saving) return;
+    try {
+      var res = await fetch('/api/schedule/meta', { credentials: 'include' });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok || !data.configured) return;
+      if (data.updatedAt && state.lastRemoteUpdatedAt && data.updatedAt !== state.lastRemoteUpdatedAt) {
+        var loaded = await loadCloud();
+        if (loaded.configured && loaded.workspace) {
+          state.workspace = loaded.workspace;
+          state.lastRemoteUpdatedAt = loaded.workspace.updatedAt;
+          saveLocal(state.workspace);
+          renderAll();
+          setSyncLabel('Live · updated', 'live');
+        }
+      }
+    } catch (_) {}
+  }
+
+  function scheduleSave() {
+    state.dirty = true;
+    setSyncLabel(state.cloudConfigured ? 'Saving…' : 'Saving on device…', state.cloudConfigured ? 'live' : 'local');
+    clearTimeout(state.saveTimer);
+    state.saveTimer = setTimeout(persist, SAVE_DEBOUNCE_MS);
+  }
+
+  async function persist() {
+    if (!state.workspace) return;
+    state.saving = true;
+    state.suppressPoll = true;
+    state.workspace.updatedAt = new Date().toISOString();
+    saveLocal(state.workspace);
+    try {
+      if (state.cloudConfigured) {
+        var result = await saveCloud(state.workspace);
+        if (result.configured && result.workspace) {
+          state.workspace = result.workspace;
+          state.lastRemoteUpdatedAt = result.workspace.updatedAt;
+          saveLocal(state.workspace);
+          setSyncLabel('Live sync on', 'live');
+        } else {
+          state.cloudConfigured = false;
+          setSyncLabel('Saved on this device', 'local');
+        }
+      } else {
+        setSyncLabel('Saved on this device', 'local');
+      }
+      state.dirty = false;
+    } catch (err) {
+      setSyncLabel('Save failed — retrying', state.cloudConfigured ? 'live' : 'local');
+      toast(err.message || 'Save failed');
+    } finally {
+      state.saving = false;
+      setTimeout(function () { state.suppressPoll = false; }, 1200);
+    }
+  }
+
+  function mutate(fn) {
+    fn();
+    renderAll();
+    scheduleSave();
+  }
+
+  /* ─── Rendering ─── */
+
+  function renderBoardTabs() {
+    var el = document.getElementById('js-board-tabs');
+    var boards = state.workspace.boards;
+    el.innerHTML = boards.map(function (b) {
+      var active = b.id === state.activeBoardId ? ' board-tab--active' : '';
+      return '<button type="button" class="board-tab' + active + '" data-board="' + b.id + '" role="tab" aria-selected="' + (b.id === state.activeBoardId) + '">' +
+        escapeHtml(b.name) + '</button>';
+    }).join('');
+  }
+
+  function renderStatusSelect(value, attrs) {
+    var cls = statusClass(value);
+    return '<select class="cell-select status-tint--' + cls + '" ' + (attrs || '') + '>' +
+      STATUS_OPTIONS.map(function (s) {
+        return '<option value="' + escapeAttr(s.value) + '"' + (s.value === value ? ' selected' : '') + '>' +
+          escapeHtml(s.label) + '</option>';
+      }).join('') + '</select>';
+  }
+
+  function tintStatusSelect(el) {
+    if (!el || !el.classList.contains('cell-select')) return;
+    STATUS_OPTIONS.forEach(function (s) {
+      el.classList.remove('status-tint--' + s.cls);
+    });
+    el.classList.add('status-tint--' + statusClass(el.value));
+  }
+
+  function renderScheduleView() {
+    var root = document.getElementById('js-view-schedule');
+    var board = activeBoard();
+    if (!board) {
+      root.innerHTML = '<div class="empty"><h3>No schedule board</h3><p>Add a board to get started.</p></div>';
+      return;
+    }
+    if (!board.days.length) {
+      root.innerHTML = '<div class="empty"><h3>' + escapeHtml(board.name) + '</h3><p>This board has no day blocks yet.</p>' +
+        '<button type="button" class="btn btn--green" id="js-seed-days">Add Mon–Fri days</button></div>';
+      return;
+    }
+
+    var daysHtml = board.days.map(function (day) {
+      var color = day.color === 'maroon' ? 'maroon' : 'blue';
+      var rows = (day.slots || []).map(function (slot) {
+        return '<tr data-day="' + day.id + '" data-slot="' + slot.id + '">' +
+          '<td style="width:7.5rem"><input class="cell-input" data-field="time" value="' + escapeAttr(slot.time) + '" /></td>' +
+          '<td style="width:11rem">' + renderStatusSelect(slot.status, 'data-field="status"') + '</td>' +
+          '<td><input class="cell-input" data-field="notes" value="' + escapeAttr(slot.notes) + '" placeholder="Client / notes" /></td>' +
+          '<td style="width:8rem"><input class="cell-input" data-field="lastDay" value="' + escapeAttr(slot.lastDay) + '" placeholder="Last day" /></td>' +
+          '<td style="width:4.5rem"><div class="slot-actions">' +
+            '<button type="button" class="btn btn--icon btn--soft" data-action="dup-slot" title="Duplicate"><i data-lucide="copy"></i></button>' +
+            '<button type="button" class="btn btn--icon btn--danger" data-action="del-slot" title="Delete"><i data-lucide="trash-2"></i></button>' +
+          '</div></td></tr>';
+      }).join('') || '<tr><td colspan="5" style="padding:0.85rem;color:var(--muted)">No slots — use + Slot</td></tr>';
+
+      return '<article class="day-block" data-day-block="' + day.id + '">' +
+        '<header class="day-block__header day-block__header--' + color + '">' +
+          '<span>' + escapeHtml(day.name) + '</span>' +
+          '<div style="display:flex;gap:0.35rem">' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="add-slot-day" data-day="' + day.id + '">+ Slot</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="rename-day" data-day="' + day.id + '" title="Rename day">Rename</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="toggle-day-color" data-day="' + day.id + '" title="Toggle header color">Color</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="del-day" data-day="' + day.id + '" title="Delete day">✕</button>' +
+          '</div>' +
+        '</header>' +
+        '<table class="slot-table"><thead><tr>' +
+          '<th>Time</th><th>Status</th><th>Notes</th><th>Last Day</th><th></th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></article>';
+    }).join('');
+
+    var clients = state.workspace.clients || [];
+    var clientRows = clients.map(function (c) {
+      return '<div class="client-side__row" data-open-client="' + c.id + '">' +
+        '<div><div class="client-side__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
+        '<div class="client-side__meta">' + escapeHtml(c.sessions || '') + '</div></div>' +
+        '<span class="client-side__hours">' + escapeHtml(c.hours || '') + '</span>' +
+        '<button type="button" class="btn btn--icon btn--soft" data-action="edit-client" data-client="' + c.id + '" title="Edit"><i data-lucide="pencil"></i></button>' +
+      '</div>';
+    }).join('') || '<p class="empty" style="padding:1.25rem">No clients yet</p>';
+
+    root.innerHTML =
+      '<div class="sched-layout">' +
+        '<div class="day-stack">' + daysHtml + '</div>' +
+        '<aside class="client-side">' +
+          '<div class="client-side__header"><span>Clients</span>' +
+            '<button type="button" class="btn btn--ghost btn--sm" id="js-side-add-client">+ Add</button></div>' +
+          '<div class="client-side__list">' + clientRows + '</div>' +
+        '</aside>' +
+      '</div>';
+  }
+
+  function renderSheetView() {
+    var root = document.getElementById('js-view-sheet');
+    var board = activeBoard();
+    if (!board) {
+      root.innerHTML = '<div class="empty"><h3>No schedule board</h3></div>';
+      return;
+    }
+    var body = '';
+    (board.days || []).forEach(function (day) {
+      var colorCls = day.color === 'maroon' ? ' sheet-day-row--maroon' : '';
+      body += '<tr class="sheet-day-row' + colorCls + '"><td colspan="5">' + escapeHtml(day.name) + '</td></tr>';
+      (day.slots || []).forEach(function (slot) {
+        body += '<tr data-day="' + day.id + '" data-slot="' + slot.id + '">' +
+          '<td><input class="cell-input" data-field="time" value="' + escapeAttr(slot.time) + '" /></td>' +
+          '<td>' + renderStatusSelect(slot.status, 'data-field="status"') + '</td>' +
+          '<td><input class="cell-input" data-field="notes" value="' + escapeAttr(slot.notes) + '" /></td>' +
+          '<td><input class="cell-input" data-field="lastDay" value="' + escapeAttr(slot.lastDay) + '" /></td>' +
+          '<td><button type="button" class="btn btn--icon btn--danger" data-action="del-slot"><i data-lucide="trash-2"></i></button></td>' +
+          '</tr>';
+      });
+    });
+    root.innerHTML = '<div class="sheet-wrap"><table class="sheet-table"><thead><tr>' +
+      '<th>Appointment Time</th><th>Status</th><th>Notes</th><th>Last Day</th><th></th>' +
+      '</tr></thead><tbody>' + (body || '<tr><td colspan="5" class="empty">No rows</td></tr>') +
+      '</tbody></table></div>';
+  }
+
+  function renderClientsView() {
+    var root = document.getElementById('js-view-clients');
+    var q = (state.clientQuery || '').toLowerCase().trim();
+    var clients = (state.workspace.clients || []).filter(function (c) {
+      if (!q) return true;
+      var blob = [c.name, c.email, c.phone, c.agency, c.parents, c.sessions, c.serviceCoordinator, c.scEmail, c.medicaid]
+        .join(' ').toLowerCase();
+      return blob.indexOf(q) !== -1;
+    });
+    if (!(state.workspace.clients || []).length) {
+      root.innerHTML = '<div class="empty"><h3>No clients yet</h3><p>Add clients to build information cards with copyable email and phone.</p>' +
+        '<button type="button" class="btn btn--green" id="js-empty-add-client">+ Add client</button></div>';
+      return;
+    }
+    if (!clients.length) {
+      root.innerHTML = '<div class="empty"><h3>No matches</h3><p>Try a different search.</p></div>';
+      return;
+    }
+    root.innerHTML = '<div class="client-grid">' + clients.map(function (c) {
+      return '<article class="client-card" data-client-card="' + c.id + '">' +
+        '<div class="client-card__head">' +
+          '<div><div class="client-card__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
+          '<div class="client-card__sessions">' + escapeHtml(c.sessions || 'No session set') + '</div></div>' +
+          '<div style="display:flex;gap:0.25rem">' +
+            '<button type="button" class="btn btn--ghost btn--icon" data-action="edit-client" data-client="' + c.id + '" title="Edit"><i data-lucide="pencil"></i></button>' +
+            '<button type="button" class="btn btn--ghost btn--icon" data-action="del-client" data-client="' + c.id + '" title="Delete"><i data-lucide="trash-2"></i></button>' +
+          '</div></div>' +
+        '<div class="client-card__body">' +
+          infoRow('DOB', c.dob) +
+          infoRow('Parents', c.parents) +
+          infoRow('Medicaid #', c.medicaid, true) +
+          contactRow('Email', c.email, 'mailto') +
+          contactRow('Phone', c.phone, 'tel') +
+          infoRow('Agency', c.agency) +
+          infoRow('Service Coord.', c.serviceCoordinator) +
+          contactRow('SC Email', c.scEmail, 'mailto') +
+        '</div>' +
+        '<div class="client-card__tasks">' +
+          '<h4>Tasks to be completed</h4>' +
+          '<textarea data-client-tasks="' + c.id + '" placeholder="Add tasks…">' + escapeHtml(c.tasks || '') + '</textarea>' +
+        '</div></article>';
+    }).join('') + '</div>';
+  }
+
+  function infoRow(label, value, copyable) {
+    var v = value || '—';
+    var copy = copyable && value
+      ? '<button type="button" class="copy-btn" data-copy="' + escapeAttr(value) + '" title="Copy"><i data-lucide="copy"></i></button>'
+      : '<span></span>';
+    return '<div class="info-row"><div class="info-row__label">' + label + '</div>' +
+      '<div class="info-row__value">' + escapeHtml(v) + '</div>' + copy + '</div>';
+  }
+
+  function contactRow(label, value, scheme) {
+    if (!value) {
+      return '<div class="info-row"><div class="info-row__label">' + label + '</div>' +
+        '<div class="info-row__value">—</div><span></span></div>';
+    }
+    var href = scheme === 'tel'
+      ? 'tel:' + String(value).replace(/[^\d+]/g, '')
+      : 'mailto:' + String(value).trim();
+    return '<div class="info-row"><div class="info-row__label">' + label + '</div>' +
+      '<div class="info-row__value"><a href="' + href + '">' + escapeHtml(value) + '</a></div>' +
+      '<button type="button" class="copy-btn" data-copy="' + escapeAttr(value) + '" title="Copy"><i data-lucide="copy"></i></button></div>';
+  }
+
+  function renderDx() {
+    var list = document.getElementById('js-dx-list');
+    var codes = state.workspace.dxCodes || [];
+    list.innerHTML = codes.map(function (c) {
+      return '<span class="dx-chip">' + escapeHtml(c) + '</span>';
+    }).join('') || '<span class="dx-chip">No codes</span>';
+  }
+
+  function showLayout() {
+    var layout = state.layout;
+    document.getElementById('js-view-schedule').classList.toggle('is-hidden', layout !== 'schedule');
+    document.getElementById('js-view-sheet').classList.toggle('is-hidden', layout !== 'sheet');
+    document.getElementById('js-view-clients').classList.toggle('is-hidden', layout !== 'clients');
+    document.getElementById('js-client-search-wrap').classList.toggle('is-hidden', layout !== 'clients');
+    document.querySelectorAll('.layout-switch__btn').forEach(function (btn) {
+      btn.classList.toggle('layout-switch__btn--active', btn.getAttribute('data-layout') === layout);
+    });
+    document.getElementById('js-add-slot').style.display = layout === 'clients' ? 'none' : '';
+    document.getElementById('js-add-day').style.display = layout === 'clients' ? 'none' : '';
+  }
+
+  function renderAll() {
+    renderBoardTabs();
+    showLayout();
+    renderScheduleView();
+    renderSheetView();
+    renderClientsView();
+    renderDx();
+    iconize();
+  }
+
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function escapeAttr(str) { return escapeHtml(str); }
+
+  function findSlot(dayId, slotId) {
+    var board = activeBoard();
+    if (!board) return null;
+    var day = (board.days || []).find(function (d) { return d.id === dayId; });
+    if (!day) return null;
+    var slot = (day.slots || []).find(function (s) { return s.id === slotId; });
+    return slot ? { day: day, slot: slot } : null;
+  }
+
+  /* ─── Modal ─── */
+
+  function openModal(title, bodyHtml, mode, context) {
+    state.modalMode = mode;
+    state.modalContext = context || null;
+    document.getElementById('js-modal-title').textContent = title;
+    document.getElementById('js-modal-body').innerHTML = bodyHtml;
+    document.getElementById('js-modal').classList.remove('is-hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('js-modal').classList.add('is-hidden');
+    state.modalMode = null;
+    state.modalContext = null;
+  }
+
+  function clientFormHtml(c) {
+    c = c || {};
+    return '<div class="field"><label>Client name</label><input id="m-name" value="' + escapeAttr(c.name || '') + '" /></div>' +
+      '<div class="field-grid">' +
+        '<div class="field"><label>DOB</label><input id="m-dob" value="' + escapeAttr(c.dob || '') + '" placeholder="MM/DD/YYYY" /></div>' +
+        '<div class="field"><label>Hours</label><input id="m-hours" value="' + escapeAttr(c.hours || '') + '" placeholder="0.5" /></div>' +
+      '</div>' +
+      '<div class="field"><label>Parents</label><input id="m-parents" value="' + escapeAttr(c.parents || '') + '" /></div>' +
+      '<div class="field"><label>Medicaid #</label><input id="m-medicaid" value="' + escapeAttr(c.medicaid || '') + '" /></div>' +
+      '<div class="field-grid">' +
+        '<div class="field"><label>Email</label><input id="m-email" type="email" value="' + escapeAttr(c.email || '') + '" /></div>' +
+        '<div class="field"><label>Phone</label><input id="m-phone" value="' + escapeAttr(c.phone || '') + '" /></div>' +
+      '</div>' +
+      '<div class="field"><label>Sessions</label><input id="m-sessions" value="' + escapeAttr(c.sessions || '') + '" placeholder="Wednesday 6:30" /></div>' +
+      '<div class="field"><label>Agency</label><input id="m-agency" value="' + escapeAttr(c.agency || '') + '" /></div>' +
+      '<div class="field-grid">' +
+        '<div class="field"><label>Service Coordinator</label><input id="m-sc" value="' + escapeAttr(c.serviceCoordinator || '') + '" /></div>' +
+        '<div class="field"><label>SC Email</label><input id="m-scemail" type="email" value="' + escapeAttr(c.scEmail || '') + '" /></div>' +
+      '</div>' +
+      '<div class="field"><label>Tasks</label><textarea id="m-tasks" rows="3">' + escapeHtml(c.tasks || '') + '</textarea></div>';
+  }
+
+  function readClientForm() {
+    return {
+      name: val('m-name'),
+      dob: val('m-dob'),
+      hours: val('m-hours'),
+      parents: val('m-parents'),
+      medicaid: val('m-medicaid'),
+      email: val('m-email'),
+      phone: val('m-phone'),
+      sessions: val('m-sessions'),
+      agency: val('m-agency'),
+      serviceCoordinator: val('m-sc'),
+      scEmail: val('m-scemail'),
+      tasks: val('m-tasks')
+    };
+  }
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  function openClientEditor(clientId) {
+    var client = (state.workspace.clients || []).find(function (c) { return c.id === clientId; });
+    openModal(client ? 'Edit client' : 'Add client', clientFormHtml(client), client ? 'edit-client' : 'add-client', { id: clientId });
+  }
+
+  /* ─── Events ─── */
+
+  function onSlotFieldChange(target) {
+    var tr = target.closest('tr[data-slot]');
+    if (!tr) return;
+    var found = findSlot(tr.getAttribute('data-day'), tr.getAttribute('data-slot'));
+    if (!found) return;
+    var field = target.getAttribute('data-field');
+    if (!field) return;
+    found.slot[field] = target.value;
+    if (field === 'status') tintStatusSelect(target);
+    scheduleSave();
+  }
+
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.matches('.cell-input, .cell-select')) onSlotFieldChange(t);
+    if (t.matches('textarea[data-client-tasks]')) {
+      var id = t.getAttribute('data-client-tasks');
+      var client = state.workspace.clients.find(function (c) { return c.id === id; });
+      if (client) {
+        client.tasks = t.value;
+        scheduleSave();
+      }
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.matches('.cell-select')) onSlotFieldChange(e.target);
+  });
+
+  document.addEventListener('click', function (e) {
+    var tab = e.target.closest('[data-board]');
+    if (tab) {
+      state.activeBoardId = tab.getAttribute('data-board');
+      localStorage.setItem(BOARD_KEY, state.activeBoardId);
+      renderAll();
+      return;
+    }
+
+    var layoutBtn = e.target.closest('[data-layout]');
+    if (layoutBtn) {
+      state.layout = layoutBtn.getAttribute('data-layout');
+      localStorage.setItem(LAYOUT_KEY, state.layout);
+      renderAll();
+      return;
+    }
+
+    var copyBtn = e.target.closest('[data-copy]');
+    if (copyBtn) {
+      copyText(copyBtn.getAttribute('data-copy'));
+      return;
+    }
+
+    var actionBtn = e.target.closest('[data-action]');
+    if (actionBtn) {
+      var action = actionBtn.getAttribute('data-action');
+      var dayId = actionBtn.getAttribute('data-day') || (actionBtn.closest('[data-day]') && actionBtn.closest('[data-day]').getAttribute('data-day'));
+      var slotId = actionBtn.closest('[data-slot]') && actionBtn.closest('[data-slot]').getAttribute('data-slot');
+      var clientId = actionBtn.getAttribute('data-client');
+
+      if (action === 'del-slot' && dayId && slotId) {
+        mutate(function () {
+          var board = activeBoard();
+          var day = board.days.find(function (d) { return d.id === dayId; });
+          if (day) day.slots = day.slots.filter(function (s) { return s.id !== slotId; });
+        });
+      }
+      if (action === 'dup-slot' && dayId && slotId) {
+        mutate(function () {
+          var found = findSlot(dayId, slotId);
+          if (!found) return;
+          var copy = Object.assign({}, found.slot, { id: uid('slot') });
+          var idx = found.day.slots.findIndex(function (s) { return s.id === slotId; });
+          found.day.slots.splice(idx + 1, 0, copy);
+        });
+      }
+      if (action === 'add-slot-day' && dayId) {
+        mutate(function () {
+          var board = activeBoard();
+          var day = board.days.find(function (d) { return d.id === dayId; });
+          if (day) day.slots.push({ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' });
+        });
+      }
+      if (action === 'toggle-day-color' && dayId) {
+        mutate(function () {
+          var board = activeBoard();
+          var day = board.days.find(function (d) { return d.id === dayId; });
+          if (day) day.color = day.color === 'maroon' ? 'blue' : 'maroon';
+        });
+      }
+      if (action === 'rename-day' && dayId) {
+        var boardR = activeBoard();
+        var dayR = boardR && boardR.days.find(function (d) { return d.id === dayId; });
+        if (dayR) {
+          var newName = prompt('Day name', dayR.name);
+          if (newName) mutate(function () { dayR.name = newName.trim(); });
+        }
+      }
+      if (action === 'del-day' && dayId) {
+        if (confirm('Delete this day and all its slots?')) {
+          mutate(function () {
+            var board = activeBoard();
+            board.days = board.days.filter(function (d) { return d.id !== dayId; });
+          });
+        }
+      }
+      if (action === 'edit-client') openClientEditor(clientId);
+      if (action === 'del-client' && clientId) {
+        if (confirm('Delete this client?')) {
+          mutate(function () {
+            state.workspace.clients = state.workspace.clients.filter(function (c) { return c.id !== clientId; });
+          });
+        }
+      }
+      return;
+    }
+
+    if (e.target.closest('#js-side-add-client') || e.target.closest('#js-empty-add-client')) {
+      openClientEditor(null);
+      return;
+    }
+    if (e.target.closest('#js-seed-days')) {
+      mutate(function () {
+        var board = activeBoard();
+        board.days = defaultBoard().days;
+      });
+    }
+    if (e.target.closest('[data-open-client]')) {
+      var row = e.target.closest('[data-open-client]');
+      if (!e.target.closest('button')) openClientEditor(row.getAttribute('data-open-client'));
+    }
+  });
+
+  document.getElementById('js-add-board').addEventListener('click', function () {
+    var name = prompt('Board name', 'New Schedule');
+    if (!name) return;
+    mutate(function () {
+      var board = defaultBoard(name.trim());
+      state.workspace.boards.push(board);
+      state.activeBoardId = board.id;
+      localStorage.setItem(BOARD_KEY, board.id);
+    });
+  });
+
+  document.getElementById('js-rename-board').addEventListener('click', function () {
+    var board = activeBoard();
+    if (!board) return;
+    var name = prompt('Rename board', board.name);
+    if (!name) return;
+    mutate(function () { board.name = name.trim(); });
+  });
+
+  document.getElementById('js-delete-board').addEventListener('click', function () {
+    if (state.workspace.boards.length <= 1) {
+      toast('Keep at least one board');
+      return;
+    }
+    var board = activeBoard();
+    if (!board || !confirm('Delete “‘ + board.name + ’”?')) return;
+    mutate(function () {
+      state.workspace.boards = state.workspace.boards.filter(function (b) { return b.id !== board.id; });
+      state.activeBoardId = state.workspace.boards[0].id;
+      localStorage.setItem(BOARD_KEY, state.activeBoardId);
+    });
+  });
+
+  document.getElementById('js-add-slot').addEventListener('click', function () {
+    var board = activeBoard();
+    if (!board || !board.days.length) {
+      toast('Add days to this board first');
+      return;
+    }
+    var names = board.days.map(function (d, i) { return (i + 1) + '. ' + d.name; }).join('\n');
+    var pick = prompt('Add slot to which day?\n' + names, '1');
+    var idx = (parseInt(pick, 10) || 1) - 1;
+    var day = board.days[idx];
+    if (!day) return;
+    mutate(function () {
+      day.slots.push({ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' });
+    });
+  });
+
+  document.getElementById('js-add-day').addEventListener('click', function () {
+    var board = activeBoard();
+    if (!board) return;
+    var name = prompt('Day name', 'Saturday');
+    if (!name) return;
+    mutate(function () {
+      board.days.push({
+        id: uid('day'),
+        name: name.trim(),
+        color: board.days.length % 2 ? 'maroon' : 'blue',
+        slots: [{ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' }]
+      });
+    });
+  });
+
+  document.getElementById('js-client-search').addEventListener('input', function (e) {
+    state.clientQuery = e.target.value || '';
+    renderClientsView();
+    iconize();
+  });
+
+  document.getElementById('js-edit-dx').addEventListener('click', function () {
+    openModal(
+      'Edit diagnostic codes',
+      '<div class="field"><label>One code per line</label><textarea id="m-dx" rows="10">' +
+        escapeHtml((state.workspace.dxCodes || []).join('\n')) + '</textarea></div>',
+      'edit-dx',
+      null
+    );
+  });
+
+  document.getElementById('js-add-client').addEventListener('click', function () {
+    openClientEditor(null);
+  });
+
+  document.getElementById('js-modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('js-modal').addEventListener('click', function (e) {
+    if (e.target.id === 'js-modal') closeModal();
+  });
+  document.getElementById('js-modal-save').addEventListener('click', function () {
+    if (state.modalMode === 'add-client' || state.modalMode === 'edit-client') {
+      var data = readClientForm();
+      if (!data.name) { toast('Name is required'); return; }
+      mutate(function () {
+        if (state.modalMode === 'edit-client' && state.modalContext && state.modalContext.id) {
+          var existing = state.workspace.clients.find(function (c) { return c.id === state.modalContext.id; });
+          if (existing) Object.assign(existing, data);
+        } else {
+          state.workspace.clients.push(Object.assign({ id: uid('client') }, data));
+        }
+      });
+      closeModal();
+      toast('Client saved');
+    }
+    if (state.modalMode === 'edit-dx') {
+      var raw = val('m-dx');
+      mutate(function () {
+        state.workspace.dxCodes = raw.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+      });
+      closeModal();
+      toast('Codes updated');
+    }
+  });
+
+  document.getElementById('js-export').addEventListener('click', function () {
+    var blob = new Blob([JSON.stringify(state.workspace, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'emme-schedule-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('js-import').addEventListener('click', function () {
+    document.getElementById('js-import-file').click();
+  });
+  document.getElementById('js-import-file').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(reader.result);
+        if (!parsed || !Array.isArray(parsed.boards)) throw new Error('Invalid file');
+        mutate(function () {
+          state.workspace = {
+            version: parsed.version || 1,
+            updatedAt: new Date().toISOString(),
+            boards: parsed.boards,
+            clients: parsed.clients || [],
+            dxCodes: parsed.dxCodes || DEFAULT_DX.slice()
+          };
+          state.activeBoardId = state.workspace.boards[0] && state.workspace.boards[0].id;
+        });
+        toast('Imported');
+      } catch (err) {
+        toast('Import failed');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  if (bc) {
+    bc.onmessage = function (ev) {
+      if (!ev.data || ev.data.type !== 'workspace') return;
+      if (state.dirty || state.saving) return;
+      var local = loadLocal();
+      if (local && local.updatedAt === ev.data.updatedAt) {
+        state.workspace = local;
+        renderAll();
+      }
+    };
+  }
+
+  async function init() {
+    setSyncLabel('Connecting…', 'local');
+    var local = loadLocal();
+    try {
+      var cloud = await loadCloud();
+      if (cloud.configured) {
+        state.cloudConfigured = true;
+        if (cloud.workspace && (cloud.workspace.boards || []).length) {
+          state.workspace = cloud.workspace;
+        } else if (local && (local.boards || []).length) {
+          state.workspace = local;
+          await persist();
+        } else {
+          state.workspace = seedWorkspace();
+          await persist();
+        }
+        state.lastRemoteUpdatedAt = state.workspace.updatedAt;
+        saveLocal(state.workspace);
+        setSyncLabel('Live sync on', 'live');
+        state.pollTimer = setInterval(pollMeta, POLL_MS);
+      } else {
+        state.cloudConfigured = false;
+        state.workspace = (local && local.boards && local.boards.length) ? local : seedWorkspace();
+        saveLocal(state.workspace);
+        setSyncLabel('Saved on this device', 'local');
+      }
+    } catch (_) {
+      state.cloudConfigured = false;
+      state.workspace = (local && local.boards && local.boards.length) ? local : seedWorkspace();
+      saveLocal(state.workspace);
+      setSyncLabel('Saved on this device', 'local');
+    }
+
+    if (!state.activeBoardId || !state.workspace.boards.some(function (b) { return b.id === state.activeBoardId; })) {
+      state.activeBoardId = state.workspace.boards[0].id;
+      localStorage.setItem(BOARD_KEY, state.activeBoardId);
+    }
+    renderAll();
+  }
+
+  init();
+})();
+  </script>
+</body>
+</html>
