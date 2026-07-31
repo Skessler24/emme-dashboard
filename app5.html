@@ -1,17 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Emme Schedule & Caseload — live weekly schedules and client info" />
   <title>Emme — Schedule &amp; Caseload</title>
-  <meta name="emme-build" content="2026-07-30-client-sync" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/lucide@latest" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --green: #084339;
@@ -218,6 +215,28 @@
     }
     .slot-actions { display: flex; gap: 0.2rem; opacity: 0.35; }
     tr:hover .slot-actions { opacity: 1; }
+    .col-drag { width: 2rem; text-align: center; }
+    .drag-handle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 1.55rem; height: 1.55rem; border-radius: 0.35rem;
+      color: var(--muted); cursor: grab; touch-action: none;
+    }
+    .drag-handle:hover { color: var(--green); background: rgba(8,67,57,0.07); }
+    .drag-handle:active, tr.is-dragging .drag-handle { cursor: grabbing; }
+    tr.is-dragging { opacity: 0.45; }
+    tr.drop-before td { box-shadow: inset 0 2px 0 0 var(--yellow); }
+    tr.drop-after td { box-shadow: inset 0 -2px 0 0 var(--yellow); }
+    .slot-link {
+      margin-top: 0.25rem; padding: 0.3rem 0.45rem;
+      background: rgba(8,67,57,0.05); border-radius: 0.4rem;
+      font-size: 0.72rem; color: var(--muted); line-height: 1.35;
+      display: flex; flex-wrap: wrap; gap: 0.35rem 0.65rem; align-items: center;
+    }
+    .slot-link button {
+      color: var(--green); font-weight: 700; text-decoration: underline;
+      text-underline-offset: 2px; font-size: 0.72rem;
+    }
+    .slot-link--empty { display: none; }
 
     .client-side {
       background: var(--surface); border: 1px solid var(--border);
@@ -263,87 +282,7 @@
       padding: 0.35rem 0.5rem; border-bottom: 1px solid rgba(8,67,57,0.07);
     }
 
-    .sched-orient-vertical { display: flex; flex-direction: column; gap: 1rem; }
-    .sched-orient-horizontal {
-      display: flex; flex-direction: row; gap: 1rem;
-      overflow-x: auto; padding-bottom: 0.5rem; align-items: flex-start;
-    }
-    .sched-orient-horizontal .day-block {
-      min-width: min(560px, 88vw); flex: 0 0 auto;
-    }
-    .unified-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; table-layout: fixed; }
-    .unified-table th {
-      text-align: left; padding: 0.5rem 0.45rem;
-      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em;
-      color: #fff; background: var(--green); cursor: pointer; user-select: none;
-      border-right: 1px solid rgba(255,255,255,0.15);
-    }
-    .unified-table th:hover { filter: brightness(1.08); }
-    .unified-table th .th-hint {
-      display: block; font-size: 0.62rem; opacity: 0.75; font-weight: 500;
-      text-transform: none; letter-spacing: 0;
-    }
-    .unified-table td {
-      padding: 0.35rem 0.4rem; border-bottom: 1px solid rgba(8,67,57,0.07);
-      vertical-align: top; border-right: 1px solid rgba(8,67,57,0.05);
-    }
-    .unified-table textarea.cell-input {
-      min-height: 3.2rem; resize: vertical; line-height: 1.4; white-space: pre-wrap;
-    }
-    .col-collapsed { width: 2.15rem !important; max-width: 2.15rem !important; }
-    .col-collapsed .th-label,
-    .col-collapsed .th-hint,
-    .col-collapsed .cell-input,
-    .col-collapsed .cell-select,
-    .col-collapsed textarea { display: none !important; }
-    .col-tick { display: none; }
-    .col-collapsed .col-tick {
-      display: block; text-align: center; font-weight: 700;
-      writing-mode: vertical-rl; transform: rotate(180deg);
-      margin: 0.35rem auto; font-size: 0.68rem; letter-spacing: 0.05em;
-    }
-    th.col-collapsed .col-tick { color: #fff; }
-    td.col-collapsed .col-tick { color: var(--green); }
-    .col-time { width: 7.5rem; }
-    .col-status { width: 10.5rem; }
-    .col-clientName { width: 11.5rem; }
-    .col-clientInfo { width: auto; }
-    .col-lastDay { width: 7.5rem; }
-    .col-actions { width: 4.5rem; }
-    .col-drag { width: 2rem; text-align: center; }
-    .drag-handle {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 1.6rem; height: 1.6rem; border-radius: 0.35rem;
-      color: var(--muted); cursor: grab; touch-action: none;
-    }
-    .drag-handle:hover { color: var(--green); background: rgba(8,67,57,0.07); }
-    .drag-handle:active, tr.is-dragging .drag-handle { cursor: grabbing; }
-    tr.is-dragging { opacity: 0.45; background: rgba(8,67,57,0.04); }
-    tr.drop-before td { box-shadow: inset 0 2px 0 0 var(--yellow); }
-    tr.drop-after td { box-shadow: inset 0 -2px 0 0 var(--yellow); }
-    tbody.drop-empty { outline: 2px dashed var(--yellow); outline-offset: -2px; }
-
     /* Clients layout */
-    .clients-panel {
-      margin-top: 1.75rem;
-      padding-top: 1.25rem;
-      border-top: 1px solid var(--border);
-    }
-    .clients-panel__head {
-      display: flex; flex-wrap: wrap; gap: 0.75rem;
-      align-items: flex-end; justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-    .clients-panel__hint {
-      margin: 0.25rem 0 0; font-size: 0.8rem; color: var(--muted); max-width: 36rem;
-    }
-    .clients-panel__actions {
-      display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;
-    }
-    .clients-panel__actions input[type="search"] {
-      min-width: 11rem; padding: 0.4rem 0.65rem;
-      border: 1px solid var(--border); border-radius: 0.5rem; background: #fff;
-    }
     .client-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -388,48 +327,6 @@
     }
     .client-card__tasks textarea:focus { outline: none; }
 
-    .caseload-sheet {
-      width: 100%; border-collapse: collapse; background: var(--surface);
-      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
-      box-shadow: var(--shadow); table-layout: fixed;
-    }
-    .caseload-sheet th {
-      text-align: left; padding: 0.65rem 0.85rem; font-size: 0.75rem;
-      letter-spacing: 0.04em; text-transform: uppercase; color: #fff;
-    }
-    .caseload-sheet th.col-client { background: #1e3a5f; width: 22%; }
-    .caseload-sheet th.col-info { background: #245E4D; width: 48%; }
-    .caseload-sheet th.col-tasks { background: #6b4a6e; width: 24%; }
-    .caseload-sheet th.col-actions { background: #1e3a5f; width: 6%; }
-    .caseload-sheet td {
-      padding: 0.55rem 0.65rem; border-bottom: 1px solid rgba(8,67,57,0.08);
-      vertical-align: top;
-    }
-    .caseload-sheet tr:hover td { background: rgba(8,67,57,0.025); }
-    .caseload-name {
-      width: 100%; border: 1px solid transparent; background: transparent;
-      font-weight: 700; color: var(--green); padding: 0.35rem 0.4rem;
-      border-radius: 0.4rem;
-    }
-    .caseload-info, .caseload-tasks {
-      width: 100%; border: 1px solid transparent; background: transparent;
-      color: var(--body); padding: 0.35rem 0.4rem; border-radius: 0.4rem;
-      min-height: 6.5rem; resize: vertical; line-height: 1.45; font-size: 0.84rem;
-      white-space: pre-wrap; font-family: var(--font-body);
-    }
-    .caseload-name:hover, .caseload-info:hover, .caseload-tasks:hover {
-      border-color: var(--border); background: #fff;
-    }
-    .caseload-name:focus, .caseload-info:focus, .caseload-tasks:focus {
-      outline: none; border-color: var(--green-light); background: #fff;
-      box-shadow: 0 0 0 3px rgba(8,67,57,0.08);
-    }
-    .caseload-meta {
-      margin-top: 0.35rem; font-size: 0.75rem; color: var(--muted);
-      display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem;
-    }
-    .caseload-meta a { color: var(--green-mid); font-weight: 600; }
-
     .empty {
       text-align: center; padding: 2.5rem 1rem; color: var(--muted);
     }
@@ -444,7 +341,7 @@
     }
     .modal__panel {
       background: var(--surface); border-radius: 1rem;
-      width: min(640px, 100%); max-height: 90vh; overflow: auto;
+      width: min(520px, 100%); max-height: 90vh; overflow: auto;
       box-shadow: 0 16px 48px rgba(8,67,57,0.25); padding: 1.25rem;
     }
     .modal__title {
@@ -506,47 +403,6 @@
     .cell-select.status-tint--closed { background: #6b2d3c; color: #fff; }
     .cell-select.status-tint--blank { background: transparent; }
 
-    .upload-drop {
-      border: 2px dashed rgba(8,67,57,0.22);
-      border-radius: 0.85rem;
-      padding: 1.25rem;
-      text-align: center;
-      background: rgba(8,67,57,0.03);
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .upload-drop:hover, .upload-drop--active {
-      border-color: var(--green-light);
-      background: rgba(8,67,57,0.06);
-    }
-    .upload-drop strong { color: var(--green); display: block; margin-bottom: 0.25rem; }
-    .upload-drop p { font-size: 0.82rem; color: var(--muted); }
-    .upload-preview {
-      margin-top: 0.85rem; padding: 0.75rem;
-      background: rgba(8,67,57,0.04); border-radius: 0.55rem;
-      font-size: 0.84rem; max-height: 220px; overflow: auto;
-    }
-    .upload-preview ul { padding-left: 1.1rem; margin-top: 0.35rem; }
-    .upload-mode {
-      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.85rem;
-    }
-    .upload-mode label {
-      display: inline-flex; align-items: center; gap: 0.35rem;
-      padding: 0.4rem 0.7rem; border-radius: 0.5rem;
-      border: 1px solid var(--border); cursor: pointer; font-size: 0.82rem; font-weight: 600;
-    }
-    .upload-mode input { accent-color: var(--green); }
-    .upload-busy {
-      display: inline-flex; align-items: center; gap: 0.45rem;
-      color: var(--green); font-weight: 600; font-size: 0.85rem; margin-top: 0.75rem;
-    }
-    .spin {
-      width: 0.9rem; height: 0.9rem; border-radius: 50%;
-      border: 2px solid rgba(8,67,57,0.2); border-top-color: var(--green);
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
     [data-lucide] { width: 1rem; height: 1rem; display: block; }
     .icon-sm [data-lucide], .icon-sm { width: 0.9rem; height: 0.9rem; }
   </style>
@@ -562,13 +418,9 @@
         <span id="js-sync-label">Loading…</span>
       </span>
       <button type="button" class="btn btn--ghost" id="js-export" title="Export JSON backup">Export</button>
-      <button type="button" class="btn btn--ghost" id="js-import" title="Import Excel, CSV, JSON, or other files">Import</button>
-      <!-- No accept= — Windows “Custom Files” / JSON-only filter comes from accept=".json" -->
+      <button type="button" class="btn btn--ghost" id="js-import" title="Import backup or spreadsheet">Import</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
-      <button type="button" class="btn btn--yellow" id="js-upload" title="Upload a caseload or schedule file">
-        <i data-lucide="upload"></i> Upload
-      </button>
-      <a class="btn btn--ghost" href="index.html">← Dashboard</a>
+      <a class="btn btn--yellow" href="index.html">← Dashboard</a>
     </div>
   </header>
 
@@ -581,40 +433,30 @@
         <button type="button" class="btn btn--danger btn--sm" id="js-delete-board" title="Delete board">Delete</button>
       </div>
       <div class="toolbar__right">
-        <div class="layout-switch" role="group" aria-label="Orientation">
-          <button type="button" class="layout-switch__btn layout-switch__btn--active" data-orient="vertical" id="js-orient-vertical">
-            <i data-lucide="rows-3"></i> Vertical
+        <div class="layout-switch" role="group" aria-label="Layout">
+          <button type="button" class="layout-switch__btn layout-switch__btn--active" data-layout="schedule" id="js-layout-schedule">
+            <i data-lucide="calendar-days"></i> Schedule
           </button>
-          <button type="button" class="layout-switch__btn" data-orient="horizontal" id="js-orient-horizontal">
-            <i data-lucide="columns-3"></i> Horizontal
+          <button type="button" class="layout-switch__btn" data-layout="sheet" id="js-layout-sheet">
+            <i data-lucide="table-2"></i> Spreadsheet
+          </button>
+          <button type="button" class="layout-switch__btn" data-layout="clients" id="js-layout-clients">
+            <i data-lucide="users"></i> Clients
           </button>
         </div>
-        <button type="button" class="btn btn--soft btn--sm" id="js-expand-cols" title="Expand all columns">Expand cols</button>
         <button type="button" class="btn btn--green btn--sm" id="js-add-slot">+ Slot</button>
         <button type="button" class="btn btn--soft btn--sm" id="js-add-day">+ Day</button>
+        <button type="button" class="btn btn--soft btn--sm" id="js-add-client">+ Client</button>
       </div>
     </div>
 
-    <div class="search-bar" id="js-schedule-search-wrap">
-      <input type="search" id="js-schedule-search" placeholder="Search by client name or info…" aria-label="Search schedule" />
+    <div class="search-bar is-hidden" id="js-client-search-wrap">
+      <input type="search" id="js-client-search" placeholder="Search clients by name, email, phone, agency…" aria-label="Search clients" />
     </div>
 
-    <div id="js-view-main"></div>
-
-    <section class="clients-panel" id="js-clients-panel" aria-label="Caseload clients">
-      <div class="clients-panel__head">
-        <div>
-          <h3 style="margin:0">Caseload</h3>
-          <p class="clients-panel__hint">Info on these tiles fills matching Client Info cells in the schedule (by name).</p>
-        </div>
-        <div class="clients-panel__actions">
-          <input type="search" id="js-client-search" placeholder="Search clients…" aria-label="Search clients" />
-          <button type="button" class="btn btn--soft btn--sm" id="js-sync-clients" title="Fill empty schedule Client Info from matching clients">Fill schedule</button>
-          <button type="button" class="btn btn--green btn--sm" id="js-add-client">+ Client</button>
-        </div>
-      </div>
-      <div class="client-grid" id="js-clients-grid"></div>
-    </section>
+    <div id="js-view-schedule"></div>
+    <div id="js-view-sheet" class="is-hidden"></div>
+    <div id="js-view-clients" class="is-hidden"></div>
 
     <section class="dx-panel" id="js-dx-panel" aria-label="Diagnostic codes">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
@@ -643,27 +485,10 @@
   'use strict';
 
   var STORAGE_KEY = 'emme_schedule_workspace_v1';
-  var ORIENT_KEY = 'emme_schedule_orient';
-  var COLLAPSE_KEY = 'emme_schedule_collapsed_cols';
+  var LAYOUT_KEY = 'emme_schedule_layout';
   var BOARD_KEY = 'emme_schedule_board';
   var POLL_MS = 6000;
   var SAVE_DEBOUNCE_MS = 700;
-
-  var SCHEDULE_COLS = [
-    { id: 'time', label: 'Appointment Time', abr: 'Time' },
-    { id: 'status', label: 'Status', abr: 'Status' },
-    { id: 'clientName', label: 'Client Name', abr: 'Name' },
-    { id: 'clientInfo', label: 'Client Info', abr: 'Info' },
-    { id: 'lastDay', label: 'Last Day', abr: 'Last' }
-  ];
-
-  function loadCollapsedCols() {
-    try {
-      var raw = localStorage.getItem(COLLAPSE_KEY);
-      if (raw) return JSON.parse(raw) || {};
-    } catch (_) {}
-    return {};
-  }
 
   var STATUS_OPTIONS = [
     { value: '', label: '—', cls: 'blank' },
@@ -694,10 +519,8 @@
   var state = {
     workspace: null,
     cloudConfigured: false,
-    orientation: localStorage.getItem(ORIENT_KEY) || 'vertical',
-    collapsedCols: loadCollapsedCols(),
+    layout: localStorage.getItem(LAYOUT_KEY) || 'schedule',
     activeBoardId: localStorage.getItem(BOARD_KEY) || '',
-    scheduleQuery: '',
     clientQuery: '',
     saving: false,
     dirty: false,
@@ -767,7 +590,7 @@
     };
     days.forEach(function (day) {
       (starterTimes[day.name] || []).forEach(function (time) {
-        day.slots.push({ id: uid('slot'), time: time, status: '', clientName: '', clientInfo: '', notes: '', lastDay: '' });
+        day.slots.push({ id: uid('slot'), time: time, status: '', notes: '', lastDay: '' });
       });
     });
     return { id: uid('board'), name: name || 'Current Schedule', days: days };
@@ -781,7 +604,7 @@
         defaultBoard('Current Schedule'),
         { id: uid('board'), name: "Summer '26 Schedule", days: defaultBoard().days.map(function (d) {
           return { id: uid('day'), name: d.name, color: d.color, slots: d.slots.map(function (s) {
-            return { id: uid('slot'), time: s.time, status: '', clientName: '', clientInfo: '', notes: '', lastDay: '' };
+            return { id: uid('slot'), time: s.time, status: '', notes: '', lastDay: '' };
           }) };
         }) },
         { id: uid('board'), name: 'Clients not in regular spot', days: [] }
@@ -860,7 +683,7 @@
       if (data.updatedAt && state.lastRemoteUpdatedAt && data.updatedAt !== state.lastRemoteUpdatedAt) {
         var loaded = await loadCloud();
         if (loaded.configured && loaded.workspace) {
-          setWorkspace(loaded.workspace);
+          state.workspace = loaded.workspace;
           state.lastRemoteUpdatedAt = loaded.workspace.updatedAt;
           saveLocal(state.workspace);
           renderAll();
@@ -887,7 +710,7 @@
       if (state.cloudConfigured) {
         var result = await saveCloud(state.workspace);
         if (result.configured && result.workspace) {
-          setWorkspace(result.workspace);
+          state.workspace = result.workspace;
           state.lastRemoteUpdatedAt = result.workspace.updatedAt;
           saveLocal(state.workspace);
           setSyncLabel('Live sync on', 'live');
@@ -943,10 +766,6 @@
     el.classList.add('status-tint--' + statusClass(el.value));
   }
 
-  function slotClientName(slot) {
-    return String((slot && (slot.clientName || slot.notes)) || '').trim();
-  }
-
   function normalizePersonName(name) {
     return String(name || '')
       .toLowerCase()
@@ -972,122 +791,81 @@
     return null;
   }
 
-  function slotClientInfo(slot) {
-    if (!slot) return '';
-    if (slot.clientInfo && String(slot.clientInfo).trim()) return String(slot.clientInfo);
-    var match = findClientByName(slotClientName(slot));
-    return match ? formatInformationCard(match) : '';
+  function slotLinkedClientHtml(slot) {
+    var match = findClientByName(slot && slot.notes);
+    if (!match) return '';
+    var bits = [];
+    if (match.dob) bits.push('DOB ' + escapeHtml(match.dob));
+    if (match.email) bits.push(escapeHtml(match.email));
+    if (match.phone) bits.push(escapeHtml(match.phone));
+    if (match.sessions) bits.push(escapeHtml(match.sessions));
+    return '<div class="slot-link">' +
+      '<button type="button" data-open-client="' + escapeAttr(match.id) + '" title="Open client card">' +
+        escapeHtml(match.name) + '</button>' +
+      (bits.length ? '<span>' + bits.join(' · ') + '</span>' : '<span>Linked from Clients</span>') +
+      '</div>';
   }
 
-  /** Push caseload tile info into schedule rows with the same client name. */
-  function syncClientInfoToSlots(client, opts) {
-    opts = opts || {};
-    var force = !!opts.force;
-    if (!client || !state.workspace) return 0;
-    var key = normalizePersonName(client.name);
-    if (!key) return 0;
-    var info = formatInformationCard(client);
-    var count = 0;
-    (state.workspace.boards || []).forEach(function (board) {
-      (board.days || []).forEach(function (day) {
-        (day.slots || []).forEach(function (slot) {
-          if (normalizePersonName(slotClientName(slot)) !== key) return;
-          var existing = String(slot.clientInfo || '').trim();
-          if (force || !existing) {
-            slot.clientInfo = info;
-            count += 1;
-          }
-        });
-      });
-    });
-    return count;
+  function findDayById(dayId) {
+    var board = activeBoard();
+    if (!board) return null;
+    return (board.days || []).find(function (d) { return d.id === dayId; }) || null;
   }
 
-  function syncAllClientsToSchedule(opts) {
-    var total = 0;
-    (state.workspace.clients || []).forEach(function (c) {
-      total += syncClientInfoToSlots(c, opts);
-    });
-    return total;
-  }
-
-  function applyClientNameToSlot(slot, name) {
-    slot.clientName = name;
-    slot.notes = name;
-    var match = findClientByName(name);
-    if (!match) return;
-    var info = formatInformationCard(match);
-    if (!info) return;
-    // Fill empty info, or refresh if it still matches the previous auto card for this client
-    var existing = String(slot.clientInfo || '').trim();
-    if (!existing || existing === info) {
-      slot.clientInfo = info;
+  function moveSlot(fromDayId, slotId, toDayId, beforeSlotId) {
+    if (!fromDayId || !slotId || !toDayId) return false;
+    var fromDay = findDayById(fromDayId);
+    var toDay = findDayById(toDayId);
+    if (!fromDay || !toDay) return false;
+    var fromIdx = (fromDay.slots || []).findIndex(function (s) { return s.id === slotId; });
+    if (fromIdx < 0) return false;
+    if (fromDayId === toDayId && beforeSlotId === slotId) return false;
+    if (fromDayId === toDayId && beforeSlotId) {
+      var beforeIdx = fromDay.slots.findIndex(function (s) { return s.id === beforeSlotId; });
+      if (beforeIdx === fromIdx || beforeIdx === fromIdx + 1) return false;
     }
-  }
-
-  function colClass(id) {
-    return 'col-' + id + (state.collapsedCols[id] ? ' col-collapsed' : '');
-  }
-
-  function renderColHeaders() {
-    return '<th class="col-drag" title="Drag rows to reorder"></th>' + SCHEDULE_COLS.map(function (col) {
-      return '<th class="' + colClass(col.id) + '" data-collapse-col="' + col.id + '" title="Click to collapse/expand">' +
-        '<span class="th-label">' + escapeHtml(col.label) + '</span>' +
-        '<span class="th-hint">click to collapse</span>' +
-        '<span class="col-tick">' + escapeHtml(col.abr) + '</span>' +
-      '</th>';
-    }).join('') + '<th class="col-actions"></th>';
-  }
-
-  function renderSlotRow(day, slot) {
-    var q = (state.scheduleQuery || '').toLowerCase().trim();
-    var name = slotClientName(slot);
-    var info = slotClientInfo(slot);
-    if (q) {
-      var blob = [slot.time, slot.status, name, info, slot.lastDay].join(' ').toLowerCase();
-      if (blob.indexOf(q) === -1) return '';
+    if (fromDayId === toDayId && !beforeSlotId && fromIdx === fromDay.slots.length - 1) return false;
+    var slot = fromDay.slots.splice(fromIdx, 1)[0];
+    if (beforeSlotId) {
+      var insertAt = toDay.slots.findIndex(function (s) { return s.id === beforeSlotId; });
+      if (insertAt < 0) toDay.slots.push(slot);
+      else toDay.slots.splice(insertAt, 0, slot);
+    } else {
+      toDay.slots.push(slot);
     }
-    return '<tr data-day="' + day.id + '" data-slot="' + slot.id + '">' +
-      '<td class="col-drag">' +
-        '<span class="drag-handle" draggable="true" data-drag-handle title="Drag to reorder" aria-label="Drag to reorder" role="button" tabindex="0">' +
-          '<i data-lucide="grip-vertical"></i>' +
-        '</span>' +
-      '</td>' +
-      '<td class="' + colClass('time') + '"><input class="cell-input" data-field="time" value="' + escapeAttr(slot.time || '') + '" placeholder="4:30 PM" /><span class="col-tick">Time</span></td>' +
-      '<td class="' + colClass('status') + '">' + renderStatusSelect(slot.status || '', 'data-field="status"') + '<span class="col-tick">Status</span></td>' +
-      '<td class="' + colClass('clientName') + '"><input class="cell-input" data-field="clientName" value="' + escapeAttr(name) + '" placeholder="Client name" /><span class="col-tick">Name</span></td>' +
-      '<td class="' + colClass('clientInfo') + '"><textarea class="cell-input" data-field="clientInfo" placeholder="DOB, parents, email, phone…">' + escapeHtml(info) + '</textarea><span class="col-tick">Info</span></td>' +
-      '<td class="' + colClass('lastDay') + '"><input class="cell-input" data-field="lastDay" value="' + escapeAttr(slot.lastDay || '') + '" placeholder="Last day" /><span class="col-tick">Last</span></td>' +
-      '<td class="col-actions"><div class="slot-actions">' +
-        '<button type="button" class="btn btn--icon btn--soft" data-action="dup-slot" title="Duplicate"><i data-lucide="copy"></i></button>' +
-        '<button type="button" class="btn btn--icon btn--danger" data-action="del-slot" title="Delete"><i data-lucide="trash-2"></i></button>' +
-      '</div></td></tr>';
+    return true;
   }
 
-  function renderDayBlock(day) {
-    var color = day.color === 'maroon' ? 'maroon' : 'blue';
-    var rows = (day.slots || []).map(function (slot) { return renderSlotRow(day, slot); }).join('');
-    if (!rows && state.scheduleQuery) return '';
-    return '<article class="day-block" data-day-block="' + day.id + '">' +
-      '<header class="day-block__header day-block__header--' + color + '">' +
-        '<span>' + escapeHtml(day.name) + '</span>' +
-        '<div style="display:flex;gap:0.35rem;flex-wrap:wrap">' +
-          '<button type="button" class="btn btn--ghost btn--sm" data-action="add-slot-day" data-day="' + day.id + '">+ Slot</button>' +
-          '<button type="button" class="btn btn--ghost btn--sm" data-action="rename-day" data-day="' + day.id + '">Rename</button>' +
-          '<button type="button" class="btn btn--ghost btn--sm" data-action="toggle-day-color" data-day="' + day.id + '">Color</button>' +
-          '<button type="button" class="btn btn--ghost btn--sm" data-action="del-day" data-day="' + day.id + '">✕</button>' +
-        '</div>' +
-      '</header>' +
-      '<div class="sheet-wrap" style="border:none;border-radius:0;box-shadow:none">' +
-        '<table class="unified-table"><thead><tr>' + renderColHeaders() + '</tr></thead>' +
-        '<tbody data-drop-day="' + day.id + '">' +
-          (rows || '<tr class="empty-row"><td colspan="7" style="padding:0.85rem;color:var(--muted)">No slots — use + Slot, or drag a row here</td></tr>') +
-        '</tbody></table></div></article>';
+  function dragHandleHtml() {
+    return '<td class="col-drag">' +
+      '<span class="drag-handle" draggable="true" data-drag-handle title="Drag to reorder" aria-label="Drag to reorder" role="button" tabindex="0">' +
+        '<i data-lucide="grip-vertical"></i>' +
+      '</span></td>';
   }
 
-  function renderUnifiedSchedule() {
-    var root = document.getElementById('js-view-main');
-    if (!root) return;
+  function renderClientSidebarHtml() {
+    var clients = state.workspace.clients || [];
+    var clientRows = clients.map(function (c) {
+      return '<div class="client-side__row" data-open-client="' + c.id + '">' +
+        '<div><div class="client-side__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
+        '<div class="client-side__meta">' + escapeHtml(c.sessions || '') + '</div></div>' +
+        '<span class="client-side__hours">' + escapeHtml(c.hours || '') + '</span>' +
+        '<button type="button" class="btn btn--icon btn--soft" data-action="edit-client" data-client="' + c.id + '" title="Edit"><i data-lucide="pencil"></i></button>' +
+      '</div>';
+    }).join('') || '<p class="empty" style="padding:1.25rem">No clients yet — add some, or open the Clients tab</p>';
+
+    return '<aside class="client-side">' +
+      '<div class="client-side__header"><span>Clients</span>' +
+        '<button type="button" class="btn btn--ghost btn--sm" id="js-side-add-client">+ Add</button></div>' +
+      '<div class="client-side__list">' + clientRows + '</div>' +
+      '<p style="padding:0.65rem 0.85rem;font-size:0.72rem;color:var(--muted);border-top:1px solid var(--border);margin:0">' +
+        'Full info cards with copyable email/phone live in the <strong>Clients</strong> tab.' +
+      '</p>' +
+    '</aside>';
+  }
+
+  function renderScheduleView() {
+    var root = document.getElementById('js-view-schedule');
     var board = activeBoard();
     if (!board) {
       root.innerHTML = '<div class="empty"><h3>No schedule board</h3><p>Add a board to get started.</p></div>';
@@ -1098,84 +876,175 @@
         '<button type="button" class="btn btn--green" id="js-seed-days">Add Mon–Fri days</button></div>';
       return;
     }
-    var orient = state.orientation === 'horizontal' ? 'horizontal' : 'vertical';
-    var blocks = board.days.map(renderDayBlock).filter(Boolean).join('');
-    root.innerHTML = '<div class="sched-orient-' + orient + '">' +
-      (blocks || '<div class="empty"><h3>No matches</h3><p>Try a different search.</p></div>') +
-      '</div>';
 
-    document.querySelectorAll('.layout-switch__btn[data-orient]').forEach(function (btn) {
-      btn.classList.toggle('layout-switch__btn--active', btn.getAttribute('data-orient') === orient);
+    var daysHtml = board.days.map(function (day) {
+      var color = day.color === 'maroon' ? 'maroon' : 'blue';
+      var rows = (day.slots || []).map(function (slot) {
+        return '<tr data-day="' + day.id + '" data-slot="' + slot.id + '">' +
+          dragHandleHtml() +
+          '<td style="width:7.5rem"><input class="cell-input" data-field="time" value="' + escapeAttr(slot.time) + '" /></td>' +
+          '<td style="width:11rem">' + renderStatusSelect(slot.status, 'data-field="status"') + '</td>' +
+          '<td><input class="cell-input" data-field="notes" value="' + escapeAttr(slot.notes) + '" placeholder="Client / notes" />' +
+            slotLinkedClientHtml(slot) + '</td>' +
+          '<td style="width:8rem"><input class="cell-input" data-field="lastDay" value="' + escapeAttr(slot.lastDay) + '" placeholder="Last day" /></td>' +
+          '<td style="width:4.5rem"><div class="slot-actions">' +
+            '<button type="button" class="btn btn--icon btn--soft" data-action="dup-slot" title="Duplicate"><i data-lucide="copy"></i></button>' +
+            '<button type="button" class="btn btn--icon btn--danger" data-action="del-slot" title="Delete"><i data-lucide="trash-2"></i></button>' +
+          '</div></td></tr>';
+      }).join('') || '<tr><td colspan="6" style="padding:0.85rem;color:var(--muted)">No slots — use + Slot</td></tr>';
+
+      return '<article class="day-block" data-day-block="' + day.id + '">' +
+        '<header class="day-block__header day-block__header--' + color + '">' +
+          '<span>' + escapeHtml(day.name) + '</span>' +
+          '<div style="display:flex;gap:0.35rem">' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="add-slot-day" data-day="' + day.id + '">+ Slot</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="rename-day" data-day="' + day.id + '" title="Rename day">Rename</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="toggle-day-color" data-day="' + day.id + '" title="Toggle header color">Color</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="del-day" data-day="' + day.id + '" title="Delete day">✕</button>' +
+          '</div>' +
+        '</header>' +
+        '<table class="slot-table"><thead><tr>' +
+          '<th class="col-drag"></th><th>Time</th><th>Status</th><th>Notes</th><th>Last Day</th><th></th>' +
+        '</tr></thead><tbody data-drop-day="' + day.id + '">' + rows + '</tbody></table></article>';
+    }).join('');
+
+    root.innerHTML =
+      '<div class="sched-layout">' +
+        '<div class="day-stack">' + daysHtml + '</div>' +
+        renderClientSidebarHtml() +
+      '</div>';
+  }
+
+  function renderSheetView() {
+    var root = document.getElementById('js-view-sheet');
+    var board = activeBoard();
+    if (!board) {
+      root.innerHTML = '<div class="empty"><h3>No schedule board</h3></div>';
+      return;
+    }
+    var body = '';
+    (board.days || []).forEach(function (day) {
+      var colorCls = day.color === 'maroon' ? ' sheet-day-row--maroon' : '';
+      body += '<tr class="sheet-day-row' + colorCls + '"><td colspan="6">' + escapeHtml(day.name) + '</td></tr>';
+      (day.slots || []).forEach(function (slot) {
+        body += '<tr data-day="' + day.id + '" data-slot="' + slot.id + '">' +
+          dragHandleHtml() +
+          '<td><input class="cell-input" data-field="time" value="' + escapeAttr(slot.time) + '" /></td>' +
+          '<td>' + renderStatusSelect(slot.status, 'data-field="status"') + '</td>' +
+          '<td><input class="cell-input" data-field="notes" value="' + escapeAttr(slot.notes) + '" />' +
+            slotLinkedClientHtml(slot) + '</td>' +
+          '<td><input class="cell-input" data-field="lastDay" value="' + escapeAttr(slot.lastDay) + '" /></td>' +
+          '<td><button type="button" class="btn btn--icon btn--danger" data-action="del-slot"><i data-lucide="trash-2"></i></button></td>' +
+          '</tr>';
+      });
     });
+    var sheet =
+      '<div class="sheet-wrap"><table class="sheet-table"><thead><tr>' +
+        '<th class="col-drag"></th><th>Appointment Time</th><th>Status</th><th>Notes</th><th>Last Day</th><th></th>' +
+      '</tr></thead><tbody>' + (body || '<tr><td colspan="6" class="empty">No rows</td></tr>') +
+      '</tbody></table></div>';
+
+    root.innerHTML =
+      '<div class="sched-layout">' +
+        sheet +
+        renderClientSidebarHtml() +
+      '</div>';
+  }
+
+  function renderClientsView() {
+    var root = document.getElementById('js-view-clients');
+    var q = (state.clientQuery || '').toLowerCase().trim();
+    var clients = (state.workspace.clients || []).filter(function (c) {
+      if (!q) return true;
+      var blob = [c.name, c.email, c.phone, c.agency, c.parents, c.sessions, c.serviceCoordinator, c.scEmail, c.medicaid, c.tasks]
+        .join(' ').toLowerCase();
+      return blob.indexOf(q) !== -1;
+    });
+    if (!(state.workspace.clients || []).length) {
+      root.innerHTML = '<div class="empty"><h3>No clients yet</h3><p>Add clients to build information cards with copyable email and phone.</p>' +
+        '<button type="button" class="btn btn--green" id="js-empty-add-client">+ Add client</button></div>';
+      return;
+    }
+    if (!clients.length) {
+      root.innerHTML = '<div class="empty"><h3>No matches</h3><p>Try a different search.</p></div>';
+      return;
+    }
+    root.innerHTML = '<div class="client-grid">' + clients.map(function (c) {
+      return '<article class="client-card" data-client-card="' + c.id + '">' +
+        '<div class="client-card__head">' +
+          '<div><div class="client-card__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
+          '<div class="client-card__sessions">' + escapeHtml(c.sessions || 'No session set') + '</div></div>' +
+          '<div style="display:flex;gap:0.25rem">' +
+            '<button type="button" class="btn btn--ghost btn--icon" data-action="edit-client" data-client="' + c.id + '" title="Edit"><i data-lucide="pencil"></i></button>' +
+            '<button type="button" class="btn btn--ghost btn--icon" data-action="del-client" data-client="' + c.id + '" title="Delete"><i data-lucide="trash-2"></i></button>' +
+          '</div></div>' +
+        '<div class="client-card__body">' +
+          infoRow('DOB', c.dob) +
+          infoRow('Parents', c.parents) +
+          infoRow('Medicaid #', c.medicaid, true) +
+          contactRow('Email', c.email, 'mailto') +
+          contactRow('Phone', c.phone, 'tel') +
+          infoRow('Agency', c.agency) +
+          infoRow('Service Coord.', c.serviceCoordinator) +
+          contactRow('SC Email', c.scEmail, 'mailto') +
+          infoRow('Hours', c.hours) +
+        '</div>' +
+        '<div class="client-card__tasks">' +
+          '<h4>Tasks to be completed</h4>' +
+          '<textarea data-client-tasks="' + c.id + '" placeholder="Add tasks…">' + escapeHtml(c.tasks || '') + '</textarea>' +
+        '</div></article>';
+    }).join('') + '</div>';
+  }
+
+  function infoRow(label, value, copyable) {
+    var v = value || '—';
+    var copy = copyable && value
+      ? '<button type="button" class="copy-btn" data-copy="' + escapeAttr(value) + '" title="Copy"><i data-lucide="copy"></i></button>'
+      : '<span></span>';
+    return '<div class="info-row"><div class="info-row__label">' + label + '</div>' +
+      '<div class="info-row__value">' + escapeHtml(v) + '</div>' + copy + '</div>';
+  }
+
+  function contactRow(label, value, scheme) {
+    if (!value) {
+      return '<div class="info-row"><div class="info-row__label">' + label + '</div>' +
+        '<div class="info-row__value">—</div><span></span></div>';
+    }
+    var href = scheme === 'tel'
+      ? 'tel:' + String(value).replace(/[^\d+]/g, '')
+      : 'mailto:' + String(value).trim();
+    return '<div class="info-row"><div class="info-row__label">' + label + '</div>' +
+      '<div class="info-row__value"><a href="' + href + '">' + escapeHtml(value) + '</a></div>' +
+      '<button type="button" class="copy-btn" data-copy="' + escapeAttr(value) + '" title="Copy"><i data-lucide="copy"></i></button></div>';
   }
 
   function renderDx() {
     var list = document.getElementById('js-dx-list');
-    if (!list) return;
     var codes = state.workspace.dxCodes || [];
     list.innerHTML = codes.map(function (c) {
       return '<span class="dx-chip">' + escapeHtml(c) + '</span>';
     }).join('') || '<span class="dx-chip">No codes</span>';
   }
 
-  function renderClientCard(c) {
-    var info = formatInformationCard(c);
-    var email = c.email || '';
-    var phone = c.phone || '';
-    return '<article class="client-card" data-open-client="' + escapeAttr(c.id) + '">' +
-      '<header class="client-card__head">' +
-        '<div>' +
-          '<div class="client-card__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
-          (c.sessions ? '<div class="client-card__sessions">' + escapeHtml(c.sessions) + '</div>' : '') +
-        '</div>' +
-        '<div style="display:flex;gap:0.25rem">' +
-          '<button type="button" class="btn btn--icon btn--ghost" data-action="edit-client" data-client="' + escapeAttr(c.id) + '" title="Edit"><i data-lucide="pencil"></i></button>' +
-          '<button type="button" class="btn btn--icon btn--ghost" data-action="del-client" data-client="' + escapeAttr(c.id) + '" title="Delete"><i data-lucide="trash-2"></i></button>' +
-        '</div>' +
-      '</header>' +
-      '<div class="client-card__body">' +
-        '<label class="info-row__label" for="info-' + escapeAttr(c.id) + '">Information card</label>' +
-        '<textarea class="caseload-info" id="info-' + escapeAttr(c.id) + '" data-client="' + escapeAttr(c.id) + '" data-client-field="information" rows="6" placeholder="DOB, parents, email, phone…">' +
-          escapeHtml(info) +
-        '</textarea>' +
-        ((email || phone) ? (
-          '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;font-size:0.8rem">' +
-            (email ? '<button type="button" class="btn btn--soft btn--sm" data-copy="' + escapeAttr(email) + '" title="Copy email">' + escapeHtml(email) + '</button>' : '') +
-            (phone ? '<button type="button" class="btn btn--soft btn--sm" data-copy="' + escapeAttr(phone) + '" title="Copy phone">' + escapeHtml(phone) + '</button>' : '') +
-          '</div>'
-        ) : '') +
-      '</div>' +
-      '<div class="client-card__tasks">' +
-        '<h4>Tasks</h4>' +
-        '<textarea data-client-tasks="' + escapeAttr(c.id) + '" placeholder="Tasks to complete…">' + escapeHtml(c.tasks || '') + '</textarea>' +
-      '</div>' +
-    '</article>';
-  }
-
-  function renderClientsPanel() {
-    var grid = document.getElementById('js-clients-grid');
-    if (!grid || !state.workspace) return;
-    var q = (state.clientQuery || '').toLowerCase().trim();
-    var clients = (state.workspace.clients || []).filter(function (c) {
-      if (!q) return true;
-      var blob = [c.name, formatInformationCard(c), c.tasks, c.sessions].join(' ').toLowerCase();
-      return blob.indexOf(q) !== -1;
+  function showLayout() {
+    var layout = state.layout;
+    document.getElementById('js-view-schedule').classList.toggle('is-hidden', layout !== 'schedule');
+    document.getElementById('js-view-sheet').classList.toggle('is-hidden', layout !== 'sheet');
+    document.getElementById('js-view-clients').classList.toggle('is-hidden', layout !== 'clients');
+    document.getElementById('js-client-search-wrap').classList.toggle('is-hidden', layout !== 'clients');
+    document.querySelectorAll('.layout-switch__btn').forEach(function (btn) {
+      btn.classList.toggle('layout-switch__btn--active', btn.getAttribute('data-layout') === layout);
     });
-    if (!clients.length) {
-      grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' +
-        '<h3>' + (q ? 'No matching clients' : 'No caseload yet') + '</h3>' +
-        '<p>' + (q ? 'Try a different search.' : 'Import a caseload sheet or add a client. Matching names will fill schedule Client Info.') + '</p>' +
-        (!q ? '<button type="button" class="btn btn--green" id="js-empty-add-client">+ Client</button>' : '') +
-        '</div>';
-      return;
-    }
-    grid.innerHTML = clients.map(renderClientCard).join('');
+    document.getElementById('js-add-slot').style.display = layout === 'clients' ? 'none' : '';
+    document.getElementById('js-add-day').style.display = layout === 'clients' ? 'none' : '';
   }
 
   function renderAll() {
     renderBoardTabs();
-    renderUnifiedSchedule();
-    renderClientsPanel();
+    showLayout();
+    renderScheduleView();
+    renderSheetView();
+    renderClientsView();
     renderDx();
     iconize();
   }
@@ -1203,46 +1072,51 @@
     state.modalContext = context || null;
     document.getElementById('js-modal-title').textContent = title;
     document.getElementById('js-modal-body').innerHTML = bodyHtml;
-    document.getElementById('js-modal-save').textContent = mode === 'upload-apply' ? 'Apply to schedule' : 'Save';
     document.getElementById('js-modal').classList.remove('is-hidden');
   }
 
   function closeModal() {
     document.getElementById('js-modal').classList.add('is-hidden');
-    document.getElementById('js-modal-save').textContent = 'Save';
     state.modalMode = null;
     state.modalContext = null;
   }
 
   function clientFormHtml(c) {
     c = c || {};
-    return '<div class="field"><label>Client</label><input id="m-name" value="' + escapeAttr(c.name || '') + '" placeholder="Full client name" /></div>' +
-      '<div class="field"><label>Information Card</label><textarea id="m-information" rows="8" placeholder="DOB:&#10;Parents:&#10;Medicaid #:&#10;Email:&#10;Phone:&#10;Sessions:&#10;Agency:&#10;Service Coordinator:&#10;SC Email:">' +
-        escapeHtml(formatInformationCard(c)) + '</textarea></div>' +
+    return '<div class="field"><label>Client name</label><input id="m-name" value="' + escapeAttr(c.name || '') + '" /></div>' +
       '<div class="field-grid">' +
-        '<div class="field"><label>Sessions (short)</label><input id="m-sessions" value="' + escapeAttr(c.sessions || '') + '" placeholder="Wednesday 6:30" /></div>' +
+        '<div class="field"><label>DOB</label><input id="m-dob" value="' + escapeAttr(c.dob || '') + '" placeholder="MM/DD/YYYY" /></div>' +
         '<div class="field"><label>Hours</label><input id="m-hours" value="' + escapeAttr(c.hours || '') + '" placeholder="0.5" /></div>' +
       '</div>' +
-      '<div class="field"><label>Tasks To Be Completed</label><textarea id="m-tasks" rows="3">' + escapeHtml(c.tasks || '') + '</textarea></div>';
+      '<div class="field"><label>Parents</label><input id="m-parents" value="' + escapeAttr(c.parents || '') + '" /></div>' +
+      '<div class="field"><label>Medicaid #</label><input id="m-medicaid" value="' + escapeAttr(c.medicaid || '') + '" /></div>' +
+      '<div class="field-grid">' +
+        '<div class="field"><label>Email</label><input id="m-email" type="email" value="' + escapeAttr(c.email || '') + '" /></div>' +
+        '<div class="field"><label>Phone</label><input id="m-phone" value="' + escapeAttr(c.phone || '') + '" /></div>' +
+      '</div>' +
+      '<div class="field"><label>Sessions</label><input id="m-sessions" value="' + escapeAttr(c.sessions || '') + '" placeholder="Wednesday 6:30" /></div>' +
+      '<div class="field"><label>Agency</label><input id="m-agency" value="' + escapeAttr(c.agency || '') + '" /></div>' +
+      '<div class="field-grid">' +
+        '<div class="field"><label>Service Coordinator</label><input id="m-sc" value="' + escapeAttr(c.serviceCoordinator || '') + '" /></div>' +
+        '<div class="field"><label>SC Email</label><input id="m-scemail" type="email" value="' + escapeAttr(c.scEmail || '') + '" /></div>' +
+      '</div>' +
+      '<div class="field"><label>Tasks</label><textarea id="m-tasks" rows="3">' + escapeHtml(c.tasks || '') + '</textarea></div>';
   }
 
   function readClientForm() {
-    var information = val('m-information');
-    var parsed = parseInfoCard(information);
     return {
       name: val('m-name'),
-      information: information,
-      dob: parsed.dob || '',
-      parents: parsed.parents || '',
-      medicaid: parsed.medicaid || '',
-      email: parsed.email || '',
-      phone: parsed.phone || '',
-      sessions: val('m-sessions') || parsed.sessions || '',
-      agency: parsed.agency || '',
-      serviceCoordinator: parsed.serviceCoordinator || '',
-      scEmail: parsed.scEmail || '',
-      tasks: val('m-tasks'),
-      hours: val('m-hours')
+      dob: val('m-dob'),
+      hours: val('m-hours'),
+      parents: val('m-parents'),
+      medicaid: val('m-medicaid'),
+      email: val('m-email'),
+      phone: val('m-phone'),
+      sessions: val('m-sessions'),
+      agency: val('m-agency'),
+      serviceCoordinator: val('m-sc'),
+      scEmail: val('m-scemail'),
+      tasks: val('m-tasks')
     };
   }
   function val(id) {
@@ -1255,37 +1129,27 @@
     openModal(client ? 'Edit client' : 'Add client', clientFormHtml(client), client ? 'edit-client' : 'add-client', { id: clientId });
   }
 
-  function findDayById(dayId) {
-    var board = activeBoard();
-    if (!board) return null;
-    return (board.days || []).find(function (d) { return d.id === dayId; }) || null;
-  }
+  /* ─── Events ─── */
 
-  function moveSlot(fromDayId, slotId, toDayId, beforeSlotId) {
-    if (!fromDayId || !slotId || !toDayId) return false;
-    var fromDay = findDayById(fromDayId);
-    var toDay = findDayById(toDayId);
-    if (!fromDay || !toDay) return false;
-    var fromIdx = (fromDay.slots || []).findIndex(function (s) { return s.id === slotId; });
-    if (fromIdx < 0) return false;
-
-    // Same position — no-op
-    if (fromDayId === toDayId && beforeSlotId === slotId) return false;
-    if (fromDayId === toDayId && !beforeSlotId && fromIdx === fromDay.slots.length - 1) return false;
-    if (fromDayId === toDayId && beforeSlotId) {
-      var beforeIdx = fromDay.slots.findIndex(function (s) { return s.id === beforeSlotId; });
-      if (beforeIdx === fromIdx || beforeIdx === fromIdx + 1) return false;
+  function onSlotFieldChange(target) {
+    var tr = target.closest('tr[data-slot]');
+    if (!tr) return;
+    var found = findSlot(tr.getAttribute('data-day'), tr.getAttribute('data-slot'));
+    if (!found) return;
+    var field = target.getAttribute('data-field');
+    if (!field) return;
+    found.slot[field] = target.value;
+    if (field === 'status') tintStatusSelect(target);
+    if (field === 'notes') {
+      var cell = target.closest('td');
+      if (cell) {
+        var old = cell.querySelector('.slot-link');
+        if (old) old.remove();
+        var html = slotLinkedClientHtml(found.slot);
+        if (html) cell.insertAdjacentHTML('beforeend', html);
+      }
     }
-
-    var slot = fromDay.slots.splice(fromIdx, 1)[0];
-    if (beforeSlotId) {
-      var insertAt = toDay.slots.findIndex(function (s) { return s.id === beforeSlotId; });
-      if (insertAt < 0) toDay.slots.push(slot);
-      else toDay.slots.splice(insertAt, 0, slot);
-    } else {
-      toDay.slots.push(slot);
-    }
-    return true;
+    scheduleSave();
   }
 
   var rowDrag = { active: false, dayId: '', slotId: '', row: null };
@@ -1293,9 +1157,6 @@
   function clearDropMarkers() {
     document.querySelectorAll('tr.drop-before, tr.drop-after, tr.is-dragging').forEach(function (el) {
       el.classList.remove('drop-before', 'drop-after', 'is-dragging');
-    });
-    document.querySelectorAll('tbody.drop-empty').forEach(function (el) {
-      el.classList.remove('drop-empty');
     });
   }
 
@@ -1313,10 +1174,7 @@
     try {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', rowDrag.slotId);
-      // Better ghost: use the whole row if supported
-      if (e.dataTransfer.setDragImage) {
-        e.dataTransfer.setDragImage(row, 24, 16);
-      }
+      if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(row, 24, 16);
     } catch (_) {}
   });
 
@@ -1331,106 +1189,51 @@
   document.addEventListener('dragover', function (e) {
     if (!rowDrag.active) return;
     var row = e.target.closest('tr[data-slot]');
-    var tbody = e.target.closest('tbody[data-drop-day]');
-    if (!row && !tbody) return;
+    if (!row) return;
     e.preventDefault();
     try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
-
     clearDropMarkers();
     if (rowDrag.row) rowDrag.row.classList.add('is-dragging');
-
-    if (row && row.getAttribute('data-slot') !== rowDrag.slotId) {
-      var rect = row.getBoundingClientRect();
-      var before = (e.clientY - rect.top) < rect.height / 2;
-      row.classList.add(before ? 'drop-before' : 'drop-after');
-    } else if (tbody && (!row || tbody.querySelector('.empty-row'))) {
-      tbody.classList.add('drop-empty');
-    }
+    if (row.getAttribute('data-slot') === rowDrag.slotId) return;
+    var rect = row.getBoundingClientRect();
+    var before = (e.clientY - rect.top) < rect.height / 2;
+    row.classList.add(before ? 'drop-before' : 'drop-after');
   });
 
   document.addEventListener('drop', function (e) {
     if (!rowDrag.active) return;
     var row = e.target.closest('tr[data-slot]');
-    var tbody = e.target.closest('tbody[data-drop-day]');
-    if (!row && !tbody) return;
+    if (!row) return;
     e.preventDefault();
-
     var fromDayId = rowDrag.dayId;
     var slotId = rowDrag.slotId;
-    var toDayId = '';
+    var toDayId = row.getAttribute('data-day') || '';
     var beforeSlotId = null;
-
-    if (row && row.getAttribute('data-slot') !== slotId) {
-      toDayId = row.getAttribute('data-day') || '';
+    if (row.getAttribute('data-slot') !== slotId) {
       var rect = row.getBoundingClientRect();
       var before = (e.clientY - rect.top) < rect.height / 2;
-      if (before) {
-        beforeSlotId = row.getAttribute('data-slot');
-      } else {
+      if (before) beforeSlotId = row.getAttribute('data-slot');
+      else {
         var next = row.nextElementSibling;
         beforeSlotId = (next && next.getAttribute('data-slot')) ? next.getAttribute('data-slot') : null;
-        toDayId = row.getAttribute('data-day') || toDayId;
       }
-    } else if (tbody) {
-      toDayId = tbody.getAttribute('data-drop-day') || '';
-      beforeSlotId = null; // append
     }
-
     clearDropMarkers();
     rowDrag.active = false;
-
     if (!toDayId || !slotId) return;
     mutate(function () {
       moveSlot(fromDayId, slotId, toDayId, beforeSlotId);
     });
   });
 
-  /* ─── Events ─── */
-
-  function onSlotFieldChange(target) {
-    var tr = target.closest('tr[data-slot]');
-    if (!tr) return;
-    var found = findSlot(tr.getAttribute('data-day'), tr.getAttribute('data-slot'));
-    if (!found) return;
-    var field = target.getAttribute('data-field');
-    if (!field) return;
-    if (field === 'clientName') {
-      applyClientNameToSlot(found.slot, target.value);
-      // Refresh info cell if we auto-filled
-      var infoCell = tr.querySelector('[data-field="clientInfo"]');
-      if (infoCell && found.slot.clientInfo != null && infoCell.value !== found.slot.clientInfo) {
-        infoCell.value = found.slot.clientInfo;
-      }
-    } else {
-      found.slot[field] = target.value;
-    }
-    if (field === 'status') tintStatusSelect(target);
-    scheduleSave();
-  }
-
   document.addEventListener('input', function (e) {
     var t = e.target;
     if (t.matches('.cell-input, .cell-select')) onSlotFieldChange(t);
-    if (t.matches('[data-client-field]')) {
-      var clientId = t.getAttribute('data-client');
-      var field = t.getAttribute('data-client-field');
-      var client = state.workspace.clients.find(function (c) { return c.id === clientId; });
-      if (!client || !field) return;
-      if (field === 'information') {
-        applyInformationCardToClient(client, t.value);
-        syncClientInfoToSlots(client, { force: true });
-        renderUnifiedSchedule();
-        iconize();
-      } else {
-        client[field] = t.value;
-      }
-      scheduleSave();
-    }
     if (t.matches('textarea[data-client-tasks]')) {
       var id = t.getAttribute('data-client-tasks');
-      var c2 = state.workspace.clients.find(function (c) { return c.id === id; });
-      if (c2) {
-        c2.tasks = t.value;
+      var client = state.workspace.clients.find(function (c) { return c.id === id; });
+      if (client) {
+        client.tasks = t.value;
         scheduleSave();
       }
     }
@@ -1441,27 +1244,18 @@
   });
 
   document.addEventListener('click', function (e) {
-    var orientBtn = e.target.closest('[data-orient]');
-    if (orientBtn) {
-      state.orientation = orientBtn.getAttribute('data-orient') || 'vertical';
-      localStorage.setItem(ORIENT_KEY, state.orientation);
-      renderAll();
-      return;
-    }
-
-    var collapseBtn = e.target.closest('[data-collapse-col]');
-    if (collapseBtn) {
-      var colId = collapseBtn.getAttribute('data-collapse-col');
-      state.collapsedCols[colId] = !state.collapsedCols[colId];
-      localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state.collapsedCols));
-      renderAll();
-      return;
-    }
-
     var tab = e.target.closest('[data-board]');
     if (tab) {
       state.activeBoardId = tab.getAttribute('data-board');
       localStorage.setItem(BOARD_KEY, state.activeBoardId);
+      renderAll();
+      return;
+    }
+
+    var layoutBtn = e.target.closest('[data-layout]');
+    if (layoutBtn) {
+      state.layout = layoutBtn.getAttribute('data-layout');
+      localStorage.setItem(LAYOUT_KEY, state.layout);
       renderAll();
       return;
     }
@@ -1499,7 +1293,7 @@
         mutate(function () {
           var board = activeBoard();
           var day = board.days.find(function (d) { return d.id === dayId; });
-          if (day) day.slots.push({ id: uid('slot'), time: '', status: '', clientName: '', clientInfo: '', notes: '', lastDay: '' });
+          if (day) day.slots.push({ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' });
         });
       }
       if (action === 'toggle-day-color' && dayId) {
@@ -1547,10 +1341,10 @@
       });
     }
     if (e.target.closest('[data-open-client]')) {
-      var row = e.target.closest('[data-open-client]');
-      if (!e.target.closest('button, input, textarea, select, a, [data-copy], [data-client-field], [data-client-tasks]')) {
-        openClientEditor(row.getAttribute('data-open-client'));
-      }
+      if (e.target.closest('[data-action]')) return;
+      var openEl = e.target.closest('[data-open-client]');
+      openClientEditor(openEl.getAttribute('data-open-client'));
+      return;
     }
   });
 
@@ -1599,7 +1393,7 @@
     var day = board.days[idx];
     if (!day) return;
     mutate(function () {
-      day.slots.push({ id: uid('slot'), time: '', status: '', clientName: '', clientInfo: '', notes: '', lastDay: '' });
+      day.slots.push({ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' });
     });
   });
 
@@ -1613,58 +1407,16 @@
         id: uid('day'),
         name: name.trim(),
         color: board.days.length % 2 ? 'maroon' : 'blue',
-        slots: [{ id: uid('slot'), time: '', status: '', clientName: '', clientInfo: '', notes: '', lastDay: '' }]
+        slots: [{ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' }]
       });
     });
   });
 
-  document.getElementById('js-expand-cols').addEventListener('click', function () {
-    state.collapsedCols = {};
-    localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state.collapsedCols));
-    renderAll();
+  document.getElementById('js-client-search').addEventListener('input', function (e) {
+    state.clientQuery = e.target.value || '';
+    renderClientsView();
+    iconize();
   });
-
-  var addClientBtn = document.getElementById('js-add-client');
-  if (addClientBtn) {
-    addClientBtn.addEventListener('click', function () { openClientEditor(null); });
-  }
-
-  var syncClientsBtn = document.getElementById('js-sync-clients');
-  if (syncClientsBtn) {
-    syncClientsBtn.addEventListener('click', function () {
-      var emptyFilled = 0;
-      var updated = 0;
-      mutate(function () {
-        emptyFilled = syncAllClientsToSchedule({ force: false });
-        if (!emptyFilled) updated = syncAllClientsToSchedule({ force: true });
-      });
-      toast(
-        emptyFilled
-          ? ('Filled ' + emptyFilled + ' empty Client Info cell(s) from caseload')
-          : (updated
-            ? ('Updated ' + updated + ' Client Info cell(s) from caseload')
-            : 'No matching client names found in the schedule')
-      );
-    });
-  }
-
-  var clientSearchEl = document.getElementById('js-client-search');
-  if (clientSearchEl) {
-    clientSearchEl.addEventListener('input', function (e) {
-      state.clientQuery = e.target.value || '';
-      renderClientsPanel();
-      iconize();
-    });
-  }
-
-  var searchEl = document.getElementById('js-schedule-search');
-  if (searchEl) {
-    searchEl.addEventListener('input', function (e) {
-      state.scheduleQuery = e.target.value || '';
-      renderUnifiedSchedule();
-      iconize();
-    });
-  }
 
   document.getElementById('js-edit-dx').addEventListener('click', function () {
     openModal(
@@ -1676,7 +1428,9 @@
     );
   });
 
-  // Client editor kept for rare manual edits via import merge; no dedicated + Client button
+  document.getElementById('js-add-client').addEventListener('click', function () {
+    openClientEditor(null);
+  });
 
   document.getElementById('js-modal-cancel').addEventListener('click', closeModal);
   document.getElementById('js-modal').addEventListener('click', function (e) {
@@ -1686,22 +1440,16 @@
     if (state.modalMode === 'add-client' || state.modalMode === 'edit-client') {
       var data = readClientForm();
       if (!data.name) { toast('Name is required'); return; }
-      var savedClient = null;
       mutate(function () {
         if (state.modalMode === 'edit-client' && state.modalContext && state.modalContext.id) {
           var existing = state.workspace.clients.find(function (c) { return c.id === state.modalContext.id; });
-          if (existing) {
-            Object.assign(existing, data);
-            savedClient = existing;
-          }
+          if (existing) Object.assign(existing, data);
         } else {
-          savedClient = Object.assign({ id: uid('client') }, data);
-          state.workspace.clients.push(savedClient);
+          state.workspace.clients.push(Object.assign({ id: uid('client') }, data));
         }
-        if (savedClient) syncClientInfoToSlots(savedClient, { force: true });
       });
       closeModal();
-      toast('Client saved — matching schedule rows updated');
+      toast('Client saved — linked schedule rows updated');
     }
     if (state.modalMode === 'edit-dx') {
       var raw = val('m-dx');
@@ -1711,1295 +1459,58 @@
       closeModal();
       toast('Codes updated');
     }
-    if (state.modalMode === 'upload-apply') {
-      if (!pendingUpload) {
-        toast('Choose a file first');
-        return;
-      }
-      var modeEl = document.querySelector('input[name="upload-mode"]:checked');
-      var mode = modeEl ? modeEl.value : 'merge';
-      applyUpload(pendingUpload, mode);
-      pendingUpload = null;
-      closeModal();
-      toast(mode === 'replace' ? 'Replaced from upload' : 'Merged upload into schedule');
-    }
   });
 
   document.getElementById('js-export').addEventListener('click', function () {
-    try {
-      var payload = JSON.stringify(state.workspace || {}, null, 2);
-      var blob = new Blob([payload], { type: 'application/json;charset=utf-8' });
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'emme-schedule-' + new Date().toISOString().slice(0, 10) + '.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-      toast('Exported backup');
-    } catch (err) {
-      toast(err.message || 'Export failed');
-    }
+    var blob = new Blob([JSON.stringify(state.workspace, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'emme-schedule-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
   });
-
-  /* ─── Upload / prefill ─── */
-
-  var UPLOAD_MAX_BYTES = 12 * 1024 * 1024;
-  var pendingUpload = null;
-  var orgAI = { checked: false, configured: false, model: '', provider: 'none' };
-
-  function fileExt(name) {
-    var parts = String(name || '').toLowerCase().split('.');
-    return parts.length > 1 ? parts.pop() : '';
-  }
-
-  function readAsText(file) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () { resolve(String(reader.result || '')); };
-      reader.onerror = reject;
-      reader.readAsText(file);
-    });
-  }
-
-  function readAsArrayBuffer(file) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () { resolve(reader.result); };
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  function readAsDataURL(file) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () { resolve(reader.result); };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function dataUrlToBase64(dataUrl) {
-    var idx = String(dataUrl).indexOf(',');
-    return idx >= 0 ? String(dataUrl).slice(idx + 1) : String(dataUrl);
-  }
-
-  function emptyImport() {
-    return { clients: [], boards: [], dxCodes: [], sourceLabel: '', notes: [] };
-  }
-
-  function formatInformationCard(c) {
-    c = c || {};
-    if (c.information && String(c.information).trim()) return String(c.information).trim();
-    var lines = [];
-    if (c.dob) lines.push('DOB: ' + c.dob);
-    if (c.parents) lines.push('Parents: ' + c.parents);
-    if (c.medicaid) lines.push('Medicaid #: ' + c.medicaid);
-    if (c.email) lines.push('Email: ' + c.email);
-    if (c.phone) lines.push('Phone: ' + c.phone);
-    if (c.sessions) lines.push('Sessions: ' + c.sessions);
-    if (c.agency) lines.push('Agency: ' + c.agency);
-    if (c.serviceCoordinator) lines.push('Service Coordinator: ' + c.serviceCoordinator);
-    if (c.scEmail) lines.push('SC Email: ' + c.scEmail);
-    return lines.join('\n');
-  }
-
-  function applyInformationCardToClient(client, text) {
-    var raw = String(text || '');
-    client.information = raw;
-    var parsed = parseInfoCard(raw);
-    client.dob = parsed.dob || client.dob || '';
-    client.parents = parsed.parents || client.parents || '';
-    client.medicaid = parsed.medicaid || client.medicaid || '';
-    client.email = parsed.email || client.email || '';
-    client.phone = parsed.phone || client.phone || '';
-    client.sessions = parsed.sessions || client.sessions || '';
-    client.agency = parsed.agency || client.agency || '';
-    client.serviceCoordinator = parsed.serviceCoordinator || client.serviceCoordinator || '';
-    client.scEmail = parsed.scEmail || client.scEmail || '';
-  }
-
-  function normalizeClient(raw) {
-    raw = raw || {};
-    var information = String(raw.information || raw.infoCard || raw['INFORMATION CARD'] || raw.info || '').trim();
-    var base = {
-      id: raw.id || uid('client'),
-      name: String(raw.name || raw.client || raw.Client || raw.CLIENT || '').trim(),
-      information: information,
-      dob: String(raw.dob || raw.DOB || '').trim(),
-      parents: String(raw.parents || raw.Parents || '').trim(),
-      medicaid: String(raw.medicaid || raw.medicaidNumber || raw['Medicaid #'] || '').trim(),
-      email: String(raw.email || raw.Email || '').trim(),
-      phone: String(raw.phone || raw.Phone || '').trim(),
-      sessions: String(raw.sessions || raw.Sessions || raw.schedule || '').trim(),
-      agency: String(raw.agency || raw.Agency || '').trim(),
-      serviceCoordinator: String(raw.serviceCoordinator || raw.sc || raw['Service Coordinator'] || '').trim(),
-      scEmail: String(raw.scEmail || raw.sc_email || raw['SC Email'] || '').trim(),
-      tasks: String(raw.tasks || raw.Tasks || '').trim(),
-      hours: String(raw.hours || raw.Hours || '').trim()
-    };
-    if (information) {
-      var parsed = parseInfoCard(information);
-      Object.keys(parsed).forEach(function (k) {
-        if (parsed[k] && !base[k]) base[k] = parsed[k];
-      });
-    }
-    if (!base.information) base.information = formatInformationCard(base);
-    return base;
-  }
-
-  function normalizeSlot(raw) {
-    raw = raw || {};
-    var time = String(raw.time || raw.Time || raw['Appointment Time'] || '').trim();
-    time = time.replace(/:(\d{2}):\d{2}\s*/i, ':$1 ').replace(/\s+/g, ' ').trim();
-    var clientName = String(raw.clientName || raw['Client Name'] || raw.notes || raw.Notes || raw.client || '').trim();
-    var clientInfo = String(raw.clientInfo || raw['Client Info'] || raw.information || raw.infoCard || '').trim();
-    return {
-      id: raw.id || uid('slot'),
-      time: time,
-      status: String(raw.status || raw.Status || '').trim(),
-      clientName: clientName,
-      clientInfo: clientInfo,
-      notes: clientName, // backward compatible with older saved data
-      lastDay: String(raw.lastDay || raw['Last Day'] || raw.last_day || '').trim()
-    };
-  }
-
-  function normalizeWorkspace(ws) {
-    if (!ws || typeof ws !== 'object') return ws;
-    (ws.boards || []).forEach(function (b) {
-      (b.days || []).forEach(function (d) {
-        d.slots = (d.slots || []).map(function (s) {
-          var slot = normalizeSlot(s);
-          if (s && s.id) slot.id = s.id;
-          return slot;
-        });
-      });
-    });
-    return ws;
-  }
-
-  function setWorkspace(ws) {
-    state.workspace = normalizeWorkspace(ws);
-    return state.workspace;
-  }
-
-  function parseInfoCard(text) {
-    var out = {};
-    var src = String(text || '');
-    function grab(label) {
-      var re = new RegExp(label + '\\s*:\\s*([^\\n]+)', 'i');
-      var m = src.match(re);
-      return m ? m[1].trim() : '';
-    }
-    out.dob = grab('DOB');
-    out.parents = grab('Parents?');
-    out.medicaid = grab('Medicaid\\s*#?');
-    out.email = grab('Email');
-    out.phone = grab('Phone');
-    out.sessions = grab('Sessions?');
-    out.agency = grab('Agency');
-    out.serviceCoordinator = grab('Service\\s*Coordinator');
-    out.scEmail = grab('(?:SC\\s*Email|Service\\s*Coordinator\\s*Email)');
-    out.tasks = grab('Tasks?(?:\\s*to\\s*be\\s*completed)?');
-    return out;
-  }
-
-  function looksLikeDayName(value) {
-    return /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(String(value || '').trim());
-  }
-
-  function dayColorForName(name) {
-    return /tuesday|thursday|saturday/i.test(name || '') ? 'maroon' : 'blue';
-  }
-
-  function headerKey(h) {
-    return String(h || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  }
-
-  function mapHeader(h) {
-    var k = headerKey(h);
-    if (!k) return '';
-    if (/appointment time|^time$/.test(k)) return 'time';
-    if (/^status$/.test(k)) return 'status';
-    if (/^client name$|client notes|^notes$/.test(k)) return 'clientName';
-    if (/^client info$/.test(k)) return 'clientInfo';
-    if (/information card|info card|^information$|details/.test(k)) return 'infoCard';
-    if (/last day|end date|eos/.test(k)) return 'lastDay';
-    // Caseload list headers (separate from schedule Client Name)
-    if (/^clients?$|caseload/.test(k)) return 'name';
-    if (/^name$/.test(k)) return 'name';
-    if (/^dob$|date of birth|birthday/.test(k)) return 'dob';
-    if (/parent/.test(k)) return 'parents';
-    if (/medicaid/.test(k)) return 'medicaid';
-    if (/^email$|client email/.test(k)) return 'email';
-    if (/phone|mobile|cell/.test(k)) return 'phone';
-    if (/session|regular spot|day time|current time/.test(k)) return 'sessions';
-    if (/agency/.test(k)) return 'agency';
-    if (/service coord| sc$|^sc /.test(k) && !/email/.test(k)) return 'serviceCoordinator';
-    if (/sc email|coordinator email/.test(k)) return 'scEmail';
-    if (/task/.test(k)) return 'tasks';
-    if (/^hours$|duration|length|^hrs?$/.test(k)) return 'hours';
-    if (/diagnos|dx code|^code$/.test(k)) return 'dx';
-    return '';
-  }
-
-  function looksLikePersonName(value) {
-    var s = String(value || '').trim();
-    if (!s || s.length < 2 || s.length > 80) return false;
-    if (looksLikeTime(s) || looksLikeStatus(s) || looksLikeDayName(s)) return false;
-    if (/^(hold|lunch|makeup|open|full|not open|appointment|status|notes|last day|client|information)/i.test(s)) return false;
-    if (/DOB\s*:|Email\s*:|Phone\s*:|Medicaid/i.test(s)) return false;
-    if (/^\d+(\.\d+)?$/.test(s)) return false; // hours like 0.5
-    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(s)) return false;
-    // Has at least one letter
-    return /[A-Za-z]/.test(s);
-  }
-
-  function cleanNoteToClientName(notes) {
-    var s = String(notes || '').trim();
-    if (!s) return '';
-    s = s.replace(/^HOLD\s*-?\s*/i, '').trim();
-    // "Nancy 1/2 hour" → "Nancy"; "Xavier- in person" → "Xavier"
-    s = s.split(/\s*[-–—]\s*/)[0].trim();
-    s = s.replace(/\s+\d+\s*\/\s*\d+\s*(hour|hr|hours)?$/i, '').trim();
-    s = s.replace(/\s+\d+(\.\d+)?\s*(hour|hr|hours)$/i, '').trim();
-    return looksLikePersonName(s) ? s : '';
-  }
-
-  function parseDelimitedTable(text) {
-    // Quote-aware parser so Google Sheets multiline cells (Information Card) stay intact
-    var src = String(text || '').replace(/^\uFEFF/, '');
-    if (!src.trim()) return [];
-    var firstLine = src.split(/\r?\n/, 1)[0] || '';
-    var delim = (firstLine.split('\t').length > firstLine.split(',').length) ? '\t' : ',';
-    var rows = [];
-    var row = [];
-    var cur = '';
-    var inQ = false;
-    for (var i = 0; i < src.length; i++) {
-      var ch = src[i];
-      var next = src[i + 1];
-      if (ch === '"') {
-        if (inQ && next === '"') { cur += '"'; i++; }
-        else inQ = !inQ;
-        continue;
-      }
-      if (!inQ && ch === delim) {
-        row.push(cur);
-        cur = '';
-        continue;
-      }
-      if (!inQ && (ch === '\n' || ch === '\r')) {
-        if (ch === '\r' && next === '\n') i++;
-        row.push(cur);
-        rows.push(row);
-        row = [];
-        cur = '';
-        continue;
-      }
-      cur += ch;
-    }
-    if (cur.length || row.length) {
-      row.push(cur);
-      rows.push(row);
-    }
-    return rows.filter(function (r) {
-      return r.some(function (c) { return String(c || '').trim() !== ''; });
-    });
-  }
-
-  function looksLikeTime(value) {
-    var s = String(value || '').trim();
-    if (!s) return false;
-    if (/^\d{1,2}:\d{2}(:\d{2})?\s*(AM|PM)?$/i.test(s)) return true;
-    if (/^\d{1,2}\s*(AM|PM)$/i.test(s)) return true;
-    // Excel sometimes yields locale time strings
-    if (/^\d{1,2}:\d{2}(:\d{2})?\s*[AaPp]\.?[Mm]\.?$/.test(s)) return true;
-    return false;
-  }
-
-  function looksLikeStatus(value) {
-    var s = String(value || '').trim();
-    if (!s) return false;
-    return /^(full|open\b|lunch|makeup|not open|scheduling)/i.test(s) ||
-      STATUS_OPTIONS.some(function (o) { return o.value && o.value.toLowerCase() === s.toLowerCase(); });
-  }
-
-  function cell(rows, r, c) {
-    return String((rows[r] && rows[r][c] != null) ? rows[r][c] : '').trim();
-  }
-
-  function maxCols(rows) {
-    var m = 0;
-    (rows || []).forEach(function (row) { m = Math.max(m, (row || []).length); });
-    return m;
-  }
-
-  function importClientsFromRows(rows, result) {
-    // Emme layouts:
-    // 1) CLIENT | INFORMATION CARD | TASKS
-    // 2) CLIENT | Wednesday 6:30 | 0.5   (no Name column, no info card)
-    // 3) No headers — col A person + col B DOB:/Email: block
-    var nameCol = -1, infoCol = -1, taskCol = -1, sessionsCol = -1, hoursCol = -1;
-    var startRow = 0;
-
-    for (var r = 0; r < Math.min(rows.length, 50); r++) {
-      var row = rows[r] || [];
-      for (var c = 0; c < row.length; c++) {
-        var mapped = mapHeader(row[c]);
-        if (mapped === 'name') nameCol = c;
-        if (mapped === 'infoCard') infoCol = c;
-        if (mapped === 'tasks') taskCol = c;
-        if (mapped === 'sessions') sessionsCol = c;
-        if (mapped === 'hours') hoursCol = c;
-      }
-      if (nameCol >= 0 || infoCol >= 0) {
-        startRow = r + 1;
-        // If CLIENT header found but sessions/hours headers missing, use next columns
-        if (nameCol >= 0 && sessionsCol < 0 && cell(rows, r, nameCol + 1) && !mapHeader(cell(rows, r, nameCol + 1))) {
-          // header row may only say CLIENT; data rows have day/time beside name
-        }
-        break;
-      }
-    }
-
-    // Fallback: Emme Caseload — person in A, info card in B
-    if (nameCol < 0 && infoCol < 0) {
-      for (var r2 = 0; r2 < Math.min(rows.length, 120); r2++) {
-        var a = cell(rows, r2, 0);
-        var b = cell(rows, r2, 1);
-        if (looksLikePersonName(a) && b && /DOB\s*:|Email\s*:|Phone\s*:|Medicaid|Parents\s*:/i.test(b)) {
-          nameCol = 0;
-          infoCol = 1;
-          taskCol = 2;
-          startRow = r2;
-          break;
-        }
-      }
-    }
-
-    // Fallback: CLIENT list only (schedule sheet right side) — names in a column near "CLIENT" label
-    if (nameCol < 0) {
-      for (var r3 = 0; r3 < Math.min(rows.length, 40); r3++) {
-        for (var c3 = 0; c3 < maxCols(rows); c3++) {
-          if (/^clients?$/i.test(cell(rows, r3, c3))) {
-            nameCol = c3;
-            startRow = r3 + 1;
-            break;
-          }
-        }
-        if (nameCol >= 0) break;
-      }
-    }
-
-    function addClient( partial ) {
-      var client = normalizeClient(partial);
-      if (!client.name || client.name.length > 120) return;
-      if (/^clients?$/i.test(client.name)) return;
-      result.clients.push(client);
-    }
-
-    if (nameCol >= 0 || infoCol >= 0) {
-      for (var i = startRow; i < rows.length; i++) {
-        var name = nameCol >= 0 ? cell(rows, i, nameCol) : '';
-        var info = infoCol >= 0 ? cell(rows, i, infoCol) : '';
-        if (!name && !info) continue;
-        if (looksLikeDayName(name) || /^clients?$/i.test(name)) continue;
-        if (/^information card$/i.test(info)) continue;
-        if (looksLikeTime(name) || looksLikeStatus(name)) continue;
-        // Stop if we hit a diagnostic code block
-        if (/^F\d{2}/i.test(name)) break;
-
-        var fromCard = info ? parseInfoCard(info) : {};
-        var sessions = sessionsCol >= 0 ? cell(rows, i, sessionsCol) : (fromCard.sessions || '');
-        var hours = hoursCol >= 0 ? cell(rows, i, hoursCol) : '';
-
-        // CLIENT | Wednesday 6:30 | 0.5  (no dedicated session/hours headers)
-        if (!sessions && nameCol >= 0) {
-          var beside = cell(rows, i, nameCol + 1);
-          if (beside && !/DOB\s*:/i.test(beside) && !looksLikeTime(beside) && !/^\d+(\.\d+)?$/.test(beside)) {
-            sessions = beside;
-          }
-          var hoursBeside = cell(rows, i, nameCol + 2);
-          if (!hours && /^\d+(\.\d+)?$/.test(hoursBeside)) hours = hoursBeside;
-          // Sometimes hours is in col+1 if sessions missing
-          if (!hours && /^\d+(\.\d+)?$/.test(beside)) {
-            hours = beside;
-            sessions = fromCard.sessions || '';
-          }
-        }
-
-        // Info-card-only row: derive name from card first line if needed
-        if (!name && info) {
-          name = info.split(/\n/)[0].replace(/^(CLIENT|NAME)\s*:?\s*/i, '').trim();
-          if (/DOB\s*:/i.test(name)) name = '';
-        }
-
-        if (!name && !fromCard.email && !fromCard.phone) continue;
-        if (name && !looksLikePersonName(name) && !fromCard.email) continue;
-
-        addClient(Object.assign({}, fromCard, {
-          name: name,
-          information: info || '',
-          tasks: taskCol >= 0 ? cell(rows, i, taskCol) : (fromCard.tasks || ''),
-          sessions: sessions,
-          hours: hours
-        }));
-      }
-    } else {
-      // Last resort: any info-card-looking cell
-      rows.forEach(function (row, ri) {
-        (row || []).forEach(function (raw, ci) {
-          var t = String(raw || '').trim();
-          if (t.length > 25 && /DOB\s*:|Email\s*:|Phone\s*:/i.test(t)) {
-            var card = parseInfoCard(t);
-            var nm = cell(rows, ri, ci - 1);
-            if (!looksLikePersonName(nm)) nm = '';
-            if (!nm) {
-              nm = t.split(/\n/)[0].replace(/^(CLIENT|NAME)\s*:?\s*/i, '').trim();
-              if (/DOB\s*:/i.test(nm)) nm = '';
-            }
-            if (nm) addClient(Object.assign({ name: nm, information: t }, card));
-          }
-        });
-      });
-    }
-  }
-
-  function harvestClientsFromScheduleNotes(result) {
-    var existing = {};
-    (result.clients || []).forEach(function (c) {
-      if (c.name) existing[c.name.toLowerCase()] = true;
-    });
-    (result.boards || []).forEach(function (board) {
-      (board.days || []).forEach(function (day) {
-        (day.slots || []).forEach(function (slot) {
-          var nm = cleanNoteToClientName(slot.notes);
-          if (!nm) return;
-          var key = nm.toLowerCase();
-          if (existing[key]) return;
-          existing[key] = true;
-          result.clients.push(normalizeClient({
-            name: nm,
-            sessions: day.name + (slot.time ? (' ' + slot.time) : '')
-          }));
-        });
-      });
-    });
-  }
-
-  function importScheduleFromRows(rows, result, boardName) {
-    var board = { id: uid('board'), name: boardName || result.sourceLabel || 'Imported Schedule', days: [] };
-    var currentDay = null;
-    var cols = maxCols(rows);
-
-    function ensureDay(name) {
-      var clean = String(name || '').replace(/:$/, '').trim();
-      if (!clean) return null;
-      // Prefer bare day name
-      var m = clean.match(/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
-      if (m) clean = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();
-      var existing = board.days.find(function (d) { return d.name.toLowerCase() === clean.toLowerCase(); });
-      if (existing) { currentDay = existing; return existing; }
-      currentDay = { id: uid('day'), name: clean, color: dayColorForName(clean), slots: [] };
-      board.days.push(currentDay);
-      return currentDay;
-    }
-
-    // Walk every row; day headers can appear in any column (merged cells / side tables)
-    for (var r = 0; r < rows.length; r++) {
-      var row = rows[r] || [];
-
-      // Day header row?
-      for (var c = 0; c < row.length; c++) {
-        var v = String(row[c] || '').trim();
-        if (looksLikeDayName(v) && !looksLikeTime(v)) {
-          ensureDay(v);
-        }
-      }
-
-      // Find a time cell in this row and read status/notes/lastDay to its right
-      for (var c2 = 0; c2 < row.length; c2++) {
-        var t = String(row[c2] || '').trim();
-        if (!looksLikeTime(t)) continue;
-        if (!currentDay) ensureDay('Imported');
-        var status = '';
-        var clientName = '';
-        var clientInfo = '';
-        var lastDay = '';
-        for (var k = c2 + 1; k < Math.min(row.length, c2 + 7); k++) {
-          var val = String(row[k] || '').trim();
-          if (!val) continue;
-          if (!status && looksLikeStatus(val)) { status = val; continue; }
-          if (!clientName && !looksLikeTime(val) && !looksLikeStatus(val) && !/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(val) && !/DOB\s*:/i.test(val)) {
-            clientName = val;
-            continue;
-          }
-          if (!clientInfo && /DOB\s*:|Email\s*:|Phone\s*:|Parents\s*:/i.test(val)) {
-            clientInfo = val;
-            continue;
-          }
-          if (!lastDay && (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(val) || /end of summer|eos|last day/i.test(val))) {
-            lastDay = val;
-          }
-        }
-        if (!status && row[c2 + 1]) status = String(row[c2 + 1] || '').trim();
-        if (!clientName && row[c2 + 2]) clientName = String(row[c2 + 2] || '').trim();
-        // 4-col legacy: time|status|name|lastDay  OR 5-col: time|status|name|info|lastDay
-        var c3 = String(row[c2 + 3] || '').trim();
-        var c4 = String(row[c2 + 4] || '').trim();
-        if (!clientInfo && c3 && /DOB\s*:|Email\s*:|Phone\s*:/i.test(c3)) clientInfo = c3;
-        else if (!lastDay && c3 && (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(c3) || /end of summer/i.test(c3))) lastDay = c3;
-        else if (!clientInfo && c3 && !/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(c3)) clientInfo = c3;
-        if (!lastDay && c4) lastDay = c4;
-        if (/^(appointment\s*time|time|status|notes|client name|client info|last\s*day)$/i.test(t)) continue;
-        currentDay.slots.push(normalizeSlot({
-          time: t,
-          status: status,
-          clientName: clientName,
-          clientInfo: clientInfo,
-          lastDay: lastDay
-        }));
-        break;
-      }
-    }
-
-    if (!board.days.length) {
-      for (var r3 = 0; r3 < rows.length; r3++) {
-        var first = cell(rows, r3, 0);
-        if (looksLikeDayName(first)) { ensureDay(first); continue; }
-        if (looksLikeTime(first)) {
-          if (!currentDay) ensureDay('Imported');
-          var maybeInfo = cell(rows, r3, 3);
-          var maybeLast = cell(rows, r3, 4);
-          if (!maybeLast && /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(maybeInfo)) {
-            maybeLast = maybeInfo;
-            maybeInfo = '';
-          }
-          currentDay.slots.push(normalizeSlot({
-            time: first,
-            status: cell(rows, r3, 1),
-            clientName: cell(rows, r3, 2),
-            clientInfo: maybeInfo,
-            lastDay: maybeLast
-          }));
-        }
-      }
-    }
-
-    // Attach client info from caseload clients when name matches and info empty
-    if (result.clients && result.clients.length) {
-      board.days.forEach(function (day) {
-        (day.slots || []).forEach(function (slot) {
-          if (slot.clientInfo) return;
-          var nm = (slot.clientName || '').toLowerCase();
-          if (!nm) return;
-          var match = result.clients.find(function (c) { return c.name && c.name.toLowerCase() === nm; });
-          if (match) slot.clientInfo = formatInformationCard(match);
-        });
-      });
-    }
-
-    if (board.days.some(function (d) { return d.slots.length; })) {
-      result.boards.push(board);
-    }
-    return board;
-  }
-
-  function importDxFromRows(rows, result) {
-    rows.forEach(function (row) {
-      (row || []).forEach(function (raw) {
-        var t = String(raw || '').trim();
-        if (/^F\d{2}/i.test(t) && t.length < 120) result.dxCodes.push(t);
-      });
-    });
-  }
-
-  function importFromGrid(rows, sourceLabel) {
-    var result = emptyImport();
-    result.sourceLabel = sourceLabel || 'spreadsheet';
-    if (!rows || !rows.length) {
-      result.notes.push('Sheet was empty.');
-      return result;
-    }
-
-    importClientsFromRows(rows, result);
-    importScheduleFromRows(rows, result, sourceLabel);
-    harvestClientsFromScheduleNotes(result);
-    importDxFromRows(rows, result);
-
-    // Deduplicate clients by name
-    var seen = {};
-    result.clients = result.clients.filter(function (c) {
-      var key = (c.name || '').toLowerCase();
-      if (!key || seen[key]) return false;
-      seen[key] = true;
-      return true;
-    });
-
-    var slotCount = result.boards.reduce(function (n, b) {
-      return n + b.days.reduce(function (m, d) { return m + d.slots.length; }, 0);
-    }, 0);
-    result.notes.push(
-      'Rows: ' + rows.length +
-      ' · clients: ' + result.clients.length +
-      ' · slots: ' + slotCount +
-      ' · cols: ' + maxCols(rows)
-    );
-    return result;
-  }
-
-  function waitForXlsx(timeoutMs) {
-    return new Promise(function (resolve, reject) {
-      if (typeof XLSX !== 'undefined') { resolve(XLSX); return; }
-      var start = Date.now();
-      var t = setInterval(function () {
-        if (typeof XLSX !== 'undefined') {
-          clearInterval(t);
-          resolve(XLSX);
-        } else if (Date.now() - start > (timeoutMs || 8000)) {
-          clearInterval(t);
-          reject(new Error('Excel reader failed to load. Check your network, then hard-refresh (Ctrl+F5).'));
-        }
-      }, 150);
-    });
-  }
-
-  function importFromWorkspaceJson(parsed, sourceLabel) {
-    var result = emptyImport();
-    result.sourceLabel = sourceLabel || 'JSON';
-    if (!parsed || typeof parsed !== 'object') return result;
-
-    // Full Emme backup — keep structure/ids intact when present
-    if (Array.isArray(parsed.boards)) {
-      result.fullBackup = true;
-      result.boards = parsed.boards.map(function (b) {
-        return {
-          id: b.id || uid('board'),
-          name: b.name || 'Imported',
-          days: (b.days || []).map(function (d) {
-            return {
-              id: d.id || uid('day'),
-              name: d.name || 'Day',
-              color: d.color === 'maroon' ? 'maroon' : 'blue',
-              slots: (d.slots || []).map(function (s) {
-                var slot = normalizeSlot(s);
-                if (s && s.id) slot.id = s.id;
-                return slot;
-              })
-            };
-          })
-        };
-      });
-    }
-    if (Array.isArray(parsed.clients)) {
-      result.clients = parsed.clients.map(function (c) {
-        var client = normalizeClient(c);
-        if (c && c.id) client.id = c.id;
-        return client;
-      }).filter(function (c) { return c.name; });
-    }
-    if (Array.isArray(parsed.dxCodes)) result.dxCodes = parsed.dxCodes.map(String);
-    // Loose arrays of clients
-    if (!result.clients.length && Array.isArray(parsed) && parsed[0] && (parsed[0].name || parsed[0].email)) {
-      result.clients = parsed.map(normalizeClient).filter(function (c) { return c.name; });
-    }
-    result.notes.push(
-      'JSON: ' + result.clients.length + ' client(s), ' +
-      result.boards.length + ' board(s)' +
-      (result.fullBackup ? ' (Emme backup)' : '')
-    );
-    return result;
-  }
-
-  function restoreFullWorkspace(parsed) {
-    if (!parsed || typeof parsed !== 'object') throw new Error('Invalid backup file');
-    if (!Array.isArray(parsed.boards) || !parsed.boards.length) {
-      throw new Error('That JSON is not an Emme schedule backup (no boards found).');
-    }
-    var boards = parsed.boards.map(function (b) {
-      return {
-        id: b.id || uid('board'),
-        name: String(b.name || 'Schedule'),
-        days: Array.isArray(b.days) ? b.days.map(function (d) {
-          return {
-            id: d.id || uid('day'),
-            name: String(d.name || 'Day'),
-            color: d.color === 'maroon' ? 'maroon' : 'blue',
-            slots: Array.isArray(d.slots) ? d.slots.map(function (s) {
-              var slot = normalizeSlot(s);
-              if (s && s.id) slot.id = s.id;
-              return slot;
-            }) : []
-          };
-        }) : []
-      };
-    });
-    var clients = Array.isArray(parsed.clients) ? parsed.clients.map(function (c) {
-      var client = normalizeClient(c);
-      if (c && c.id) client.id = c.id;
-      return client;
-    }).filter(function (c) { return c.name; }) : [];
-
-    setWorkspace({
-      version: Number(parsed.version) || 1,
-      updatedAt: new Date().toISOString(),
-      boards: boards,
-      clients: clients,
-      dxCodes: Array.isArray(parsed.dxCodes) && parsed.dxCodes.length ? parsed.dxCodes.map(String) : DEFAULT_DX.slice()
-    });
-    state.activeBoardId = state.workspace.boards[0].id;
-    localStorage.setItem(BOARD_KEY, state.activeBoardId);
-    saveLocal(state.workspace);
-    renderAll();
-    scheduleSave();
-  }
-
-  async function smartImportFiles(fileList, options) {
-    options = options || {};
-    var files = Array.prototype.slice.call(fileList || []);
-    if (!files.length) throw new Error('No file selected');
-    var file = files[0];
-    var ext = fileExt(file.name);
-
-    // Emme JSON backup → exact restore
-    if (ext === 'json' || /json/i.test(file.type) || /\.json$/i.test(file.name)) {
-      var text = (await readAsText(file)).replace(/^\uFEFF/, '');
-      var parsed;
-      try {
-        parsed = JSON.parse(text);
-      } catch (_) {
-        throw new Error('That file is not valid JSON.');
-      }
-      if (parsed && Array.isArray(parsed.boards) && parsed.boards.length) {
-        restoreFullWorkspace(parsed);
-        return {
-          mode: 'backup',
-          message: 'Imported Emme backup (' + parsed.boards.length + ' board(s), ' +
-            ((parsed.clients && parsed.clients.length) || 0) + ' client(s))'
-        };
-      }
-    }
-
-    // Spreadsheet / other → parse then apply
-    var combined = emptyImport();
-    combined.sourceLabel = files.map(function (f) { return f.name; }).join(', ');
-    for (var i = 0; i < files.length; i++) {
-      var part = await parseUploadFile(files[i]);
-      combined.clients = combined.clients.concat(part.clients || []);
-      combined.boards = combined.boards.concat(part.boards || []);
-      combined.dxCodes = combined.dxCodes.concat(part.dxCodes || []);
-      combined.notes = combined.notes.concat(part.notes || []);
-      if (part.fullBackup) combined.fullBackup = true;
-    }
-    var seen = {};
-    combined.clients = combined.clients.filter(function (c) {
-      var key = (c.name || '').toLowerCase();
-      if (!key || seen[key]) return false;
-      seen[key] = true;
-      return true;
-    });
-    if (!combined.clients.length && !combined.boards.length && !combined.dxCodes.length) {
-      throw new Error('No clients or schedule slots found in “' + file.name + '”.');
-    }
-
-    if (options.previewOnly) {
-      pendingUpload = combined;
-      return { mode: 'preview', payload: combined };
-    }
-
-    var applyMode = options.mode || (combined.fullBackup ? 'replace' : 'merge');
-    applyUpload(combined, applyMode);
-    var slots = combined.boards.reduce(function (n, b) {
-      return n + (b.days || []).reduce(function (m, d) { return m + (d.slots || []).length; }, 0);
-    }, 0);
-    return {
-      mode: applyMode,
-      message: 'Imported ' + combined.clients.length + ' client(s) and ' + slots + ' slot(s) from ' + file.name
-    };
-  }
-
-  function extractJsonBlock(text) {
-    var raw = String(text || '').trim();
-    var fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fence) raw = fence[1].trim();
-    var start = raw.indexOf('{');
-    var end = raw.lastIndexOf('}');
-    if (start >= 0 && end > start) raw = raw.slice(start, end + 1);
-    return JSON.parse(raw);
-  }
-
-  async function refreshOrgAI() {
-    try {
-      var res = await fetch('/api/openai-chat', { method: 'GET', credentials: 'include' });
-      var data = await res.json().catch(function () { return {}; });
-      orgAI = {
-        checked: true,
-        configured: !!data.configured,
-        model: data.model || '',
-        provider: data.provider || 'none'
-      };
-    } catch (_) {
-      orgAI = { checked: true, configured: false, model: '', provider: 'none' };
-    }
-    return orgAI;
-  }
-
-  async function callScheduleAI(messages) {
-    if (!orgAI.checked) await refreshOrgAI();
-    if (!orgAI.configured) throw new Error('Org AI is not configured. CSV/Excel/JSON still work without AI.');
-    var res = await fetch('/api/openai-chat', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: messages, model: orgAI.model })
-    });
-    var data = await res.json().catch(function () { return {}; });
-    if (!res.ok) throw new Error(data.error || ('AI error ' + res.status));
-    if (!data.content) throw new Error('AI returned an empty response');
-    return data.content;
-  }
-
-  var AI_SYSTEM = [
-    'You extract Emme therapy schedule and caseload data from uploaded files.',
-    'Return ONLY valid JSON with this shape:',
-    '{ "clients":[{"name","dob","parents","medicaid","email","phone","sessions","agency","serviceCoordinator","scEmail","tasks","hours"}],',
-    '"boards":[{"name","days":[{"name","color":"blue|maroon","slots":[{"time","status","notes","lastDay"}]}]}],',
-    '"dxCodes":["F80.0 — ..."] }',
-    'Use empty arrays when unknown. Preserve emails/phones exactly. Status values like Full, Open 4x, Lunch, Makeup, Not Open when present.',
-    'Map Information Card blocks into client fields. Map day sections into boards/days/slots.'
-  ].join(' ');
-
-  async function aiImportFromText(text, sourceLabel) {
-    var content = await callScheduleAI([
-      { role: 'system', content: AI_SYSTEM },
-      { role: 'user', content: 'File: ' + sourceLabel + '\n\nExtract schedule/caseload JSON from:\n\n' + String(text).slice(0, 24000) }
-    ]);
-    var parsed = extractJsonBlock(content);
-    var result = importFromWorkspaceJson(parsed, sourceLabel);
-    result.notes.push('AI mapped fields from ' + sourceLabel);
-    return result;
-  }
-
-  async function aiImportFromMultimodal(userContent, sourceLabel) {
-    var content = await callScheduleAI([
-      { role: 'system', content: AI_SYSTEM },
-      { role: 'user', content: userContent }
-    ]);
-    var parsed = extractJsonBlock(content);
-    var result = importFromWorkspaceJson(parsed, sourceLabel);
-    result.notes.push('AI read ' + sourceLabel);
-    return result;
-  }
-
-  async function parseUploadFile(file) {
-    if (file.size > UPLOAD_MAX_BYTES) throw new Error('File is too large (max 12 MB)');
-    var ext = fileExt(file.name);
-    var label = file.name;
-
-    // JSON workspace / client list
-    if (ext === 'json' || /json/i.test(file.type)) {
-      var jsonText = await readAsText(file);
-      var parsed = JSON.parse(jsonText);
-      if (parsed && (parsed.boards || parsed.clients || Array.isArray(parsed))) {
-        return importFromWorkspaceJson(parsed, label);
-      }
-      return aiImportFromText(jsonText, label);
-    }
-
-    // CSV / TSV / TXT
-    if (ext === 'csv' || ext === 'tsv' || ext === 'txt' || /csv|tab-separated|plain/i.test(file.type)) {
-      var text = await readAsText(file);
-      var grid = parseDelimitedTable(text);
-      var fromGrid = importFromGrid(grid, label);
-      if (fromGrid.clients.length || fromGrid.boards.length || fromGrid.dxCodes.length) return fromGrid;
-      try {
-        return await aiImportFromText(text, label);
-      } catch (aiErr) {
-        throw new Error(
-          'Could not map that spreadsheet. Tip: download as Excel (.xlsx) or CSV from Google Sheets. ' +
-          (aiErr && aiErr.message ? aiErr.message : '')
-        );
-      }
-    }
-
-    // Excel
-    if (ext === 'xlsx' || ext === 'xls' || /spreadsheet|excel/i.test(file.type)) {
-      var XLSXlib = await waitForXlsx(10000);
-      var buf = await readAsArrayBuffer(file);
-      var wb = XLSXlib.read(buf, { type: 'array', cellDates: false, raw: false });
-      var merged = emptyImport();
-      merged.sourceLabel = label;
-      var diagnostics = [];
-      wb.SheetNames.forEach(function (sheetName) {
-        var sheet = wb.Sheets[sheetName];
-        var rows = XLSXlib.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '', blankrows: false });
-        // Normalize all cells to strings (SheetJS may leave numbers)
-        rows = rows.map(function (row) {
-          return (row || []).map(function (v) { return v == null ? '' : String(v); });
-        });
-        diagnostics.push(sheetName + ':' + rows.length + 'r');
-        var part = importFromGrid(rows, sheetName);
-        merged.clients = merged.clients.concat(part.clients);
-        part.boards.forEach(function (b) {
-          if (!b.name || b.name === 'Imported Schedule') b.name = sheetName;
-          merged.boards.push(b);
-        });
-        merged.dxCodes = merged.dxCodes.concat(part.dxCodes);
-        merged.notes = merged.notes.concat(part.notes || []);
-      });
-      // Dedupe clients across sheets
-      var seenX = {};
-      merged.clients = merged.clients.filter(function (c) {
-        var key = (c.name || '').toLowerCase();
-        if (!key || seenX[key]) return false;
-        seenX[key] = true;
-        return true;
-      });
-      if (merged.clients.length || merged.boards.length || merged.dxCodes.length) {
-        merged.notes.push('Excel sheets: ' + diagnostics.join(', '));
-        return merged;
-      }
-      // Last resort: flatten to CSV text and try AI
-      var flat = wb.SheetNames.map(function (n) {
-        return '--- ' + n + ' ---\n' + XLSXlib.utils.sheet_to_csv(wb.Sheets[n]);
-      }).join('\n\n');
-      try {
-        return await aiImportFromText(flat, label);
-      } catch (aiErr) {
-        throw new Error(
-          'Excel opened (' + diagnostics.join(', ') + ') but no clients/slots were detected. ' +
-          'Make sure the sheet has client names or times like 4:30 PM. ' +
-          (aiErr && aiErr.message ? aiErr.message : '')
-        );
-      }
-    }
-
-    // DOCX
-    if (ext === 'docx' || /wordprocessingml/i.test(file.type)) {
-      if (typeof mammoth === 'undefined') throw new Error('Word reader failed to load');
-      var docBuf = await readAsArrayBuffer(file);
-      var doc = await mammoth.extractRawText({ arrayBuffer: docBuf });
-      var docText = String(doc.value || '').trim();
-      if (!docText) throw new Error('No text found in Word file');
-      return aiImportFromText(docText, label);
-    }
-    if (ext === 'doc') throw new Error('Legacy .doc is not supported. Re-save as .docx, CSV, or Excel.');
-
-    // Images
-    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].indexOf(ext) >= 0 || /^image\//i.test(file.type)) {
-      var dataUrl = await readAsDataURL(file);
-      var mediaType = (/^image\//.test(file.type) ? file.type : null) || (ext === 'png' ? 'image/png' : 'image/jpeg');
-      return aiImportFromMultimodal([
-        { type: 'text', text: 'Uploaded image: ' + label + '\nExtract all clients, schedule slots, statuses, and contact fields into the JSON schema.' },
-        { type: 'image', source: { type: 'base64', media_type: mediaType, data: dataUrlToBase64(dataUrl) } }
-      ], label);
-    }
-
-    // PDF
-    if (ext === 'pdf' || file.type === 'application/pdf') {
-      var pdfUrl = await readAsDataURL(file);
-      return aiImportFromMultimodal([
-        { type: 'text', text: 'Uploaded PDF: ' + label + '\nExtract caseload and schedule into the JSON schema.' },
-        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: dataUrlToBase64(pdfUrl) } }
-      ], label);
-    }
-
-    // Fallback: try text, then AI
-    try {
-      var fallbackText = await readAsText(file);
-      if (fallbackText && fallbackText.replace(/\s/g, '').length > 20) {
-        var grid2 = parseDelimitedTable(fallbackText);
-        var g2 = importFromGrid(grid2, label);
-        if (g2.clients.length || g2.boards.length) return g2;
-        return aiImportFromText(fallbackText, label);
-      }
-    } catch (_) {}
-
-    throw new Error('Could not read this file type automatically. Try CSV, Excel, JSON, PDF, image, or DOCX.');
-  }
-
-  function mergeClients(existing, incoming) {
-    var out = existing.slice();
-    incoming.forEach(function (c) {
-      if (!c.name) return;
-      var idx = out.findIndex(function (x) {
-        return x.name.toLowerCase() === c.name.toLowerCase() ||
-          (c.email && x.email && x.email.toLowerCase() === c.email.toLowerCase());
-      });
-      if (idx >= 0) {
-        var prev = out[idx];
-        out[idx] = Object.assign({}, prev, {
-          information: c.information || prev.information,
-          dob: c.dob || prev.dob,
-          parents: c.parents || prev.parents,
-          medicaid: c.medicaid || prev.medicaid,
-          email: c.email || prev.email,
-          phone: c.phone || prev.phone,
-          sessions: c.sessions || prev.sessions,
-          agency: c.agency || prev.agency,
-          serviceCoordinator: c.serviceCoordinator || prev.serviceCoordinator,
-          scEmail: c.scEmail || prev.scEmail,
-          tasks: c.tasks || prev.tasks,
-          hours: c.hours || prev.hours
-        });
-      } else {
-        out.push(c);
-      }
-    });
-    return out;
-  }
-
-  function applyUpload(payload, mode) {
-    // Emme JSON backups always fully restore (same as Import)
-    if (payload && payload.fullBackup && mode === 'replace') {
-      restoreFullWorkspace({
-        version: 1,
-        boards: payload.boards,
-        clients: payload.clients,
-        dxCodes: payload.dxCodes
-      });
-      return;
-    }
-    mutate(function () {
-      if (mode === 'replace') {
-        if (payload.boards.length) state.workspace.boards = payload.boards;
-        if (payload.clients.length) state.workspace.clients = payload.clients;
-        if (payload.dxCodes.length) state.workspace.dxCodes = payload.dxCodes.slice();
-      } else {
-        if (payload.clients.length) {
-          state.workspace.clients = mergeClients(state.workspace.clients || [], payload.clients);
-        }
-        if (payload.boards.length) {
-          payload.boards.forEach(function (b) {
-            var existing = state.workspace.boards.find(function (x) {
-              return x.name.toLowerCase() === String(b.name || '').toLowerCase();
-            });
-            if (!existing) {
-              state.workspace.boards.push(b);
-            } else {
-              (b.days || []).forEach(function (day) {
-                var ed = existing.days.find(function (d) { return d.name.toLowerCase() === day.name.toLowerCase(); });
-                if (!ed) existing.days.push(day);
-                else {
-                  day.slots.forEach(function (slot) {
-                    var match = ed.slots.find(function (s) {
-                      return s.time === slot.time &&
-                        (slotClientName(s) === slotClientName(slot) || s.notes === slot.notes);
-                    });
-                    if (!match) ed.slots.push(normalizeSlot(slot));
-                    else {
-                      if (slot.status) match.status = slot.status;
-                      if (slot.lastDay) match.lastDay = slot.lastDay;
-                      if (slot.clientName || slot.notes) {
-                        match.clientName = slot.clientName || slot.notes;
-                        match.notes = match.clientName;
-                      }
-                      if (slot.clientInfo) match.clientInfo = slot.clientInfo;
-                    }
-                  });
-                }
-              });
-            }
-          });
-        }
-        if (payload.dxCodes.length) {
-          var set = {};
-          (state.workspace.dxCodes || []).concat(payload.dxCodes).forEach(function (c) { set[c] = true; });
-          state.workspace.dxCodes = Object.keys(set);
-        }
-      }
-      normalizeWorkspace(state.workspace);
-      syncAllClientsToSchedule({ force: false });
-      if (state.workspace.boards[0]) {
-        state.activeBoardId = state.workspace.boards[0].id;
-        localStorage.setItem(BOARD_KEY, state.activeBoardId);
-      }
-    });
-  }
-
-  function openUploadModal() {
-    openModal(
-      'Upload caseload / schedule',
-      '<div class="upload-drop" id="js-upload-drop" tabindex="0" role="button" aria-label="Choose files to upload">' +
-        '<strong>Drop a file here or click to browse</strong>' +
-        '<p>Works with Time / Status / Client Name / Client Info / Last Day. Excel or CSV preferred.</p>' +
-      '</div>' +
-      '<div class="upload-mode">' +
-        '<label><input type="radio" name="upload-mode" value="merge" checked /> Merge into current data</label>' +
-        '<label><input type="radio" name="upload-mode" value="replace" /> Replace with uploaded data</label>' +
-      '</div>' +
-      '<p style="font-size:0.78rem;color:var(--muted);margin-top:0.5rem">Accepts Excel, CSV, JSON backups, PDF, images, and Word. File picker shows <strong>All files</strong>.</p>' +
-      '<div id="js-upload-status"></div>' +
-      '<div class="upload-preview is-hidden" id="js-upload-preview"></div>',
-      'upload-apply',
-      null
-    );
-    var drop = document.getElementById('js-upload-drop');
-    drop.addEventListener('click', function () {
-      pickFiles(true).then(function (files) {
-        if (files.length) handleUploadFiles(files);
-      });
-    });
-    drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('upload-drop--active'); });
-    drop.addEventListener('dragleave', function () { drop.classList.remove('upload-drop--active'); });
-    drop.addEventListener('drop', function (e) {
-      e.preventDefault();
-      drop.classList.remove('upload-drop--active');
-      var files = e.dataTransfer && e.dataTransfer.files;
-      if (files && files.length) handleUploadFiles(files);
-    });
-  }
-
-  function renderUploadPreview(payload) {
-    var el = document.getElementById('js-upload-preview');
-    var status = document.getElementById('js-upload-status');
-    if (!el || !status) return;
-    status.innerHTML = '';
-    el.classList.remove('is-hidden');
-    var slotCount = (payload.boards || []).reduce(function (n, b) {
-      return n + (b.days || []).reduce(function (m, d) { return m + (d.slots || []).length; }, 0);
-    }, 0);
-    var clientNames = (payload.clients || []).slice(0, 8).map(function (c) { return '<li>' + escapeHtml(c.name) + (c.email ? ' · ' + escapeHtml(c.email) : '') + '</li>'; }).join('');
-    el.innerHTML =
-      '<strong>' + escapeHtml(payload.sourceLabel || 'Upload') + '</strong>' +
-      '<div style="margin-top:0.35rem">' +
-        (payload.clients.length) + ' client(s) · ' +
-        (payload.boards.length) + ' board(s) · ' +
-        slotCount + ' slot(s)' +
-        (payload.dxCodes.length ? ' · ' + payload.dxCodes.length + ' DX code(s)' : '') +
-      '</div>' +
-      (clientNames ? '<ul>' + clientNames + ((payload.clients.length > 8) ? '<li>…</li>' : '') + '</ul>' : '') +
-      ((payload.notes || []).length ? '<p style="margin-top:0.4rem;color:var(--muted)">' + escapeHtml(payload.notes.join(' ')) + '</p>' : '');
-  }
-
-  async function handleUploadFiles(fileList) {
-    var status = document.getElementById('js-upload-status');
-    if (status) status.innerHTML = '<div class="upload-busy"><span class="spin" aria-hidden="true"></span> Reading file…</div>';
-    pendingUpload = null;
-    try {
-      var result = await smartImportFiles(fileList, { previewOnly: true });
-      if (result.mode === 'backup') {
-        if (status) status.innerHTML = '';
-        closeModal();
-        toast(result.message);
-        return;
-      }
-      renderUploadPreview(result.payload);
-      if (result.payload.fullBackup) {
-        var replaceRadio = document.querySelector('input[name="upload-mode"][value="replace"]');
-        if (replaceRadio) replaceRadio.checked = true;
-      }
-      toast('Ready to apply');
-    } catch (err) {
-      pendingUpload = null;
-      console.error(err);
-      if (status) status.innerHTML = '<p style="color:#8b2e3a;font-weight:600;margin-top:0.75rem">' + escapeHtml(err.message || 'Upload failed') + '</p>';
-      toast(err.message || 'Upload failed');
-    }
-  }
-
-  function clearFileAccept(input) {
-    if (!input) return;
-    input.removeAttribute('accept');
-    try { input.accept = ''; } catch (_) {}
-  }
-
-  function pickFiles(multiple) {
-    return new Promise(function (resolve) {
-      var permanent = document.getElementById('js-import-file');
-      if (permanent && !permanent._emmeBusy) {
-        permanent._emmeBusy = true;
-        permanent.value = '';
-        permanent.multiple = !!multiple;
-        clearFileAccept(permanent);
-        var onChange = function () {
-          permanent.removeEventListener('change', onChange);
-          permanent.removeEventListener('cancel', onCancel);
-          permanent._emmeBusy = false;
-          resolve(Array.prototype.slice.call(permanent.files || []));
-        };
-        var onCancel = function () {
-          permanent.removeEventListener('change', onChange);
-          permanent.removeEventListener('cancel', onCancel);
-          permanent._emmeBusy = false;
-          resolve([]);
-        };
-        permanent.addEventListener('change', onChange);
-        permanent.addEventListener('cancel', onCancel);
-        permanent.click();
-        return;
-      }
-
-      var input = document.createElement('input');
-      input.type = 'file';
-      clearFileAccept(input);
-      if (multiple) input.multiple = true;
-      input.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;width:1px;height:1px;';
-      document.body.appendChild(input);
-      var done = false;
-      function finish(files) {
-        if (done) return;
-        done = true;
-        try { input.remove(); } catch (_) {}
-        resolve(files || []);
-      }
-      input.addEventListener('change', function () {
-        finish(Array.prototype.slice.call(input.files || []));
-      });
-      input.addEventListener('cancel', function () { finish([]); });
-      input.click();
-    });
-  }
 
   document.getElementById('js-import').addEventListener('click', function () {
     var input = document.getElementById('js-import-file');
-    if (!input) {
-      pickFiles(true).then(function (files) {
-        if (!files.length) return;
-        toast('Importing…');
-        return smartImportFiles(files, { mode: 'merge' }).then(function (result) {
-          toast(result.message || 'Imported');
-          renderAll();
-        });
-      }).catch(function (err) {
-        console.error(err);
-        toast(err.message || 'Import failed');
-      });
-      return;
-    }
+    input.removeAttribute('accept');
+    try { input.accept = ''; } catch (_) {}
     input.value = '';
-    clearFileAccept(input);
-    input.onchange = function () {
-      var files = Array.prototype.slice.call(input.files || []);
-      input.onchange = null;
-      if (!files.length) return;
-      toast('Importing…');
-      smartImportFiles(files, { mode: 'merge' }).then(function (result) {
-        toast(result.message || 'Imported');
-        renderAll();
-      }).catch(function (err) {
-        console.error(err);
-        toast(err.message || 'Import failed');
-      });
-    };
     input.click();
   });
-
-  document.getElementById('js-upload').addEventListener('click', function () {
-    openUploadModal();
+  document.getElementById('js-import-file').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(reader.result);
+        if (!parsed || !Array.isArray(parsed.boards)) throw new Error('Invalid file');
+        mutate(function () {
+          state.workspace = {
+            version: parsed.version || 1,
+            updatedAt: new Date().toISOString(),
+            boards: parsed.boards,
+            clients: parsed.clients || [],
+            dxCodes: parsed.dxCodes || DEFAULT_DX.slice()
+          };
+          state.activeBoardId = state.workspace.boards[0] && state.workspace.boards[0].id;
+        });
+        toast('Imported');
+      } catch (err) {
+        toast('Import failed — use an Emme Export JSON backup');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
   });
 
-  // Remove old static picker wiring if present
   if (bc) {
     bc.onmessage = function (ev) {
       if (!ev.data || ev.data.type !== 'workspace') return;
       if (state.dirty || state.saving) return;
       var local = loadLocal();
       if (local && local.updatedAt === ev.data.updatedAt) {
-        setWorkspace(local);
+        state.workspace = local;
         renderAll();
       }
     };
@@ -3007,19 +1518,18 @@
 
   async function init() {
     setSyncLabel('Connecting…', 'local');
-    refreshOrgAI();
     var local = loadLocal();
     try {
       var cloud = await loadCloud();
       if (cloud.configured) {
         state.cloudConfigured = true;
         if (cloud.workspace && (cloud.workspace.boards || []).length) {
-          setWorkspace(cloud.workspace);
+          state.workspace = cloud.workspace;
         } else if (local && (local.boards || []).length) {
-          setWorkspace(local);
+          state.workspace = local;
           await persist();
         } else {
-          setWorkspace(seedWorkspace());
+          state.workspace = seedWorkspace();
           await persist();
         }
         state.lastRemoteUpdatedAt = state.workspace.updatedAt;
@@ -3028,13 +1538,13 @@
         state.pollTimer = setInterval(pollMeta, POLL_MS);
       } else {
         state.cloudConfigured = false;
-        setWorkspace((local && local.boards && local.boards.length) ? local : seedWorkspace());
+        state.workspace = (local && local.boards && local.boards.length) ? local : seedWorkspace();
         saveLocal(state.workspace);
         setSyncLabel('Saved on this device', 'local');
       }
     } catch (_) {
       state.cloudConfigured = false;
-      setWorkspace((local && local.boards && local.boards.length) ? local : seedWorkspace());
+      state.workspace = (local && local.boards && local.boards.length) ? local : seedWorkspace();
       saveLocal(state.workspace);
       setSyncLabel('Saved on this device', 'local');
     }
@@ -3043,7 +1553,6 @@
       state.activeBoardId = state.workspace.boards[0].id;
       localStorage.setItem(BOARD_KEY, state.activeBoardId);
     }
-    syncAllClientsToSchedule({ force: false });
     renderAll();
   }
 
