@@ -2236,21 +2236,22 @@
           root.innerHTML = days.map(function (day) {
             const color = day.color === 'maroon' ? ' sched-preview__day-head--maroon' : '';
             const slots = (day.slots || []).filter(function (s) {
-              return s.notes || s.status || s.time;
+              return s.clientName || s.notes || s.status || s.time;
             }).slice(0, 8);
             const rows = slots.length
               ? slots.map(function (s) {
                   const cls = SchedulePreview.statusClass(s.status);
+                  const name = s.clientName || s.notes || '';
                   return '<tr>' +
                     '<td style="width:6.5rem;font-weight:600;color:var(--color-green)">' + SchedulePreview.escapeHtml(s.time || '—') + '</td>' +
                     '<td style="width:9rem"><span class="sched-status sched-status--' + cls + '">' + SchedulePreview.escapeHtml(s.status || '—') + '</span></td>' +
-                    '<td>' + SchedulePreview.escapeHtml(s.notes || '') + '</td>' +
+                    '<td>' + SchedulePreview.escapeHtml(name) + '</td>' +
                     '</tr>';
                 }).join('')
               : '<tr><td colspan="3" style="color:var(--color-text-muted)">No appointments listed</td></tr>';
             return '<article class="sched-preview__day">' +
               '<div class="sched-preview__day-head' + color + '"><span>' + SchedulePreview.escapeHtml(day.name) + '</span><span style="opacity:.8;font-size:.75rem;font-family:var(--font-body)">Live</span></div>' +
-              '<table class="sched-preview__table"><thead><tr><th>Time</th><th>Status</th><th>Notes</th></tr></thead><tbody>' +
+              '<table class="sched-preview__table"><thead><tr><th>Time</th><th>Status</th><th>Client</th></tr></thead><tbody>' +
               rows + '</tbody></table></article>';
           }).join('');
         },
