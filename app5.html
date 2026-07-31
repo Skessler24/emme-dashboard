@@ -262,25 +262,7 @@
       background: rgba(8,67,57,0.07); padding: 0.15rem 0.45rem; border-radius: 999px;
     }
 
-    /* Spreadsheet layout */
-    .sheet-wrap {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); box-shadow: var(--shadow); overflow: auto;
-    }
-    .sheet-table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 0.86rem; }
-    .sheet-table th {
-      position: sticky; top: 0; z-index: 2;
-      background: var(--green); color: #fff; text-align: left;
-      padding: 0.55rem 0.7rem; font-size: 0.75rem; letter-spacing: 0.03em;
-    }
-    .sheet-day-row td {
-      background: var(--day-blue); color: #fff; font-weight: 700;
-      font-family: var(--font-display); padding: 0.5rem 0.7rem;
-    }
-    .sheet-day-row--maroon td { background: var(--day-maroon); }
-    .sheet-table td {
-      padding: 0.35rem 0.5rem; border-bottom: 1px solid rgba(8,67,57,0.07);
-    }
+    /* Schedule + Clients layouts */
 
     /* Clients layout */
     .client-grid {
@@ -437,9 +419,6 @@
           <button type="button" class="layout-switch__btn layout-switch__btn--active" data-layout="schedule" id="js-layout-schedule">
             <i data-lucide="calendar-days"></i> Schedule
           </button>
-          <button type="button" class="layout-switch__btn" data-layout="sheet" id="js-layout-sheet">
-            <i data-lucide="table-2"></i> Spreadsheet
-          </button>
           <button type="button" class="layout-switch__btn" data-layout="clients" id="js-layout-clients">
             <i data-lucide="users"></i> Clients
           </button>
@@ -455,7 +434,6 @@
     </div>
 
     <div id="js-view-schedule"></div>
-    <div id="js-view-sheet" class="is-hidden"></div>
     <div id="js-view-clients" class="is-hidden"></div>
 
     <section class="dx-panel" id="js-dx-panel" aria-label="Diagnostic codes">
@@ -915,42 +893,6 @@
       '</div>';
   }
 
-  function renderSheetView() {
-    var root = document.getElementById('js-view-sheet');
-    var board = activeBoard();
-    if (!board) {
-      root.innerHTML = '<div class="empty"><h3>No schedule board</h3></div>';
-      return;
-    }
-    var body = '';
-    (board.days || []).forEach(function (day) {
-      var colorCls = day.color === 'maroon' ? ' sheet-day-row--maroon' : '';
-      body += '<tr class="sheet-day-row' + colorCls + '"><td colspan="6">' + escapeHtml(day.name) + '</td></tr>';
-      (day.slots || []).forEach(function (slot) {
-        body += '<tr data-day="' + day.id + '" data-slot="' + slot.id + '">' +
-          dragHandleHtml() +
-          '<td><input class="cell-input" data-field="time" value="' + escapeAttr(slot.time) + '" /></td>' +
-          '<td>' + renderStatusSelect(slot.status, 'data-field="status"') + '</td>' +
-          '<td><input class="cell-input" data-field="notes" value="' + escapeAttr(slot.notes) + '" />' +
-            slotLinkedClientHtml(slot) + '</td>' +
-          '<td><input class="cell-input" data-field="lastDay" value="' + escapeAttr(slot.lastDay) + '" /></td>' +
-          '<td><button type="button" class="btn btn--icon btn--danger" data-action="del-slot"><i data-lucide="trash-2"></i></button></td>' +
-          '</tr>';
-      });
-    });
-    var sheet =
-      '<div class="sheet-wrap"><table class="sheet-table"><thead><tr>' +
-        '<th class="col-drag"></th><th>Appointment Time</th><th>Status</th><th>Notes</th><th>Last Day</th><th></th>' +
-      '</tr></thead><tbody>' + (body || '<tr><td colspan="6" class="empty">No rows</td></tr>') +
-      '</tbody></table></div>';
-
-    root.innerHTML =
-      '<div class="sched-layout">' +
-        sheet +
-        renderClientSidebarHtml() +
-      '</div>';
-  }
-
   function renderClientsView() {
     var root = document.getElementById('js-view-clients');
     var q = (state.clientQuery || '').toLowerCase().trim();
@@ -1027,9 +969,12 @@
   }
 
   function showLayout() {
+    if (state.layout !== 'schedule' && state.layout !== 'clients') {
+      state.layout = 'schedule';
+      localStorage.setItem(LAYOUT_KEY, state.layout);
+    }
     var layout = state.layout;
     document.getElementById('js-view-schedule').classList.toggle('is-hidden', layout !== 'schedule');
-    document.getElementById('js-view-sheet').classList.toggle('is-hidden', layout !== 'sheet');
     document.getElementById('js-view-clients').classList.toggle('is-hidden', layout !== 'clients');
     document.getElementById('js-client-search-wrap').classList.toggle('is-hidden', layout !== 'clients');
     document.querySelectorAll('.layout-switch__btn').forEach(function (btn) {
@@ -1043,7 +988,6 @@
     renderBoardTabs();
     showLayout();
     renderScheduleView();
-    renderSheetView();
     renderClientsView();
     renderDx();
     iconize();
