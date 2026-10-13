@@ -3,10 +3,6 @@
   "Values": {
     "AzureWebJobsStorage": "",
     "FUNCTIONS_WORKER_RUNTIME": "node",
-    "OPENAI_API_KEY": "sk-ant-your-anthropic-key",
-    "OPENAI_MODEL": "claude-sonnet-5",
-    "ANTHROPIC_API_KEY": "",
-    "ANTHROPIC_MODEL": "claude-sonnet-5",
     "AZURE_STORAGE_CONNECTION_STRING": "",
     "AZURE_STORAGE_CONTAINER": "emme-reports"
   }
