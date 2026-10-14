@@ -1447,15 +1447,7 @@
         return location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       }
       function redirectUri() {
-        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-          return location.protocol + '//' + location.host + '/';
-        }
-        const path = location.pathname || '/';
-        if (path.endsWith('.html')) {
-          const dir = path.replace(/\/[^/]*$/, '/');
-          return location.origin + (dir || '/');
-        }
-        return location.origin + (path.endsWith('/') ? path : path + '/');
+        return location.origin + '/ms-redirect.html';
       }
 
       /* ── MICROSOFT GRAPH ── */
@@ -1537,6 +1529,10 @@
             cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false },
           });
           await MsGraph.pca.initialize();
+          if (window.opener && window.opener !== window) {
+            MsGraph.ready = true;
+            return MsGraph.pca;
+          }
           const result = await MsGraph.pca.handleRedirectPromise();
           if (result && result.account) MsGraph.account = result.account;
           else {
@@ -1564,8 +1560,11 @@
             if (code === 'popup_window_error' || /popup/i.test(msg)) {
               throw new Error('Pop-up blocked. Allow pop-ups for localhost, then try Connect again.');
             }
+            if (code === 'hash_empty_error') {
+              throw new Error('Microsoft returned without a sign-in result. In Azure, add this Single-page application redirect URI: ' + redirectUri());
+            }
             if (code === 'network_error' || /network/i.test(msg)) {
-              throw new Error('Sign-in network failed. Check that Azure Redirect URI is exactly http://localhost:5500/ (SPA), then hard-refresh and try again.');
+              throw new Error('Sign-in network failed. In Azure, the Single-page application redirect URI must be exactly ' + redirectUri());
             }
             throw err;
           }

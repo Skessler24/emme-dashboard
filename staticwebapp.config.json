@@ -1,6 +1,10 @@
 {
   "routes": [
     {
+      "route": "/ms-redirect.html",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/api/*",
       "allowedRoles": ["authenticated"]
     },
