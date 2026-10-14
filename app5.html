@@ -399,7 +399,9 @@
         <span class="sync-dot" aria-hidden="true"></span>
         <span id="js-sync-label">Loading…</span>
       </span>
-      <button type="button" class="btn btn--ghost" id="js-export" title="Export JSON backup">Export</button>
+      <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Download an Excel spreadsheet">Spreadsheet</button>
+      <button type="button" class="btn btn--ghost" id="js-pdf" title="Open a PDF you can save or print">PDF</button>
+      <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
       <button type="button" class="btn btn--ghost" id="js-import" title="Import backup or spreadsheet">Import</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
       <a class="btn btn--yellow" href="index.html">← Dashboard</a>
@@ -447,6 +449,19 @@
 
   <div class="toast" id="js-toast" role="status" aria-live="polite"></div>
 
+  <div class="modal is-hidden" id="js-share-modal" role="dialog" aria-modal="true" aria-labelledby="js-share-title">
+    <div class="modal__panel">
+      <h2 class="modal__title" id="js-share-title">Share schedule</h2>
+      <p id="js-share-status" style="color:var(--muted);font-size:0.92rem">Creating a link your bosses can open while signed in to Emme…</p>
+      <input id="js-share-link" class="cell-input" readonly style="width:100%;margin:0.75rem 0" />
+      <div class="modal__actions">
+        <button type="button" class="btn btn--green" id="js-share-copy">Copy link</button>
+        <a class="btn btn--soft" id="js-share-email" href="#">Email link</a>
+        <button type="button" class="btn btn--soft" id="js-share-close">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal is-hidden" id="js-modal" role="dialog" aria-modal="true" aria-labelledby="js-modal-title">
     <div class="modal__panel">
       <h2 class="modal__title" id="js-modal-title">Edit</h2>
@@ -462,9 +477,10 @@
 (function () {
   'use strict';
 
-  var STORAGE_KEY = 'emme_schedule_workspace_v1';
-  var LAYOUT_KEY = 'emme_schedule_layout';
-  var BOARD_KEY = 'emme_schedule_board';
+  var userScope = 'device';
+  function storageKey() { return 'emme_schedule_workspace_v1:' + userScope; }
+  function layoutKey() { return 'emme_schedule_layout:' + userScope; }
+  function boardKey() { return 'emme_schedule_board:' + userScope; }
   var POLL_MS = 6000;
   var SAVE_DEBOUNCE_MS = 700;
 
@@ -497,8 +513,8 @@
   var state = {
     workspace: null,
     cloudConfigured: false,
-    layout: localStorage.getItem(LAYOUT_KEY) || 'schedule',
-    activeBoardId: localStorage.getItem(BOARD_KEY) || '',
+    layout: 'schedule',
+    activeBoardId: '',
     clientQuery: '',
     saving: false,
     dirty: false,
@@ -511,7 +527,18 @@
   };
 
   var bc = null;
-  try { bc = new BroadcastChannel('emme_schedule_sync'); } catch (_) {}
+
+  async function resolveUserScope() {
+    try {
+      var res = await fetch('/.auth/me', { credentials: 'same-origin' });
+      if (!res.ok) return 'device';
+      var data = await res.json();
+      var principal = data && data.clientPrincipal;
+      if (!principal) return 'device';
+      var id = String(principal.userId || principal.userDetails || 'device').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80);
+      return id || 'device';
+    } catch (_) { return 'device'; }
+  }
 
   function uid(prefix) {
     return (prefix || 'id') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
@@ -599,7 +626,7 @@
     if (!board) {
       board = ws.boards[0];
       state.activeBoardId = board.id;
-      localStorage.setItem(BOARD_KEY, board.id);
+      localStorage.setItem(boardKey(), board.id);
     }
     return board;
   }
@@ -614,14 +641,14 @@
 
   function loadLocal() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
+      var raw = localStorage.getItem(storageKey());
       if (!raw) return null;
       return JSON.parse(raw);
     } catch (_) { return null; }
   }
 
   function saveLocal(workspace) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
+    localStorage.setItem(storageKey(), JSON.stringify(workspace));
     if (bc) {
       try { bc.postMessage({ type: 'workspace', updatedAt: workspace.updatedAt }); } catch (_) {}
     }
@@ -971,7 +998,7 @@
   function showLayout() {
     if (state.layout !== 'schedule' && state.layout !== 'clients') {
       state.layout = 'schedule';
-      localStorage.setItem(LAYOUT_KEY, state.layout);
+      localStorage.setItem(layoutKey(), state.layout);
     }
     var layout = state.layout;
     document.getElementById('js-view-schedule').classList.toggle('is-hidden', layout !== 'schedule');
@@ -1191,7 +1218,7 @@
     var tab = e.target.closest('[data-board]');
     if (tab) {
       state.activeBoardId = tab.getAttribute('data-board');
-      localStorage.setItem(BOARD_KEY, state.activeBoardId);
+      localStorage.setItem(boardKey(), state.activeBoardId);
       renderAll();
       return;
     }
@@ -1199,7 +1226,7 @@
     var layoutBtn = e.target.closest('[data-layout]');
     if (layoutBtn) {
       state.layout = layoutBtn.getAttribute('data-layout');
-      localStorage.setItem(LAYOUT_KEY, state.layout);
+      localStorage.setItem(layoutKey(), state.layout);
       renderAll();
       return;
     }
@@ -1299,7 +1326,7 @@
       var board = defaultBoard(name.trim());
       state.workspace.boards.push(board);
       state.activeBoardId = board.id;
-      localStorage.setItem(BOARD_KEY, board.id);
+      localStorage.setItem(boardKey(), board.id);
     });
   });
 
@@ -1321,7 +1348,7 @@
     mutate(function () {
       state.workspace.boards = state.workspace.boards.filter(function (b) { return b.id !== board.id; });
       state.activeBoardId = state.workspace.boards[0].id;
-      localStorage.setItem(BOARD_KEY, state.activeBoardId);
+      localStorage.setItem(boardKey(), state.activeBoardId);
     });
   });
 
@@ -1405,13 +1432,117 @@
     }
   });
 
-  document.getElementById('js-export').addEventListener('click', function () {
-    var blob = new Blob([JSON.stringify(state.workspace, null, 2)], { type: 'application/json' });
+  function csvCell(value) {
+    var text = String(value == null ? '' : value);
+    if (/[",\n\r]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
+    return text;
+  }
+
+  function scheduleRows() {
+    var rows = [['Board', 'Day', 'Time', 'Status', 'Client / notes', 'Last day']];
+    (state.workspace.boards || []).forEach(function (board) {
+      (board.days || []).forEach(function (day) {
+        (day.slots || []).forEach(function (slot) {
+          rows.push([board.name || '', day.name || '', slot.time || '', slot.status || '', slot.notes || '', slot.lastDay || '']);
+        });
+      });
+    });
+    rows.push([]);
+    rows.push(['Clients']);
+    rows.push(['Name', 'Sessions', 'Hours', 'Phone', 'Email', 'Agency', 'Parents', 'Service coordinator', 'Tasks']);
+    (state.workspace.clients || []).forEach(function (c) {
+      rows.push([c.name || '', c.sessions || '', c.hours || '', c.phone || '', c.email || '', c.agency || '', c.parents || '', c.serviceCoordinator || '', c.tasks || '']);
+    });
+    return rows;
+  }
+
+  function downloadFile(filename, mime, contents) {
+    var blob = new Blob([contents], { type: mime });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'emme-schedule-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(a.href);
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+  }
+
+  function exportSpreadsheet() {
+    if (!state.workspace) return;
+    var csv = '\uFEFF' + scheduleRows().map(function (row) {
+      return row.map(csvCell).join(',');
+    }).join('\r\n');
+    var stamp = new Date().toISOString().slice(0, 10);
+    downloadFile('Emme-schedule-' + stamp + '.csv', 'text/csv;charset=utf-8', csv);
+    toast('Spreadsheet downloaded — open it in Excel');
+  }
+
+  function exportPdf() {
+    if (!state.workspace) return;
+    var rows = scheduleRows();
+    var body = rows.map(function (row) {
+      if (!row.length) return '';
+      if (row.length === 1) return '<h2>' + escapeHtml(row[0]) + '</h2>';
+      return '<tr>' + row.map(function (cell) { return '<td>' + escapeHtml(cell) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Emme schedule</title>' +
+      '<style>body{font-family:Segoe UI,sans-serif;color:#142028;padding:24px}h1{color:#084339}table{width:100%;border-collapse:collapse}td{border-bottom:1px solid #e4e4e4;padding:6px 8px;font-size:13px}h2{margin-top:28px;color:#084339}</style></head><body>' +
+      '<h1>Emme schedule</h1><p>In the print window, choose Save as PDF.</p><table>' + body + '</table></body></html>';
+    var popup = window.open('', '_blank');
+    if (!popup) { toast('Allow pop-ups to save a PDF'); return; }
+    popup.document.open();
+    popup.document.write(html);
+    popup.document.close();
+    popup.focus();
+    setTimeout(function () { popup.print(); }, 300);
+  }
+
+  function shareLink() {
+    var modal = document.getElementById('js-share-modal');
+    var status = document.getElementById('js-share-status');
+    var input = document.getElementById('js-share-link');
+    var email = document.getElementById('js-share-email');
+    modal.classList.remove('is-hidden');
+    status.textContent = 'Creating a link…';
+    input.value = '';
+    email.removeAttribute('href');
+    fetch('/api/schedule/share', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    }).then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+      .then(function (result) {
+        if (!result.ok || !result.data.token) throw new Error((result.data && result.data.error) || 'Could not create a share link');
+        var url = location.origin + '/schedule-share.html?t=' + result.data.token;
+        input.value = url;
+        status.textContent = 'Your bosses can open this while signed in to Emme. It shows this schedule and client list.';
+        email.href = 'mailto:?subject=' + encodeURIComponent('Emme schedule') + '&body=' + encodeURIComponent('Here is my Emme schedule:\n' + url);
+      })
+      .catch(function (err) {
+        status.textContent = err.message || 'Could not create a share link';
+      });
+  }
+
+  document.getElementById('js-spreadsheet').addEventListener('click', exportSpreadsheet);
+  document.getElementById('js-pdf').addEventListener('click', exportPdf);
+  document.getElementById('js-share').addEventListener('click', shareLink);
+  document.getElementById('js-share-close').addEventListener('click', function () {
+    document.getElementById('js-share-modal').classList.add('is-hidden');
+  });
+  document.getElementById('js-share-modal').addEventListener('click', function (e) {
+    if (e.target.id === 'js-share-modal') e.currentTarget.classList.add('is-hidden');
+  });
+  document.getElementById('js-share-copy').addEventListener('click', function () {
+    var input = document.getElementById('js-share-link');
+    if (!input.value) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(input.value).then(function () { toast('Link copied'); });
+    } else {
+      input.select();
+      document.execCommand('copy');
+      toast('Link copied');
+    }
   });
 
   document.getElementById('js-import').addEventListener('click', function () {
@@ -1448,19 +1579,22 @@
     reader.readAsText(file);
   });
 
-  if (bc) {
-    bc.onmessage = function (ev) {
-      if (!ev.data || ev.data.type !== 'workspace') return;
-      if (state.dirty || state.saving) return;
-      var local = loadLocal();
-      if (local && local.updatedAt === ev.data.updatedAt) {
-        state.workspace = local;
-        renderAll();
-      }
-    };
-  }
-
   async function init() {
+    userScope = await resolveUserScope();
+    state.layout = localStorage.getItem(layoutKey()) || 'schedule';
+    state.activeBoardId = localStorage.getItem(boardKey()) || '';
+    try { bc = new BroadcastChannel('emme_schedule_sync_' + userScope); } catch (_) {}
+    if (bc) {
+      bc.onmessage = function (ev) {
+        if (!ev.data || ev.data.type !== 'workspace') return;
+        if (state.dirty || state.saving) return;
+        var local = loadLocal();
+        if (local && local.updatedAt === ev.data.updatedAt) {
+          state.workspace = local;
+          renderAll();
+        }
+      };
+    }
     setSyncLabel('Connecting…', 'local');
     var local = loadLocal();
     try {
@@ -1495,7 +1629,7 @@
 
     if (!state.activeBoardId || !state.workspace.boards.some(function (b) { return b.id === state.activeBoardId; })) {
       state.activeBoardId = state.workspace.boards[0].id;
-      localStorage.setItem(BOARD_KEY, state.activeBoardId);
+      localStorage.setItem(boardKey(), state.activeBoardId);
     }
     renderAll();
   }

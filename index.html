@@ -1782,7 +1782,7 @@
               const local = email.split('@')[0];
               name = local.charAt(0).toUpperCase() + local.slice(1);
             }
-            return { name: name, email: email };
+            return { name: name, email: email, id: String(principal.userId || email || 'device') };
           } catch (_) { return null; }
         },
       };
@@ -2206,6 +2206,10 @@
 
       const SchedulePreview = {
         STORAGE_KEY: 'emme_schedule_workspace_v1',
+        userKey: '',
+        storageKey: function () {
+          return SchedulePreview.STORAGE_KEY + ':' + (SchedulePreview.userKey || 'device');
+        },
         POLL_MS: 8000,
         lastUpdatedAt: null,
         timer: null,
@@ -2241,7 +2245,7 @@
 
         loadLocal: function () {
           try {
-            const raw = localStorage.getItem(SchedulePreview.STORAGE_KEY);
+            const raw = localStorage.getItem(SchedulePreview.storageKey());
             return raw ? JSON.parse(raw) : null;
           } catch (_) { return null; }
         },
@@ -2304,7 +2308,7 @@
             const res = await fetch('/api/schedule', { credentials: 'include' });
             const data = await res.json().catch(function () { return {}; });
             if (res.ok && data.configured && data.workspace) {
-              try { localStorage.setItem(SchedulePreview.STORAGE_KEY, JSON.stringify(data.workspace)); } catch (_) {}
+              try { localStorage.setItem(SchedulePreview.storageKey(), JSON.stringify(data.workspace)); } catch (_) {}
               SchedulePreview.applyWorkspace(data.workspace, 'cloud');
               return;
             }
@@ -2333,16 +2337,22 @@
           }
         },
 
-        init: function () {
+        init: async function () {
+          try {
+            const user = await SiteUser.current();
+            SchedulePreview.userKey = String((user && (user.id || user.email)) || 'device').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80) || 'device';
+          } catch (_) {
+            SchedulePreview.userKey = 'device';
+          }
           const refreshBtn = document.getElementById('js-sched-refresh');
           if (refreshBtn) refreshBtn.addEventListener('click', function () { SchedulePreview.refresh(); });
           SchedulePreview.refresh();
           SchedulePreview.timer = setInterval(SchedulePreview.poll, SchedulePreview.POLL_MS);
           window.addEventListener('storage', function (e) {
-            if (e.key === SchedulePreview.STORAGE_KEY) SchedulePreview.poll();
+            if (e.key === SchedulePreview.storageKey()) SchedulePreview.poll();
           });
           try {
-            const bc = new BroadcastChannel('emme_schedule_sync');
+            const bc = new BroadcastChannel('emme_schedule_sync_' + SchedulePreview.userKey);
             bc.onmessage = function () { SchedulePreview.poll(); };
           } catch (_) {}
         },

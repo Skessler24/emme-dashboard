@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emme — Shared schedule</title>
+  <style>
+    :root { --green: #084339; --pink: #fde8f3; --text: #1c2430; --muted: #5c6b7a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", sans-serif; color: var(--text); background: #f7f4f6; }
+    header { background: var(--green); color: #fff; padding: 1rem 1.25rem; }
+    header h1 { margin: 0; font-size: 1.25rem; }
+    header p { margin: 0.35rem 0 0; opacity: 0.85; font-size: 0.9rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 1.25rem; }
+    .day { background: #fff; border-radius: 12px; margin-bottom: 1rem; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .day h2 { margin: 0; padding: 0.7rem 1rem; background: var(--green); color: #fff; font-size: 1rem; }
+    .day h2.maroon { background: #6b2d3c; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid #eee; font-size: 0.92rem; }
+    th { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .clients { margin-top: 1.5rem; }
+    .msg { padding: 2rem 1rem; color: var(--muted); }
+    @media print {
+      body { background: #fff; }
+      header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Emme schedule</h1>
+    <p id="js-meta">Loading…</p>
+  </header>
+  <main id="js-main"><p class="msg">Loading the shared schedule…</p></main>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var token = params.get('t') || '';
+      var main = document.getElementById('js-main');
+      var meta = document.getElementById('js-meta');
+
+      function esc(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function signIn() {
+        var back = location.pathname + location.search;
+        location.href = '/.auth/login/aad?post_login_redirect_uri=' + encodeURIComponent(back);
+      }
+
+      function render(data) {
+        var ws = data.workspace || {};
+        var who = data.owner ? ('Shared by ' + data.owner) : 'Shared schedule';
+        var when = data.createdAt ? new Date(data.createdAt).toLocaleString() : '';
+        meta.textContent = who + (when ? ' · ' + when : '');
+        var html = '';
+        (ws.boards || []).forEach(function (board) {
+          html += '<h2 style="margin:1.25rem 0 0.6rem;color:#084339">' + esc(board.name || 'Schedule') + '</h2>';
+          (board.days || []).forEach(function (day) {
+            var rows = (day.slots || []).map(function (slot) {
+              return '<tr><td>' + esc(slot.time || '') + '</td><td>' + esc(slot.status || '') +
+                '</td><td>' + esc(slot.notes || '') + '</td><td>' + esc(slot.lastDay || '') + '</td></tr>';
+            }).join('') || '<tr><td colspan="4">No appointments</td></tr>';
+            html += '<section class="day"><h2 class="' + (day.color === 'maroon' ? 'maroon' : '') + '">' +
+              esc(day.name || 'Day') + '</h2><table><thead><tr><th>Time</th><th>Status</th><th>Client / notes</th><th>Last day</th></tr></thead><tbody>' +
+              rows + '</tbody></table></section>';
+          });
+        });
+        var clients = ws.clients || [];
+        if (clients.length) {
+          html += '<section class="clients"><h2 style="color:#084339">Clients</h2><table><thead><tr><th>Name</th><th>Sessions</th><th>Phone</th><th>Email</th><th>Agency</th></tr></thead><tbody>';
+          clients.forEach(function (c) {
+            html += '<tr><td>' + esc(c.name) + '</td><td>' + esc(c.sessions) + '</td><td>' + esc(c.phone) +
+              '</td><td>' + esc(c.email) + '</td><td>' + esc(c.agency) + '</td></tr>';
+          });
+          html += '</tbody></table></section>';
+        }
+        main.innerHTML = html || '<p class="msg">This schedule is empty.</p>';
+      }
+
+      if (!/^[a-f0-9]{20,64}$/.test(token)) {
+        main.innerHTML = '<p class="msg">This share link is not valid.</p>';
+        meta.textContent = '';
+        return;
+      }
+
+      fetch('/api/schedule/share/' + token, { credentials: 'include' })
+        .then(function (res) {
+          var type = res.headers.get('content-type') || '';
+          if (res.status === 401 || res.status === 302 || type.indexOf('json') === -1) {
+            signIn();
+            return null;
+          }
+          return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+        })
+        .then(function (result) {
+          if (!result) return;
+          if (!result.ok) {
+            main.innerHTML = '<p class="msg">' + esc((result.data && result.data.error) || 'This share link is not available.') + '</p>';
+            meta.textContent = '';
+            return;
+          }
+          render(result.data);
+        })
+        .catch(function () {
+          main.innerHTML = '<p class="msg">Could not open this schedule. Sign in to Emme and try the link again.</p>';
+        });
+    })();
+  </script>
+</body>
+</html>

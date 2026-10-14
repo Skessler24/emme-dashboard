@@ -5,7 +5,7 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get", "put", "options"],
+      "methods": ["get", "put", "post", "options"],
       "route": "schedule/{*rest}"
     },
     {
