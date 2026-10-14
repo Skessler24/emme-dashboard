@@ -1142,9 +1142,10 @@
     </a>
     <div class="site-header__actions">
       <time class="site-header__date" id="js-date" aria-live="polite"></time>
+      <span class="site-header__date" id="js-site-user"></span>
       <button type="button" class="btn btn--yellow" id="js-ms-connect" style="display:none">Connect Microsoft</button>
       <button type="button" class="btn btn--outline" id="js-ms-settings" style="color:#fff;border-color:rgba(255,255,255,.4)">MS Setup</button>
-      <button type="button" class="btn btn--outline" id="js-ms-signout" style="display:none;color:#fff;border-color:rgba(255,255,255,.4)">Sign out</button>
+      <button type="button" class="btn btn--outline" id="js-ms-signout" style="color:#fff;border-color:rgba(255,255,255,.4)">Sign out</button>
     </div>
   </header>
 
@@ -1292,7 +1293,7 @@
         </section>
 
         <div class="ms-bar" id="js-ms-bar" role="status">
-          <p class="ms-bar__status" id="js-ms-status">Microsoft Calendar &amp; To Do are not connected. Open <strong>MS Setup</strong>, add your Azure app Client ID, then sign in with <strong>skessler@emmeco.org</strong>.</p>
+          <p class="ms-bar__status" id="js-ms-status">Click <strong>Connect Microsoft</strong> and sign in with your own Emme account to sync your calendar and To Do.</p>
           <button type="button" class="btn btn--green" id="js-ms-connect-bar">Connect Microsoft</button>
           <button type="button" class="btn btn--outline" id="js-ms-setup-bar">MS Setup</button>
         </div>
@@ -1388,7 +1389,7 @@
     <div class="ms-modal__panel">
       <h2 class="ms-modal__title" id="js-ms-modal-title">Connect Emme Microsoft account</h2>
       <div class="ms-modal__text">
-        <p>One-time setup in Azure (use your Emme admin access, or ask IT). Sign in later as <strong>skessler@emmeco.org</strong>.</p>
+        <p>The company app is already set up. Each person signs in with their own Emme account.</p>
         <ol>
           <li>Go to <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener">App registrations</a> → <strong>New registration</strong></li>
           <li>Name: <code>Emme Dashboard</code></li>
@@ -1453,6 +1454,8 @@
       /* ── MICROSOFT GRAPH ── */
       const MsGraph = {
         CONFIG_KEY: 'emme_ms_graph_config',
+        DEFAULT_CLIENT_ID: 'b1e3bd77-c545-4716-afdc-8b0ec14ddcdf',
+        DEFAULT_TENANT_ID: '4da01280-a61e-44cc-b537-9b21b7f17c68',
         SCOPES: ['User.Read', 'Calendars.Read', 'Tasks.ReadWrite'],
         pca: null,
         account: null,
@@ -1461,13 +1464,18 @@
         ready: false,
 
         getConfig: function () {
+          let clientId = MsGraph.DEFAULT_CLIENT_ID;
+          let tenantId = MsGraph.DEFAULT_TENANT_ID;
           try {
             const raw = localStorage.getItem(MsGraph.CONFIG_KEY);
-            if (!raw) return null;
-            const cfg = JSON.parse(raw);
-            if (!cfg.clientId) return null;
-            return { clientId: cfg.clientId.trim(), tenantId: (cfg.tenantId || '').trim() };
-          } catch (_) { return null; }
+            if (raw) {
+              const cfg = JSON.parse(raw);
+              if (cfg.clientId && cfg.clientId.trim()) clientId = cfg.clientId.trim();
+              if (cfg.tenantId && cfg.tenantId.trim()) tenantId = cfg.tenantId.trim();
+            }
+          } catch (_) {}
+          if (!clientId) return null;
+          return { clientId: clientId, tenantId: tenantId };
         },
 
         saveConfig: function (clientId, tenantId) {
@@ -1498,13 +1506,11 @@
             if (tasksRefresh) tasksRefresh.style.display = '';
           } else {
             if (status) {
-              status.innerHTML = cfg
-                ? 'App configured. Click <strong>Connect Microsoft</strong> and sign in as <strong>skessler@emmeco.org</strong>.'
-                : 'Microsoft Calendar &amp; To Do are not connected. Open <strong>MS Setup</strong>, add your Azure app Client ID, then sign in with <strong>skessler@emmeco.org</strong>.';
+              status.innerHTML = 'Click <strong>Connect Microsoft</strong> and sign in with your own Emme account.';
             }
             if (connectBtn) connectBtn.style.display = cfg ? '' : 'none';
-            if (connectBar) { connectBar.style.display = ''; connectBar.textContent = cfg ? 'Connect Microsoft' : 'Start MS Setup'; }
-            if (signout) signout.style.display = 'none';
+            if (connectBar) { connectBar.style.display = ''; connectBar.textContent = 'Connect Microsoft'; }
+            if (signout) signout.style.display = '';
             if (calRefresh) calRefresh.style.display = 'none';
             if (tasksRefresh) tasksRefresh.style.display = 'none';
           }
@@ -1549,7 +1555,6 @@
             const result = await MsGraph.pca.loginPopup({
               scopes: MsGraph.SCOPES,
               prompt: 'select_account',
-              loginHint: 'skessler@emmeco.org',
             });
             MsGraph.account = result.account;
             MsGraph.updateUI();
@@ -1568,6 +1573,18 @@
             }
             throw err;
           }
+        },
+
+        signOutSite: function () {
+          try {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.indexOf('msal.') === 0) keys.push(key);
+            }
+            keys.forEach(function (key) { localStorage.removeItem(key); });
+          } catch (_) {}
+          window.location.href = '/.auth/logout';
         },
 
         logout: async function () {
@@ -1690,7 +1707,7 @@
           document.getElementById('js-ms-connect').addEventListener('click', connect);
           document.getElementById('js-ms-connect-bar').addEventListener('click', connect);
           document.getElementById('js-ms-signout').addEventListener('click', function () {
-            MsGraph.logout();
+            MsGraph.signOutSite();
           });
 
           if (MsGraph.getConfig()) {
@@ -1730,8 +1747,43 @@
           if (!titleEl || !quoteEl) return;
           const hour = new Date().getHours();
           const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-          titleEl.textContent = 'Good ' + period + ', Samantha';
+          titleEl.textContent = 'Good ' + period;
           quoteEl.textContent = Greeting.QUOTES[Math.floor(Math.random() * Greeting.QUOTES.length)];
+          Greeting.loadName(titleEl, period);
+        },
+        loadName: async function (titleEl, period) {
+          const user = await SiteUser.current();
+          if (user && user.name) titleEl.textContent = 'Good ' + period + ', ' + user.name;
+          const label = document.getElementById('js-site-user');
+          if (label && user && user.email) label.textContent = user.email;
+        },
+      };
+
+      const SiteUser = {
+        current: async function () {
+          try {
+            const res = await fetch('/.auth/me', { credentials: 'same-origin' });
+            if (!res.ok) return null;
+            const data = await res.json();
+            const principal = data && data.clientPrincipal;
+            if (!principal) return null;
+            const email = principal.userDetails || '';
+            let given = '';
+            let display = '';
+            (principal.claims || []).forEach(function (claim) {
+              const typ = String(claim.typ || '').toLowerCase();
+              const val = String(claim.val || '');
+              if (!val || val.indexOf('@') !== -1) return;
+              if (typ === 'given_name' || typ.endsWith('/givenname')) given = val;
+              else if (typ === 'name' || typ.endsWith('/claims/name')) display = val;
+            });
+            let name = given || display;
+            if (!name && email.indexOf('@') !== -1) {
+              const local = email.split('@')[0];
+              name = local.charAt(0).toUpperCase() + local.slice(1);
+            }
+            return { name: name, email: email };
+          } catch (_) { return null; }
         },
       };
 
