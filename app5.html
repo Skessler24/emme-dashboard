@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <style>
     :root {
@@ -402,7 +405,7 @@
       <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Download an Excel spreadsheet">Spreadsheet</button>
       <button type="button" class="btn btn--ghost" id="js-pdf" title="Open a PDF you can save or print">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
-      <button type="button" class="btn btn--ghost" id="js-import" title="Import backup or spreadsheet">Import</button>
+      <button type="button" class="btn btn--ghost" id="js-import" title="Import clients from a spreadsheet, PDF, Word doc, or text file">Import</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
       <a class="btn btn--yellow" href="index.html">← Dashboard</a>
     </div>
@@ -1545,38 +1548,308 @@
     }
   });
 
+  var CLIENT_FIELDS = [
+    ['scEmail', ['sc email', 'service coordinator email', 'coordinator email']],
+    ['serviceCoordinator', ['service coordinator', 'coordinator', 'sc name']],
+    ['medicaid', ['medicaid number', 'medicaid', 'member id']],
+    ['dob', ['date of birth', 'birth date', 'birthdate', 'birthday', 'dob']],
+    ['parents', ['parents', 'parent', 'caregiver', 'guardians', 'guardian']],
+    ['sessions', ['sessions', 'session', 'appointment']],
+    ['agency', ['agency', 'organization']],
+    ['hours', ['weekly hours', 'hours']],
+    ['phone', ['phone number', 'telephone', 'mobile', 'cell', 'phone']],
+    ['email', ['email address', 'e mail', 'email']],
+    ['tasks', ['tasks', 'comments']],
+    ['name', ['client name', 'child name', 'patient name', 'full name', 'name', 'client', 'child', 'patient']]
+  ];
+
+  function normalizeLabel(value) {
+    return String(value || '').toLowerCase().replace(/[#_./-]+/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function fieldForLabel(label) {
+    var n = normalizeLabel(label);
+    if (!n) return '';
+    var i, j, names;
+    for (i = 0; i < CLIENT_FIELDS.length; i++) {
+      names = CLIENT_FIELDS[i][1];
+      for (j = 0; j < names.length; j++) if (n === names[j]) return CLIENT_FIELDS[i][0];
+    }
+    for (i = 0; i < CLIENT_FIELDS.length; i++) {
+      names = CLIENT_FIELDS[i][1];
+      for (j = 0; j < names.length; j++) {
+        if (names[j].length < 4) continue;
+        if (n.indexOf(names[j]) !== -1) return CLIENT_FIELDS[i][0];
+      }
+    }
+    return '';
+  }
+
+  function cleanClient(raw) {
+    var client = {};
+    if (!raw) return client;
+    Object.keys(raw).forEach(function (key) {
+      var value = String(raw[key] == null ? '' : raw[key]).trim();
+      if (value) client[key] = value;
+    });
+    return client;
+  }
+
+  function clientHasIdentity(client) {
+    return !!(client.name || client.email || client.phone);
+  }
+
+  function parseDelimited(text) {
+    var sample = String(text || '').split(/\r?\n/)[0] || '';
+    var delim = (sample.split('\t').length > sample.split(',').length) ? '\t' : ',';
+    var rows = [];
+    var row = [];
+    var cell = '';
+    var inQuotes = false;
+    text = String(text || '').replace(/^\uFEFF/, '');
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { cell += '"'; i++; }
+          else inQuotes = false;
+        } else cell += ch;
+      } else if (ch === '"') inQuotes = true;
+      else if (ch === delim) { row.push(cell); cell = ''; }
+      else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (ch !== '\r') cell += ch;
+    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  function clientsFromMatrix(rows) {
+    var clients = [];
+    var i = 0;
+    while (i < rows.length) {
+      var headerText = (rows[i] || []).map(normalizeLabel).join(' ');
+      if (headerText.indexOf('time') !== -1 && headerText.indexOf('last day') !== -1) {
+        i++;
+        while (i < rows.length && (rows[i] || []).some(function (cell) { return String(cell || '').trim(); })) i++;
+        continue;
+      }
+      var header = (rows[i] || []).map(fieldForLabel);
+      var recognized = header.filter(Boolean).length;
+      if (recognized >= 2 || header.indexOf('name') !== -1) {
+        i++;
+        while (i < rows.length) {
+          var source = rows[i] || [];
+          if (!source.some(function (cell) { return String(cell || '').trim(); })) break;
+          var client = {};
+          header.forEach(function (field, idx) {
+            if (!field) return;
+            var value = String(source[idx] == null ? '' : source[idx]).trim();
+            if (value && !client[field]) client[field] = value;
+          });
+          client = cleanClient(client);
+          if (clientHasIdentity(client)) clients.push(client);
+          i++;
+        }
+      }
+      i++;
+    }
+    return clients;
+  }
+
+  function parseLabeledText(text) {
+    var source = String(text || '').replace(/\r/g, '\n');
+    var labels = [];
+    CLIENT_FIELDS.forEach(function (pair) {
+      pair[1].forEach(function (label) { labels.push(label); });
+    });
+    labels.sort(function (a, b) { return b.length - a.length; });
+    var alternation = labels.map(function (label) {
+      return label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
+    }).join('|');
+    var re = new RegExp('(?:^|\\n|\\s{2,})(' + alternation + ')\\s*[:\\-]\\s*', 'ig');
+    var matches = [];
+    var found;
+    while ((found = re.exec(source))) {
+      matches.push({ index: found.index, end: re.lastIndex, label: found[1] });
+    }
+    if (!matches.length) return [];
+    var clients = [];
+    var current = {};
+    matches.forEach(function (item, idx) {
+      var field = fieldForLabel(item.label);
+      var valueEnd = idx + 1 < matches.length ? matches[idx + 1].index : source.length;
+      var value = source.slice(item.end, valueEnd).replace(/\s+/g, ' ').trim();
+      if (field === 'name' && current.name) {
+        if (clientHasIdentity(current)) clients.push(cleanClient(current));
+        current = {};
+      }
+      if (field && value && !current[field]) current[field] = value;
+    });
+    if (clientHasIdentity(current)) clients.push(cleanClient(current));
+    return clients;
+  }
+
+  function remapClient(item) {
+    var known = {};
+    CLIENT_FIELDS.forEach(function (pair) { known[pair[0]] = true; });
+    var client = {};
+    Object.keys(item || {}).forEach(function (key) {
+      if (key === 'id') return;
+      var field = known[key] ? key : fieldForLabel(key);
+      var value = String(item[key] == null ? '' : item[key]).trim();
+      if (field && value) client[field] = value;
+    });
+    return client;
+  }
+
+  function clientsFromJson(parsed) {
+    if (Array.isArray(parsed)) return parsed.map(remapClient).filter(clientHasIdentity);
+    if (parsed && Array.isArray(parsed.clients)) return parsed.clients.map(remapClient).filter(clientHasIdentity);
+    return [];
+  }
+
+  function mergeClients(incoming) {
+    var added = 0;
+    var updated = 0;
+    if (!state.workspace.clients) state.workspace.clients = [];
+    incoming.forEach(function (row) {
+      var client = cleanClient(row);
+      if (!clientHasIdentity(client)) return;
+      var nameKey = normalizePersonName(client.name);
+      var emailKey = String(client.email || '').toLowerCase();
+      var existing = state.workspace.clients.find(function (current) {
+        if (nameKey && normalizePersonName(current.name) === nameKey) return true;
+        return emailKey && String(current.email || '').toLowerCase() === emailKey;
+      });
+      if (existing) {
+        Object.keys(client).forEach(function (key) { existing[key] = client[key]; });
+        updated++;
+      } else {
+        client.id = uid('client');
+        state.workspace.clients.push(client);
+        added++;
+      }
+    });
+    return { added: added, updated: updated };
+  }
+
+  function applyImport(kind, payload) {
+    if (kind === 'workspace') {
+      mutate(function () {
+        state.workspace = {
+          version: payload.version || 1,
+          updatedAt: new Date().toISOString(),
+          boards: payload.boards,
+          clients: payload.clients || [],
+          dxCodes: payload.dxCodes || DEFAULT_DX.slice()
+        };
+        state.activeBoardId = state.workspace.boards[0] && state.workspace.boards[0].id;
+      });
+      toast('Imported schedule backup');
+      return;
+    }
+    var counts = { added: 0, updated: 0 };
+    state.layout = 'clients';
+    try { localStorage.setItem(layoutKey(), 'clients'); } catch (_) {}
+    mutate(function () { counts = mergeClients(payload); });
+    if (!counts.added && !counts.updated) {
+      toast('No client details found in that file');
+      return;
+    }
+    var parts = [];
+    if (counts.added) parts.push(counts.added + ' added');
+    if (counts.updated) parts.push(counts.updated + ' updated');
+    toast('Clients imported — ' + parts.join(', '));
+  }
+
+  async function textFromFile(file) {
+    var name = String(file.name || '').toLowerCase();
+    var buffer = await file.arrayBuffer();
+    if (/\.(xlsx|xls|ods)$/.test(name) || /spreadsheet|excel|officedocument.spreadsheet/i.test(file.type || '')) {
+      if (typeof XLSX === 'undefined') throw new Error('Spreadsheet reader did not load. Try a CSV instead.');
+      var book = XLSX.read(buffer, { type: 'array' });
+      var rows = [];
+      book.SheetNames.forEach(function (sheetName) {
+        rows = rows.concat(XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' }));
+      });
+      return { kind: 'matrix', rows: rows };
+    }
+    if (/\.pdf$/.test(name) || file.type === 'application/pdf') {
+      if (typeof pdfjsLib === 'undefined') throw new Error('PDF reader did not load. Try a spreadsheet or text file.');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      var pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+      var text = '';
+      for (var pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        var page = await pdf.getPage(pageNum);
+        var content = await page.getTextContent();
+        text += content.items.map(function (item) { return item.str + (item.hasEOL ? '\n' : ' '); }).join('');
+      }
+      return { kind: 'text', text: text };
+    }
+    if (/\.docx$/.test(name)) {
+      if (typeof mammoth === 'undefined') throw new Error('Word reader did not load. Save the document as PDF or CSV.');
+      var result = await mammoth.extractRawText({ arrayBuffer: buffer });
+      return { kind: 'text', text: result.value || '' };
+    }
+    var decoded = new TextDecoder('utf-8').decode(buffer);
+    return { kind: 'text', text: decoded };
+  }
+
+  async function importFile(file) {
+    var extracted = await textFromFile(file);
+    if (extracted.kind === 'matrix') {
+      var fromSheet = clientsFromMatrix(extracted.rows);
+      if (!fromSheet.length) throw new Error('No client columns found in ' + file.name);
+      applyImport('clients', fromSheet);
+      return;
+    }
+    var text = String(extracted.text || '').replace(/^\uFEFF/, '').trim();
+    if (!text) throw new Error(file.name + ' is empty');
+    if (text.charAt(0) === '{' || text.charAt(0) === '[') {
+      try {
+        var parsed = JSON.parse(text);
+        if (parsed && Array.isArray(parsed.boards)) {
+          applyImport('workspace', parsed);
+          return;
+        }
+        var fromJson = clientsFromJson(parsed);
+        if (fromJson.length) {
+          applyImport('clients', fromJson);
+          return;
+        }
+      } catch (_) {}
+    }
+    var firstLine = text.split(/\n/)[0] || '';
+    if ((firstLine.match(/,/g) || []).length || (firstLine.match(/\t/g) || []).length) {
+      var fromTable = clientsFromMatrix(parseDelimited(text));
+      if (fromTable.length) {
+        applyImport('clients', fromTable);
+        return;
+      }
+    }
+    var fromLabels = parseLabeledText(text);
+    if (fromLabels.length) {
+      applyImport('clients', fromLabels);
+      return;
+    }
+    throw new Error('Could not find client names, emails, or phones in ' + file.name);
+  }
+
   document.getElementById('js-import').addEventListener('click', function () {
     var input = document.getElementById('js-import-file');
     input.removeAttribute('accept');
-    try { input.accept = ''; } catch (_) {}
     input.value = '';
     input.click();
   });
   document.getElementById('js-import-file').addEventListener('change', function (e) {
-    var file = e.target.files && e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      try {
-        var parsed = JSON.parse(reader.result);
-        if (!parsed || !Array.isArray(parsed.boards)) throw new Error('Invalid file');
-        mutate(function () {
-          state.workspace = {
-            version: parsed.version || 1,
-            updatedAt: new Date().toISOString(),
-            boards: parsed.boards,
-            clients: parsed.clients || [],
-            dxCodes: parsed.dxCodes || DEFAULT_DX.slice()
-          };
-          state.activeBoardId = state.workspace.boards[0] && state.workspace.boards[0].id;
-        });
-        toast('Imported');
-      } catch (err) {
-        toast('Import failed — use an Emme Export JSON backup');
-      }
-      e.target.value = '';
-    };
-    reader.readAsText(file);
+    var files = Array.prototype.slice.call(e.target.files || []);
+    e.target.value = '';
+    if (!files.length) return;
+    files.reduce(function (chain, file) {
+      return chain.then(function () { return importFile(file); });
+    }, Promise.resolve()).catch(function (err) {
+      toast(err.message || 'Import failed');
+    });
   });
 
   async function init() {
