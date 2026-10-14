@@ -1560,7 +1560,7 @@
     ['phone', ['phone number', 'telephone', 'mobile', 'cell', 'phone']],
     ['email', ['email address', 'e mail', 'email']],
     ['tasks', ['tasks', 'comments']],
-    ['name', ['client name', 'child name', 'patient name', 'full name', 'name', 'client', 'child', 'patient']]
+    ['name', ['client name', 'child name', 'patient name', 'full name', 'first name', 'last name', 'given name', 'surname', 'name', 'client', 'child', 'patient']]
   ];
 
   function normalizeLabel(value) {
@@ -1599,14 +1599,25 @@
     return !!(client.name || client.email || client.phone);
   }
 
+  function detectDelimiter(text) {
+    var sample = String(text || '').split(/\r?\n/).slice(0, 8).join('\n');
+    var options = [
+      ['\t', (sample.match(/\t/g) || []).length],
+      [';', (sample.match(/;/g) || []).length],
+      [',', (sample.match(/,/g) || []).length]
+    ];
+    options.sort(function (a, b) { return b[1] - a[1]; });
+    return options[0][1] > 0 ? options[0][0] : ',';
+  }
+
   function parseDelimited(text) {
-    var sample = String(text || '').split(/\r?\n/)[0] || '';
-    var delim = (sample.split('\t').length > sample.split(',').length) ? '\t' : ',';
+    var delim = detectDelimiter(text);
     var rows = [];
     var row = [];
     var cell = '';
     var inQuotes = false;
     text = String(text || '').replace(/^\uFEFF/, '');
+    if (/^sep\s*=/i.test(text.split(/\r?\n/)[0] || '')) text = text.replace(/^[^\n]*\n/, '');
     for (var i = 0; i < text.length; i++) {
       var ch = text[i];
       if (inQuotes) {
@@ -1623,6 +1634,27 @@
     return rows;
   }
 
+  function guessClients(rows) {
+    var clients = [];
+    (rows || []).forEach(function (row) {
+      var cells = (row || []).map(function (cell) { return String(cell || '').trim(); }).filter(Boolean);
+      if (cells.length < 2) return;
+      if (cells.filter(function (cell) { return fieldForLabel(cell); }).length >= Math.min(2, cells.length)) return;
+      var client = {};
+      var nameParts = [];
+      cells.forEach(function (value) {
+        if (!client.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { client.email = value; return; }
+        if (!client.phone && /(?:\+?1[\s.-]*)?(?:\(?\d{3}\)?[\s.-]*)\d{3}[\s.-]*\d{4}/.test(value)) { client.phone = value; return; }
+        if (!client.dob && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(value)) { client.dob = value; return; }
+        if (nameParts.length < 3 && /[a-z]/i.test(value) && value.length < 80 && !fieldForLabel(value)) nameParts.push(value);
+      });
+      if (!client.name && nameParts.length) client.name = nameParts.slice(0, 2).join(' ');
+      client = cleanClient(client);
+      if (clientHasIdentity(client)) clients.push(client);
+    });
+    return clients;
+  }
+
   function clientsFromMatrix(rows) {
     var clients = [];
     var i = 0;
@@ -1633,7 +1665,8 @@
         while (i < rows.length && (rows[i] || []).some(function (cell) { return String(cell || '').trim(); })) i++;
         continue;
       }
-      var header = (rows[i] || []).map(fieldForLabel);
+      var headerLabels = (rows[i] || []).map(normalizeLabel);
+      var header = headerLabels.map(fieldForLabel);
       var recognized = header.filter(Boolean).length;
       if (recognized >= 2 || header.indexOf('name') !== -1) {
         i++;
@@ -1641,11 +1674,19 @@
           var source = rows[i] || [];
           if (!source.some(function (cell) { return String(cell || '').trim(); })) break;
           var client = {};
+          var first = '';
+          var last = '';
           header.forEach(function (field, idx) {
-            if (!field) return;
+            var label = headerLabels[idx];
             var value = String(source[idx] == null ? '' : source[idx]).trim();
-            if (value && !client[field]) client[field] = value;
+            if (!value) return;
+            if (label === 'first name' || label === 'firstname' || label === 'given name') { first = value; return; }
+            if (label === 'last name' || label === 'lastname' || label === 'surname' || label === 'family name') { last = value; return; }
+            if (!field) return;
+            if (field === 'name' && client.name) client.name = client.name + ' ' + value;
+            else if (!client[field]) client[field] = value;
           });
+          if (first || last) client.name = (first + ' ' + last).trim();
           client = cleanClient(client);
           if (clientHasIdentity(client)) clients.push(client);
           i++;
@@ -1653,6 +1694,7 @@
       }
       i++;
     }
+    if (!clients.length) return guessClients(rows);
     return clients;
   }
 
@@ -1762,17 +1804,34 @@
     toast('Clients imported — ' + parts.join(', '));
   }
 
+  function decodeBuffer(buffer) {
+    var bytes = new Uint8Array(buffer);
+    if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder('utf-16le').decode(buffer);
+    if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder('utf-16be').decode(buffer);
+    var nulls = 0;
+    var sample = Math.min(bytes.length, 240);
+    for (var i = 0; i < sample; i++) if (bytes[i] === 0) nulls++;
+    if (nulls > 8) return new TextDecoder('utf-16le').decode(buffer);
+    return new TextDecoder('utf-8').decode(buffer);
+  }
+
   async function textFromFile(file) {
     var name = String(file.name || '').toLowerCase();
     var buffer = await file.arrayBuffer();
-    if (/\.(xlsx|xls|ods)$/.test(name) || /spreadsheet|excel|officedocument.spreadsheet/i.test(file.type || '')) {
-      if (typeof XLSX === 'undefined') throw new Error('Spreadsheet reader did not load. Try a CSV instead.');
-      var book = XLSX.read(buffer, { type: 'array' });
-      var rows = [];
-      book.SheetNames.forEach(function (sheetName) {
-        rows = rows.concat(XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' }));
-      });
-      return { kind: 'matrix', rows: rows };
+    var isCsv = /\.(csv|tsv|txt)$/.test(name) || /csv|tab-separated|plain/i.test(file.type || '');
+    var isExcel = !isCsv && (/\.(xlsx|xls|ods)$/.test(name) || /spreadsheet|officedocument\.spreadsheet|ms-excel/i.test(file.type || ''));
+    if (isExcel) {
+      if (typeof XLSX === 'undefined') throw new Error('Spreadsheet reader did not load. Save the file as CSV and try again.');
+      try {
+        var book = XLSX.read(buffer, { type: 'array' });
+        var rows = [];
+        book.SheetNames.forEach(function (sheetName) {
+          rows = rows.concat(XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' }));
+        });
+        return { kind: 'matrix', rows: rows };
+      } catch (_) {
+        return { kind: 'text', text: decodeBuffer(buffer) };
+      }
     }
     if (/\.pdf$/.test(name) || file.type === 'application/pdf') {
       if (typeof pdfjsLib === 'undefined') throw new Error('PDF reader did not load. Try a spreadsheet or text file.');
@@ -1791,7 +1850,7 @@
       var result = await mammoth.extractRawText({ arrayBuffer: buffer });
       return { kind: 'text', text: result.value || '' };
     }
-    var decoded = new TextDecoder('utf-8').decode(buffer);
+    var decoded = decodeBuffer(buffer);
     return { kind: 'text', text: decoded };
   }
 
@@ -1819,8 +1878,8 @@
         }
       } catch (_) {}
     }
-    var firstLine = text.split(/\n/)[0] || '';
-    if ((firstLine.match(/,/g) || []).length || (firstLine.match(/\t/g) || []).length) {
+    var firstLine = text.split(/\n/).slice(0, 8).join('\n');
+    if ((firstLine.match(/[,;\t]/g) || []).length) {
       var fromTable = clientsFromMatrix(parseDelimited(text));
       if (fromTable.length) {
         applyImport('clients', fromTable);
