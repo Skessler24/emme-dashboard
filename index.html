@@ -1584,7 +1584,7 @@
             }
             keys.forEach(function (key) { localStorage.removeItem(key); });
           } catch (_) {}
-          window.location.href = '/.auth/logout';
+          window.location.assign('/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/signed-out.html'));
         },
 
         logout: async function () {
@@ -1706,9 +1706,6 @@
           };
           document.getElementById('js-ms-connect').addEventListener('click', connect);
           document.getElementById('js-ms-connect-bar').addEventListener('click', connect);
-          document.getElementById('js-ms-signout').addEventListener('click', function () {
-            MsGraph.signOutSite();
-          });
 
           if (MsGraph.getConfig()) {
             try {
@@ -2360,6 +2357,8 @@
 
       const App = {
         init: async function () {
+          const signout = document.getElementById('js-ms-signout');
+          if (signout) signout.addEventListener('click', function () { MsGraph.signOutSite(); });
           Header.init();
           Greeting.init();
           Calendar.init();

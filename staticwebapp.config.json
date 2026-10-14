@@ -5,7 +5,7 @@
       "allowedRoles": ["anonymous"]
     },
     {
-      "route": "/schedule-share.html",
+      "route": "/signed-out.html",
       "allowedRoles": ["anonymous"]
     },
     {
@@ -20,7 +20,7 @@
   "responseOverrides": {
     "401": {
       "statusCode": 302,
-      "redirect": "/.auth/login/aad"
+      "redirect": "/.auth/login/aad?prompt=select_account"
     }
   }
 }
