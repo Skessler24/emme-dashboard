@@ -67,23 +67,43 @@ function readPrincipal(req) {
     const email = String(value || '').trim().toLowerCase();
     if (email.indexOf('@') !== -1 && emails.indexOf(email) === -1) emails.push(email);
   }
-  addEmail(userDetails);
   ((parsed && parsed.claims) || []).forEach(function (claim) {
-    addEmail(claim && claim.val);
+    const typ = String((claim && claim.typ) || '').toLowerCase();
+    const val = String((claim && claim.val) || '').trim().toLowerCase();
+    if (val.indexOf('@') === -1) return;
+    if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) {
+      emails.unshift(val);
+    } else {
+      addEmail(val);
+    }
+  });
+  addEmail(userDetails);
+  const preferred = String(userDetails || '').trim().toLowerCase();
+  const unique = [];
+  if (preferred.indexOf('@') !== -1) unique.push(preferred);
+  emails.forEach(function (email) {
+    if (unique.indexOf(email) === -1) unique.push(email);
   });
   return {
     userId: String(userId || userDetails),
     userDetails: String(userDetails || ''),
-    emails: emails
+    emails: unique
   };
 }
 
-function blobNameFor(principal) {
-  const safe = String(principal.userId || 'user')
+function safeBlobKey(value) {
+  return String(value || 'user')
     .toLowerCase()
     .replace(/[^a-z0-9._-]/g, '_')
-    .slice(0, 120);
-  return 'schedules/' + (safe || 'user') + '.json';
+    .slice(0, 120) || 'user';
+}
+
+function emailBlobName(principal) {
+  return 'schedules/by-email/' + safeBlobKey((principal.emails && principal.emails[0]) || principal.userId) + '.json';
+}
+
+function idBlobName(principal) {
+  return 'schedules/' + safeBlobKey(principal.userId) + '.json';
 }
 
 function isLegacyOwner(principal) {
@@ -109,8 +129,28 @@ function normalizeWorkspace(raw) {
     updatedAt: src.updatedAt || new Date().toISOString(),
     boards: Array.isArray(src.boards) ? src.boards : [],
     clients: Array.isArray(src.clients) ? src.clients : [],
-    dxCodes: Array.isArray(src.dxCodes) ? src.dxCodes : []
+    dxCodes: Array.isArray(src.dxCodes) ? src.dxCodes : [],
+    ownerEmail: String(src.ownerEmail || '').trim().toLowerCase()
   };
+}
+
+function belongsTo(workspace, principal) {
+  if (!workspace) return false;
+  const tagged = String(workspace.ownerEmail || '').toLowerCase();
+  if (!tagged) return true;
+  return principal.emails.indexOf(tagged) !== -1;
+}
+
+async function metadataOwner(blob) {
+  if (!(await blob.exists())) return '';
+  const props = await blob.getProperties();
+  const meta = props.metadata || {};
+  return String(meta.owner || '').toLowerCase();
+}
+
+function ownerMatches(owner, principal) {
+  if (!owner) return true;
+  return principal.emails.indexOf(owner) !== -1;
 }
 
 module.exports = async function (context, req) {
@@ -137,7 +177,8 @@ module.exports = async function (context, req) {
 
     const container = service.getContainerClient(CONTAINER);
     await container.createIfNotExists();
-    const personal = container.getBlockBlobClient(blobNameFor(principal));
+    const personal = container.getBlockBlobClient(emailBlobName(principal));
+    const previous = container.getBlockBlobClient(idBlobName(principal));
     const legacy = container.getBlockBlobClient(LEGACY_BLOB);
     const ownerEmail = principal.emails[0] || '';
 
@@ -145,17 +186,25 @@ module.exports = async function (context, req) {
       .replace(/^\/+|\/+$/g, '');
     const method = (req.method || 'GET').toUpperCase();
 
+    async function adopt(blob) {
+      if (!(await ownerMatches(await metadataOwner(blob), principal))) return null;
+      const workspace = await readWorkspace(blob);
+      if (!belongsTo(workspace, principal) || !hasProviderData(workspace)) return null;
+      workspace.ownerEmail = ownerEmail;
+      await writeWorkspace(personal, workspace, ownerEmail);
+      return workspace;
+    }
+
     async function loadForProvider() {
       const own = await readWorkspace(personal);
-      if (hasProviderData(own)) return own;
+      if (belongsTo(own, principal) && hasProviderData(own)) return own;
+      const fromPrevious = await adopt(previous);
+      if (fromPrevious) return fromPrevious;
       if (isLegacyOwner(principal)) {
-        const original = await readWorkspace(legacy);
-        if (hasProviderData(original)) {
-          await writeWorkspace(personal, original, ownerEmail);
-          return original;
-        }
+        const fromLegacy = await adopt(legacy);
+        if (fromLegacy) return fromLegacy;
       }
-      return own || emptyWorkspace();
+      return emptyWorkspace();
     }
 
     if (rest === 'share' && method === 'POST') {
@@ -228,6 +277,7 @@ module.exports = async function (context, req) {
       body = body || {};
       const incoming = body.workspace || body;
       const workspace = normalizeWorkspace(incoming);
+      workspace.ownerEmail = ownerEmail;
       workspace.updatedAt = new Date().toISOString();
       workspace.version = (Number(workspace.version) || 0) + 1;
       await writeWorkspace(personal, workspace, ownerEmail);

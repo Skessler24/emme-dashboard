@@ -397,6 +397,7 @@
     <a class="topbar__brand" href="index.html">
       Emme <span>/ Schedule &amp; Caseload</span>
     </a>
+    <span id="js-signed-in" style="margin-right:auto;margin-left:0.35rem;font-size:0.85rem;opacity:0.9"></span>
     <div class="topbar__actions">
       <span class="sync-pill" id="js-sync-pill" title="Sync status">
         <span class="sync-dot" aria-hidden="true"></span>
@@ -480,7 +481,8 @@
 (function () {
   'use strict';
 
-  var userScope = 'device';
+  var userScope = '';
+  var currentEmail = '';
   function storageKey() { return 'emme_schedule_workspace_v1:' + userScope; }
   function layoutKey() { return 'emme_schedule_layout:' + userScope; }
   function boardKey() { return 'emme_schedule_board:' + userScope; }
@@ -531,16 +533,35 @@
 
   var bc = null;
 
+  function emailFromPrincipal(principal) {
+    var details = String((principal && principal.userDetails) || '').trim().toLowerCase();
+    if (details.indexOf('@') !== -1) return details;
+    var claims = (principal && principal.claims) || [];
+    var fallback = '';
+    for (var i = 0; i < claims.length; i++) {
+      var typ = String(claims[i].typ || '').toLowerCase();
+      var val = String(claims[i].val || '').trim().toLowerCase();
+      if (val.indexOf('@') === -1) continue;
+      if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) return val;
+      if (!fallback) fallback = val;
+    }
+    return fallback;
+  }
+
+  function scopeFromEmail(email) {
+    return String(email || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80);
+  }
+
   async function resolveUserScope() {
     try {
       var res = await fetch('/.auth/me', { credentials: 'same-origin' });
-      if (!res.ok) return 'device';
+      if (!res.ok) return '';
       var data = await res.json();
       var principal = data && data.clientPrincipal;
-      if (!principal) return 'device';
-      var id = String(principal.userId || principal.userDetails || 'device').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80);
-      return id || 'device';
-    } catch (_) { return 'device'; }
+      if (!principal) return '';
+      currentEmail = emailFromPrincipal(principal);
+      return scopeFromEmail(currentEmail);
+    } catch (_) { return ''; }
   }
 
   function uid(prefix) {
@@ -643,14 +664,19 @@
   }
 
   function loadLocal() {
+    if (!userScope) return null;
     try {
       var raw = localStorage.getItem(storageKey());
       if (!raw) return null;
-      return JSON.parse(raw);
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.ownerEmail && parsed.ownerEmail !== currentEmail) return null;
+      return parsed;
     } catch (_) { return null; }
   }
 
   function saveLocal(workspace) {
+    if (!userScope || !workspace) return;
+    workspace.ownerEmail = currentEmail;
     localStorage.setItem(storageKey(), JSON.stringify(workspace));
     if (bc) {
       try { bc.postMessage({ type: 'workspace', updatedAt: workspace.updatedAt }); } catch (_) {}
@@ -709,7 +735,7 @@
   }
 
   async function persist() {
-    if (!state.workspace) return;
+    if (!state.workspace || !currentEmail) return;
     state.saving = true;
     state.suppressPoll = true;
     state.workspace.updatedAt = new Date().toISOString();
@@ -740,6 +766,7 @@
   }
 
   function mutate(fn) {
+    if (!currentEmail) return;
     fn();
     renderAll();
     scheduleSave();
@@ -1634,67 +1661,238 @@
     return rows;
   }
 
-  function guessClients(rows) {
-    var clients = [];
-    (rows || []).forEach(function (row) {
-      var cells = (row || []).map(function (cell) { return String(cell || '').trim(); }).filter(Boolean);
-      if (cells.length < 2) return;
-      if (cells.filter(function (cell) { return fieldForLabel(cell); }).length >= Math.min(2, cells.length)) return;
-      var client = {};
-      var nameParts = [];
-      cells.forEach(function (value) {
-        if (!client.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { client.email = value; return; }
-        if (!client.phone && /(?:\+?1[\s.-]*)?(?:\(?\d{3}\)?[\s.-]*)\d{3}[\s.-]*\d{4}/.test(value)) { client.phone = value; return; }
-        if (!client.dob && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(value)) { client.dob = value; return; }
-        if (nameParts.length < 3 && /[a-z]/i.test(value) && value.length < 80 && !fieldForLabel(value)) nameParts.push(value);
+  function looksLikeEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+  }
+
+  function looksLikePhone(value) {
+    var raw = String(value || '').trim();
+    var digits = raw.replace(/\D/g, '');
+    if (digits.length < 10 || digits.length > 15) return false;
+    return /[()\-.\s]/.test(raw) || /^\+/.test(raw);
+  }
+
+  function looksLikeDate(value) {
+    return /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(String(value || '').trim());
+  }
+
+  function looksLikeName(value) {
+    var v = String(value || '').trim();
+    if (!v || v.length > 80 || v.length < 2) return false;
+    if (looksLikeEmail(v) || looksLikePhone(v) || looksLikeDate(v)) return false;
+    if (/\d/.test(v)) return false;
+    if (fieldForLabel(v) && normalizeLabel(v).split(' ').length < 3) return false;
+    return /[a-z]/i.test(v);
+  }
+
+  function tidyName(value) {
+    var v = String(value || '').replace(/\s+/g, ' ').trim();
+    var parts = v.match(/^([A-Za-z][A-Za-z'’.-]*),\s*([A-Za-z][A-Za-z'’.-]*(?:\s+[A-Za-z][A-Za-z'’.-]*)*)$/);
+    if (parts) return (parts[2] + ' ' + parts[1]).replace(/\s+/g, ' ').trim();
+    return v;
+  }
+
+  function columnRole(label) {
+    var n = normalizeLabel(label);
+    if (!n) return '';
+    var otherPerson = /\b(parent|parents|guardian|caregiver|mother|father|mom|dad|coordinator)\b/.test(n);
+    var notAName = /\b(session|sessions|appointment|visit|day|date|seen|phone|email|id|number|#)\b/.test(n);
+    if (!otherPerson && !notAName) {
+      if (/\b(first|given)\b/.test(n) || n === 'fname' || n === 'firstname' || n === 'f name') return 'name:first';
+      if (/\b(last|surname|family)\b/.test(n) || n === 'lname' || n === 'lastname' || n === 'l name') return 'name:last';
+      if (/\bmiddle\b/.test(n) || n === 'mi' || n === 'middle initial') return 'name:middle';
+    }
+    var field = fieldForLabel(label);
+    if (field === 'name') return 'name:full';
+    if (field) return field;
+    if (otherPerson || notAName) return '';
+    if (/^(child|children|student|participant|member|consumer|youth|individual|recipient|enrollee|patient|client|kid|kiddos?)$/.test(n)) return 'name:full';
+    return '';
+  }
+
+  function headerScore(row) {
+    var filled = 0;
+    var score = 0;
+    (row || []).forEach(function (cell) {
+      var text = String(cell || '').trim();
+      if (!text) return;
+      filled++;
+      if (looksLikeEmail(text) || looksLikePhone(text) || looksLikeDate(text)) { score -= 2; return; }
+      var role = columnRole(text);
+      if (role) score += role.indexOf('name:') === 0 ? 4 : 3;
+    });
+    if (filled < 2) return 0;
+    return score;
+  }
+
+  function nameColumnIndex(roles, dataRows) {
+    var hasName = roles.some(function (role) { return role && role.indexOf('name:') === 0; });
+    if (hasName) return -1;
+    var best = -1;
+    var bestScore = 0;
+    var width = roles.length;
+    dataRows.forEach(function (row) { width = Math.max(width, (row || []).length); });
+    for (var idx = 0; idx < width; idx++) {
+      if (roles[idx]) continue;
+      var hits = 0;
+      var seen = 0;
+      dataRows.forEach(function (row) {
+        var value = String((row || [])[idx] || '').trim();
+        if (!value) return;
+        seen++;
+        if (looksLikeName(value)) hits++;
       });
-      if (!client.name && nameParts.length) client.name = nameParts.slice(0, 2).join(' ');
-      client = cleanClient(client);
+      if (seen && hits >= Math.max(1, Math.ceil(seen * 0.5)) && hits > bestScore) {
+        bestScore = hits;
+        best = idx;
+      }
+    }
+    return best;
+  }
+
+  function rowIsHeader(row) {
+    var filled = 0;
+    var labels = 0;
+    (row || []).forEach(function (cell) {
+      var text = String(cell || '').trim();
+      if (!text) return;
+      filled++;
+      if (columnRole(text)) labels++;
+    });
+    return filled > 0 && labels === filled;
+  }
+
+  function repairShiftedName(roles, source) {
+    var cells = (source || []).slice();
+    var nameIdx = -1;
+    roles.forEach(function (role, idx) {
+      if (nameIdx < 0 && role && role.indexOf('name:') === 0) nameIdx = idx;
+    });
+    if (nameIdx < 0 || cells.length <= roles.length) return cells;
+    var left = String(cells[nameIdx] || '').trim();
+    var right = String(cells[nameIdx + 1] || '').trim();
+    if (!looksLikeName(left) || !looksLikeName(right)) return cells;
+    var nextRole = roles[nameIdx + 1];
+    if (nextRole && nextRole.indexOf('name:') === 0) return cells;
+    var shifted = cells[nameIdx + 2];
+    var shiftedFits = !nextRole ||
+      (nextRole === 'dob' && looksLikeDate(shifted)) ||
+      (nextRole === 'email' && looksLikeEmail(shifted)) ||
+      (nextRole === 'phone' && looksLikePhone(shifted));
+    var rightFits = nextRole && (
+      (nextRole === 'dob' && looksLikeDate(right)) ||
+      (nextRole === 'email' && looksLikeEmail(right)) ||
+      (nextRole === 'phone' && looksLikePhone(right))
+    );
+    if (shiftedFits && !rightFits) cells.splice(nameIdx, 2, right + ' ' + left);
+    return cells;
+  }
+
+  function clientFromRoles(roles, source) {
+    var client = {};
+    var first = '';
+    var middle = '';
+    var last = '';
+    var full = [];
+    roles.forEach(function (role, idx) {
+      var value = String(source[idx] == null ? '' : source[idx]).trim();
+      if (!value || !role) return;
+      if (role === 'name:first') { if (!first) first = value; return; }
+      if (role === 'name:middle') { if (!middle) middle = value; return; }
+      if (role === 'name:last') { if (!last) last = value; return; }
+      if (role === 'name:full') { full.push(value); return; }
+      if (!client[role]) client[role] = value;
+    });
+    var combined = [first, middle, last].filter(Boolean).join(' ');
+    client.name = tidyName(combined || full.join(' '));
+    if (!client.name && looksLikeName(client.parents)) client.name = client.parents;
+    return cleanClient(client);
+  }
+
+  function guessClients(rows) {
+    var data = (rows || []).filter(function (row) {
+      return (row || []).some(function (cell) { return String(cell || '').trim(); });
+    });
+    if (!data.length) return [];
+    var width = 0;
+    data.forEach(function (row) { width = Math.max(width, row.length); });
+    var roles = [];
+    for (var idx = 0; idx < width; idx++) {
+      var emails = 0;
+      var phones = 0;
+      var dates = 0;
+      var names = 0;
+      var seen = 0;
+      data.forEach(function (row) {
+        var value = String(row[idx] || '').trim();
+        if (!value) return;
+        seen++;
+        if (looksLikeEmail(value)) emails++;
+        else if (looksLikePhone(value)) phones++;
+        else if (looksLikeDate(value)) dates++;
+        else if (looksLikeName(value)) names++;
+      });
+      if (!seen) { roles[idx] = ''; continue; }
+      if (emails >= seen * 0.5) roles[idx] = 'email';
+      else if (phones >= seen * 0.5) roles[idx] = 'phone';
+      else if (dates >= seen * 0.5) roles[idx] = 'dob';
+      else if (names >= seen * 0.5) roles[idx] = 'name:full';
+      else roles[idx] = '';
+    }
+    var nameHits = roles.filter(function (role) { return role && role.indexOf('name:') === 0; }).length;
+    if (nameHits > 1) {
+      var used = 0;
+      roles = roles.map(function (role) {
+        if (role !== 'name:full') return role;
+        used++;
+        if (used === 1) return 'name:first';
+        if (used === 2) return 'name:last';
+        return '';
+      });
+    }
+    var clients = [];
+    data.forEach(function (row) {
+      if (rowIsHeader(row) || headerScore(row) >= 6) return;
+      var client = clientFromRoles(roles, row);
       if (clientHasIdentity(client)) clients.push(client);
     });
     return clients;
   }
 
   function clientsFromMatrix(rows) {
+    var list = rows || [];
+    var bestIndex = -1;
+    var bestScore = 0;
+    list.forEach(function (row, idx) {
+      var score = headerScore(row);
+      if (score > bestScore) { bestScore = score; bestIndex = idx; }
+    });
     var clients = [];
-    var i = 0;
-    while (i < rows.length) {
-      var headerText = (rows[i] || []).map(normalizeLabel).join(' ');
-      if (headerText.indexOf('time') !== -1 && headerText.indexOf('last day') !== -1) {
-        i++;
-        while (i < rows.length && (rows[i] || []).some(function (cell) { return String(cell || '').trim(); })) i++;
-        continue;
-      }
-      var headerLabels = (rows[i] || []).map(normalizeLabel);
-      var header = headerLabels.map(fieldForLabel);
-      var recognized = header.filter(Boolean).length;
-      if (recognized >= 2 || header.indexOf('name') !== -1) {
-        i++;
-        while (i < rows.length) {
-          var source = rows[i] || [];
-          if (!source.some(function (cell) { return String(cell || '').trim(); })) break;
-          var client = {};
-          var first = '';
-          var last = '';
-          header.forEach(function (field, idx) {
-            var label = headerLabels[idx];
-            var value = String(source[idx] == null ? '' : source[idx]).trim();
-            if (!value) return;
-            if (label === 'first name' || label === 'firstname' || label === 'given name') { first = value; return; }
-            if (label === 'last name' || label === 'lastname' || label === 'surname' || label === 'family name') { last = value; return; }
-            if (!field) return;
-            if (field === 'name' && client.name) client.name = client.name + ' ' + value;
-            else if (!client[field]) client[field] = value;
-          });
-          if (first || last) client.name = (first + ' ' + last).trim();
-          client = cleanClient(client);
-          if (clientHasIdentity(client)) clients.push(client);
-          i++;
+    if (bestIndex >= 0 && bestScore >= 4) {
+      var roles = (list[bestIndex] || []).map(columnRole);
+      var after = [];
+      for (var i = bestIndex + 1; i < list.length; i++) {
+        var source = list[i] || [];
+        if (!source.some(function (cell) { return String(cell || '').trim(); })) {
+          if (after.length) break;
+          continue;
         }
+        after.push(source);
       }
-      i++;
+      var inferred = nameColumnIndex(roles, after);
+      if (inferred >= 0) roles[inferred] = 'name:full';
+      after.forEach(function (source) {
+        if (rowIsHeader(source) || headerScore(source) >= bestScore) return;
+        var client = clientFromRoles(roles, repairShiftedName(roles, source));
+        if (clientHasIdentity(client)) clients.push(client);
+      });
     }
-    if (!clients.length) return guessClients(rows);
+    if (!clients.length) return guessClients(list);
+    var named = clients.filter(function (client) { return client.name; });
+    if (!named.length) {
+      var guessed = guessClients(list).filter(function (client) { return client.name; });
+      if (guessed.length) return guessed;
+    }
     return clients;
   }
 
@@ -1913,6 +2111,14 @@
 
   async function init() {
     userScope = await resolveUserScope();
+    var who = document.getElementById('js-signed-in');
+    if (who) who.textContent = currentEmail;
+    if (!currentEmail || !userScope) {
+      state.workspace = { version: 1, boards: [], clients: [], dxCodes: [] };
+      setSyncLabel('Sign in required', 'local');
+      document.getElementById('js-view-schedule').innerHTML = '<div class="empty"><h3>Sign in to see your schedule</h3><p>Each Emme email has its own schedule and client list.</p></div>';
+      return;
+    }
     state.layout = localStorage.getItem(layoutKey()) || 'schedule';
     state.activeBoardId = localStorage.getItem(boardKey()) || '';
     try { bc = new BroadcastChannel('emme_schedule_sync_' + userScope); } catch (_) {}
@@ -1933,6 +2139,9 @@
       var cloud = await loadCloud();
       if (cloud.configured) {
         state.cloudConfigured = true;
+        if (cloud.workspace && cloud.workspace.ownerEmail && cloud.workspace.ownerEmail !== currentEmail) {
+          cloud.workspace = null;
+        }
         if (cloud.workspace && (cloud.workspace.boards || []).length) {
           state.workspace = cloud.workspace;
         } else if (local && (local.boards || []).length) {

@@ -1497,16 +1497,17 @@
           const cfg = MsGraph.getConfig();
 
           if (MsGraph.account) {
-            const name = MsGraph.account.name || MsGraph.account.username || 'Emme account';
-            if (status) status.innerHTML = 'Connected as <strong>' + name + '</strong> — live Outlook calendar &amp; Microsoft To Do.';
+            const name = MsGraph.account.username || MsGraph.account.name || 'Emme account';
+            if (status) status.innerHTML = 'Connected as <strong>' + name + '</strong> — this Outlook calendar and To Do list.';
             if (connectBtn) connectBtn.style.display = 'none';
             if (connectBar) connectBar.style.display = 'none';
             if (signout) signout.style.display = '';
             if (calRefresh) calRefresh.style.display = '';
             if (tasksRefresh) tasksRefresh.style.display = '';
           } else {
+            const email = (SiteUser.cached && SiteUser.cached.email) || 'your Emme email';
             if (status) {
-              status.innerHTML = 'Click <strong>Connect Microsoft</strong> and sign in with your own Emme account.';
+              status.innerHTML = 'Connect Microsoft once as <strong>' + email + '</strong>. This browser keeps that calendar and to-do list until you sign out.';
             }
             if (connectBtn) connectBtn.style.display = cfg ? '' : 'none';
             if (connectBar) { connectBar.style.display = ''; connectBar.textContent = 'Connect Microsoft'; }
@@ -1514,6 +1515,56 @@
             if (calRefresh) calRefresh.style.display = 'none';
             if (tasksRefresh) tasksRefresh.style.display = 'none';
           }
+        },
+
+        linkKey: function (email) {
+          const scope = String(email || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80);
+          return 'emme_ms_link:' + scope;
+        },
+
+        accountEmails: function (account) {
+          const emails = [];
+          function add(value) {
+            const email = String(value || '').trim().toLowerCase();
+            if (email.indexOf('@') !== -1 && emails.indexOf(email) === -1) emails.push(email);
+          }
+          if (!account) return emails;
+          add(account.username);
+          const claims = account.idTokenClaims || {};
+          add(claims.preferred_username);
+          add(claims.email);
+          add(claims.upn);
+          add(claims.unique_name);
+          if (Array.isArray(claims.emails)) claims.emails.forEach(add);
+          return emails;
+        },
+
+        accountMatchesSite: function (account, email) {
+          const want = String(email || '').trim().toLowerCase();
+          if (!want || !account) return false;
+          return MsGraph.accountEmails(account).indexOf(want) !== -1;
+        },
+
+        rememberAccount: function (account) {
+          const site = SiteUser.cached;
+          if (!site || !site.email || !account || !account.homeAccountId) return;
+          try {
+            localStorage.setItem(MsGraph.linkKey(site.email), JSON.stringify({
+              homeAccountId: account.homeAccountId,
+              username: account.username || ''
+            }));
+          } catch (_) {}
+        },
+
+        rememberedAccount: function (accounts, email) {
+          try {
+            const raw = localStorage.getItem(MsGraph.linkKey(email));
+            if (!raw) return null;
+            const saved = JSON.parse(raw);
+            return (accounts || []).find(function (account) {
+              return account.homeAccountId && account.homeAccountId === saved.homeAccountId;
+            }) || null;
+          } catch (_) { return null; }
         },
 
         ensureMsal: async function () {
@@ -1540,10 +1591,20 @@
             return MsGraph.pca;
           }
           const result = await MsGraph.pca.handleRedirectPromise();
-          if (result && result.account) MsGraph.account = result.account;
-          else {
-            const accounts = MsGraph.pca.getAllAccounts();
-            MsGraph.account = accounts[0] || null;
+          const site = SiteUser.cached || await SiteUser.current();
+          const want = String((site && site.email) || '').toLowerCase();
+          const accounts = MsGraph.pca.getAllAccounts();
+          let matched = null;
+          if (want) {
+            matched = MsGraph.rememberedAccount(accounts, want) || accounts.find(function (account) {
+              return MsGraph.accountMatchesSite(account, want);
+            }) || null;
+          }
+          if (result && result.account && MsGraph.accountMatchesSite(result.account, want)) matched = result.account;
+          MsGraph.account = matched;
+          if (matched) {
+            MsGraph.pca.setActiveAccount(matched);
+            MsGraph.rememberAccount(matched);
           }
           MsGraph.ready = true;
           return MsGraph.pca;
@@ -1551,12 +1612,29 @@
 
         login: async function () {
           await MsGraph.ensureMsal();
+          const site = SiteUser.cached || await SiteUser.current();
+          const hint = site && site.email;
           try {
             const result = await MsGraph.pca.loginPopup({
               scopes: MsGraph.SCOPES,
               prompt: 'select_account',
+              loginHint: hint || undefined,
             });
-            MsGraph.account = result.account;
+            const signedInAs = result.account;
+            if (hint && !MsGraph.accountMatchesSite(signedInAs, hint)) {
+              MsGraph.account = null;
+              MsGraph.eventsByDay = {};
+              MsGraph.todoListId = null;
+              Calendar.render();
+              Calendar.renderDayEvents();
+              Tasks.loadLocal();
+              Tasks.render();
+              MsGraph.updateUI();
+              throw new Error('This dashboard is signed in as ' + hint + '. Connect Microsoft with that same email.');
+            }
+            MsGraph.account = signedInAs;
+            if (MsGraph.pca.setActiveAccount) MsGraph.pca.setActiveAccount(signedInAs);
+            MsGraph.rememberAccount(signedInAs);
             MsGraph.updateUI();
             await MsGraph.syncAll();
           } catch (err) {
@@ -1575,15 +1653,28 @@
           }
         },
 
-        signOutSite: function () {
+        signOutSite: async function () {
+          const email = SiteUser.cached && SiteUser.cached.email;
+          const account = MsGraph.account;
+          if (email) {
+            try { localStorage.removeItem(MsGraph.linkKey(email)); } catch (_) {}
+          }
           try {
-            const keys = [];
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && key.indexOf('msal.') === 0) keys.push(key);
+            if (MsGraph.pca && account && typeof MsGraph.pca.clearCache === 'function') {
+              await MsGraph.pca.clearCache({ account: account });
+            } else if (account && account.homeAccountId) {
+              const id = account.homeAccountId;
+              const keys = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.indexOf(id) !== -1) keys.push(key);
+              }
+              keys.forEach(function (key) { localStorage.removeItem(key); });
             }
-            keys.forEach(function (key) { localStorage.removeItem(key); });
           } catch (_) {}
+          if (email) {
+            try { localStorage.removeItem(MsGraph.linkKey(email)); } catch (_) {}
+          }
           window.location.assign('/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/signed-out.html'));
         },
 
@@ -1606,19 +1697,26 @@
         getToken: async function () {
           await MsGraph.ensureMsal();
           if (!MsGraph.account) throw new Error('Not signed in');
+          const request = { account: MsGraph.account, scopes: MsGraph.SCOPES };
           try {
-            const silent = await MsGraph.pca.acquireTokenSilent({
-              account: MsGraph.account,
-              scopes: MsGraph.SCOPES,
-            });
+            const silent = await MsGraph.pca.acquireTokenSilent(request);
             return silent.accessToken;
-          } catch (_) {
-            const popup = await MsGraph.pca.acquireTokenPopup({
+          } catch (_) {}
+          try {
+            const sso = await MsGraph.pca.ssoSilent({
               account: MsGraph.account,
               scopes: MsGraph.SCOPES,
+              loginHint: MsGraph.account.username
             });
-            return popup.accessToken;
-          }
+            if (sso && sso.account) {
+              MsGraph.account = sso.account;
+              MsGraph.rememberAccount(sso.account);
+            }
+            return sso.accessToken;
+          } catch (_) {}
+          const popup = await MsGraph.pca.acquireTokenPopup(request);
+          if (popup && popup.account) MsGraph.rememberAccount(popup.account);
+          return popup.accessToken;
         },
 
         graph: async function (path, options) {
@@ -1757,14 +1855,16 @@
       };
 
       const SiteUser = {
+        cached: null,
         current: async function () {
+          if (SiteUser.cached) return SiteUser.cached;
           try {
             const res = await fetch('/.auth/me', { credentials: 'same-origin' });
             if (!res.ok) return null;
             const data = await res.json();
             const principal = data && data.clientPrincipal;
             if (!principal) return null;
-            const email = principal.userDetails || '';
+            const email = SiteUser.emailFromPrincipal(principal);
             let given = '';
             let display = '';
             (principal.claims || []).forEach(function (claim) {
@@ -1779,8 +1879,26 @@
               const local = email.split('@')[0];
               name = local.charAt(0).toUpperCase() + local.slice(1);
             }
-            return { name: name, email: email, id: String(principal.userId || email || 'device') };
+            SiteUser.cached = { name: name, email: email, id: String(principal.userId || email || '') };
+            return SiteUser.cached;
           } catch (_) { return null; }
+        },
+        emailFromPrincipal: function (principal) {
+          const details = String((principal && principal.userDetails) || '').trim().toLowerCase();
+          if (details.indexOf('@') !== -1) return details;
+          const claims = (principal && principal.claims) || [];
+          let fallback = '';
+          for (let i = 0; i < claims.length; i++) {
+            const typ = String(claims[i].typ || '').toLowerCase();
+            const val = String(claims[i].val || '').trim().toLowerCase();
+            if (val.indexOf('@') === -1) continue;
+            if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) return val;
+            if (!fallback) fallback = val;
+          }
+          return fallback;
+        },
+        scopeKey: function (user) {
+          return String((user && user.email) || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80);
         },
       };
 
@@ -1827,21 +1945,34 @@
           const end = new Date(year, month + 1, 1);
           const startISO = start.toISOString();
           const endISO = end.toISOString();
+          const mine = String((MsGraph.account && MsGraph.account.username) || '').toLowerCase();
           try {
-            const data = await MsGraph.graph(
-              '/me/calendarView?startDateTime=' + encodeURIComponent(startISO) +
-              '&endDateTime=' + encodeURIComponent(endISO) +
-              '&$select=subject,start,end,isAllDay,webLink&$orderby=start/dateTime&$top=200',
-              { headers: { Prefer: 'outlook.timezone="America/Denver"' } }
-            );
-            const map = {};
-            (data.value || []).forEach(function (ev) {
-              const raw = (ev.start && (ev.start.dateTime || ev.start.date)) || '';
-              const dayKey = raw.slice(0, 10);
-              if (!dayKey) return;
-              if (!map[dayKey]) map[dayKey] = [];
-              map[dayKey].push(ev);
+            const calendars = await MsGraph.graph('/me/calendars?$select=id,name,owner,isDefaultCalendar');
+            const owned = (calendars.value || []).filter(function (cal) {
+              const addr = String((cal.owner && cal.owner.address) || '').toLowerCase();
+              if (!addr) return !!cal.isDefaultCalendar;
+              return addr === mine;
             });
+            const map = {};
+            const sources = owned.length ? owned : [{ id: '' }];
+            for (let i = 0; i < sources.length; i++) {
+              const path = sources[i].id
+                ? '/me/calendars/' + encodeURIComponent(sources[i].id) + '/calendarView'
+                : '/me/calendarView';
+              const data = await MsGraph.graph(
+                path + '?startDateTime=' + encodeURIComponent(startISO) +
+                '&endDateTime=' + encodeURIComponent(endISO) +
+                '&$select=subject,start,end,isAllDay,webLink&$orderby=start/dateTime&$top=100',
+                { headers: { Prefer: 'outlook.timezone="America/Denver"' } }
+              );
+              (data.value || []).forEach(function (ev) {
+                const raw = (ev.start && (ev.start.dateTime || ev.start.date)) || '';
+                const dayKey = raw.slice(0, 10);
+                if (!dayKey) return;
+                if (!map[dayKey]) map[dayKey] = [];
+                map[dayKey].push(ev);
+              });
+            }
             MsGraph.eventsByDay = map;
             Calendar.render();
             Calendar.renderDayEvents();
@@ -1967,7 +2098,11 @@
 
       /* ── TASKS ── */
       const Tasks = {
-        KEY: 'emme_tasks',
+        storageKey: function () {
+          const user = SiteUser.cached;
+          const scope = SiteUser.scopeKey(user);
+          return 'emme_tasks:' + (scope || 'signed-out');
+        },
         DEFAULT_TASKS: [
           { id: 'local-1', text: "Review today's session notes", completed: false },
           { id: 'local-2', text: 'Send intake form to new client', completed: false },
@@ -2010,7 +2145,7 @@
 
         loadLocal: function () {
           try {
-            const raw = localStorage.getItem(Tasks.KEY);
+            const raw = localStorage.getItem(Tasks.storageKey());
             if (raw) {
               const parsed = JSON.parse(raw);
               if (Array.isArray(parsed)) { Tasks.items = parsed; return; }
@@ -2024,7 +2159,7 @@
 
         saveLocal: function () {
           if (MsGraph.isSignedIn()) return;
-          try { localStorage.setItem(Tasks.KEY, JSON.stringify(Tasks.items)); } catch (_) {}
+          try { localStorage.setItem(Tasks.storageKey(), JSON.stringify(Tasks.items)); } catch (_) {}
         },
 
         loadFromGraph: async function () {
@@ -2038,17 +2173,22 @@
             if (!list) throw new Error('No Microsoft To Do list found');
             MsGraph.todoListId = list.id;
 
-            const data = await MsGraph.graph(
-              '/me/todo/lists/' + encodeURIComponent(list.id) +
-              '/tasks?$top=50&$orderby=createdDateTime desc'
-            );
-            Tasks.items = (data.value || []).map(function (t) {
-              return {
-                id: t.id,
-                text: t.title || '(Untitled)',
-                completed: t.status === 'completed',
-              };
-            });
+            const items = [];
+            for (let i = 0; i < listsArr.length; i++) {
+              const data = await MsGraph.graph(
+                '/me/todo/lists/' + encodeURIComponent(listsArr[i].id) +
+                '/tasks?$top=50&$orderby=createdDateTime desc'
+              );
+              (data.value || []).forEach(function (t) {
+                items.push({
+                  id: t.id,
+                  listId: listsArr[i].id,
+                  text: t.title || '(Untitled)',
+                  completed: t.status === 'completed',
+                });
+              });
+            }
+            Tasks.items = items;
             Tasks.render();
           } catch (err) {
             console.warn(err);
@@ -2084,7 +2224,7 @@
                 '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks',
                 { method: 'POST', body: { title: text } }
               );
-              Tasks.items.unshift({ id: created.id, text: created.title || text, completed: false });
+              Tasks.items.unshift({ id: created.id, listId: MsGraph.todoListId, text: created.title || text, completed: false });
               Tasks.render();
             } catch (err) {
               alert('Could not add To Do task: ' + (err.message || 'error'));
@@ -2103,7 +2243,7 @@
           if (MsGraph.isSignedIn()) {
             try {
               await MsGraph.graph(
-                '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks/' + encodeURIComponent(id),
+                '/me/todo/lists/' + encodeURIComponent(task.listId || MsGraph.todoListId) + '/tasks/' + encodeURIComponent(id),
                 { method: 'PATCH', body: { status: next ? 'completed' : 'notStarted' } }
               );
               task.completed = next;
@@ -2119,10 +2259,11 @@
         },
 
         remove: async function (id) {
+          const task = Tasks.items.find(function (t) { return String(t.id) === String(id); });
           if (MsGraph.isSignedIn()) {
             try {
               await MsGraph.graph(
-                '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks/' + encodeURIComponent(id),
+                '/me/todo/lists/' + encodeURIComponent((task && task.listId) || MsGraph.todoListId) + '/tasks/' + encodeURIComponent(id),
                 { method: 'DELETE' }
               );
               Tasks.items = Tasks.items.filter(function (t) { return String(t.id) !== String(id); });
@@ -2143,7 +2284,7 @@
             for (let i = 0; i < done.length; i++) {
               try {
                 await MsGraph.graph(
-                  '/me/todo/lists/' + encodeURIComponent(MsGraph.todoListId) + '/tasks/' + encodeURIComponent(done[i].id),
+                  '/me/todo/lists/' + encodeURIComponent(done[i].listId || MsGraph.todoListId) + '/tasks/' + encodeURIComponent(done[i].id),
                   { method: 'DELETE' }
                 );
               } catch (_) {}
@@ -2205,7 +2346,7 @@
         STORAGE_KEY: 'emme_schedule_workspace_v1',
         userKey: '',
         storageKey: function () {
-          return SchedulePreview.STORAGE_KEY + ':' + (SchedulePreview.userKey || 'device');
+          return SchedulePreview.STORAGE_KEY + ':' + (SchedulePreview.userKey || 'signed-out');
         },
         POLL_MS: 8000,
         lastUpdatedAt: null,
@@ -2243,7 +2384,10 @@
         loadLocal: function () {
           try {
             const raw = localStorage.getItem(SchedulePreview.storageKey());
-            return raw ? JSON.parse(raw) : null;
+            const parsed = raw ? JSON.parse(raw) : null;
+            const email = SiteUser.cached && SiteUser.cached.email;
+            if (parsed && parsed.ownerEmail && email && parsed.ownerEmail !== email) return null;
+            return parsed;
           } catch (_) { return null; }
         },
 
@@ -2304,7 +2448,7 @@
           try {
             const res = await fetch('/api/schedule', { credentials: 'include' });
             const data = await res.json().catch(function () { return {}; });
-            if (res.ok && data.configured && data.workspace) {
+            if (res.ok && data.configured && data.workspace && (!data.workspace.ownerEmail || !SchedulePreview.userKey || data.workspace.ownerEmail === ((SiteUser.cached && SiteUser.cached.email) || ''))) {
               try { localStorage.setItem(SchedulePreview.storageKey(), JSON.stringify(data.workspace)); } catch (_) {}
               SchedulePreview.applyWorkspace(data.workspace, 'cloud');
               return;
@@ -2337,7 +2481,7 @@
         init: async function () {
           try {
             const user = await SiteUser.current();
-            SchedulePreview.userKey = String((user && (user.id || user.email)) || 'device').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80) || 'device';
+            SchedulePreview.userKey = SiteUser.scopeKey(user);
           } catch (_) {
             SchedulePreview.userKey = 'device';
           }
@@ -2359,6 +2503,7 @@
         init: async function () {
           const signout = document.getElementById('js-ms-signout');
           if (signout) signout.addEventListener('click', function () { MsGraph.signOutSite(); });
+          await SiteUser.current();
           Header.init();
           Greeting.init();
           Calendar.init();
