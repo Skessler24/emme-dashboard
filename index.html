@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -515,99 +515,9 @@
       flex-wrap: wrap;
     }
 
-    /* ── COMPONENTS — SCHEDULE PREVIEW ── */
-    .sched-preview__meta {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-    }
-    .sched-preview__dot {
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: var(--radius-full);
-      background: #7dcea0;
-      box-shadow: 0 0 0 0 rgba(125, 206, 160, 0.45);
-      animation: sched-pulse 2s infinite;
-    }
-    @keyframes sched-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(125, 206, 160, 0.45); }
-      70% { box-shadow: 0 0 0 6px rgba(125, 206, 160, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(125, 206, 160, 0); }
-    }
-    .sched-preview__day {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      background: var(--color-surface);
-    }
-    .sched-preview__day-head {
-      padding: var(--space-3) var(--space-4);
-      color: #fff;
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: var(--text-sm);
-      background: #1e3a5f;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .sched-preview__day-head--maroon { background: #6b2d3c; }
-    .sched-preview__table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: var(--text-sm);
-    }
-    .sched-preview__table th {
-      text-align: left;
-      padding: var(--space-2) var(--space-4);
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--color-text-muted);
-      background: var(--color-green-subtle);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .sched-preview__table td {
-      padding: var(--space-3) var(--space-4);
-      border-bottom: 1px solid var(--color-border);
-      vertical-align: middle;
-    }
-    .sched-preview__table tr:last-child td { border-bottom: none; }
-    .sched-status {
-      display: inline-flex;
-      padding: 0.15rem 0.55rem;
-      border-radius: var(--radius-full);
-      font-size: 0.72rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .sched-status--full { background: #f8cacb; color: #7a2f38; }
-    .sched-status--open4 { background: #d4edda; color: #1e5c33; }
-    .sched-status--open2,
-    .sched-status--open1 { background: #ffe8a3; color: #6b4e00; }
-    .sched-status--progress { background: #ffd0a8; color: #7a3d00; }
-    .sched-status--lunch { background: #cfe8f5; color: #1a4d66; }
-    .sched-status--makeup { background: #e4d4f5; color: #4b2d6b; }
-    .sched-status--closed { background: #6b2d3c; color: #fff; }
-    .sched-status--blank { background: #f0e8ef; color: var(--color-text-muted); }
-    .sched-preview__empty {
-      padding: var(--space-8);
-      text-align: center;
-      color: var(--color-text-muted);
-      font-size: var(--text-sm);
-    }
-    .sched-preview__grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: var(--space-4);
-    }
-
     /* ── COMPONENTS — CALENDAR ── */
     .cal-container {
-      max-width: 34rem;
-      margin-inline: auto;
+      width: 100%;
     }
 
     .cal-nav {
@@ -672,15 +582,54 @@
 
     .cal-cell {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      aspect-ratio: 1;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 0.2rem;
+      min-height: 7.5rem;
+      padding: 0.4rem 0.4rem 0.45rem;
+      border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
+      background: #fff;
       font-size: var(--text-sm);
       font-weight: 500;
       color: var(--color-text-body);
+      text-align: left;
       transition: background-color var(--transition-fast);
       cursor: pointer;
+    }
+
+    .cal-cell__num {
+      font-weight: 700;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .cal-cell__events {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+
+    .cal-chip {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.7rem;
+      font-weight: 600;
+      line-height: 1.3;
+      padding: 0.12rem 0.32rem;
+      border-radius: 0.25rem;
+      background: #f8cacb;
+      color: #5c2430;
+    }
+
+    .cal-chip--more {
+      background: transparent;
+      color: var(--color-text-muted);
+      padding-inline: 0.15rem;
     }
 
     .cal-cell:hover { background-color: var(--color-green-subtle); }
@@ -700,14 +649,12 @@
 
     .cal-cell--overflow { color: var(--color-text-faint); }
 
-    .cal-cell--has-event {
-      box-shadow: inset 0 -3px 0 0 var(--color-pink-dark);
-      font-weight: 700;
+    .cal-cell--today .cal-chip {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
     }
 
-    .cal-cell--today.cal-cell--has-event {
-      box-shadow: inset 0 -3px 0 0 var(--color-yellow);
-    }
+    .cal-cell--today .cal-chip--more { color: rgba(255, 255, 255, 0.85); }
 
     .cal-cell--selected {
       outline: 2px solid var(--color-pink-dark);
@@ -1116,6 +1063,10 @@
       }
 
       .greeting::after { display: none; }
+
+      .cal-cell { min-height: 4.6rem; padding: 0.2rem; }
+      .cal-cell__num { font-size: 0.8rem; }
+      .cal-chip { font-size: 0.58rem; }
     }
 
     @media (max-width: 374px) {
@@ -1297,28 +1248,6 @@
           <button type="button" class="btn btn--green" id="js-ms-connect-bar">Connect Microsoft</button>
           <button type="button" class="btn btn--outline" id="js-ms-setup-bar">MS Setup</button>
         </div>
-
-        <section class="widget" role="region" aria-labelledby="sched-heading">
-          <header class="widget__header">
-            <div class="widget__heading-group">
-              <i data-lucide="calendar-days" class="icon-md widget__icon" aria-hidden="true"></i>
-              <h2 class="widget__heading" id="sched-heading">My Schedule</h2>
-              <span class="sched-preview__meta" id="js-sched-sync">
-                <span class="sched-preview__dot" aria-hidden="true"></span>
-                <span id="js-sched-sync-label">Loading…</span>
-              </span>
-            </div>
-            <div class="widget__actions">
-              <button type="button" class="btn btn--outline" id="js-sched-refresh">Refresh</button>
-              <a class="btn btn--green" href="app5.html" target="_blank" rel="noopener noreferrer">Open Schedule →</a>
-            </div>
-          </header>
-          <div class="widget__body">
-            <div class="sched-preview__grid" id="js-sched-preview">
-              <p class="sched-preview__empty">Loading schedule…</p>
-            </div>
-          </div>
-        </section>
 
         <section class="widget" role="region" aria-labelledby="cal-heading">
           <header class="widget__header">
@@ -2013,14 +1942,36 @@
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'cal-cell';
-          btn.textContent = day;
           const key = ymd(year, month, day);
           btn.dataset.date = key;
           const labelDate = new Date(year, month, day);
-          btn.setAttribute('aria-label', labelDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+          const events = (!isOverflow && MsGraph.eventsByDay[key]) || [];
+          btn.setAttribute('aria-label', labelDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + (events.length ? ', ' + events.length + ' events' : ''));
+          const num = document.createElement('span');
+          num.className = 'cal-cell__num';
+          num.textContent = day;
+          btn.appendChild(num);
+          if (events.length) {
+            const wrap = document.createElement('span');
+            wrap.className = 'cal-cell__events';
+            events.slice(0, 3).forEach(function (ev) {
+              const chip = document.createElement('span');
+              chip.className = 'cal-chip';
+              const when = Calendar.eventTime(ev);
+              chip.textContent = (when ? when + ' ' : '') + (ev.subject || '(No title)');
+              wrap.appendChild(chip);
+            });
+            if (events.length > 3) {
+              const more = document.createElement('span');
+              more.className = 'cal-chip cal-chip--more';
+              more.textContent = '+' + (events.length - 3) + ' more';
+              wrap.appendChild(more);
+            }
+            btn.appendChild(wrap);
+          }
           if (isOverflow) btn.classList.add('cal-cell--overflow');
           if (isToday) { btn.classList.add('cal-cell--today'); btn.setAttribute('aria-current', 'date'); }
-          if (MsGraph.eventsByDay[key] && MsGraph.eventsByDay[key].length) btn.classList.add('cal-cell--has-event');
+          if (events.length) btn.classList.add('cal-cell--has-event');
           if (Calendar.state.selectedKey === key) btn.classList.add('cal-cell--selected');
           btn.addEventListener('click', function () {
             Calendar.state.selectedKey = key;
@@ -2028,6 +1979,19 @@
             Calendar.renderDayEvents();
           });
           return btn;
+        },
+
+        eventTime: function (ev) {
+          if (!ev || ev.isAllDay) return ev && ev.isAllDay ? 'All day' : '';
+          const startStr = (ev.start && ev.start.dateTime) || '';
+          if (startStr.indexOf('T') === -1) return '';
+          const hm = startStr.split('T')[1].slice(0, 5);
+          const bits = hm.split(':');
+          let hour = parseInt(bits[0], 10);
+          if (isNaN(hour)) return hm;
+          const suffix = hour >= 12 ? 'p' : 'a';
+          hour = hour % 12 || 12;
+          return hour + ':' + (bits[1] || '00') + suffix;
         },
 
         renderDayEvents: function () {
@@ -2342,163 +2306,6 @@
         },
       };
 
-      const SchedulePreview = {
-        STORAGE_KEY: 'emme_schedule_workspace_v1',
-        userKey: '',
-        storageKey: function () {
-          return SchedulePreview.STORAGE_KEY + ':' + (SchedulePreview.userKey || 'signed-out');
-        },
-        POLL_MS: 8000,
-        lastUpdatedAt: null,
-        timer: null,
-
-        statusClass: function (value) {
-          const map = {
-            'Full': 'full',
-            'Open 4x': 'open4',
-            'Open 2x (1&3)': 'open2',
-            'Open 2x (2&4)': 'open2',
-            'Open 1x (1)': 'open1',
-            'Open 1x (2)': 'open1',
-            'Open 1x (3)': 'open1',
-            'Open 1x (4)': 'open1',
-            'Scheduling In Progress': 'progress',
-            'Lunch': 'lunch',
-            'Makeup': 'makeup',
-            'Not Open': 'closed',
-          };
-          return map[value] || 'blank';
-        },
-
-        escapeHtml: function (str) {
-          return String(str == null ? '' : str)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-        },
-
-        setSync: function (text) {
-          const el = document.getElementById('js-sched-sync-label');
-          if (el) el.textContent = text;
-        },
-
-        loadLocal: function () {
-          try {
-            const raw = localStorage.getItem(SchedulePreview.storageKey());
-            const parsed = raw ? JSON.parse(raw) : null;
-            const email = SiteUser.cached && SiteUser.cached.email;
-            if (parsed && parsed.ownerEmail && email && parsed.ownerEmail !== email) return null;
-            return parsed;
-          } catch (_) { return null; }
-        },
-
-        todayName: function () {
-          return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
-        },
-
-        pickDays: function (workspace) {
-          if (!workspace || !Array.isArray(workspace.boards) || !workspace.boards.length) return [];
-          const board = workspace.boards[0];
-          const days = board.days || [];
-          const today = SchedulePreview.todayName();
-          const todayDay = days.find(function (d) { return d.name === today; });
-          if (todayDay) return [todayDay];
-          return days.filter(function (d) { return (d.slots || []).some(function (s) { return s.notes || s.status; }); }).slice(0, 2);
-        },
-
-        render: function (workspace) {
-          const root = document.getElementById('js-sched-preview');
-          if (!root) return;
-          const days = SchedulePreview.pickDays(workspace);
-          if (!days.length) {
-            root.innerHTML = '<p class="sched-preview__empty">No schedule yet. Open <strong>Schedule &amp; Caseload</strong> to build your week — it will live-update here.</p>';
-            return;
-          }
-          root.innerHTML = days.map(function (day) {
-            const color = day.color === 'maroon' ? ' sched-preview__day-head--maroon' : '';
-            const slots = (day.slots || []).filter(function (s) {
-              return s.clientName || s.notes || s.status || s.time;
-            }).slice(0, 8);
-            const rows = slots.length
-              ? slots.map(function (s) {
-                  const cls = SchedulePreview.statusClass(s.status);
-                  const name = s.clientName || s.notes || '';
-                  return '<tr>' +
-                    '<td style="width:6.5rem;font-weight:600;color:var(--color-green)">' + SchedulePreview.escapeHtml(s.time || '—') + '</td>' +
-                    '<td style="width:9rem"><span class="sched-status sched-status--' + cls + '">' + SchedulePreview.escapeHtml(s.status || '—') + '</span></td>' +
-                    '<td>' + SchedulePreview.escapeHtml(name) + '</td>' +
-                    '</tr>';
-                }).join('')
-              : '<tr><td colspan="3" style="color:var(--color-text-muted)">No appointments listed</td></tr>';
-            return '<article class="sched-preview__day">' +
-              '<div class="sched-preview__day-head' + color + '"><span>' + SchedulePreview.escapeHtml(day.name) + '</span><span style="opacity:.8;font-size:.75rem;font-family:var(--font-body)">Live</span></div>' +
-              '<table class="sched-preview__table"><thead><tr><th>Time</th><th>Status</th><th>Client</th></tr></thead><tbody>' +
-              rows + '</tbody></table></article>';
-          }).join('');
-        },
-
-        applyWorkspace: function (workspace, source) {
-          if (!workspace) return;
-          SchedulePreview.lastUpdatedAt = workspace.updatedAt || null;
-          SchedulePreview.render(workspace);
-          SchedulePreview.setSync(source === 'cloud' ? 'Live sync' : (source === 'device' ? 'On this device' : 'Updated'));
-        },
-
-        refresh: async function () {
-          SchedulePreview.setSync('Refreshing…');
-          try {
-            const res = await fetch('/api/schedule', { credentials: 'include' });
-            const data = await res.json().catch(function () { return {}; });
-            if (res.ok && data.configured && data.workspace && (!data.workspace.ownerEmail || !SchedulePreview.userKey || data.workspace.ownerEmail === ((SiteUser.cached && SiteUser.cached.email) || ''))) {
-              try { localStorage.setItem(SchedulePreview.storageKey(), JSON.stringify(data.workspace)); } catch (_) {}
-              SchedulePreview.applyWorkspace(data.workspace, 'cloud');
-              return;
-            }
-          } catch (_) {}
-          const local = SchedulePreview.loadLocal();
-          if (local) {
-            SchedulePreview.applyWorkspace(local, 'device');
-          } else {
-            SchedulePreview.render(null);
-            SchedulePreview.setSync('Open Schedule to start');
-          }
-        },
-
-        poll: async function () {
-          try {
-            const res = await fetch('/api/schedule/meta', { credentials: 'include' });
-            const data = await res.json().catch(function () { return {}; });
-            if (res.ok && data.configured && data.updatedAt && data.updatedAt !== SchedulePreview.lastUpdatedAt) {
-              await SchedulePreview.refresh();
-              return;
-            }
-          } catch (_) {}
-          const local = SchedulePreview.loadLocal();
-          if (local && local.updatedAt && local.updatedAt !== SchedulePreview.lastUpdatedAt) {
-            SchedulePreview.applyWorkspace(local, 'device');
-          }
-        },
-
-        init: async function () {
-          try {
-            const user = await SiteUser.current();
-            SchedulePreview.userKey = SiteUser.scopeKey(user);
-          } catch (_) {
-            SchedulePreview.userKey = 'device';
-          }
-          const refreshBtn = document.getElementById('js-sched-refresh');
-          if (refreshBtn) refreshBtn.addEventListener('click', function () { SchedulePreview.refresh(); });
-          SchedulePreview.refresh();
-          SchedulePreview.timer = setInterval(SchedulePreview.poll, SchedulePreview.POLL_MS);
-          window.addEventListener('storage', function (e) {
-            if (e.key === SchedulePreview.storageKey()) SchedulePreview.poll();
-          });
-          try {
-            const bc = new BroadcastChannel('emme_schedule_sync_' + SchedulePreview.userKey);
-            bc.onmessage = function () { SchedulePreview.poll(); };
-          } catch (_) {}
-        },
-      };
-
       const App = {
         init: async function () {
           const signout = document.getElementById('js-ms-signout');
@@ -2508,7 +2315,6 @@
           Greeting.init();
           Calendar.init();
           Tasks.init();
-          SchedulePreview.init();
           await MsGraph.init();
           refreshIcons();
         },

@@ -253,7 +253,7 @@
     }
     .client-side__list { max-height: min(70vh, 720px); overflow: auto; }
     .client-side__row {
-      display: grid; grid-template-columns: 1fr auto auto; gap: 0.5rem;
+      display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.5rem;
       padding: 0.65rem 0.85rem; border-bottom: 1px solid rgba(8,67,57,0.06);
       align-items: center; cursor: pointer;
     }
@@ -350,6 +350,7 @@
     .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
     @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
     .modal__actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+    #js-modal-delete { margin-right: auto; }
 
     .dx-panel {
       margin-top: 1.25rem; padding: 1rem;
@@ -471,6 +472,7 @@
       <h2 class="modal__title" id="js-modal-title">Edit</h2>
       <div id="js-modal-body"></div>
       <div class="modal__actions">
+        <button type="button" class="btn btn--danger is-hidden" id="js-modal-delete">Delete client</button>
         <button type="button" class="btn btn--soft" id="js-modal-cancel">Cancel</button>
         <button type="button" class="btn btn--green" id="js-modal-save">Save</button>
       </div>
@@ -886,6 +888,7 @@
         '<div class="client-side__meta">' + escapeHtml(c.sessions || '') + '</div></div>' +
         '<span class="client-side__hours">' + escapeHtml(c.hours || '') + '</span>' +
         '<button type="button" class="btn btn--icon btn--soft" data-action="edit-client" data-client="' + c.id + '" title="Edit"><i data-lucide="pencil"></i></button>' +
+        '<button type="button" class="btn btn--danger btn--sm" data-action="del-client" data-client="' + c.id + '">Delete</button>' +
       '</div>';
     }).join('') || '<p class="empty" style="padding:1.25rem">No clients yet — add some, or open the Clients tab</p>';
 
@@ -974,8 +977,8 @@
           '<div><div class="client-card__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
           '<div class="client-card__sessions">' + escapeHtml(c.sessions || 'No session set') + '</div></div>' +
           '<div style="display:flex;gap:0.25rem">' +
-            '<button type="button" class="btn btn--ghost btn--icon" data-action="edit-client" data-client="' + c.id + '" title="Edit"><i data-lucide="pencil"></i></button>' +
-            '<button type="button" class="btn btn--ghost btn--icon" data-action="del-client" data-client="' + c.id + '" title="Delete"><i data-lucide="trash-2"></i></button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="edit-client" data-client="' + c.id + '" title="Edit">Edit</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="del-client" data-client="' + c.id + '">Delete</button>' +
           '</div></div>' +
         '<div class="client-card__body">' +
           infoRow('DOB', c.dob) +
@@ -1073,6 +1076,8 @@
     state.modalContext = context || null;
     document.getElementById('js-modal-title').textContent = title;
     document.getElementById('js-modal-body').innerHTML = bodyHtml;
+    var deleteBtn = document.getElementById('js-modal-delete');
+    if (deleteBtn) deleteBtn.classList.toggle('is-hidden', mode !== 'edit-client');
     document.getElementById('js-modal').classList.remove('is-hidden');
   }
 
@@ -1123,6 +1128,18 @@
   function val(id) {
     var el = document.getElementById(id);
     return el ? el.value.trim() : '';
+  }
+
+  function deleteClient(clientId) {
+    if (!clientId || !state.workspace) return;
+    var client = (state.workspace.clients || []).find(function (c) { return c.id === clientId; });
+    var name = client && client.name ? client.name : 'this client';
+    if (!confirm('Delete ' + name + '?')) return;
+    mutate(function () {
+      state.workspace.clients = (state.workspace.clients || []).filter(function (c) { return c.id !== clientId; });
+    });
+    closeModal();
+    toast('Client deleted');
   }
 
   function openClientEditor(clientId) {
@@ -1321,13 +1338,7 @@
         }
       }
       if (action === 'edit-client') openClientEditor(clientId);
-      if (action === 'del-client' && clientId) {
-        if (confirm('Delete this client?')) {
-          mutate(function () {
-            state.workspace.clients = state.workspace.clients.filter(function (c) { return c.id !== clientId; });
-          });
-        }
-      }
+      if (action === 'del-client' && clientId) deleteClient(clientId);
       return;
     }
 
@@ -1434,6 +1445,11 @@
   });
 
   document.getElementById('js-modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('js-modal-delete').addEventListener('click', function () {
+    if (state.modalMode === 'edit-client' && state.modalContext && state.modalContext.id) {
+      deleteClient(state.modalContext.id);
+    }
+  });
   document.getElementById('js-modal').addEventListener('click', function (e) {
     if (e.target.id === 'js-modal') closeModal();
   });
