@@ -318,17 +318,27 @@
     /* ── COMPONENTS — CARDS ── */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-auto-rows: 8.75rem;
       gap: var(--space-6);
+    }
+
+    .card-grid > li {
+      display: flex;
+      min-width: 0;
+      height: 100%;
     }
 
     .card {
       display: flex;
       align-items: center;
       gap: var(--space-4);
+      width: 100%;
+      height: 100%;
+      min-height: 8.75rem;
       background: var(--color-surface);
       border-radius: var(--radius-xl);
-      padding: var(--space-6) var(--space-8);
+      padding: var(--space-5) var(--space-6);
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--color-border);
       border-left: 4px solid transparent;
@@ -387,13 +397,18 @@
       font-weight: 700;
       color: var(--color-green);
       margin-bottom: var(--space-1);
+      line-height: 1.3;
     }
-    .card__title-keep { white-space: nowrap; }
+    .card__title-keep { white-space: normal; }
 
     .card__desc {
       font-size: var(--text-xs);
       color: var(--color-text-muted);
-      line-height: 1.5;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .card__action {
@@ -877,20 +892,23 @@
     }
 
     .task-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-      margin-bottom: var(--space-4);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin: 0 0 var(--space-4);
+      padding: 0;
+      list-style: none;
     }
 
     .task-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
+      min-width: 0;
+      padding: var(--space-4);
       background: var(--color-bg);
       border-radius: var(--radius-md);
-      border: 1px solid transparent;
+      border: 1px solid var(--color-border);
       transition: background-color var(--transition-fast), border-color var(--transition-fast);
     }
 
@@ -904,11 +922,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 1.375rem;
-      height: 1.375rem;
-      border-radius: var(--radius-sm);
-      border: 2px solid var(--color-border-input);
-      background: var(--color-surface);
+      width: 1.35rem;
+      height: 1.35rem;
+      margin-top: 0.1rem;
+      border-radius: 0.35rem;
+      border: 2px solid var(--color-green);
+      background: #fff;
+      box-shadow: inset 0 0 0 2px #fff;
       transition: background-color var(--transition-fast), border-color var(--transition-fast);
       cursor: pointer;
     }
@@ -1023,14 +1043,16 @@
     }
 
     /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+      .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
     @media (max-width: 767px) {
       .site-header { padding-inline: var(--space-5); }
 
       .tab-nav { padding-inline: var(--space-5); }
 
       .content-wrapper { padding: var(--space-8) var(--space-5); }
-
-      .card-grid { grid-template-columns: 1fr; }
 
       .widget {
         padding: var(--space-6);
@@ -1064,6 +1086,8 @@
 
       .greeting::after { display: none; }
 
+      .task-list { grid-template-columns: 1fr; }
+      .card-grid { grid-template-columns: 1fr; }
       .cal-cell { min-height: 4.6rem; padding: 0.2rem; }
       .cal-cell__num { font-size: 0.8rem; }
       .cal-chip { font-size: 0.58rem; }
@@ -1249,6 +1273,34 @@
           <button type="button" class="btn btn--outline" id="js-ms-setup-bar">MS Setup</button>
         </div>
 
+        <section class="widget" role="region" aria-labelledby="tasks-heading">
+          <header class="widget__header">
+            <div class="widget__heading-group">
+              <i data-lucide="check-square" class="icon-md widget__icon" aria-hidden="true"></i>
+              <h2 class="widget__heading" id="tasks-heading">Tasks</h2>
+            </div>
+            <div class="widget__actions">
+              <button type="button" class="btn btn--outline" id="js-tasks-refresh" style="display:none">Refresh</button>
+              <a class="btn btn--green" href="https://to.microsoft.com" target="_blank" rel="noopener noreferrer">Open Microsoft To‑Do →</a>
+            </div>
+          </header>
+          <div class="widget__body">
+            <form class="task-form" id="js-task-form" aria-label="Add a task" novalidate>
+              <label class="sr-only" for="js-task-input">New task</label>
+              <input type="text" class="task-form__input" id="js-task-input"
+                     placeholder="Add a new task and press Enter…"
+                     autocomplete="off" aria-label="New task" />
+              <button type="submit" class="task-form__submit btn btn--green" aria-label="Add task">+</button>
+            </form>
+            <ul class="task-list" id="js-task-list" aria-label="Task list" aria-live="polite"></ul>
+            <p class="task-list__empty is-hidden" id="js-task-empty" role="status">No tasks yet — add one above</p>
+            <footer class="task-footer">
+              <span class="task-footer__count" id="js-task-count" aria-live="polite"></span>
+              <button type="button" class="task-footer__clear" id="js-task-clear">Clear completed</button>
+            </footer>
+          </div>
+        </section>
+
         <section class="widget" role="region" aria-labelledby="cal-heading">
           <header class="widget__header">
             <div class="widget__heading-group">
@@ -1278,34 +1330,6 @@
                 <ul class="cal-events__list is-hidden" id="js-cal-events-list"></ul>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section class="widget" role="region" aria-labelledby="tasks-heading">
-          <header class="widget__header">
-            <div class="widget__heading-group">
-              <i data-lucide="check-square" class="icon-md widget__icon" aria-hidden="true"></i>
-              <h2 class="widget__heading" id="tasks-heading">Tasks</h2>
-            </div>
-            <div class="widget__actions">
-              <button type="button" class="btn btn--outline" id="js-tasks-refresh" style="display:none">Refresh</button>
-              <a class="btn btn--green" href="https://to.microsoft.com" target="_blank" rel="noopener noreferrer">Open Microsoft To‑Do →</a>
-            </div>
-          </header>
-          <div class="widget__body">
-            <form class="task-form" id="js-task-form" aria-label="Add a task" novalidate>
-              <label class="sr-only" for="js-task-input">New task</label>
-              <input type="text" class="task-form__input" id="js-task-input"
-                     placeholder="Add a new task and press Enter…"
-                     autocomplete="off" aria-label="New task" />
-              <button type="submit" class="task-form__submit btn btn--green" aria-label="Add task">+</button>
-            </form>
-            <ul class="task-list" id="js-task-list" aria-label="Task list" aria-live="polite"></ul>
-            <p class="task-list__empty is-hidden" id="js-task-empty" role="status">No tasks yet — add one above</p>
-            <footer class="task-footer">
-              <span class="task-footer__count" id="js-task-count" aria-live="polite"></span>
-              <button type="button" class="task-footer__clear" id="js-task-clear">Clear completed</button>
-            </footer>
           </div>
         </section>
 
