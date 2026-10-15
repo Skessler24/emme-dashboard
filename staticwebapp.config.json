@@ -1,6 +1,22 @@
 {
   "routes": [
     {
+      "route": "/api/scheduling/availability",
+      "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
+      "route": "/api/cancellations",
+      "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
+      "route": "/api/documentation-compliance",
+      "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
+      "route": "/api/mileage",
+      "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
       "route": "/ms-redirect.html",
       "allowedRoles": ["anonymous"]
     },

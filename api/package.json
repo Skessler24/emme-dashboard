@@ -5,7 +5,12 @@
   "engines": {
     "node": ">=18"
   },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "dependencies": {
-    "@azure/storage-blob": "^12.26.0"
+    "@azure/storage-blob": "^12.26.0",
+    "@types/node": "^18.19.64",
+    "typescript": "^5.6.3"
   }
 }

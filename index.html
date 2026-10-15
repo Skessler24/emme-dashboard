@@ -1099,6 +1099,54 @@
       .widget__heading    { font-size: var(--text-md); }
     }
 
+    .alert-banner {
+      overflow: hidden;
+      background: var(--color-yellow);
+      color: var(--color-green);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-6);
+    }
+
+    .alert-banner__track {
+      display: flex;
+      gap: 3rem;
+      width: max-content;
+      padding: 0.7rem 1rem;
+      animation: alert-marquee 36s linear infinite;
+    }
+
+    .alert-banner__track p {
+      margin: 0;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .alert-banner--static .alert-banner__track {
+      width: auto;
+      flex-wrap: wrap;
+    }
+
+    .alert-banner--static .alert-banner__track p:last-child { display: none; }
+
+    @keyframes alert-marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .staff-note {
+      width: 100%;
+      min-height: 5.5rem;
+      border: 1px solid var(--color-border-input);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      font: inherit;
+      color: var(--color-text);
+      background: var(--color-surface);
+      resize: vertical;
+    }
+
+    .staff-note-status { margin-top: var(--space-3); color: var(--color-text-muted); }
+
     /* ── MOTION ── */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -1155,6 +1203,8 @@
           <h1 class="greeting__title" id="js-greeting"></h1>
           <p class="greeting__quote" id="js-quote"></p>
         </section>
+
+        <div id="js-alert-banner" class="alert-banner is-hidden" role="status" aria-live="polite"></div>
 
         <section aria-labelledby="resources-heading">
           <h2 class="section-heading" id="resources-heading">Resources &amp; Tools</h2>
@@ -1265,6 +1315,81 @@
             </li>
 
           </ul>
+        </section>
+
+        <section id="js-admin-section" class="is-hidden" aria-labelledby="admin-heading">
+          <h2 class="section-heading" id="admin-heading">Admin</h2>
+          <ul class="card-grid" role="list">
+            <li role="listitem">
+              <a class="card card--green" href="admin/index.html#/billing">
+                <div class="card__icon-wrap card__icon-wrap--green" aria-hidden="true"><i data-lucide="receipt" class="icon-md"></i></div>
+                <div class="card__body">
+                  <h3 class="card__title">Billing</h3>
+                  <p class="card__desc">Invoice status from IntakeQ</p>
+                </div>
+                <span class="card__action btn btn--green" aria-hidden="true">Open →</span>
+              </a>
+            </li>
+            <li role="listitem">
+              <a class="card card--pink" href="admin/index.html#/onboarding">
+                <div class="card__icon-wrap card__icon-wrap--pink" aria-hidden="true"><i data-lucide="user-plus" class="icon-md"></i></div>
+                <div class="card__body">
+                  <h3 class="card__title">Onboarding</h3>
+                  <p class="card__desc">Checklists and employee documents</p>
+                </div>
+                <span class="card__action btn btn--pink" aria-hidden="true">Open →</span>
+              </a>
+            </li>
+            <li role="listitem">
+              <a class="card card--green" href="admin/index.html#/referrals">
+                <div class="card__icon-wrap card__icon-wrap--green" aria-hidden="true"><i data-lucide="share-2" class="icon-md"></i></div>
+                <div class="card__body">
+                  <h3 class="card__title">Referrals</h3>
+                  <p class="card__desc">Incoming referral list</p>
+                </div>
+                <span class="card__action btn btn--green" aria-hidden="true">Open →</span>
+              </a>
+            </li>
+            <li role="listitem">
+              <a class="card card--pink" href="admin/index.html#/staff">
+                <div class="card__icon-wrap card__icon-wrap--pink" aria-hidden="true"><i data-lucide="users" class="icon-md"></i></div>
+                <div class="card__body">
+                  <h3 class="card__title">Staff Information</h3>
+                  <p class="card__desc">Trainings, open notes, and questions</p>
+                </div>
+                <span class="card__action btn btn--pink" aria-hidden="true">Open →</span>
+              </a>
+            </li>
+            <li role="listitem">
+              <a class="card card--yellow" href="admin/index.html#/expectations">
+                <div class="card__icon-wrap card__icon-wrap--yellow" aria-hidden="true"><i data-lucide="calendar-check" class="icon-md"></i></div>
+                <div class="card__body">
+                  <h3 class="card__title">Staff Expectations</h3>
+                  <p class="card__desc">Openings, mileage, cancellations, and documentation</p>
+                </div>
+                <span class="card__action btn btn--yellow" aria-hidden="true">Open →</span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <section class="widget" role="region" aria-labelledby="staff-message-heading">
+          <header class="widget__header">
+            <div class="widget__heading-group">
+              <i data-lucide="message-circle" class="icon-md widget__icon" aria-hidden="true"></i>
+              <h2 class="widget__heading" id="staff-message-heading">Question for admin</h2>
+            </div>
+          </header>
+          <div class="widget__body">
+            <form id="js-staff-message-form">
+              <label class="sr-only" for="js-staff-message">Message</label>
+              <textarea class="staff-note" id="js-staff-message" maxlength="4000" placeholder="Send a question or comment to the admin team" required></textarea>
+              <div class="widget__actions" style="margin-top:0.75rem">
+                <button type="submit" class="btn btn--green">Send</button>
+              </div>
+            </form>
+            <p class="staff-note-status" id="js-staff-message-status" role="status"></p>
+          </div>
         </section>
 
         <div class="ms-bar" id="js-ms-bar" role="status">
@@ -2452,11 +2577,67 @@
         },
       };
 
+      const AdminHome = {
+        escape: function (value) {
+          return String(value || '').replace(/[&<>"']/g, function (ch) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+          });
+        },
+        init: async function () {
+          try {
+            const res = await fetch('/api/me', { credentials: 'include', headers: { Accept: 'application/json' } });
+            const data = await res.json().catch(function () { return {}; });
+            const section = document.getElementById('js-admin-section');
+            if (section && data && data.isAdmin) section.classList.remove('is-hidden');
+          } catch (_) {}
+          AdminHome.loadAlerts();
+          const form = document.getElementById('js-staff-message-form');
+          if (form) form.addEventListener('submit', AdminHome.sendMessage);
+        },
+        loadAlerts: async function () {
+          const banner = document.getElementById('js-alert-banner');
+          if (!banner) return;
+          try {
+            const res = await fetch('/api/admin-alerts?active=true', { credentials: 'include', headers: { Accept: 'application/json' } });
+            const data = await res.json().catch(function () { return {}; });
+            const alerts = (data && data.alerts) || [];
+            const line = alerts.map(function (alert) { return alert.Message || alert.Title || ''; }).filter(Boolean).join('   ·   ');
+            if (!line) return;
+            const staticBanner = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            banner.className = 'alert-banner' + (staticBanner ? ' alert-banner--static' : '');
+            banner.innerHTML = '<div class="alert-banner__track"><p>' + AdminHome.escape(line) + '</p><p aria-hidden="true">' + AdminHome.escape(line) + '</p></div>';
+          } catch (_) {}
+        },
+        sendMessage: async function (event) {
+          event.preventDefault();
+          const input = document.getElementById('js-staff-message');
+          const status = document.getElementById('js-staff-message-status');
+          const message = input ? input.value.trim() : '';
+          if (!message) return;
+          if (status) status.textContent = 'Sending…';
+          try {
+            const res = await fetch('/api/staff-messages', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ message: message })
+            });
+            const data = await res.json().catch(function () { return {}; });
+            if (!res.ok) throw new Error(data.error || 'Could not send');
+            if (input) input.value = '';
+            if (status) status.textContent = 'Sent to the admin team.';
+          } catch (err) {
+            if (status) status.textContent = (err && err.message) || 'Could not send';
+          }
+        },
+      };
+
       const App = {
         init: async function () {
           const signout = document.getElementById('js-ms-signout');
           if (signout) signout.addEventListener('click', function () { MsGraph.signOutSite(); });
           await SiteUser.current();
+          await AdminHome.init();
           Header.init();
           Greeting.init();
           Calendar.init();

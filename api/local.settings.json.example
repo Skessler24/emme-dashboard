@@ -7,6 +7,16 @@
     "AZURE_STORAGE_CONTAINER": "emme-reports",
     "AZURE_CLIENT_ID": "",
     "AZURE_TENANT_ID": "",
-    "AZURE_CLIENT_SECRET": ""
+    "AZURE_CLIENT_SECRET": "",
+    "GRAPH_CLIENT_ID": "",
+    "GRAPH_CLIENT_SECRET": "",
+    "GRAPH_TENANT_ID": "",
+    "INTAKEQ_API_KEY": "",
+    "SHAREPOINT_HOSTNAME": "",
+    "SHAREPOINT_SITE_PATH": "",
+    "EMME_ADMIN_GROUP_NAME": "Emme Admin",
+    "EMME_ADMIN_GROUP_ID": "",
+    "EMME_ADMIN_EMAILS": "",
+    "AUTOMATION_API_KEY": ""
   }
 }

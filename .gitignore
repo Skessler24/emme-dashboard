@@ -1,2 +1,4 @@
 ﻿api/local.settings.json
+api/node_modules
+admin-ui/node_modules
 .DS_Store
