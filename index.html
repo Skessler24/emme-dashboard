@@ -1119,7 +1119,7 @@
       <time class="site-header__date" id="js-date" aria-live="polite"></time>
       <span class="site-header__date" id="js-site-user"></span>
       <button type="button" class="btn btn--yellow" id="js-ms-connect" style="display:none">Connect Microsoft</button>
-      <button type="button" class="btn btn--outline" id="js-ms-settings" style="color:#fff;border-color:rgba(255,255,255,.4)">MS Setup</button>
+      <button type="button" class="btn btn--outline" id="js-ms-settings" style="display:none;color:#fff;border-color:rgba(255,255,255,.4)">MS Setup</button>
       <button type="button" class="btn btn--outline" id="js-ms-signout" style="color:#fff;border-color:rgba(255,255,255,.4)">Sign out</button>
     </div>
   </header>
@@ -1268,9 +1268,9 @@
         </section>
 
         <div class="ms-bar" id="js-ms-bar" role="status">
-          <p class="ms-bar__status" id="js-ms-status">Click <strong>Connect Microsoft</strong> and sign in with your own Emme account to sync your calendar and To Do.</p>
-          <button type="button" class="btn btn--green" id="js-ms-connect-bar">Connect Microsoft</button>
-          <button type="button" class="btn btn--outline" id="js-ms-setup-bar">MS Setup</button>
+          <p class="ms-bar__status" id="js-ms-status">Signed in. Calendar and to-do follow your Emme email.</p>
+          <button type="button" class="btn btn--green" id="js-ms-connect-bar" style="display:none">Connect Microsoft</button>
+          <button type="button" class="btn btn--outline" id="js-ms-setup-bar" style="display:none">MS Setup</button>
         </div>
 
         <section class="widget" role="region" aria-labelledby="tasks-heading">
@@ -1326,7 +1326,7 @@
               <div class="cal-grid" id="js-cal-grid" role="grid" aria-label="Calendar"></div>
               <div class="cal-events" id="js-cal-events">
                 <h3 class="cal-events__title" id="js-cal-events-title">Select a day</h3>
-                <p class="cal-events__empty" id="js-cal-events-empty">Connect Microsoft to see Outlook events here.</p>
+                <p class="cal-events__empty" id="js-cal-events-empty">Your Outlook events will show here.</p>
                 <ul class="cal-events__list is-hidden" id="js-cal-events-list"></ul>
               </div>
             </div>
@@ -1438,36 +1438,62 @@
           }));
         },
 
+        viaServer: false,
+        pendingConsent: false,
+
+        serverFetch: async function (path, options) {
+          options = options || {};
+          const res = await fetch('/api/microsoft' + path, {
+            method: options.method || 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: options.body ? JSON.stringify(options.body) : undefined
+          });
+          const data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.error || 'Microsoft data is not available');
+          return data;
+        },
+
         isSignedIn: function () { return !!MsGraph.account; },
+
+        siteEmail: function () {
+          return (SiteUser.cached && SiteUser.cached.email) || '';
+        },
+
+        hideConnect: function () {
+          ['js-ms-connect', 'js-ms-connect-bar', 'js-ms-settings', 'js-ms-setup-bar'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+          });
+        },
 
         updateUI: function () {
           const status = document.getElementById('js-ms-status');
-          const connectBtn = document.getElementById('js-ms-connect');
-          const connectBar = document.getElementById('js-ms-connect-bar');
           const signout = document.getElementById('js-ms-signout');
           const calRefresh = document.getElementById('js-cal-refresh');
           const tasksRefresh = document.getElementById('js-tasks-refresh');
-          const cfg = MsGraph.getConfig();
+          const email = (MsGraph.account && (MsGraph.account.username || MsGraph.account.name)) || MsGraph.siteEmail();
+          const graphReady = !!(MsGraph.viaServer && MsGraph.account && !MsGraph.pendingConsent);
 
-          if (MsGraph.account) {
-            const name = MsGraph.account.username || MsGraph.account.name || 'Emme account';
-            if (status) status.innerHTML = 'Connected as <strong>' + name + '</strong> — this Outlook calendar and To Do list.';
-            if (connectBtn) connectBtn.style.display = 'none';
-            if (connectBar) connectBar.style.display = 'none';
-            if (signout) signout.style.display = '';
-            if (calRefresh) calRefresh.style.display = '';
-            if (tasksRefresh) tasksRefresh.style.display = '';
+          if (email) MsGraph.hideConnect();
+          if (signout) signout.style.display = '';
+          if (calRefresh) calRefresh.style.display = graphReady ? '' : 'none';
+          if (tasksRefresh) tasksRefresh.style.display = graphReady ? '' : 'none';
+          if (!status) return;
+          if (!email) return;
+          if (graphReady) {
+            status.innerHTML = 'Signed in as <strong>' + email + '</strong>. Calendar and to-do follow this email on any browser.';
+          } else if (MsGraph.graphNote) {
+            status.textContent = MsGraph.graphNote;
           } else {
-            const email = (SiteUser.cached && SiteUser.cached.email) || 'your Emme email';
-            if (status) {
-              status.innerHTML = 'Connect Microsoft once as <strong>' + email + '</strong>. This browser keeps that calendar and to-do list until you sign out.';
-            }
-            if (connectBtn) connectBtn.style.display = cfg ? '' : 'none';
-            if (connectBar) { connectBar.style.display = ''; connectBar.textContent = 'Connect Microsoft'; }
-            if (signout) signout.style.display = '';
-            if (calRefresh) calRefresh.style.display = 'none';
-            if (tasksRefresh) tasksRefresh.style.display = 'none';
+            status.innerHTML = 'Signed in as <strong>' + email + '</strong>. Calendar and to-do will show here after an admin grants Calendars.Read and Tasks.ReadWrite.All.';
           }
+        },
+
+        noteGraphError: function () {
+          MsGraph.pendingConsent = true;
+          MsGraph.graphNote = '';
+          MsGraph.updateUI();
         },
 
         linkKey: function (email) {
@@ -1758,6 +1784,26 @@
           document.getElementById('js-ms-connect').addEventListener('click', connect);
           document.getElementById('js-ms-connect-bar').addEventListener('click', connect);
 
+          try {
+            const status = await MsGraph.serverFetch('/status');
+            if (status && status.configured && status.email) {
+              MsGraph.viaServer = true;
+              MsGraph.pendingConsent = false;
+              MsGraph.graphNote = '';
+              MsGraph.account = { username: status.email };
+              MsGraph.hideConnect();
+              await MsGraph.syncAll();
+              if (!MsGraph.pendingConsent) MsGraph.updateUI();
+              return;
+            }
+          } catch (_) {}
+
+          if (MsGraph.siteEmail()) {
+            MsGraph.pendingConsent = true;
+            MsGraph.updateUI();
+            return;
+          }
+
           if (MsGraph.getConfig()) {
             try {
               await MsGraph.ensureMsal();
@@ -1899,6 +1945,28 @@
           const startISO = start.toISOString();
           const endISO = end.toISOString();
           const mine = String((MsGraph.account && MsGraph.account.username) || '').toLowerCase();
+          if (MsGraph.viaServer) {
+            try {
+              const data = await MsGraph.serverFetch('/calendar?start=' + encodeURIComponent(startISO) + '&end=' + encodeURIComponent(endISO));
+              const map = {};
+              (data.events || []).forEach(function (ev) {
+                const raw = (ev.start && (ev.start.dateTime || ev.start.date)) || '';
+                const dayKey = raw.slice(0, 10);
+                if (!dayKey) return;
+                if (!map[dayKey]) map[dayKey] = [];
+                map[dayKey].push(ev);
+              });
+              MsGraph.eventsByDay = map;
+              Calendar.render();
+              Calendar.renderDayEvents();
+            } catch (err) {
+              console.warn(err);
+              MsGraph.noteGraphError(err);
+              const empty = document.getElementById('js-cal-events-empty');
+              if (empty) empty.textContent = 'Your Outlook calendar will show here after an admin grants Calendars.Read.';
+            }
+            return;
+          }
           try {
             const calendars = await MsGraph.graph('/me/calendars?$select=id,name,owner,isDefaultCalendar');
             const owned = (calendars.value || []).filter(function (cal) {
@@ -2029,7 +2097,7 @@
             title.textContent = 'Select a day';
             empty.classList.remove('is-hidden');
             list.classList.add('is-hidden');
-            empty.textContent = MsGraph.isSignedIn() ? 'Select a day to see events.' : 'Connect Microsoft to see Outlook events here.';
+            empty.textContent = (MsGraph.viaServer || MsGraph.siteEmail()) ? 'Select a day to see events.' : 'Your Outlook events will show here.';
             return;
           }
 
@@ -2041,7 +2109,7 @@
 
           const events = MsGraph.eventsByDay[key] || [];
           if (!MsGraph.isSignedIn()) {
-            empty.textContent = 'Connect Microsoft to see Outlook events here.';
+            empty.textContent = 'Your Outlook events will show here.';
             empty.classList.remove('is-hidden');
             list.classList.add('is-hidden');
             list.innerHTML = '';
@@ -2152,6 +2220,17 @@
 
         loadFromGraph: async function () {
           if (!MsGraph.isSignedIn()) return;
+          if (MsGraph.viaServer) {
+            try {
+              const data = await MsGraph.serverFetch('/tasks');
+              Tasks.items = data.items || [];
+              Tasks.render();
+            } catch (err) {
+              console.warn(err);
+              MsGraph.noteGraphError(err);
+            }
+            return;
+          }
           try {
             const lists = await MsGraph.graph('/me/todo/lists');
             const listsArr = lists.value || [];
@@ -2199,12 +2278,22 @@
           if (countEl) {
             const remaining = Tasks.items.filter(function (t) { return !t.completed; }).length;
             countEl.textContent = remaining + ' of ' + Tasks.items.length + ' remaining' +
-              (MsGraph.isSignedIn() ? ' · synced with Microsoft To Do' : '');
+              (MsGraph.viaServer && !MsGraph.pendingConsent ? ' · synced with Microsoft To Do' : '');
           }
           refreshIcons();
         },
 
         add: async function (text) {
+          if (MsGraph.viaServer) {
+            try {
+              const data = await MsGraph.serverFetch('/tasks', { method: 'POST', body: { title: text } });
+              if (data.item) Tasks.items.unshift(data.item);
+              Tasks.render();
+            } catch (err) {
+              alert('Could not add To Do task: ' + (err.message || 'error'));
+            }
+            return;
+          }
           if (MsGraph.isSignedIn()) {
             try {
               if (!MsGraph.todoListId) await Tasks.loadFromGraph();
@@ -2228,6 +2317,19 @@
           const task = Tasks.items.find(function (t) { return String(t.id) === String(id); });
           if (!task) return;
           const next = !task.completed;
+          if (MsGraph.viaServer) {
+            try {
+              await MsGraph.serverFetch('/tasks', {
+                method: 'PATCH',
+                body: { id: task.id, listId: task.listId, completed: next }
+              });
+              task.completed = next;
+              Tasks.render();
+            } catch (err) {
+              alert('Could not update task: ' + (err.message || 'error'));
+            }
+            return;
+          }
           if (MsGraph.isSignedIn()) {
             try {
               await MsGraph.graph(
@@ -2248,6 +2350,16 @@
 
         remove: async function (id) {
           const task = Tasks.items.find(function (t) { return String(t.id) === String(id); });
+          if (MsGraph.viaServer) {
+            try {
+              await MsGraph.serverFetch('/tasks?id=' + encodeURIComponent(id) + '&listId=' + encodeURIComponent((task && task.listId) || ''), { method: 'DELETE' });
+              Tasks.items = Tasks.items.filter(function (t) { return String(t.id) !== String(id); });
+              Tasks.render();
+            } catch (err) {
+              alert('Could not delete task: ' + (err.message || 'error'));
+            }
+            return;
+          }
           if (MsGraph.isSignedIn()) {
             try {
               await MsGraph.graph(
@@ -2268,6 +2380,16 @@
 
         clearCompleted: async function () {
           const done = Tasks.items.filter(function (t) { return t.completed; });
+          if (MsGraph.viaServer) {
+            for (let i = 0; i < done.length; i++) {
+              try {
+                await MsGraph.serverFetch('/tasks?id=' + encodeURIComponent(done[i].id) + '&listId=' + encodeURIComponent(done[i].listId || ''), { method: 'DELETE' });
+              } catch (_) {}
+            }
+            Tasks.items = Tasks.items.filter(function (t) { return !t.completed; });
+            Tasks.render();
+            return;
+          }
           if (MsGraph.isSignedIn()) {
             for (let i = 0; i < done.length; i++) {
               try {

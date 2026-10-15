@@ -4,6 +4,9 @@
     "AzureWebJobsStorage": "",
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AZURE_STORAGE_CONNECTION_STRING": "",
-    "AZURE_STORAGE_CONTAINER": "emme-reports"
+    "AZURE_STORAGE_CONTAINER": "emme-reports",
+    "AZURE_CLIENT_ID": "",
+    "AZURE_TENANT_ID": "",
+    "AZURE_CLIENT_SECRET": ""
   }
 }
