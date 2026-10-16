@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GraphError = void 0;
 exports.graphIsConfigured = graphIsConfigured;
 exports.graphGet = graphGet;
+exports.graphGetBytes = graphGetBytes;
 exports.graphGetText = graphGetText;
 exports.graphSend = graphSend;
 exports.getSharePointSiteId = getSharePointSiteId;
@@ -70,6 +71,16 @@ async function graphGet(path, extraHeaders) {
         throw new GraphError(res.status, String(message).slice(0, 300));
     }
     return data;
+}
+async function graphGetBytes(path) {
+    const token = await appToken();
+    const res = await fetch(toUrl(path), {
+        headers: { Authorization: 'Bearer ' + token },
+    });
+    if (!res.ok) {
+        throw new GraphError(res.status, 'Graph file read failed (' + res.status + ')');
+    }
+    return new Uint8Array(await res.arrayBuffer());
 }
 async function graphGetText(path) {
     const token = await appToken();

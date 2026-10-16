@@ -1,4 +1,4 @@
-import { GraphError, getSharePointSiteId, graphGet, graphGetText, graphSend } from './graphClient';
+import { GraphError, getSharePointSiteId, graphGet, graphGetBytes, graphGetText, graphSend } from './graphClient';
 
 /**
  * SharePoint lists used by the admin dashboard. Create these on the Emme
@@ -17,10 +17,10 @@ import { GraphError, getSharePointSiteId, graphGet, graphGetText, graphSend } fr
  * Employee files live in the site document library:
  *   /Employees/<EmployeeName>/Onboarding/CurrentDocuments/
  *   /Employees/<EmployeeName>/Onboarding/ArchivedDocuments/
- *   /Employees/<EmployeeName>/Current Availability/Schedules/
+ *   /Employees/<EmployeeName>/Current Availability/Schedules/<Name> Schedule.xlsx
  *
- * POWER AUTOMATE writes schedule-summary-YYYY-MM-DD.json into Schedules.
- * This service only reads those files for the admin openings view.
+ * The workbook is overwritten when that provider saves Schedule & Caseload.
+ * This service reads those workbooks for the admin openings view.
  */
 
 export const LISTS = {
@@ -152,9 +152,17 @@ function unwrapSummary(value: unknown): unknown {
   return value;
 }
 
+const WORKBOOK_FILE = /schedule\.xlsx$/i;
+
+async function readFileBytes(segments: string[]): Promise<Uint8Array> {
+  const siteId = await getSharePointSiteId();
+  const path = '/sites/' + siteId + '/drive/root:/' + encodeDrivePath(segments) + ':/content';
+  return graphGetBytes(path);
+}
+
 /**
- * Reads the newest schedule summary file under each /Employees folder.
- * Those files are written by the nightly Power Automate flow, not by this API.
+ * Reads each provider's living schedule workbook. Older JSON summaries are
+ * used only when the workbook is not there yet.
  */
 export async function readLatestScheduleSummaries(): Promise<Array<{ employee: string; fileName: string; path: string; summary: unknown }>> {
   const employees = await listFolder(['Employees']);
@@ -168,6 +176,22 @@ export async function readLatestScheduleSummaries(): Promise<Array<{ employee: s
       files = await listFolder(folder);
     } catch (_) {
       continue;
+    }
+    const workbook = files.find(function (file) { return WORKBOOK_FILE.test(file.name); });
+    if (workbook) {
+      try {
+        const bytes = await readFileBytes(folder.concat([workbook.name]));
+        const parsed = await require('./scheduleWorkbook').openingsFromWorkbook(bytes, employee.name);
+        summaries.push({
+          employee: employee.name,
+          fileName: workbook.name,
+          path: '/' + folder.concat([workbook.name]).join('/'),
+          summary: parsed,
+        });
+        continue;
+      } catch (_) {
+        continue;
+      }
     }
     const summariesForEmployee = files
       .filter(function (file) { return SUMMARY_FILE.test(file.name); })

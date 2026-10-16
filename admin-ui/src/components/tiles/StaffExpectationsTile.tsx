@@ -75,13 +75,13 @@ export function StaffExpectationsTile() {
     <section>
       <h1>Staff expectations</h1>
       <p className="lede">
-        Openings come from the latest schedule summary files in SharePoint. Power Automate writes those files each night from the Emme scheduling database.
+        Each provider has one schedule spreadsheet in SharePoint. It updates when they save their schedule in the app.
       </p>
       {error ? <p className="error">{error}</p> : null}
       <h2>Openings</h2>
       <DataTable
         rows={openings}
-        empty="No schedule summaries yet. The nightly flow has not written files."
+        empty="No provider spreadsheets yet. They appear after a provider saves a schedule."
         columns={[
           { key: 'employee', label: 'Staff' },
           { key: 'date', label: 'Date' },

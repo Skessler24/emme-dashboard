@@ -749,7 +749,7 @@
           state.workspace = result.workspace;
           state.lastRemoteUpdatedAt = result.workspace.updatedAt;
           saveLocal(state.workspace);
-          setSyncLabel('Live sync on', 'live');
+          setSyncLabel(result.sharePoint && result.sharePoint.ok ? 'Live · saved to SharePoint' : 'Live sync on', 'live');
         } else {
           state.cloudConfigured = false;
           setSyncLabel('Saved on this device', 'local');

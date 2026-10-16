@@ -31,6 +31,10 @@
       --color-yellow-dark:   #e6b320;
       --color-yellow-subtle: rgba(255 202 52 / 0.15);
 
+      --color-blue:          #38b4fe;
+      --color-blue-dark:     #1296e4;
+      --color-blue-subtle:   rgba(56 180 254 / 0.18);
+
       --color-bg:            #fef7fc;
       --color-surface:       #ffffff;
       --color-surface-alt:   #fdf3fb;
@@ -360,6 +364,7 @@
     .card--green  { border-left-color: var(--color-green); }
     .card--pink   { border-left-color: var(--color-pink-dark); }
     .card--yellow { border-left-color: var(--color-yellow); }
+    .card--blue   { border-left-color: var(--color-blue); }
 
     .card__icon-wrap {
       flex-shrink: 0;
@@ -384,6 +389,11 @@
     .card__icon-wrap--yellow {
       background: var(--color-yellow-subtle);
       color: #9a7200;
+    }
+
+    .card__icon-wrap--blue {
+      background: var(--color-blue-subtle);
+      color: #0878b8;
     }
 
     .card__body {
@@ -469,6 +479,18 @@
     .btn--yellow:hover,
     .btn--yellow:focus-visible {
       background-color: var(--color-yellow-dark);
+    }
+
+    .btn--blue {
+      background-color: var(--color-blue);
+      color: var(--color-green);
+      box-shadow: 0 2px 8px rgba(56 180 254 / 0.35);
+    }
+
+    .btn--blue:hover,
+    .btn--blue:focus-visible {
+      background-color: var(--color-blue-dark);
+      color: var(--color-text-light);
     }
 
     .btn--outline {
@@ -1443,15 +1465,15 @@
             </li>
 
             <li role="listitem">
-              <a class="card card--pink" href="https://outlook.office365.com" target="_blank" rel="noopener noreferrer" aria-label="Microsoft Outlook — opens in new tab">
-                <div class="card__icon-wrap card__icon-wrap--pink" aria-hidden="true">
+              <a class="card card--blue" href="https://outlook.office365.com" target="_blank" rel="noopener noreferrer" aria-label="Microsoft Outlook — opens in new tab">
+                <div class="card__icon-wrap card__icon-wrap--blue" aria-hidden="true">
                   <i data-lucide="mail" class="icon-md"></i>
                 </div>
                 <div class="card__body">
                   <h3 class="card__title">Microsoft Outlook</h3>
                   <p class="card__desc">Access your Microsoft email and inbox</p>
                 </div>
-                <span class="card__action btn btn--pink" aria-hidden="true">Open →</span>
+                <span class="card__action btn btn--blue" aria-hidden="true">Open →</span>
               </a>
             </li>
 
@@ -1527,8 +1549,7 @@
           </ul>
         </section>
 
-        <div class="ms-bar" id="js-ms-bar" role="status">
-          <p class="ms-bar__status" id="js-ms-status">Signed in. Calendar and to-do follow your Emme email.</p>
+        <div class="ms-bar is-hidden" id="js-ms-bar">
           <button type="button" class="btn btn--green" id="js-ms-connect-bar" style="display:none">Connect Microsoft</button>
           <button type="button" class="btn btn--outline" id="js-ms-setup-bar" style="display:none">MS Setup</button>
         </div>
@@ -1752,7 +1773,6 @@
         },
 
         updateUI: function () {
-          const status = document.getElementById('js-ms-status');
           const signout = document.getElementById('js-ms-signout');
           const calRefresh = document.getElementById('js-cal-refresh');
           const tasksRefresh = document.getElementById('js-tasks-refresh');
@@ -1763,15 +1783,6 @@
           if (signout) signout.style.display = '';
           if (calRefresh) calRefresh.style.display = graphReady ? '' : 'none';
           if (tasksRefresh) tasksRefresh.style.display = graphReady ? '' : 'none';
-          if (!status) return;
-          if (!email) return;
-          if (graphReady) {
-            status.innerHTML = 'Signed in as <strong>' + email + '</strong>. Calendar and to-do follow this email on any browser.';
-          } else if (MsGraph.graphNote) {
-            status.textContent = MsGraph.graphNote;
-          } else {
-            status.innerHTML = 'Signed in as <strong>' + email + '</strong>. Calendar and to-do will show here after an admin grants Calendars.Read and Tasks.ReadWrite.All.';
-          }
         },
 
         noteGraphError: function () {

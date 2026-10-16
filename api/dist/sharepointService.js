@@ -28,10 +28,10 @@ const graphClient_1 = require("./graphClient");
  * Employee files live in the site document library:
  *   /Employees/<EmployeeName>/Onboarding/CurrentDocuments/
  *   /Employees/<EmployeeName>/Onboarding/ArchivedDocuments/
- *   /Employees/<EmployeeName>/Current Availability/Schedules/
+ *   /Employees/<EmployeeName>/Current Availability/Schedules/<Name> Schedule.xlsx
  *
- * POWER AUTOMATE writes schedule-summary-YYYY-MM-DD.json into Schedules.
- * This service only reads those files for the admin openings view.
+ * The workbook is overwritten when that provider saves Schedule & Caseload.
+ * This service reads those workbooks for the admin openings view.
  */
 exports.LISTS = {
     onboarding: 'OnboardingChecklist',
@@ -150,9 +150,15 @@ function unwrapSummary(value) {
         return record.summary;
     return value;
 }
+const WORKBOOK_FILE = /schedule\.xlsx$/i;
+async function readFileBytes(segments) {
+    const siteId = await (0, graphClient_1.getSharePointSiteId)();
+    const path = '/sites/' + siteId + '/drive/root:/' + encodeDrivePath(segments) + ':/content';
+    return (0, graphClient_1.graphGetBytes)(path);
+}
 /**
- * Reads the newest schedule summary file under each /Employees folder.
- * Those files are written by the nightly Power Automate flow, not by this API.
+ * Reads each provider's living schedule workbook. Older JSON summaries are
+ * used only when the workbook is not there yet.
  */
 async function readLatestScheduleSummaries() {
     const employees = await listFolder(['Employees']);
@@ -168,6 +174,23 @@ async function readLatestScheduleSummaries() {
         }
         catch (_) {
             continue;
+        }
+        const workbook = files.find(function (file) { return WORKBOOK_FILE.test(file.name); });
+        if (workbook) {
+            try {
+                const bytes = await readFileBytes(folder.concat([workbook.name]));
+                const parsed = await require('./scheduleWorkbook').openingsFromWorkbook(bytes, employee.name);
+                summaries.push({
+                    employee: employee.name,
+                    fileName: workbook.name,
+                    path: '/' + folder.concat([workbook.name]).join('/'),
+                    summary: parsed,
+                });
+                continue;
+            }
+            catch (_) {
+                continue;
+            }
         }
         const summariesForEmployee = files
             .filter(function (file) { return SUMMARY_FILE.test(file.name); })

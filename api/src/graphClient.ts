@@ -66,6 +66,17 @@ export async function graphGet(path: string, extraHeaders?: Record<string, strin
   return data;
 }
 
+export async function graphGetBytes(path: string): Promise<Uint8Array> {
+  const token = await appToken();
+  const res = await fetch(toUrl(path), {
+    headers: { Authorization: 'Bearer ' + token },
+  });
+  if (!res.ok) {
+    throw new GraphError(res.status, 'Graph file read failed (' + res.status + ')');
+  }
+  return new Uint8Array(await res.arrayBuffer());
+}
+
 export async function graphGetText(path: string): Promise<string> {
   const token = await appToken();
   const res = await fetch(toUrl(path), {

@@ -10,18 +10,18 @@ import { employeeFolderName } from './sharepointService';
  * This module projects weekly boards onto calendar dates. Slot notes and the
  * client list are PHI and are never copied into the availability payload.
  *
- * POWER AUTOMATE nightly flow:
- *   1. HTTP GET {site}/api/scheduling/availability
- *      Header x-emme-automation-key: AUTOMATION_API_KEY
- *   2. For each staff[] item, write staff[].summary as JSON to
- *      staff[].sharePointPath on the Emme SharePoint site:
- *      /Employees/<Name>/Current Availability/Schedules/schedule-summary-YYYY-MM-DD.json
- *   3. The admin dashboard reads those files. It does not write them.
+ * The SharePoint copy is one Excel workbook per provider, written when that
+ * provider saves in Schedule & Caseload:
+ *   /Employees/<Name>/Current Availability/Schedules/<Name> Schedule.xlsx
+ * The admin dashboard reads those workbooks. It does not embed Excel.
  */
 
 const TIME_ZONE = 'America/Denver';
 const OPEN_WEEKS: Record<string, number[]> = {
   'open 4x': [1, 2, 3, 4],
+  'open 3x (1,2,3)': [1, 2, 3],
+  'open 3x (2,3,4)': [2, 3, 4],
+  'open 3x (1,3,4)': [1, 3, 4],
   'open 2x (1&3)': [1, 3],
   'open 2x (2&4)': [2, 4],
   'open 1x (1)': [1],
@@ -51,7 +51,7 @@ export type ScheduleSummary = {
   counts: { open: number; full: number; inProgress: number; notOpen: number };
 };
 
-type Slot = { time?: string; status?: string };
+type Slot = { time?: string; status?: string; notes?: string; lastDay?: string };
 type Day = { name?: string; slots?: Slot[] };
 type Board = { name?: string; days?: Day[] };
 type Workspace = { ownerEmail?: string; updatedAt?: string; boards?: Board[] };
@@ -103,7 +103,7 @@ function classify(status: string): 'open' | 'full' | 'progress' | 'closed' | 'ig
   if (OPEN_WEEKS[key]) return 'open';
   if (key === 'full') return 'full';
   if (key === 'scheduling in progress') return 'progress';
-  if (key === 'lunch' || key === 'makeup') return 'ignore';
+  if (key === 'lunch' || key === 'lunch/paperwork' || key === 'makeup') return 'ignore';
   if (key === 'not open') return 'closed';
   return 'ignore';
 }
@@ -165,9 +165,9 @@ export function buildScheduleSummary(options: {
   };
 }
 
-export function sharePointSummaryPath(staffName: string, asOf: string): string {
+export function sharePointSummaryPath(staffName: string, _asOf?: string): string {
   const folder = employeeFolderName(staffName);
-  return '/Employees/' + folder + '/Current Availability/Schedules/schedule-summary-' + asOf + '.json';
+  return '/Employees/' + folder + '/Current Availability/Schedules/' + folder + ' Schedule.xlsx';
 }
 
 function streamToString(readable: NodeJS.ReadableStream | undefined): Promise<string> {
