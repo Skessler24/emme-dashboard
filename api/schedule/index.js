@@ -282,13 +282,20 @@ module.exports = async function (context, req) {
       workspace.version = (Number(workspace.version) || 0) + 1;
       await writeWorkspace(personal, workspace, ownerEmail);
       let sharePoint = { ok: false, skipped: true };
+      let mileage = { ok: false, skipped: true };
       try {
         const workbook = require('../dist/scheduleWorkbook');
         sharePoint = await workbook.syncScheduleWorkbook(workspace, ownerEmail);
       } catch (err) {
         sharePoint = { ok: false, error: String((err && err.message) || 'SharePoint update failed').slice(0, 200) };
       }
-      json(context, 200, { configured: true, workspace: workspace, owner: ownerEmail, sharePoint: sharePoint });
+      try {
+        const mileageBook = require('../dist/mileageWorkbook');
+        mileage = await mileageBook.syncMileageWorkbook(workspace, ownerEmail);
+      } catch (err) {
+        mileage = { ok: false, error: String((err && err.message) || 'Mileage update failed').slice(0, 200) };
+      }
+      json(context, 200, { configured: true, workspace: workspace, owner: ownerEmail, sharePoint: sharePoint, mileage: mileage });
       return;
     }
 

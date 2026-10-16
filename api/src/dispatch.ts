@@ -2,6 +2,7 @@ import { automationAuthorized, readPrincipal, requireAdmin, requireUser, resolve
 import { GraphError } from './graphClient';
 import { IntakeQError, complianceByStaff, getCancellations, getInvoices, getNoteSummaries } from './intakeQService';
 import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, restParts } from './http';
+import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
 import { availabilityForWindow } from './schedulingService';
 import {
   LISTS,
@@ -343,15 +344,22 @@ async function mileage(context: FnContext, req: HttpRequest): Promise<void> {
   if (verb === 'GET') {
     const admin = await requireAdmin(context, req);
     if (!admin) return;
-    const items = await listItems(LISTS.mileage);
-    json(context, 200, { mileage: items.map(publicItem) });
+    const result = await syncAllMileageLogs();
+    json(context, 200, { mileage: result.rows, syncError: result.error || '' });
     return;
   }
   if (verb === 'POST') {
+    const body = readBody(req);
+    if (body.action === 'confirm') {
+      const admin = await requireAdmin(context, req);
+      if (!admin) return;
+      const result = await confirmMileageRow(asText(body.staffEmail, 200), asText(body.appointmentId, 80));
+      json(context, result.ok ? 200 : 400, result);
+      return;
+    }
     const automated = automationAuthorized(req);
     const user = automated ? null : await requireUser(context, req);
     if (!automated && !user) return;
-    const body = readBody(req);
     const miles = Number(body.miles);
     const purpose = asText(body.purpose, 500);
     const tripDate = asText(body.tripDate, 40);

@@ -286,6 +286,26 @@
     .client-card__name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
     .client-card__sessions { font-size: 0.78rem; opacity: 0.85; margin-top: 0.2rem; }
     .client-card__body { padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
+    .client-card__travel {
+      padding: 0.75rem 1rem 0.15rem;
+      display: grid;
+      gap: 0.45rem;
+      border-top: 1px solid var(--border);
+    }
+    .client-card__checks { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+    .client-card__checks label, .check-line {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.84rem; font-weight: 600; color: var(--green);
+    }
+    .client-miles {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.8rem; color: var(--muted); font-weight: 600;
+    }
+    .client-miles input {
+      width: 5.5rem; border: 1px solid var(--border); border-radius: 0.4rem;
+      padding: 0.3rem 0.45rem; font: inherit; color: var(--body);
+    }
+    .client-miles__hint { margin: 0; font-size: 0.75rem; color: var(--muted); }
     .info-row {
       display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 0.4rem;
       align-items: start; font-size: 0.84rem;
@@ -991,6 +1011,16 @@
           contactRow('SC Email', c.scEmail, 'mailto') +
           infoRow('Hours', c.hours) +
         '</div>' +
+        '<div class="client-card__travel">' +
+          '<div class="client-card__checks">' +
+            '<label><input type="checkbox" data-client-flag="virtualService" data-client="' + c.id + '"' + (c.virtualService ? ' checked' : '') + ' /> Virtual</label>' +
+            '<label><input type="checkbox" data-client-flag="inPerson" data-client="' + c.id + '"' + (c.inPerson ? ' checked' : '') + ' /> In person</label>' +
+          '</div>' +
+          '<label class="client-miles' + (c.inPerson ? '' : ' is-hidden') + '">Average miles per trip' +
+            '<input type="number" min="0" max="400" step="0.1" inputmode="decimal" data-client-miles="' + c.id + '" value="' + escapeAttr(c.milesPerTrip || '') + '" />' +
+          '</label>' +
+          '<p class="client-miles__hint' + (c.inPerson ? '' : ' is-hidden') + '">In person adds this mileage each time IntakeQ shows a session.</p>' +
+        '</div>' +
         '<div class="client-card__tasks">' +
           '<h4>Tasks to be completed</h4>' +
           '<textarea data-client-tasks="' + c.id + '" placeholder="Add tasks…">' + escapeHtml(c.tasks || '') + '</textarea>' +
@@ -1106,7 +1136,12 @@
         '<div class="field"><label>Service Coordinator</label><input id="m-sc" value="' + escapeAttr(c.serviceCoordinator || '') + '" /></div>' +
         '<div class="field"><label>SC Email</label><input id="m-scemail" type="email" value="' + escapeAttr(c.scEmail || '') + '" /></div>' +
       '</div>' +
-      '<div class="field"><label>Tasks</label><textarea id="m-tasks" rows="3">' + escapeHtml(c.tasks || '') + '</textarea></div>';
+      '<div class="field"><label>Tasks</label><textarea id="m-tasks" rows="3">' + escapeHtml(c.tasks || '') + '</textarea></div>' +
+      '<div class="field"><div class="client-card__checks">' +
+        '<label class="check-line"><input type="checkbox" id="m-virtual"' + (c.virtualService ? ' checked' : '') + ' /> Virtual</label>' +
+        '<label class="check-line"><input type="checkbox" id="m-inperson"' + (c.inPerson ? ' checked' : '') + ' /> In person</label>' +
+      '</div></div>' +
+      '<div class="field"><label>Average miles per trip</label><input id="m-miles" inputmode="decimal" value="' + escapeAttr(c.milesPerTrip || '') + '" placeholder="12.5" /></div>';
   }
 
   function readClientForm() {
@@ -1122,7 +1157,10 @@
       agency: val('m-agency'),
       serviceCoordinator: val('m-sc'),
       scEmail: val('m-scemail'),
-      tasks: val('m-tasks')
+      tasks: val('m-tasks'),
+      virtualService: !!(document.getElementById('m-virtual') && document.getElementById('m-virtual').checked),
+      inPerson: !!(document.getElementById('m-inperson') && document.getElementById('m-inperson').checked),
+      milesPerTrip: val('m-miles')
     };
   }
   function val(id) {
@@ -1255,10 +1293,32 @@
         scheduleSave();
       }
     }
+    if (t.matches('input[data-client-miles]')) {
+      var milesId = t.getAttribute('data-client-miles');
+      var milesClient = state.workspace.clients.find(function (c) { return c.id === milesId; });
+      if (milesClient) {
+        milesClient.milesPerTrip = t.value.trim();
+        scheduleSave();
+      }
+    }
   });
 
   document.addEventListener('change', function (e) {
     if (e.target.matches('.cell-select')) onSlotFieldChange(e.target);
+    var flag = e.target.closest('[data-client-flag]');
+    if (flag && state.workspace) {
+      var flagged = state.workspace.clients.find(function (c) { return c.id === flag.getAttribute('data-client'); });
+      if (flagged) {
+        flagged[flag.getAttribute('data-client-flag')] = flag.checked;
+        var card = flag.closest('[data-client-card]');
+        if (card && flag.getAttribute('data-client-flag') === 'inPerson') {
+          card.querySelectorAll('.client-miles, .client-miles__hint').forEach(function (el) {
+            el.classList.toggle('is-hidden', !flag.checked);
+          });
+        }
+        scheduleSave();
+      }
+    }
   });
 
   document.addEventListener('click', function (e) {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
 
@@ -18,14 +18,12 @@ export function StaffExpectationsTile() {
   const [cancellations, setCancellations] = useState<Row[]>([]);
   const [compliance, setCompliance] = useState<Row[]>([]);
   const [error, setError] = useState('');
-  const [tripDate, setTripDate] = useState('');
-  const [miles, setMiles] = useState('');
-  const [purpose, setPurpose] = useState('');
+  const [mileageNote, setMileageNote] = useState('');
 
   function loadLists() {
     Promise.all([
       api<{ staff: SummaryFile[] }>('/api/scheduling/openings'),
-      api<{ mileage: Row[] }>('/api/mileage'),
+      api<{ mileage: Row[]; syncError?: string }>('/api/mileage'),
       api<{ cancellations: Row[] }>('/api/cancellations'),
       api<{ rows: Row[] }>('/api/documentation-compliance'),
     ]).then(([openingData, mileageData, cancellationData, complianceData]) => {
@@ -49,6 +47,7 @@ export function StaffExpectationsTile() {
       });
       setOpenings(flat);
       setMileage(mileageData.mileage || []);
+      setMileageNote(mileageData.syncError || '');
       setCancellations(cancellationData.cancellations || []);
       setCompliance(complianceData.rows || []);
       setError('');
@@ -57,17 +56,16 @@ export function StaffExpectationsTile() {
 
   useEffect(() => { loadLists(); }, []);
 
-  async function submitMileage(event: FormEvent) {
-    event.preventDefault();
+  async function confirmMileage(row: Row) {
     setError('');
     try {
-      await api('/api/mileage', { method: 'POST', body: { tripDate, miles: Number(miles), purpose } });
-      setTripDate('');
-      setMiles('');
-      setPurpose('');
+      await api('/api/mileage', {
+        method: 'POST',
+        body: { action: 'confirm', staffEmail: row.staffEmail, appointmentId: row.appointmentId },
+      });
       loadLists();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save mileage');
+      setError(err instanceof Error ? err.message : 'Could not confirm mileage');
     }
   }
 
@@ -91,13 +89,37 @@ export function StaffExpectationsTile() {
         ]}
       />
       <h2>Mileage</h2>
-      <form className="row" onSubmit={submitMileage}>
-        <label>Date<input type="date" value={tripDate} onChange={(event) => setTripDate(event.target.value)} required /></label>
-        <label>Miles<input value={miles} onChange={(event) => setMiles(event.target.value)} inputMode="decimal" required /></label>
-        <label>Purpose<input value={purpose} onChange={(event) => setPurpose(event.target.value)} required /></label>
-        <button className="btn" type="submit">Add</button>
-      </form>
-      <DataTable rows={mileage} empty="No mileage entries." columns={[{ key: 'StaffName', label: 'Staff' }, { key: 'TripDate', label: 'Date' }, { key: 'Miles', label: 'Miles' }, { key: 'Purpose', label: 'Purpose' }, { key: 'Status', label: 'Status' }]} />
+      <p className="muted">Each provider has a mileage spreadsheet in SharePoint. In-person sessions from IntakeQ are added with that client’s average miles. Confirm a row when it is ready for billing.</p>
+      {mileageNote ? <p className="error">{mileageNote}</p> : null}
+      {mileage.length === 0 ? <p className="empty">No mileage yet. It appears after a provider marks a client In person and IntakeQ shows a session.</p> : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Staff</th><th>Date</th><th>Client</th><th>Service</th><th>Miles</th><th>Amount</th><th>Billing</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {mileage.map((row) => (
+                <tr key={String(row.id || row.appointmentId)}>
+                  <td>{String(row.staffName || '')}</td>
+                  <td>{String(row.date || '')}</td>
+                  <td>{String(row.client || '')}</td>
+                  <td>{String(row.service || '')}</td>
+                  <td>{String(row.miles ?? '')}</td>
+                  <td>{typeof row.amount === 'number' ? '$' + row.amount.toFixed(2) : String(row.amount || '')}</td>
+                  <td>{String(row.billing || '')}</td>
+                  <td>
+                    {row.billing === 'Confirmed' ? null : (
+                      <button type="button" className="btn btn--ghost" onClick={() => confirmMileage(row)}>Confirm</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <h2>Cancellations</h2>
       <p className="muted">The Cancellations list is filled from IntakeQ by a scheduled Power Automate flow.</p>
       <DataTable rows={cancellations} empty="No cancellations stored yet." columns={[{ key: 'StaffName', label: 'Staff' }, { key: 'AppointmentDate', label: 'When' }, { key: 'Status', label: 'Status' }, { key: 'ClientName', label: 'Client' }, { key: 'ServiceName', label: 'Service' }]} />

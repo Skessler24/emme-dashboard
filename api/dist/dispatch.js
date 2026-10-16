@@ -5,6 +5,7 @@ const auth_1 = require("./auth");
 const graphClient_1 = require("./graphClient");
 const intakeQService_1 = require("./intakeQService");
 const http_1 = require("./http");
+const mileageWorkbook_1 = require("./mileageWorkbook");
 const schedulingService_1 = require("./schedulingService");
 const sharepointService_1 = require("./sharepointService");
 function denverToday() {
@@ -338,16 +339,24 @@ async function mileage(context, req) {
         const admin = await (0, auth_1.requireAdmin)(context, req);
         if (!admin)
             return;
-        const items = await (0, sharepointService_1.listItems)(sharepointService_1.LISTS.mileage);
-        (0, http_1.json)(context, 200, { mileage: items.map(publicItem) });
+        const result = await (0, mileageWorkbook_1.syncAllMileageLogs)();
+        (0, http_1.json)(context, 200, { mileage: result.rows, syncError: result.error || '' });
         return;
     }
     if (verb === 'POST') {
+        const body = (0, http_1.readBody)(req);
+        if (body.action === 'confirm') {
+            const admin = await (0, auth_1.requireAdmin)(context, req);
+            if (!admin)
+                return;
+            const result = await (0, mileageWorkbook_1.confirmMileageRow)((0, http_1.asText)(body.staffEmail, 200), (0, http_1.asText)(body.appointmentId, 80));
+            (0, http_1.json)(context, result.ok ? 200 : 400, result);
+            return;
+        }
         const automated = (0, auth_1.automationAuthorized)(req);
         const user = automated ? null : await (0, auth_1.requireUser)(context, req);
         if (!automated && !user)
             return;
-        const body = (0, http_1.readBody)(req);
         const miles = Number(body.miles);
         const purpose = (0, http_1.asText)(body.purpose, 500);
         const tripDate = (0, http_1.asText)(body.tripDate, 40);

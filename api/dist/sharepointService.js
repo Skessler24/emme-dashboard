@@ -29,6 +29,7 @@ const graphClient_1 = require("./graphClient");
  *   /Employees/<EmployeeName>/Onboarding/CurrentDocuments/
  *   /Employees/<EmployeeName>/Onboarding/ArchivedDocuments/
  *   /Employees/<EmployeeName>/Current Availability/Schedules/<Name> Schedule.xlsx
+ *   /Employees/<EmployeeName>/Mileage/<Name> Mileage.xlsx
  *
  * The workbook is overwritten when that provider saves Schedule & Caseload.
  * This service reads those workbooks for the admin openings view.
