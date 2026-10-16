@@ -231,25 +231,55 @@ function alertIsActive(fields: Record<string, unknown>, now: number): boolean {
 }
 
 async function adminAlerts(context: FnContext, req: HttpRequest): Promise<void> {
-  if (methodOf(req) !== 'GET') {
-    json(context, 405, { error: 'Method not allowed' });
+  const verb = methodOf(req);
+  const parts = restParts(req);
+  if (verb === 'GET' && parts.length === 0) {
+    const activeOnly = queryOf(req, 'active') === 'true';
+    if (!activeOnly) {
+      const admin = await requireAdmin(context, req);
+      if (!admin) return;
+    } else {
+      const user = await requireUser(context, req);
+      if (!user) return;
+    }
+    const items = await listItems(LISTS.alerts);
+    const now = Date.now();
+    const alerts = items.map(publicItem).filter(function (item) {
+      if (!activeOnly) return true;
+      return alertIsActive(item as unknown as Record<string, unknown>, now);
+    });
+    alerts.sort(function (a: { createdAt?: string }, b: { createdAt?: string }) {
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+    });
+    json(context, 200, { alerts });
     return;
   }
-  const activeOnly = queryOf(req, 'active') === 'true';
-  if (!activeOnly) {
+  if (verb === 'POST' && parts.length === 0) {
     const admin = await requireAdmin(context, req);
     if (!admin) return;
-  } else {
-    const user = await requireUser(context, req);
-    if (!user) return;
+    const body = readBody(req);
+    const message = asText(body.message, 240);
+    if (!message) {
+      json(context, 400, { error: 'A message is required' });
+      return;
+    }
+    const created = await createItem(LISTS.alerts, {
+      Title: message.slice(0, 80),
+      Message: message,
+      Active: true,
+      StartsOn: new Date().toISOString(),
+    });
+    json(context, 201, { ok: true, alert: publicItem(created) });
+    return;
   }
-  const items = await listItems(LISTS.alerts);
-  const now = Date.now();
-  const alerts = items.map(publicItem).filter(function (item) {
-    if (!activeOnly) return true;
-    return alertIsActive(item as unknown as Record<string, unknown>, now);
-  });
-  json(context, 200, { alerts });
+  if (verb === 'POST' && parts[1] === 'end') {
+    const admin = await requireAdmin(context, req);
+    if (!admin) return;
+    await updateItem(LISTS.alerts, parts[0], { Active: false });
+    json(context, 200, { ok: true });
+    return;
+  }
+  json(context, 404, { error: 'Not found' });
 }
 
 async function staffMessages(context: FnContext, req: HttpRequest): Promise<void> {

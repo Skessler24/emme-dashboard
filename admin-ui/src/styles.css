@@ -125,3 +125,53 @@ th { color: var(--green); font-size: 0.78rem; letter-spacing: 0.02em; }
 .message p { margin: 0.4rem 0; white-space: pre-wrap; }
 .reply { margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px dashed var(--line); }
 .back { display: inline-block; margin-bottom: 0.4rem; }
+
+.ask-float {
+  position: fixed;
+  top: 4.6rem;
+  right: 1.25rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+.ask-float__bubble {
+  width: 3.4rem;
+  height: 3.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(8, 67, 57, 0.28);
+  display: grid;
+  place-items: center;
+}
+.ask-float__row { display: flex; gap: 0.55rem; align-items: center; }
+.ask-float__bubble--quiet {
+  background: var(--surface);
+  color: var(--green);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(8, 67, 57, 0.1);
+}
+.ask-float__bubble:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+.ask-float form { display: grid; gap: 0.55rem; margin-bottom: 0.75rem; }
+.ask-float textarea { width: 100%; }
+.ask-float__icon { width: 1.45rem; height: 1.45rem; }
+.ask-float__icon.is-hidden { display: none; }
+.ask-float__panel {
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: min(32rem, calc(100vh - 8rem));
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: 0 6px 24px rgba(8, 67, 57, 0.13);
+  padding: 1rem;
+}
+.ask-float__panel h2 { margin: 0 0 0.25rem; }
+.ask-float__hint { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.85rem; }
+.ask-float .messages { max-height: none; }
+@media (max-width: 767px) {
+  .ask-float { right: 0.75rem; }
+}

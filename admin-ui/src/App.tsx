@@ -6,12 +6,13 @@ import { OnboardingTile } from './components/tiles/OnboardingTile';
 import { ReferralsTile } from './components/tiles/ReferralsTile';
 import { StaffExpectationsTile } from './components/tiles/StaffExpectationsTile';
 import { StaffInformationTile } from './components/tiles/StaffInformationTile';
+import { StaffConnection } from './components/StaffConnection';
 
 const TILES = [
   { id: 'billing', href: '#/billing', title: 'Billing', text: 'Invoice status from IntakeQ' },
   { id: 'onboarding', href: '#/onboarding', title: 'Onboarding', text: 'Checklists and employee documents' },
   { id: 'referrals', href: '#/referrals', title: 'Referrals', text: 'Incoming referrals' },
-  { id: 'staff', href: '#/staff', title: 'Staff Information', text: 'Trainings, notes, and questions' },
+  { id: 'staff', href: '#/staff', title: 'Staff Information', text: 'Trainings and open notes' },
   { id: 'expectations', href: '#/expectations', title: 'Staff Expectations', text: 'Openings, mileage, and compliance' },
 ];
 
@@ -69,6 +70,7 @@ export function App() {
       </nav>
       {me?.isAdmin && page ? <div className="panel">{page}</div> : null}
       {me?.isAdmin && !page ? <p className="lede">Choose a tile. Scheduling openings are on Staff Expectations.</p> : null}
+      {me?.isAdmin ? <StaffConnection /> : null}
     </div>
   );
 }

@@ -1121,6 +1121,11 @@
       white-space: nowrap;
     }
 
+    .alert-banner:hover .alert-banner__track,
+    .alert-banner:focus-within .alert-banner__track {
+      animation-play-state: paused;
+    }
+
     .alert-banner--static .alert-banner__track {
       width: auto;
       flex-wrap: wrap;
@@ -1131,6 +1136,64 @@
     @keyframes alert-marquee {
       from { transform: translateX(0); }
       to { transform: translateX(-50%); }
+    }
+
+    .ask-admin {
+      position: fixed;
+      top: calc(var(--header-height) + 0.85rem);
+      right: 1.25rem;
+      z-index: 95;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.65rem;
+    }
+
+    .ask-admin__bubble {
+      width: 3.4rem;
+      height: 3.4rem;
+      border: none;
+      border-radius: 999px;
+      background: var(--color-green);
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(8, 67, 57, 0.28);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .ask-admin__bubble:hover { background: var(--color-green-hover); }
+
+    .ask-admin__bubble:focus-visible {
+      outline: 2px solid var(--color-yellow);
+      outline-offset: 3px;
+    }
+
+    .ask-admin__icon { width: 1.45rem; height: 1.45rem; }
+    .ask-admin__icon--close { display: none; }
+    .ask-admin__bubble[aria-expanded="true"] .ask-admin__icon--chat { display: none; }
+    .ask-admin__bubble[aria-expanded="true"] .ask-admin__icon--close { display: block; }
+
+    .ask-admin__panel {
+      width: min(22rem, calc(100vw - 2rem));
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 1rem 1rem 0.85rem;
+    }
+
+    .ask-admin__title {
+      margin: 0 0 0.25rem;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      color: var(--color-green);
+    }
+
+    .ask-admin__hint {
+      margin: 0 0 0.75rem;
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
     }
 
     .staff-note {
@@ -1145,7 +1208,14 @@
       resize: vertical;
     }
 
-    .staff-note-status { margin-top: var(--space-3); color: var(--color-text-muted); }
+    .staff-note-status { margin: var(--space-3) 0 0; color: var(--color-text-muted); min-height: 1.2em; }
+
+    @media (max-width: 767px) {
+      .ask-admin {
+        top: calc(var(--header-height) + 3.6rem);
+        right: 0.75rem;
+      }
+    }
 
     /* ── MOTION ── */
     @media (prefers-reduced-motion: reduce) {
@@ -1199,12 +1269,12 @@
     <div id="panel-dashboard">
       <div class="content-wrapper">
 
+        <div id="js-alert-banner" class="alert-banner is-hidden" role="status" aria-live="polite"></div>
+
         <section class="greeting" aria-label="Personalized greeting">
           <h1 class="greeting__title" id="js-greeting"></h1>
           <p class="greeting__quote" id="js-quote"></p>
         </section>
-
-        <div id="js-alert-banner" class="alert-banner is-hidden" role="status" aria-live="polite"></div>
 
         <section aria-labelledby="resources-heading">
           <h2 class="section-heading" id="resources-heading">Resources &amp; Tools</h2>
@@ -1355,7 +1425,7 @@
                 <div class="card__icon-wrap card__icon-wrap--pink" aria-hidden="true"><i data-lucide="users" class="icon-md"></i></div>
                 <div class="card__body">
                   <h3 class="card__title">Staff Information</h3>
-                  <p class="card__desc">Trainings, open notes, and questions</p>
+                  <p class="card__desc">Trainings and open notes</p>
                 </div>
                 <span class="card__action btn btn--pink" aria-hidden="true">Open →</span>
               </a>
@@ -1371,25 +1441,6 @@
               </a>
             </li>
           </ul>
-        </section>
-
-        <section class="widget" role="region" aria-labelledby="staff-message-heading">
-          <header class="widget__header">
-            <div class="widget__heading-group">
-              <i data-lucide="message-circle" class="icon-md widget__icon" aria-hidden="true"></i>
-              <h2 class="widget__heading" id="staff-message-heading">Question for admin</h2>
-            </div>
-          </header>
-          <div class="widget__body">
-            <form id="js-staff-message-form">
-              <label class="sr-only" for="js-staff-message">Message</label>
-              <textarea class="staff-note" id="js-staff-message" maxlength="4000" placeholder="Send a question or comment to the admin team" required></textarea>
-              <div class="widget__actions" style="margin-top:0.75rem">
-                <button type="submit" class="btn btn--green">Send</button>
-              </div>
-            </form>
-            <p class="staff-note-status" id="js-staff-message-status" role="status"></p>
-          </div>
         </section>
 
         <div class="ms-bar" id="js-ms-bar" role="status">
@@ -1498,6 +1549,30 @@
     <p class="site-footer__copy">© 2026 Emme Therapy · Built with ❤️ for Samantha</p>
     <p class="site-footer__note">Calendar &amp; Tasks sync via Microsoft Graph when connected.</p>
   </footer>
+
+  <div class="ask-admin">
+    <button type="button" class="ask-admin__bubble" id="js-ask-admin-toggle" aria-expanded="false" aria-controls="js-ask-admin-panel" aria-label="Open Admin Connection">
+      <svg class="ask-admin__icon ask-admin__icon--chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <svg class="ask-admin__icon ask-admin__icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+    <div class="ask-admin__panel" id="js-ask-admin-panel" hidden role="dialog" aria-labelledby="staff-message-heading">
+      <h2 class="ask-admin__title" id="staff-message-heading">Admin Connection</h2>
+      <p class="ask-admin__hint">Send a note to the admin team.</p>
+      <form id="js-staff-message-form">
+        <label class="sr-only" for="js-staff-message">Message</label>
+        <textarea class="staff-note" id="js-staff-message" maxlength="4000" placeholder="Send a question or comment" required></textarea>
+        <div class="widget__actions" style="margin-top:0.75rem">
+          <button type="submit" class="btn btn--green">Send</button>
+        </div>
+      </form>
+      <p class="staff-note-status" id="js-staff-message-status" role="status"></p>
+    </div>
+  </div>
 
   <script>
     (function () {
@@ -2593,6 +2668,26 @@
           AdminHome.loadAlerts();
           const form = document.getElementById('js-staff-message-form');
           if (form) form.addEventListener('submit', AdminHome.sendMessage);
+          const toggle = document.getElementById('js-ask-admin-toggle');
+          const panel = document.getElementById('js-ask-admin-panel');
+          if (toggle && panel) {
+            toggle.addEventListener('click', function () {
+              const open = panel.hasAttribute('hidden');
+              if (open) panel.removeAttribute('hidden');
+              else panel.setAttribute('hidden', '');
+              toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+              if (open) {
+                const input = document.getElementById('js-staff-message');
+                if (input) input.focus();
+              }
+            });
+            document.addEventListener('keydown', function (event) {
+              if (event.key !== 'Escape' || panel.hasAttribute('hidden')) return;
+              panel.setAttribute('hidden', '');
+              toggle.setAttribute('aria-expanded', 'false');
+              toggle.focus();
+            });
+          }
         },
         loadAlerts: async function () {
           const banner = document.getElementById('js-alert-banner');

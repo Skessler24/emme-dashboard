@@ -6,10 +6,17 @@ export function AlertBanner() {
 
   useEffect(() => {
     let cancelled = false;
-    api<{ alerts: Row[] }>('/api/admin-alerts?active=true')
-      .then((data) => { if (!cancelled) setAlerts(data.alerts || []); })
-      .catch(() => { if (!cancelled) setAlerts([]); });
-    return () => { cancelled = true; };
+    function load() {
+      api<{ alerts: Row[] }>('/api/admin-alerts?active=true')
+        .then((data) => { if (!cancelled) setAlerts(data.alerts || []); })
+        .catch(() => { if (!cancelled) setAlerts([]); });
+    }
+    load();
+    window.addEventListener('emme-alerts-changed', load);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('emme-alerts-changed', load);
+    };
   }, []);
 
   if (!alerts.length) return null;

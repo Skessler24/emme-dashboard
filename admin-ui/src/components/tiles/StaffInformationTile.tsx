@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Row } from '../../api';
-import { StaffMessageAdmin } from '../StaffMessageAdmin';
 import { DataTable } from '../DataTable';
 
 export function StaffInformationTile() {
@@ -63,7 +62,6 @@ export function StaffInformationTile() {
       <DataTable rows={notes} empty="No open notes." columns={[{ key: 'noteName', label: 'Note' }, { key: 'clientName', label: 'Client' }, { key: 'date', label: 'Date' }, { key: 'status', label: 'Status' }]} />
       <h2>Open evals</h2>
       <DataTable rows={evals} empty="No open evals." columns={[{ key: 'noteName', label: 'Eval' }, { key: 'clientName', label: 'Client' }, { key: 'date', label: 'Date' }, { key: 'status', label: 'Status' }]} />
-      <StaffMessageAdmin />
     </section>
   );
 }

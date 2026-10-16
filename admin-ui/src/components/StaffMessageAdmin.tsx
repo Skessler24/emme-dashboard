@@ -29,7 +29,6 @@ export function StaffMessageAdmin() {
 
   return (
     <section>
-      <h2>Staff questions</h2>
       {error ? <p className="error">{error}</p> : null}
       <div className="messages">
         {messages.length === 0 ? <p className="empty">No messages yet.</p> : null}

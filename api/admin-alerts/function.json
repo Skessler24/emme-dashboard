@@ -5,8 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get","options"],
-      "route": "admin-alerts"
+      "methods": ["get","post","options"],
+      "route": "admin-alerts/{*rest}"
     },
     {
       "type": "http",

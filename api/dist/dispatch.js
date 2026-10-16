@@ -218,29 +218,61 @@ function alertIsActive(fields, now) {
     return true;
 }
 async function adminAlerts(context, req) {
-    if ((0, http_1.methodOf)(req) !== 'GET') {
-        (0, http_1.json)(context, 405, { error: 'Method not allowed' });
+    const verb = (0, http_1.methodOf)(req);
+    const parts = (0, http_1.restParts)(req);
+    if (verb === 'GET' && parts.length === 0) {
+        const activeOnly = (0, http_1.queryOf)(req, 'active') === 'true';
+        if (!activeOnly) {
+            const admin = await (0, auth_1.requireAdmin)(context, req);
+            if (!admin)
+                return;
+        }
+        else {
+            const user = await (0, auth_1.requireUser)(context, req);
+            if (!user)
+                return;
+        }
+        const items = await (0, sharepointService_1.listItems)(sharepointService_1.LISTS.alerts);
+        const now = Date.now();
+        const alerts = items.map(publicItem).filter(function (item) {
+            if (!activeOnly)
+                return true;
+            return alertIsActive(item, now);
+        });
+        alerts.sort(function (a, b) {
+            return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+        });
+        (0, http_1.json)(context, 200, { alerts });
         return;
     }
-    const activeOnly = (0, http_1.queryOf)(req, 'active') === 'true';
-    if (!activeOnly) {
+    if (verb === 'POST' && parts.length === 0) {
         const admin = await (0, auth_1.requireAdmin)(context, req);
         if (!admin)
             return;
-    }
-    else {
-        const user = await (0, auth_1.requireUser)(context, req);
-        if (!user)
+        const body = (0, http_1.readBody)(req);
+        const message = (0, http_1.asText)(body.message, 240);
+        if (!message) {
+            (0, http_1.json)(context, 400, { error: 'A message is required' });
             return;
+        }
+        const created = await (0, sharepointService_1.createItem)(sharepointService_1.LISTS.alerts, {
+            Title: message.slice(0, 80),
+            Message: message,
+            Active: true,
+            StartsOn: new Date().toISOString(),
+        });
+        (0, http_1.json)(context, 201, { ok: true, alert: publicItem(created) });
+        return;
     }
-    const items = await (0, sharepointService_1.listItems)(sharepointService_1.LISTS.alerts);
-    const now = Date.now();
-    const alerts = items.map(publicItem).filter(function (item) {
-        if (!activeOnly)
-            return true;
-        return alertIsActive(item, now);
-    });
-    (0, http_1.json)(context, 200, { alerts });
+    if (verb === 'POST' && parts[1] === 'end') {
+        const admin = await (0, auth_1.requireAdmin)(context, req);
+        if (!admin)
+            return;
+        await (0, sharepointService_1.updateItem)(sharepointService_1.LISTS.alerts, parts[0], { Active: false });
+        (0, http_1.json)(context, 200, { ok: true });
+        return;
+    }
+    (0, http_1.json)(context, 404, { error: 'Not found' });
 }
 async function staffMessages(context, req) {
     const verb = (0, http_1.methodOf)(req);
