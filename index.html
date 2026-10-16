@@ -1242,6 +1242,7 @@
     }
 
     .ask-admin__bubble {
+      position: relative;
       width: 3.4rem;
       height: 3.4rem;
       border: none;
@@ -1252,6 +1253,31 @@
       cursor: pointer;
       display: grid;
       place-items: center;
+    }
+
+    .ask-admin__bubble.has-unread {
+      animation: chat-blink 1.15s ease-in-out infinite;
+    }
+
+    .ask-admin__count {
+      position: absolute;
+      top: -0.2rem;
+      right: -0.25rem;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      padding: 0 0.28rem;
+      border-radius: 999px;
+      background: var(--color-yellow);
+      color: var(--color-green);
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.25rem;
+      text-align: center;
+    }
+
+    @keyframes chat-blink {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 202, 52, 0.85); }
+      50% { box-shadow: 0 0 0 9px rgba(255, 202, 52, 0); }
     }
 
     .ask-admin__bubble:hover { background: var(--color-green-hover); }
@@ -1301,6 +1327,11 @@
     }
 
     .staff-note-status { margin: var(--space-3) 0 0; color: var(--color-text-muted); min-height: 1.2em; }
+
+    .staff-thread { display: grid; gap: 0.55rem; margin-top: 0.85rem; max-height: 16rem; overflow: auto; }
+    .staff-thread__item { border-top: 1px solid var(--color-border); padding-top: 0.55rem; font-size: 0.88rem; }
+    .staff-thread__item p { margin: 0.2rem 0; }
+    .staff-thread__reply { color: var(--color-green); }
 
     .announce {
       background: var(--color-surface);
@@ -1714,7 +1745,7 @@
   </footer>
 
   <div class="ask-admin">
-    <button type="button" class="ask-admin__bubble" id="js-ask-admin-toggle" aria-expanded="false" aria-controls="js-ask-admin-panel" aria-label="Open Admin Connection">
+    <button type="button" class="ask-admin__bubble" id="js-ask-admin-toggle" aria-expanded="false" aria-controls="js-ask-admin-panel" aria-label="Admin Communication">
       <svg class="ask-admin__icon ask-admin__icon--chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
@@ -1722,10 +1753,11 @@
         <path d="M18 6 6 18"></path>
         <path d="m6 6 12 12"></path>
       </svg>
+      <span class="ask-admin__count is-hidden" id="js-ask-admin-count"></span>
     </button>
     <div class="ask-admin__panel" id="js-ask-admin-panel" hidden role="dialog" aria-labelledby="staff-message-heading">
-      <h2 class="ask-admin__title" id="staff-message-heading">Admin Connection</h2>
-      <p class="ask-admin__hint">Send a note to the admin team.</p>
+      <h2 class="ask-admin__title" id="staff-message-heading">Admin Communication</h2>
+      <p class="ask-admin__hint">Send a note to the admin team. Replies show here.</p>
       <form id="js-staff-message-form">
         <label class="sr-only" for="js-staff-message">Message</label>
         <textarea class="staff-note" id="js-staff-message" maxlength="4000" placeholder="Send a question or comment" required></textarea>
@@ -1734,6 +1766,7 @@
         </div>
       </form>
       <p class="staff-note-status" id="js-staff-message-status" role="status"></p>
+      <div class="staff-thread" id="js-staff-thread"></div>
     </div>
   </div>
 
@@ -2840,8 +2873,11 @@
               if (open) {
                 const input = document.getElementById('js-staff-message');
                 if (input) input.focus();
+                AdminHome.openThread();
               }
             });
+          AdminHome.refreshUnread();
+          setInterval(AdminHome.refreshUnread, 20000);
             document.addEventListener('keydown', function (event) {
               if (event.key !== 'Escape' || panel.hasAttribute('hidden')) return;
               panel.setAttribute('hidden', '');
@@ -2980,9 +3016,54 @@
             if (!res.ok) throw new Error(data.error || 'Could not send');
             if (input) input.value = '';
             if (status) status.textContent = 'Sent to the admin team.';
+            AdminHome.loadThread();
           } catch (err) {
             if (status) status.textContent = (err && err.message) || 'Could not send';
           }
+        },
+        showUnread: function (count) {
+          const button = document.getElementById('js-ask-admin-toggle');
+          const badge = document.getElementById('js-ask-admin-count');
+          if (!button || !badge) return;
+          const total = Number(count) || 0;
+          button.classList.toggle('has-unread', total > 0);
+          badge.classList.toggle('is-hidden', total < 1);
+          badge.textContent = total > 9 ? '9+' : (total ? String(total) : '');
+          button.setAttribute('aria-label', total ? 'Admin Communication, ' + total + ' new' : 'Admin Communication');
+        },
+        refreshUnread: async function () {
+          try {
+            const res = await fetch('/api/staff-messages/unread?box=staff', { credentials: 'include', headers: { Accept: 'application/json' } });
+            const data = await res.json().catch(function () { return {}; });
+            if (!res.ok) return;
+            AdminHome.showUnread(data.count);
+          } catch (_) {}
+        },
+        loadThread: async function () {
+          const thread = document.getElementById('js-staff-thread');
+          if (!thread) return;
+          try {
+            const res = await fetch('/api/staff-messages?box=staff', { credentials: 'include', headers: { Accept: 'application/json' } });
+            const data = await res.json().catch(function () { return {}; });
+            if (!res.ok) return;
+            const messages = (data && data.messages) || [];
+            thread.innerHTML = messages.map(function (item) {
+              const reply = item.Reply ? '<p class="staff-thread__reply"><strong>Admin: </strong>' + AdminHome.escape(item.Reply) + '</p>' : '';
+              return '<article class="staff-thread__item"><p>' + AdminHome.escape(item.Message) + '</p>' + reply + '</article>';
+            }).join('');
+          } catch (_) {}
+        },
+        openThread: async function () {
+          await AdminHome.loadThread();
+          try {
+            await fetch('/api/staff-messages/seen', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ box: 'staff' })
+            });
+          } catch (_) {}
+          AdminHome.showUnread(0);
         },
       };
 

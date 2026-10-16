@@ -138,6 +138,7 @@ th { color: var(--green); font-size: 0.78rem; letter-spacing: 0.02em; }
   gap: 0.65rem;
 }
 .ask-float__bubble {
+  position: relative;
   width: 3.4rem;
   height: 3.4rem;
   border: 0;
@@ -147,6 +148,29 @@ th { color: var(--green); font-size: 0.78rem; letter-spacing: 0.02em; }
   box-shadow: 0 8px 22px rgba(8, 67, 57, 0.28);
   display: grid;
   place-items: center;
+}
+.ask-float__bubble.has-unread { animation: chat-blink 1.15s ease-in-out infinite; }
+.ask-float__count {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.25rem;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--green);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  text-align: center;
+}
+@keyframes chat-blink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 202, 52, 0.85); }
+  50% { box-shadow: 0 0 0 9px rgba(255, 202, 52, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ask-float__bubble.has-unread { animation: none; outline: 3px solid var(--yellow); }
 }
 .ask-float__row { display: flex; gap: 0.55rem; align-items: center; }
 .ask-float__bubble--quiet {

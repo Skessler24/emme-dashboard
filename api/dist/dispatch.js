@@ -5,6 +5,7 @@ const auth_1 = require("./auth");
 const graphClient_1 = require("./graphClient");
 const intakeQService_1 = require("./intakeQService");
 const http_1 = require("./http");
+const conversationStore_1 = require("./conversationStore");
 const mileageWorkbook_1 = require("./mileageWorkbook");
 const schedulingService_1 = require("./schedulingService");
 const sharepointService_1 = require("./sharepointService");
@@ -233,15 +234,11 @@ async function adminAlerts(context, req) {
             if (!user)
                 return;
         }
-        const items = await (0, sharepointService_1.listItems)(sharepointService_1.LISTS.alerts);
         const now = Date.now();
-        const alerts = items.map(publicItem).filter(function (item) {
+        const alerts = (await (0, conversationStore_1.listAlerts)()).filter(function (item) {
             if (!activeOnly)
                 return true;
             return alertIsActive(item, now);
-        });
-        alerts.sort(function (a, b) {
-            return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
         });
         (0, http_1.json)(context, 200, { alerts });
         return;
@@ -256,20 +253,15 @@ async function adminAlerts(context, req) {
             (0, http_1.json)(context, 400, { error: 'A message is required' });
             return;
         }
-        const created = await (0, sharepointService_1.createItem)(sharepointService_1.LISTS.alerts, {
-            Title: message.slice(0, 80),
-            Message: message,
-            Active: true,
-            StartsOn: new Date().toISOString(),
-        });
-        (0, http_1.json)(context, 201, { ok: true, alert: publicItem(created) });
+        const created = await (0, conversationStore_1.addAlert)(message);
+        (0, http_1.json)(context, 201, { ok: true, alert: created });
         return;
     }
     if (verb === 'POST' && parts[1] === 'end') {
         const admin = await (0, auth_1.requireAdmin)(context, req);
         if (!admin)
             return;
-        await (0, sharepointService_1.updateItem)(sharepointService_1.LISTS.alerts, parts[0], { Active: false });
+        await (0, conversationStore_1.endAlert)(parts[0]);
         (0, http_1.json)(context, 200, { ok: true });
         return;
     }
@@ -278,15 +270,49 @@ async function adminAlerts(context, req) {
 async function staffMessages(context, req) {
     const verb = (0, http_1.methodOf)(req);
     const parts = (0, http_1.restParts)(req);
-    if (verb === 'GET' && parts.length === 0) {
-        const admin = await (0, auth_1.requireAdmin)(context, req);
-        if (!admin)
+    if (verb === 'GET' && parts[0] === 'unread') {
+        const user = await (0, auth_1.requireUser)(context, req);
+        if (!user)
             return;
-        const items = (await (0, sharepointService_1.listItems)(sharepointService_1.LISTS.messages)).map(publicItem);
-        items.sort(function (a, b) {
-            return String(b.createdAt || b.Created || '').localeCompare(String(a.createdAt || a.Created || ''));
-        });
-        (0, http_1.json)(context, 200, { messages: items.slice(0, 50) });
+        const box = (0, http_1.queryOf)(req, 'box') === 'admin' ? 'admin' : 'staff';
+        if (box === 'admin') {
+            const admin = await (0, auth_1.requireAdmin)(context, req);
+            if (!admin)
+                return;
+        }
+        (0, http_1.json)(context, 200, { count: await (0, conversationStore_1.unreadCount)(box, user.email) });
+        return;
+    }
+    if (verb === 'GET' && parts.length === 0) {
+        const user = await (0, auth_1.requireUser)(context, req);
+        if (!user)
+            return;
+        const box = (0, http_1.queryOf)(req, 'box');
+        if (box !== 'staff') {
+            const admin = await (0, auth_1.requireAdmin)(context, req);
+            if (!admin)
+                return;
+        }
+        const mine = user.email.trim().toLowerCase();
+        const messages = (await (0, conversationStore_1.listMessages)()).filter(function (item) {
+            return box === 'staff' ? item.FromEmail === mine : true;
+        }).slice(0, 50);
+        (0, http_1.json)(context, 200, { messages });
+        return;
+    }
+    if (verb === 'POST' && parts[0] === 'seen') {
+        const user = await (0, auth_1.requireUser)(context, req);
+        if (!user)
+            return;
+        const body = (0, http_1.readBody)(req);
+        const box = (0, http_1.asText)(body.box, 20) === 'admin' ? 'admin' : 'staff';
+        if (box === 'admin') {
+            const admin = await (0, auth_1.requireAdmin)(context, req);
+            if (!admin)
+                return;
+        }
+        await (0, conversationStore_1.markSeen)(box, user.email);
+        (0, http_1.json)(context, 200, { ok: true });
         return;
     }
     if (verb === 'POST' && parts.length === 0) {
@@ -299,16 +325,7 @@ async function staffMessages(context, req) {
             (0, http_1.json)(context, 400, { error: 'A message is required' });
             return;
         }
-        const created = await (0, sharepointService_1.createItem)(sharepointService_1.LISTS.messages, {
-            Title: 'Staff message ' + new Date().toISOString().slice(0, 16),
-            Message: message,
-            FromEmail: user.email,
-            FromName: user.name || user.email,
-            Status: 'Open',
-            Reply: '',
-            RepliedBy: '',
-            RepliedAt: '',
-        });
+        const created = await (0, conversationStore_1.addMessage)({ message, email: user.email, name: user.name || user.email });
         (0, http_1.json)(context, 201, { ok: true, id: created.id });
         return;
     }
@@ -322,12 +339,7 @@ async function staffMessages(context, req) {
             (0, http_1.json)(context, 400, { error: 'A reply is required' });
             return;
         }
-        await (0, sharepointService_1.updateItem)(sharepointService_1.LISTS.messages, parts[0], {
-            Reply: reply,
-            RepliedBy: admin.email || admin.name,
-            RepliedAt: new Date().toISOString(),
-            Status: 'Replied',
-        });
+        await (0, conversationStore_1.replyToMessage)(parts[0], reply, admin.email || admin.name);
         (0, http_1.json)(context, 200, { ok: true });
         return;
     }

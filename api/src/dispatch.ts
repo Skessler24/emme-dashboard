@@ -2,6 +2,7 @@ import { automationAuthorized, readPrincipal, requireAdmin, requireUser, resolve
 import { GraphError } from './graphClient';
 import { IntakeQError, complianceByStaff, getCancellations, getInvoices, getNoteSummaries } from './intakeQService';
 import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, restParts } from './http';
+import { addAlert, addMessage, endAlert, listAlerts, listMessages, markSeen, replyToMessage, unreadCount } from './conversationStore';
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
 import { availabilityForWindow } from './schedulingService';
 import {
@@ -243,14 +244,10 @@ async function adminAlerts(context: FnContext, req: HttpRequest): Promise<void> 
       const user = await requireUser(context, req);
       if (!user) return;
     }
-    const items = await listItems(LISTS.alerts);
     const now = Date.now();
-    const alerts = items.map(publicItem).filter(function (item) {
+    const alerts = (await listAlerts()).filter(function (item) {
       if (!activeOnly) return true;
       return alertIsActive(item as unknown as Record<string, unknown>, now);
-    });
-    alerts.sort(function (a: { createdAt?: string }, b: { createdAt?: string }) {
-      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
     });
     json(context, 200, { alerts });
     return;
@@ -264,19 +261,14 @@ async function adminAlerts(context: FnContext, req: HttpRequest): Promise<void> 
       json(context, 400, { error: 'A message is required' });
       return;
     }
-    const created = await createItem(LISTS.alerts, {
-      Title: message.slice(0, 80),
-      Message: message,
-      Active: true,
-      StartsOn: new Date().toISOString(),
-    });
-    json(context, 201, { ok: true, alert: publicItem(created) });
+    const created = await addAlert(message);
+    json(context, 201, { ok: true, alert: created });
     return;
   }
   if (verb === 'POST' && parts[1] === 'end') {
     const admin = await requireAdmin(context, req);
     if (!admin) return;
-    await updateItem(LISTS.alerts, parts[0], { Active: false });
+    await endAlert(parts[0]);
     json(context, 200, { ok: true });
     return;
   }
@@ -286,14 +278,43 @@ async function adminAlerts(context: FnContext, req: HttpRequest): Promise<void> 
 async function staffMessages(context: FnContext, req: HttpRequest): Promise<void> {
   const verb = methodOf(req);
   const parts = restParts(req);
+  if (verb === 'GET' && parts[0] === 'unread') {
+    const user = await requireUser(context, req);
+    if (!user) return;
+    const box = queryOf(req, 'box') === 'admin' ? 'admin' : 'staff';
+    if (box === 'admin') {
+      const admin = await requireAdmin(context, req);
+      if (!admin) return;
+    }
+    json(context, 200, { count: await unreadCount(box, user.email) });
+    return;
+  }
   if (verb === 'GET' && parts.length === 0) {
-    const admin = await requireAdmin(context, req);
-    if (!admin) return;
-    const items = (await listItems(LISTS.messages)).map(publicItem);
-    items.sort(function (a: any, b: any) {
-      return String(b.createdAt || b.Created || '').localeCompare(String(a.createdAt || a.Created || ''));
-    });
-    json(context, 200, { messages: items.slice(0, 50) });
+    const user = await requireUser(context, req);
+    if (!user) return;
+    const box = queryOf(req, 'box');
+    if (box !== 'staff') {
+      const admin = await requireAdmin(context, req);
+      if (!admin) return;
+    }
+    const mine = user.email.trim().toLowerCase();
+    const messages = (await listMessages()).filter(function (item) {
+      return box === 'staff' ? item.FromEmail === mine : true;
+    }).slice(0, 50);
+    json(context, 200, { messages });
+    return;
+  }
+  if (verb === 'POST' && parts[0] === 'seen') {
+    const user = await requireUser(context, req);
+    if (!user) return;
+    const body = readBody(req);
+    const box = asText(body.box, 20) === 'admin' ? 'admin' : 'staff';
+    if (box === 'admin') {
+      const admin = await requireAdmin(context, req);
+      if (!admin) return;
+    }
+    await markSeen(box, user.email);
+    json(context, 200, { ok: true });
     return;
   }
   if (verb === 'POST' && parts.length === 0) {
@@ -305,16 +326,7 @@ async function staffMessages(context: FnContext, req: HttpRequest): Promise<void
       json(context, 400, { error: 'A message is required' });
       return;
     }
-    const created = await createItem(LISTS.messages, {
-      Title: 'Staff message ' + new Date().toISOString().slice(0, 16),
-      Message: message,
-      FromEmail: user.email,
-      FromName: user.name || user.email,
-      Status: 'Open',
-      Reply: '',
-      RepliedBy: '',
-      RepliedAt: '',
-    });
+    const created = await addMessage({ message, email: user.email, name: user.name || user.email });
     json(context, 201, { ok: true, id: created.id });
     return;
   }
@@ -327,12 +339,7 @@ async function staffMessages(context: FnContext, req: HttpRequest): Promise<void
       json(context, 400, { error: 'A reply is required' });
       return;
     }
-    await updateItem(LISTS.messages, parts[0], {
-      Reply: reply,
-      RepliedBy: admin.email || admin.name,
-      RepliedAt: new Date().toISOString(),
-      Status: 'Replied',
-    });
+    await replyToMessage(parts[0], reply, admin.email || admin.name);
     json(context, 200, { ok: true });
     return;
   }
