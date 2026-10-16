@@ -1138,6 +1138,76 @@
       to { transform: translateX(-50%); }
     }
 
+    .team-meet {
+      margin: 0 0 var(--space-6);
+      background: var(--color-surface);
+      color: var(--color-green);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+    }
+
+    .team-meet__summary {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.8rem 1rem;
+      cursor: pointer;
+      list-style: none;
+      font-weight: 600;
+    }
+
+    .team-meet__summary::-webkit-details-marker { display: none; }
+
+    .team-meet__title { font-family: var(--font-display); }
+
+    .team-meet__status {
+      margin-left: auto;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-align: right;
+    }
+
+    .team-meet__summary::after {
+      content: "";
+      width: 0.45rem;
+      height: 0.45rem;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg) translateY(-0.1rem);
+      flex: none;
+    }
+
+    .team-meet[open] .team-meet__summary::after {
+      transform: rotate(-135deg) translateY(-0.1rem);
+    }
+
+    .team-meet__body {
+      display: grid;
+      gap: 0.35rem;
+      padding: 0 1rem 1rem;
+    }
+
+    .team-meet__body p { margin: 0; }
+
+    .team-meet__link {
+      justify-self: start;
+      margin-top: 0.45rem;
+    }
+
+    .team-meet--today {
+      background: var(--color-yellow);
+      border-color: var(--color-yellow-dark);
+      color: var(--color-green);
+    }
+
+    .team-meet--today .team-meet__status { color: var(--color-green); }
+
+    @media (max-width: 767px) {
+      .team-meet__summary { align-items: flex-start; flex-wrap: wrap; }
+      .team-meet__status { margin-left: 0; text-align: left; }
+    }
+
     .ask-admin {
       position: fixed;
       top: calc(var(--header-height) + 0.85rem);
@@ -1270,6 +1340,20 @@
       <div class="content-wrapper">
 
         <div id="js-alert-banner" class="alert-banner is-hidden" role="status" aria-live="polite"></div>
+
+        <details class="team-meet" id="js-team-meet">
+          <summary class="team-meet__summary">
+            <span class="team-meet__title">Team Meetings</span>
+            <span class="team-meet__status" id="js-team-meet-status">1st &amp; 3rd Thursday · 2nd &amp; 4th Friday</span>
+          </summary>
+          <div class="team-meet__body">
+            <p>1st and 3rd Thursday at 1:00 PM</p>
+            <p>2nd and 4th Friday at 7:00 AM</p>
+            <p>Meeting ID: 227 556 6715</p>
+            <p>Passcode: 617507</p>
+            <a class="btn btn--green team-meet__link" href="https://zoom.us/j/2275566715" target="_blank" rel="noopener noreferrer">Join Zoom meeting</a>
+          </div>
+        </details>
 
         <section class="greeting" aria-label="Personalized greeting">
           <h1 class="greeting__title" id="js-greeting"></h1>
@@ -2666,6 +2750,7 @@
             if (section && data && data.isAdmin) section.classList.remove('is-hidden');
           } catch (_) {}
           AdminHome.loadAlerts();
+          AdminHome.markTeamMeeting();
           const form = document.getElementById('js-staff-message-form');
           if (form) form.addEventListener('submit', AdminHome.sendMessage);
           const toggle = document.getElementById('js-ask-admin-toggle');
@@ -2688,6 +2773,27 @@
               toggle.focus();
             });
           }
+        },
+        markTeamMeeting: function () {
+          const block = document.getElementById('js-team-meet');
+          const status = document.getElementById('js-team-meet-status');
+          if (!block || !status) return;
+          const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Denver',
+            weekday: 'short',
+            day: 'numeric',
+          }).formatToParts(new Date());
+          const map = {};
+          parts.forEach(function (part) { map[part.type] = part.value; });
+          const weekday = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[map.weekday];
+          const occurrence = Math.floor((Number(map.day) - 1) / 7) + 1;
+          let when = '';
+          if (weekday === 4 && (occurrence === 1 || occurrence === 3)) when = '1:00 PM';
+          if (weekday === 5 && (occurrence === 2 || occurrence === 4)) when = '7:00 AM';
+          if (!when) return;
+          block.classList.add('team-meet--today');
+          block.open = true;
+          status.textContent = 'Team meeting today at ' + when;
         },
         loadAlerts: async function () {
           const banner = document.getElementById('js-alert-banner');
