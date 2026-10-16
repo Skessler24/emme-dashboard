@@ -6,6 +6,7 @@ import { OnboardingTile } from './components/tiles/OnboardingTile';
 import { ReferralsTile } from './components/tiles/ReferralsTile';
 import { StaffExpectationsTile } from './components/tiles/StaffExpectationsTile';
 import { StaffInformationTile } from './components/tiles/StaffInformationTile';
+import { AnnouncementPanel } from './components/AnnouncementPanel';
 import { StaffConnection } from './components/StaffConnection';
 
 const TILES = [
@@ -58,6 +59,11 @@ export function App() {
         <span className="who">{me?.name || me?.email || ''}</span>
       </header>
       <AlertBanner />
+      {me?.isAdmin ? (
+        <section className="panel" aria-label="Staff announcement">
+          <AnnouncementPanel />
+        </section>
+      ) : null}
       {error ? <p className="error">{error}</p> : null}
       {me && !me.isAdmin ? <p className="error">Emme Admin access is required for these tools.</p> : null}
       <nav className="tiles" aria-label="Admin tools">

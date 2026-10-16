@@ -1302,6 +1302,50 @@
 
     .staff-note-status { margin: var(--space-3) 0 0; color: var(--color-text-muted); min-height: 1.2em; }
 
+    .announce {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 1rem 1.1rem 1.1rem;
+      margin-bottom: var(--space-6);
+    }
+
+    .announce__title {
+      margin: 0 0 0.25rem;
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      color: var(--color-green);
+    }
+
+    .announce__hint,
+    .announce__status {
+      margin: 0 0 0.75rem;
+      color: var(--color-text-muted);
+      font-size: 0.88rem;
+    }
+
+    .announce__status:empty { display: none; }
+
+    .announce__list {
+      list-style: none;
+      margin: 0.85rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .announce__item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding-top: 0.55rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .announce__item p { margin: 0; }
+
     @media (max-width: 767px) {
       .ask-admin {
         top: calc(var(--header-height) + 3.6rem);
@@ -1362,6 +1406,20 @@
       <div class="content-wrapper">
 
         <div id="js-alert-banner" class="alert-banner is-hidden" role="status" aria-live="polite"></div>
+
+        <section id="js-announce" class="announce is-hidden" aria-labelledby="announce-heading">
+          <h2 class="announce__title" id="announce-heading">Staff announcement</h2>
+          <p class="announce__hint">This scrolls across the top of the staff dashboard until you remove it.</p>
+          <form id="js-announce-form">
+            <label class="sr-only" for="js-announce-message">Announcement</label>
+            <textarea class="staff-note" id="js-announce-message" maxlength="240" placeholder="Write a short update for the staff" required></textarea>
+            <div class="widget__actions" style="margin-top:0.75rem">
+              <button type="submit" class="btn btn--green">Post announcement</button>
+            </div>
+          </form>
+          <p class="announce__status" id="js-announce-status" role="status"></p>
+          <ul class="announce__list" id="js-announce-list"></ul>
+        </section>
 
         <details class="team-meet" id="js-team-meet">
           <summary class="team-meet__summary">
@@ -2758,9 +2816,16 @@
             const res = await fetch('/api/me', { credentials: 'include', headers: { Accept: 'application/json' } });
             const data = await res.json().catch(function () { return {}; });
             const section = document.getElementById('js-admin-section');
-            if (section && data && data.isAdmin) section.classList.remove('is-hidden');
+            AdminHome.isAdmin = !!(data && data.isAdmin);
+            if (section && AdminHome.isAdmin) section.classList.remove('is-hidden');
+            const announce = document.getElementById('js-announce');
+            if (announce && AdminHome.isAdmin) announce.classList.remove('is-hidden');
           } catch (_) {}
           AdminHome.loadAlerts();
+          const announceForm = document.getElementById('js-announce-form');
+          if (announceForm) announceForm.addEventListener('submit', AdminHome.postAnnouncement);
+          const announceList = document.getElementById('js-announce-list');
+          if (announceList) announceList.addEventListener('click', AdminHome.removeAnnouncement);
           AdminHome.markTeamMeeting();
           const form = document.getElementById('js-staff-message-form');
           if (form) form.addEventListener('submit', AdminHome.sendMessage);
@@ -2806,19 +2871,96 @@
           block.open = true;
           status.textContent = 'Team meeting today at ' + when;
         },
-        loadAlerts: async function () {
+        isAdmin: false,
+        alertText: function (alert) {
+          return String((alert && (alert.Message || alert.Title)) || '').trim();
+        },
+        alertActive: function (alert) {
+          return alert && (alert.Active === true || alert.Active === 'true' || alert.Active === 1);
+        },
+        showBanner: function (alerts) {
           const banner = document.getElementById('js-alert-banner');
           if (!banner) return;
+          const line = (alerts || []).map(AdminHome.alertText).filter(Boolean).join('   ·   ');
+          if (!line) {
+            banner.className = 'alert-banner is-hidden';
+            banner.innerHTML = '';
+            return;
+          }
+          const staticBanner = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          banner.className = 'alert-banner' + (staticBanner ? ' alert-banner--static' : '');
+          banner.innerHTML = '<div class="alert-banner__track"><p>' + AdminHome.escape(line) + '</p><p aria-hidden="true">' + AdminHome.escape(line) + '</p></div>';
+        },
+        showAnnouncementList: function (alerts) {
+          const list = document.getElementById('js-announce-list');
+          if (!list || !AdminHome.isAdmin) return;
+          const active = (alerts || []).filter(AdminHome.alertActive);
+          if (!active.length) {
+            list.innerHTML = '';
+            return;
+          }
+          list.innerHTML = active.map(function (alert) {
+            const id = AdminHome.escape(alert.id);
+            return '<li class="announce__item"><p>' + AdminHome.escape(AdminHome.alertText(alert)) + '</p><button type="button" class="btn btn--outline" data-alert-id="' + id + '">Remove</button></li>';
+          }).join('');
+        },
+        loadAlerts: async function () {
+          const status = document.getElementById('js-announce-status');
           try {
-            const res = await fetch('/api/admin-alerts?active=true', { credentials: 'include', headers: { Accept: 'application/json' } });
+            const path = AdminHome.isAdmin ? '/api/admin-alerts' : '/api/admin-alerts?active=true';
+            const res = await fetch(path, { credentials: 'include', headers: { Accept: 'application/json' } });
             const data = await res.json().catch(function () { return {}; });
+            if (!res.ok) throw new Error(data.error || 'Could not load announcements');
             const alerts = (data && data.alerts) || [];
-            const line = alerts.map(function (alert) { return alert.Message || alert.Title || ''; }).filter(Boolean).join('   ·   ');
-            if (!line) return;
-            const staticBanner = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            banner.className = 'alert-banner' + (staticBanner ? ' alert-banner--static' : '');
-            banner.innerHTML = '<div class="alert-banner__track"><p>' + AdminHome.escape(line) + '</p><p aria-hidden="true">' + AdminHome.escape(line) + '</p></div>';
-          } catch (_) {}
+            const visible = AdminHome.isAdmin ? alerts.filter(AdminHome.alertActive) : alerts;
+            AdminHome.showBanner(visible);
+            AdminHome.showAnnouncementList(alerts);
+          } catch (err) {
+            if (status && AdminHome.isAdmin) status.textContent = (err && err.message) || 'Could not load announcements';
+          }
+        },
+        postAnnouncement: async function (event) {
+          event.preventDefault();
+          const input = document.getElementById('js-announce-message');
+          const status = document.getElementById('js-announce-status');
+          const message = input ? input.value.trim() : '';
+          if (!message) return;
+          if (status) status.textContent = 'Posting…';
+          try {
+            const res = await fetch('/api/admin-alerts', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ message: message })
+            });
+            const data = await res.json().catch(function () { return {}; });
+            if (!res.ok) throw new Error(data.error || 'Could not post');
+            if (input) input.value = '';
+            if (status) status.textContent = 'Posted. It is scrolling at the top of the dashboard.';
+            AdminHome.loadAlerts();
+          } catch (err) {
+            if (status) status.textContent = (err && err.message) || 'Could not post';
+          }
+        },
+        removeAnnouncement: async function (event) {
+          const button = event.target.closest('[data-alert-id]');
+          if (!button) return;
+          const status = document.getElementById('js-announce-status');
+          if (status) status.textContent = 'Removing…';
+          try {
+            const res = await fetch('/api/admin-alerts/' + encodeURIComponent(button.getAttribute('data-alert-id')) + '/end', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: '{}'
+            });
+            const data = await res.json().catch(function () { return {}; });
+            if (!res.ok) throw new Error(data.error || 'Could not remove');
+            if (status) status.textContent = 'Removed from the banner.';
+            AdminHome.loadAlerts();
+          } catch (err) {
+            if (status) status.textContent = (err && err.message) || 'Could not remove';
+          }
         },
         sendMessage: async function (event) {
           event.preventDefault();
