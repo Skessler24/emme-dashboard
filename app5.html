@@ -251,6 +251,9 @@
     .client-card__name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
     .client-card__sessions { font-size: 0.78rem; opacity: 0.85; margin-top: 0.2rem; }
     .client-card__body { padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
+    .client-card.is-collapsed .client-card__body,
+    .client-card.is-collapsed .client-card__travel,
+    .client-card.is-collapsed .client-card__tasks { display: none; }
     .client-card__travel {
       padding: 0.75rem 1rem 0.15rem;
       display: grid;
@@ -816,6 +819,59 @@
     return null;
   }
 
+  var collapsedClients = null;
+  function collapsedStore() {
+    if (collapsedClients) return collapsedClients;
+    collapsedClients = {};
+    if (!userScope) return collapsedClients;
+    try {
+      var raw = JSON.parse(localStorage.getItem('emme_client_collapsed:' + userScope) || '{}');
+      if (raw && typeof raw === 'object') collapsedClients = raw;
+    } catch (_) { collapsedClients = {}; }
+    return collapsedClients;
+  }
+  function rememberCollapsed(id, collapsed) {
+    var store = collapsedStore();
+    if (collapsed) store[id] = true;
+    else delete store[id];
+    if (userScope) localStorage.setItem('emme_client_collapsed:' + userScope, JSON.stringify(store));
+  }
+
+  function parseLooseDate(text) {
+    var s = String(text || '').trim();
+    var iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3]));
+    var us = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if (!us) return null;
+    var year = +us[3];
+    if (year < 100) year += 2000;
+    var month = +us[1];
+    var day = +us[2];
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    return new Date(Date.UTC(year, month - 1, day));
+  }
+
+  function formatLooseDate(date) {
+    if (!date) return '';
+    return String(date.getUTCMonth() + 1).padStart(2, '0') + '/' + String(date.getUTCDate()).padStart(2, '0') + '/' + date.getUTCFullYear();
+  }
+
+  function turnsThree(dob) {
+    var date = parseLooseDate(dob);
+    if (!date) return '';
+    date.setUTCFullYear(date.getUTCFullYear() + 3);
+    return formatLooseDate(date);
+  }
+
+  function clientLastVisit(client) {
+    if (!client) return '';
+    var third = parseLooseDate(client.dob);
+    if (third) third.setUTCFullYear(third.getUTCFullYear() + 3);
+    var par = parseLooseDate(client.parExpires);
+    var chosen = third && par ? (third.getTime() <= par.getTime() ? third : par) : (third || par);
+    return formatLooseDate(chosen);
+  }
+
   function slotLinkedClientHtml(slot) {
     var match = findClientByName(slot && slot.notes);
     if (!match) return '';
@@ -890,7 +946,7 @@
           '<td style="width:11rem">' + renderStatusSelect(slot.status, 'data-field="status"') + '</td>' +
           '<td><input class="cell-input" data-field="notes" value="' + escapeAttr(slot.notes) + '" placeholder="Client / notes" />' +
             slotLinkedClientHtml(slot) + '</td>' +
-          '<td style="width:8rem"><input class="cell-input" data-field="lastDay" value="' + escapeAttr(slot.lastDay) + '" placeholder="Last day" /></td>' +
+          '<td style="width:8rem"><input class="cell-input" data-field="lastDay" value="' + escapeAttr(clientLastVisit(findClientByName(slot.notes)) || slot.lastDay) + '" placeholder="Turns 3 or PAR end" title="Date of last visit: the day this client turns 3, or the PAR or Medicaid end date, whichever comes first" /></td>' +
           '<td style="width:4.5rem"><div class="slot-actions">' +
             '<button type="button" class="btn btn--icon btn--soft" data-action="dup-slot" title="Duplicate"><i data-lucide="copy"></i></button>' +
             '<button type="button" class="btn btn--icon btn--danger" data-action="del-slot" title="Delete"><i data-lucide="trash-2"></i></button>' +
@@ -908,7 +964,7 @@
           '</div>' +
         '</header>' +
         '<table class="slot-table"><thead><tr>' +
-          '<th class="col-drag"></th><th>Time</th><th>Status</th><th>Notes</th><th>Last Day</th><th></th>' +
+          '<th class="col-drag"></th><th>Time</th><th>Status</th><th>Notes</th><th>Last visit</th><th></th>' +
         '</tr></thead><tbody data-drop-day="' + day.id + '">' + rows + '</tbody></table></article>';
     }).join('');
 
@@ -920,7 +976,7 @@
     var q = (state.clientQuery || '').toLowerCase().trim();
     var clients = (state.workspace.clients || []).filter(function (c) {
       if (!q) return true;
-      var blob = [c.name, c.email, c.phone, c.agency, c.parents, c.sessions, c.serviceCoordinator, c.scEmail, c.medicaid, c.tasks]
+      var blob = [c.name, c.email, c.phone, c.agency, c.parents, c.sessions, c.serviceCoordinator, c.scEmail, c.medicaid, c.parExpires, c.tasks]
         .join(' ').toLowerCase();
       return blob.indexOf(q) !== -1;
     });
@@ -934,16 +990,20 @@
       return;
     }
     root.innerHTML = '<div class="client-grid">' + clients.map(function (c) {
-      return '<article class="client-card" data-client-card="' + c.id + '">' +
+      var collapsed = !!collapsedStore()[c.id];
+      return '<article class="client-card' + (collapsed ? ' is-collapsed' : '') + '" data-client-card="' + c.id + '">' +
         '<div class="client-card__head">' +
           '<div><div class="client-card__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
           '<div class="client-card__sessions">' + escapeHtml(c.sessions || 'No session set') + '</div></div>' +
           '<div style="display:flex;gap:0.25rem">' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="toggle-client" data-client="' + c.id + '" aria-expanded="' + (collapsed ? 'false' : 'true') + '">' + (collapsed ? 'Expand' : 'Minimize') + '</button>' +
             '<button type="button" class="btn btn--ghost btn--sm" data-action="edit-client" data-client="' + c.id + '" title="Edit">Edit</button>' +
             '<button type="button" class="btn btn--ghost btn--sm" data-action="del-client" data-client="' + c.id + '">Delete</button>' +
           '</div></div>' +
         '<div class="client-card__body">' +
           infoRow('DOB', c.dob) +
+          infoRow('Turns 3', turnsThree(c.dob)) +
+          infoRow('PAR ends', c.parExpires) +
           infoRow('Parents', c.parents) +
           infoRow('Medicaid #', c.medicaid, true) +
           contactRow('Email', c.email, 'mailto') +
@@ -1063,6 +1123,8 @@
       '</div>' +
       '<div class="field"><label>Parents</label><input id="m-parents" value="' + escapeAttr(c.parents || '') + '" /></div>' +
       '<div class="field"><label>Medicaid #</label><input id="m-medicaid" value="' + escapeAttr(c.medicaid || '') + '" /></div>' +
+      '<div class="field"><label>PAR or Medicaid end date</label><input id="m-par" value="' + escapeAttr(c.parExpires || '') + '" placeholder="MM/DD/YYYY" /></div>' +
+      '<p class="client-miles__hint">The schedule’s Date of Last Visit uses the day this client turns 3, or this end date, whichever comes first.</p>' +
       '<div class="field-grid">' +
         '<div class="field"><label>Email</label><input id="m-email" type="email" value="' + escapeAttr(c.email || '') + '" /></div>' +
         '<div class="field"><label>Phone</label><input id="m-phone" value="' + escapeAttr(c.phone || '') + '" /></div>' +
@@ -1090,6 +1152,7 @@
       hours: val('m-hours'),
       parents: val('m-parents'),
       medicaid: val('m-medicaid'),
+      parExpires: val('m-par'),
       email: val('m-email'),
       phone: val('m-phone'),
       sessions: val('m-sessions'),
@@ -1299,6 +1362,16 @@
       var slotId = actionBtn.closest('[data-slot]') && actionBtn.closest('[data-slot]').getAttribute('data-slot');
       var clientId = actionBtn.getAttribute('data-client');
 
+      if (action === 'toggle-client' && clientId) {
+        var card = actionBtn.closest('[data-client-card]');
+        if (card) {
+          var nowCollapsed = card.classList.toggle('is-collapsed');
+          rememberCollapsed(clientId, nowCollapsed);
+          actionBtn.textContent = nowCollapsed ? 'Expand' : 'Minimize';
+          actionBtn.setAttribute('aria-expanded', nowCollapsed ? 'false' : 'true');
+        }
+        return;
+      }
       if (action === 'del-slot' && dayId && slotId) {
         mutate(function () {
           var board = activeBoard();
@@ -1584,6 +1657,7 @@
   var CLIENT_FIELDS = [
     ['scEmail', ['sc email', 'service coordinator email', 'coordinator email']],
     ['serviceCoordinator', ['service coordinator', 'coordinator', 'sc name']],
+    ['parExpires', ['par end date', 'par expiration', 'par expires', 'medicaid end date', 'medicaid expiration', 'insurance par']],
     ['medicaid', ['medicaid number', 'medicaid', 'member id']],
     ['dob', ['date of birth', 'birth date', 'birthdate', 'birthday', 'dob']],
     ['parents', ['parents', 'parent', 'caregiver', 'guardians', 'guardian']],

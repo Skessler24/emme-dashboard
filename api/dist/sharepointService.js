@@ -28,7 +28,7 @@ const graphClient_1 = require("./graphClient");
  * Employee files live in the site document library:
  *   /Employees/<EmployeeName>/Onboarding/CurrentDocuments/
  *   /Employees/<EmployeeName>/Onboarding/ArchivedDocuments/
- *   /Employees/<EmployeeName>/Current Availability/Schedules/<Name> Schedule.xlsx
+ *   EMME/LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules/<Name>/
  * Mileage reimbursement forms live in EMME/PAYROLL & MILEAGE/Mileage,
  * one folder and workbook per provider.
  *
@@ -163,6 +163,15 @@ async function readFileBytes(segments) {
  * used only when the workbook is not there yet.
  */
 async function readLatestScheduleSummaries() {
+    try {
+        const live = await require('./scheduleWorkbook').listScheduleOpenings();
+        if (live && live.length) {
+            return live.map(function (item) {
+                return { employee: item.staffName, fileName: item.fileName, path: item.path, summary: item.summary };
+            });
+        }
+    }
+    catch (_) { /* older Employees copies remain the fallback */ }
     const employees = await listFolder(['Employees']);
     const summaries = [];
     for (let i = 0; i < employees.length; i++) {

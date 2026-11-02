@@ -18,7 +18,7 @@ const sharepointService_1 = require("./sharepointService");
  *
  * The SharePoint copy is one Excel workbook per provider, written when that
  * provider saves in Schedule & Caseload:
- *   /Employees/<Name>/Current Availability/Schedules/<Name> Schedule.xlsx
+ *   /EMME/LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules/<Name>/
  * The admin dashboard reads those workbooks. It does not embed Excel.
  */
 const TIME_ZONE = 'America/Denver';
@@ -143,7 +143,8 @@ function buildScheduleSummary(options) {
 }
 function sharePointSummaryPath(staffName, _asOf) {
     const folder = (0, sharepointService_1.employeeFolderName)(staffName);
-    return '/Employees/' + folder + '/Current Availability/Schedules/' + folder + ' Schedule.xlsx';
+    const first = folder.split(' ')[0] || folder;
+    return '/EMME/LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules/' + folder + '/' + first + ' Schedule.xlsx';
 }
 function streamToString(readable) {
     return new Promise(function (resolve, reject) {

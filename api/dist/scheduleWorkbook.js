@@ -4,19 +4,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.spreadsheetStatus = spreadsheetStatus;
+exports.lastVisitDate = lastVisitDate;
 exports.buildScheduleWorkbook = buildScheduleWorkbook;
 exports.openingsFromWorkbook = openingsFromWorkbook;
+exports.applyScheduleWorkbook = applyScheduleWorkbook;
+exports.listScheduleOpenings = listScheduleOpenings;
 exports.syncScheduleWorkbook = syncScheduleWorkbook;
 const exceljs_1 = __importDefault(require("exceljs"));
 const graphClient_1 = require("./graphClient");
 const schedulingService_1 = require("./schedulingService");
-const sharepointService_1 = require("./sharepointService");
 /**
- * Writes one living Excel file per provider, in the same layout as
- * "Jenny Schedule.xlsx": a Current Schedule sheet with a table for each
- * weekday. Client names stay in the Notes column of that SharePoint file.
- * The Emme schedule database remains the source of truth. This file is the
- * copy the boss opens in SharePoint.
+ * Updates each provider's existing schedule workbook in
+ * EMME/LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules.
+ * The sheet stays in the Sam Schedule layout: one table per weekday, with
+ * appointment time, status, client name, and Date of Last Visit.
+ * Date of Last Visit is the day the client turns 3, or the day their
+ * Medicaid or insurance PAR ends, whichever comes first.
  */
 const STATUSES = [
     'Open 4x',
@@ -43,6 +46,7 @@ const DAY_HEADER = {
     thursday: 'Thurs Appointment Time ',
     friday: 'Fri Appointment Time ',
 };
+const SCHEDULE_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'Referral Process', 'Provider Schedules'];
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 function dayKey(name) {
     const text = String(name || '').trim().toLowerCase();
@@ -108,6 +112,75 @@ function formatExcelTime(value) {
     }
     return String(value || '').trim();
 }
+function parseLooseDate(value) {
+    const text = String(value || '').trim();
+    const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso)
+        return new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
+    const us = text.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if (!us)
+        return null;
+    let year = Number(us[3]);
+    if (year < 100)
+        year += 2000;
+    const month = Number(us[1]);
+    const day = Number(us[2]);
+    if (month < 1 || month > 12 || day < 1 || day > 31)
+        return null;
+    return new Date(Date.UTC(year, month - 1, day));
+}
+function excelDateSerial(value) {
+    return (Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()) - Date.UTC(1899, 11, 30)) / 86400000;
+}
+function formatLooseDate(value) {
+    if (!value || Number.isNaN(value.getTime()))
+        return '';
+    const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(value.getUTCDate()).padStart(2, '0');
+    return month + '/' + day + '/' + value.getUTCFullYear();
+}
+function lastVisitDate(client) {
+    if (!client)
+        return '';
+    const third = parseLooseDate(String(client.dob || ''));
+    if (third)
+        third.setUTCFullYear(third.getUTCFullYear() + 3);
+    const par = parseLooseDate(String(client.parExpires || ''));
+    let chosen = null;
+    if (third && par)
+        chosen = third.getTime() <= par.getTime() ? third : par;
+    else
+        chosen = third || par;
+    return formatLooseDate(chosen);
+}
+function normName(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function namesMatch(left, right) {
+    const a = normName(left).split(' ').filter(Boolean);
+    const b = normName(right).split(' ').filter(Boolean);
+    if (!a.length || !b.length)
+        return false;
+    if (a.join(' ') === b.join(' '))
+        return true;
+    if (a.length >= 2 && b.length >= 2 && a.every(function (token) { return b.indexOf(token) !== -1; }))
+        return true;
+    if (a.length >= 2 && b.length >= 2 && b.every(function (token) { return a.indexOf(token) !== -1; }))
+        return true;
+    return false;
+}
+function clientForNotes(clients, notes) {
+    const text = String(notes || '').trim();
+    if (!text)
+        return null;
+    const list = clients || [];
+    const exact = list.find(function (client) { return namesMatch(String(client.name || ''), text); });
+    return exact || null;
+}
+function visitForSlot(slot, clients) {
+    const computed = lastVisitDate(clientForNotes(clients, String(slot.notes || '')));
+    return computed || String(slot.lastDay || '').trim();
+}
 function weekdayFromHeader(text) {
     const raw = String(text || '').trim();
     const lowered = raw.toLowerCase();
@@ -148,11 +221,13 @@ async function buildScheduleWorkbook(workspace) {
         });
         const data = (slots.length ? slots : [{ time: '', status: '', notes: '', lastDay: '' }]).map(function (slot) {
             const fraction = timeFraction(String(slot.time || ''));
+            const visitText = visitForSlot(slot, workspace.clients);
+            const visit = parseLooseDate(visitText);
             return [
                 fraction == null ? String(slot.time || '') : fraction,
                 spreadsheetStatus(String(slot.status || '')),
                 String(slot.notes || ''),
-                String(slot.lastDay || ''),
+                visit ? excelDateSerial(visit) : visitText,
             ];
         });
         const headerRow = row;
@@ -170,9 +245,12 @@ async function buildScheduleWorkbook(workspace) {
             rows: data,
         });
         for (let i = 0; i < data.length; i++) {
-            const cell = sheet.getCell(headerRow + 1 + i, 1);
-            if (typeof cell.value === 'number')
-                cell.numFmt = 'h:mm AM/PM';
+            const timeCell = sheet.getCell(headerRow + 1 + i, 1);
+            if (typeof timeCell.value === 'number')
+                timeCell.numFmt = 'h:mm AM/PM';
+            const visitCell = sheet.getCell(headerRow + 1 + i, 4);
+            if (typeof visitCell.value === 'number' && visitCell.value > 1000)
+                visitCell.numFmt = 'mm/dd/yyyy';
         }
         const statusStart = headerRow + 1;
         const statusEnd = headerRow + data.length;
@@ -213,19 +291,289 @@ async function openingsFromWorkbook(bytes, staffName) {
     });
     return { staffName, source: 'sharepoint-schedule-workbook', openings };
 }
+function compact(value) {
+    return normName(value).replace(/\s/g, '');
+}
+function shortCode(name) {
+    const parts = normName(name).split(' ').filter(Boolean);
+    if (parts.length < 2)
+        return parts[0] || '';
+    return parts[0].slice(0, 3) + parts[parts.length - 1].slice(0, 3);
+}
+function scoreName(candidate, staffName, email) {
+    const folder = compact(candidate);
+    const name = compact(staffName);
+    const code = shortCode(staffName);
+    const local = compact((email || '').split('@')[0] || '');
+    const first = compact(normName(staffName).split(' ')[0] || '');
+    if (!folder)
+        return 0;
+    if (name && folder === name)
+        return 100;
+    if (code && folder === code)
+        return 90;
+    if (first && (folder === first || folder.indexOf(first) === 0))
+        return 75;
+    const tokens = normName(staffName).split(' ').filter(function (token) { return token.length > 2; });
+    if (tokens.length >= 2 && tokens.every(function (token) { return folder.includes(token); }))
+        return 80;
+    if (local && (folder === local || folder.includes(local)))
+        return 70;
+    if (code && folder.includes(code))
+        return 60;
+    return 0;
+}
+let scheduleSiteCache = '';
+async function scheduleSiteId() {
+    if (scheduleSiteCache)
+        return scheduleSiteCache;
+    const tries = [];
+    try {
+        const personal = await (0, graphClient_1.graphGet)('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
+        if (personal && personal.id)
+            tries.push(String(personal.id));
+    }
+    catch (_) { /* the configured site is the fallback */ }
+    try {
+        const configured = await (0, graphClient_1.getSharePointSiteId)();
+        if (tries.indexOf(configured) === -1)
+            tries.push(configured);
+    }
+    catch (_) { /* personal site may still work */ }
+    if (!tries.length)
+        throw new graphClient_1.GraphError(503, 'SharePoint is not configured for schedules.');
+    const folder = SCHEDULE_ROOT.map(encodeURIComponent).join('/');
+    for (let i = 0; i < tries.length; i++) {
+        try {
+            await (0, graphClient_1.graphGet)('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
+            scheduleSiteCache = tries[i];
+            return scheduleSiteCache;
+        }
+        catch (err) {
+            if (err instanceof graphClient_1.GraphError && (err.status === 401 || err.status === 403 || err.status === 404))
+                continue;
+            throw err;
+        }
+    }
+    scheduleSiteCache = tries[0];
+    return scheduleSiteCache;
+}
+function drivePath(segments) {
+    return segments.map(encodeURIComponent).join('/');
+}
+async function listScheduleFolder(segments) {
+    const siteId = await scheduleSiteId();
+    const path = '/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/children?$select=name,lastModifiedDateTime,folder,file';
+    try {
+        const data = await (0, graphClient_1.graphGet)(path);
+        return ((data && data.value) || []).map(function (item) {
+            return {
+                name: String(item.name || ''),
+                lastModified: String(item.lastModifiedDateTime || ''),
+                isFolder: !!item.folder,
+            };
+        });
+    }
+    catch (err) {
+        if (err instanceof graphClient_1.GraphError && (err.status === 404 || /itemNotFound/i.test(err.message)))
+            return [];
+        throw err;
+    }
+}
+async function readScheduleBytes(segments) {
+    try {
+        const siteId = await scheduleSiteId();
+        return await (0, graphClient_1.graphGetBytes)('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/content');
+    }
+    catch (err) {
+        if (err instanceof graphClient_1.GraphError && (err.status === 404 || /not found|itemNotFound/i.test(err.message)))
+            return null;
+        throw err;
+    }
+}
+async function writeScheduleBytes(segments, bytes) {
+    const siteId = await scheduleSiteId();
+    await (0, graphClient_1.graphSend)('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/content', {
+        method: 'PUT',
+        rawBody: bytes,
+        contentType: XLSX_TYPE,
+    });
+}
+function chooseScheduleFile(files, staffName, email) {
+    const books = files.filter(function (file) {
+        return !file.isFolder && /\.xlsx$/i.test(file.name) && file.name.indexOf('~$') !== 0;
+    });
+    if (!books.length)
+        return '';
+    const ranked = books.map(function (file) {
+        return {
+            name: file.name,
+            modified: file.lastModified,
+            score: scoreName(file.name, staffName, email) + (/schedule/i.test(file.name) ? 15 : 0),
+        };
+    });
+    ranked.sort(function (a, b) { return b.score - a.score || b.modified.localeCompare(a.modified); });
+    return ranked[0].name;
+}
+async function locateSchedule(staffName, email) {
+    const entries = await listScheduleFolder(SCHEDULE_ROOT);
+    let bestFolder = '';
+    let bestScore = 0;
+    entries.forEach(function (item) {
+        if (!item.isFolder)
+            return;
+        const score = scoreName(item.name, staffName, email);
+        if (score > bestScore) {
+            bestScore = score;
+            bestFolder = item.name;
+        }
+    });
+    if (bestFolder && bestScore >= 60) {
+        const inside = await listScheduleFolder(SCHEDULE_ROOT.concat([bestFolder]));
+        const fileName = chooseScheduleFile(inside, staffName, email);
+        if (fileName) {
+            const segments = SCHEDULE_ROOT.concat([bestFolder]);
+            return { segments, fileName, path: '/' + segments.concat([fileName]).join('/') };
+        }
+        const created = (normName(staffName).split(' ')[0] || 'Provider');
+        const file = created.charAt(0).toUpperCase() + created.slice(1) + ' Schedule.xlsx';
+        const segments = SCHEDULE_ROOT.concat([bestFolder]);
+        return { segments, fileName: file, path: '/' + segments.concat([file]).join('/') };
+    }
+    const rootFile = chooseScheduleFile(entries, staffName, email);
+    if (rootFile && scoreName(rootFile, staffName, email) >= 60) {
+        return { segments: SCHEDULE_ROOT.slice(), fileName: rootFile, path: '/' + SCHEDULE_ROOT.concat([rootFile]).join('/') };
+    }
+    return null;
+}
+function cellPlain(cell) {
+    return String(cell.text || '').trim();
+}
+function dayBlocks(sheet) {
+    const blocks = [];
+    let block = null;
+    const max = Math.max(sheet.rowCount || 0, 1);
+    for (let index = 1; index <= max; index++) {
+        const row = sheet.getRow(index);
+        const header = weekdayFromHeader(cellPlain(row.getCell(1)));
+        if (header) {
+            block = { headerRow: index, rows: [] };
+            blocks.push(block);
+            continue;
+        }
+        if (!block)
+            continue;
+        const filled = [1, 2, 3, 4].some(function (col) { return cellPlain(row.getCell(col)) !== ''; });
+        if (!filled) {
+            block = null;
+            continue;
+        }
+        block.rows.push(index);
+    }
+    return blocks;
+}
+function slotsForBlock(workspace, headerText) {
+    const board = (0, schedulingService_1.currentBoard)(workspace.boards);
+    const wanted = dayKey(weekdayFromHeader(headerText) || headerText);
+    const day = ((board && board.days) || []).find(function (item) { return dayKey(String(item.name || '')) === wanted; });
+    return ((day && day.slots) || []).filter(function (slot) {
+        return String(slot.time || '').trim() || String(slot.status || '').trim() || String(slot.notes || '').trim();
+    });
+}
+function writeVisitCell(cell, text) {
+    const parsed = parseLooseDate(text);
+    if (!parsed) {
+        cell.value = text;
+        return;
+    }
+    cell.value = excelDateSerial(parsed);
+    cell.numFmt = 'mm/dd/yyyy';
+}
+async function applyScheduleWorkbook(bytes, workspace) {
+    const workbook = new exceljs_1.default.Workbook();
+    await workbook.xlsx.load(Buffer.from(bytes));
+    const sheet = workbook.getWorksheet('Current Schedule') || workbook.worksheets[0];
+    if (!sheet)
+        throw new Error('The schedule workbook has no worksheet.');
+    const blocks = dayBlocks(sheet);
+    if (!blocks.length)
+        throw new Error('The schedule form needs a weekday appointment table.');
+    for (let b = blocks.length - 1; b >= 0; b--) {
+        const block = blocks[b];
+        const headerText = cellPlain(sheet.getRow(block.headerRow).getCell(1));
+        const slots = slotsForBlock(workspace, headerText);
+        while (block.rows.length < slots.length) {
+            const insertAt = (block.rows.length ? block.rows[block.rows.length - 1] : block.headerRow) + 1;
+            sheet.insertRow(insertAt, []);
+            block.rows.push(insertAt);
+        }
+        slots.forEach(function (slot, index) {
+            const row = sheet.getRow(block.rows[index]);
+            const fraction = timeFraction(String(slot.time || ''));
+            row.getCell(1).value = fraction == null ? String(slot.time || '') : fraction;
+            if (typeof row.getCell(1).value === 'number')
+                row.getCell(1).numFmt = 'h:mm AM/PM';
+            row.getCell(2).value = spreadsheetStatus(String(slot.status || ''));
+            row.getCell(3).value = String(slot.notes || '');
+            writeVisitCell(row.getCell(4), visitForSlot(slot, workspace.clients));
+        });
+        for (let index = slots.length; index < block.rows.length; index++) {
+            const row = sheet.getRow(block.rows[index]);
+            row.getCell(1).value = null;
+            row.getCell(2).value = null;
+            row.getCell(3).value = null;
+            row.getCell(4).value = null;
+        }
+    }
+    return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+async function listScheduleOpenings() {
+    const entries = await listScheduleFolder(SCHEDULE_ROOT);
+    const found = [];
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        if (!entry.isFolder)
+            continue;
+        const inside = await listScheduleFolder(SCHEDULE_ROOT.concat([entry.name]));
+        const fileName = chooseScheduleFile(inside, entry.name, '');
+        if (!fileName)
+            continue;
+        const segments = SCHEDULE_ROOT.concat([entry.name, fileName]);
+        const bytes = await readScheduleBytes(segments);
+        if (!bytes)
+            continue;
+        const parsed = await openingsFromWorkbook(bytes, entry.name);
+        found.push({
+            staffName: entry.name,
+            fileName,
+            path: '/' + segments.join('/'),
+            summary: parsed,
+        });
+    }
+    return found;
+}
 async function syncScheduleWorkbook(workspace, email) {
     try {
-        const staffName = (0, graphClient_1.graphIsConfigured)() && email ? await (0, graphClient_1.getUserDisplayName)(email) : (email || 'Provider');
-        const folder = (0, sharepointService_1.employeeFolderName)(staffName);
-        const fileName = folder + ' Schedule.xlsx';
-        const bytes = new Uint8Array(await buildScheduleWorkbook(workspace));
-        const saved = await (0, sharepointService_1.uploadEmployeeFile)(['Employees', folder, 'Current Availability', 'Schedules'], fileName, bytes, XLSX_TYPE);
-        return { ok: true, path: saved.path };
+        const staffEmail = String(email || '').trim().toLowerCase();
+        const staffName = (0, graphClient_1.graphIsConfigured)() && staffEmail ? await (0, graphClient_1.getUserDisplayName)(staffEmail) : (staffEmail || 'Provider');
+        const form = await locateSchedule(staffName, staffEmail);
+        if (!form) {
+            return { ok: false, error: 'No schedule folder for ' + staffName + ' in Provider Schedules.' };
+        }
+        const current = await readScheduleBytes(form.segments.concat([form.fileName]));
+        const next = current
+            ? await applyScheduleWorkbook(current, workspace)
+            : await buildScheduleWorkbook(workspace);
+        await writeScheduleBytes(form.segments.concat([form.fileName]), new Uint8Array(next));
+        return { ok: true, path: form.path };
     }
     catch (err) {
         const message = err instanceof Error ? err.message : 'Could not update the SharePoint schedule';
         if (/not configured/i.test(message))
             return { ok: false, skipped: true };
+        if (/403|401|accessdenied|authorization/i.test(message)) {
+            return { ok: false, error: 'Microsoft denied access to the Provider Schedules folder.' };
+        }
         return { ok: false, error: message.slice(0, 200) };
     }
 }
