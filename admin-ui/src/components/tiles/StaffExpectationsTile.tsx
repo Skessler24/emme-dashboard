@@ -89,9 +89,9 @@ export function StaffExpectationsTile() {
         ]}
       />
       <h2>Mileage</h2>
-      <p className="muted">Each provider has a mileage spreadsheet in SharePoint. In-person sessions from IntakeQ are added with that client’s average miles. Confirm a row when it is ready for billing.</p>
+      <p className="muted">Each provider’s mileage form is in SharePoint under Payroll & Mileage. A nightly check adds a row when the client is marked In person, the visit is on the provider’s Outlook calendar, and IntakeQ shows the appointment happened. Confirm a row when it is ready for billing.</p>
       {mileageNote ? <p className="error">{mileageNote}</p> : null}
-      {mileage.length === 0 ? <p className="empty">No mileage yet. It appears after a provider marks a client In person and IntakeQ shows a session.</p> : (
+      {mileage.length === 0 ? <p className="empty">No mileage yet. It appears after a provider marks a client In person, enters average miles, and both Outlook and IntakeQ show the visit.</p> : (
         <div className="table-wrap">
           <table>
             <thead>

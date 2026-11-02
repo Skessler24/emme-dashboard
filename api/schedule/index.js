@@ -122,12 +122,44 @@ function hasProviderData(workspace) {
   });
 }
 
+function isSummerBoard(name) {
+  const text = String(name || '').toLowerCase().replace(/['’]/g, '');
+  return text.indexOf('summer') !== -1 && text.indexOf('26') !== -1;
+}
+
+function isIrregularBoard(name) {
+  return String(name || '').toLowerCase().indexOf('not in regular spot') !== -1;
+}
+
+function shapedBoards(boards) {
+  const next = (Array.isArray(boards) ? boards : []).filter(function (board) {
+    return board && !isSummerBoard(board.name);
+  });
+  let irregular = null;
+  for (let i = 0; i < next.length; i++) {
+    if (isIrregularBoard(next[i].name)) {
+      irregular = next[i];
+      break;
+    }
+  }
+  if (!irregular) {
+    next.push({
+      id: 'board_' + crypto.randomBytes(4).toString('hex'),
+      name: 'Clients not in regular spot',
+      days: [{ id: 'day_' + crypto.randomBytes(4).toString('hex'), name: 'Clients', color: 'blue', slots: [] }]
+    });
+  } else if (!Array.isArray(irregular.days) || !irregular.days.length) {
+    irregular.days = [{ id: 'day_' + crypto.randomBytes(4).toString('hex'), name: 'Clients', color: 'blue', slots: [] }];
+  }
+  return next;
+}
+
 function normalizeWorkspace(raw) {
   const src = raw && typeof raw === 'object' ? raw : {};
   return {
     version: Number(src.version) || 1,
     updatedAt: src.updatedAt || new Date().toISOString(),
-    boards: Array.isArray(src.boards) ? src.boards : [],
+    boards: shapedBoards(src.boards),
     clients: Array.isArray(src.clients) ? src.clients : [],
     dxCodes: Array.isArray(src.dxCodes) ? src.dxCodes : [],
     ownerEmail: String(src.ownerEmail || '').trim().toLowerCase()

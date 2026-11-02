@@ -1,0 +1,24 @@
+name: Nightly mileage sync
+
+on:
+  schedule:
+    # 08:00 UTC, after the Denver workday, so the previous day's visits are logged.
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log confirmed visits onto provider mileage forms
+        env:
+          AUTOMATION_API_KEY: ${{ secrets.AUTOMATION_API_KEY }}
+        run: |
+          if [ -z "$AUTOMATION_API_KEY" ]; then
+            echo "AUTOMATION_API_KEY is not set, so the nightly mileage sync was skipped."
+            exit 0
+          fi
+          curl --fail-with-body -sS -X POST "https://lively-river-0c3792c10.7.azurestaticapps.net/api/mileage" \
+            -H "content-type: application/json" \
+            -H "x-emme-automation-key: $AUTOMATION_API_KEY" \
+            -d '{"sync":true}'

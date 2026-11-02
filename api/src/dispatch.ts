@@ -357,6 +357,15 @@ async function mileage(context: FnContext, req: HttpRequest): Promise<void> {
   }
   if (verb === 'POST') {
     const body = readBody(req);
+    if (body.sync === true) {
+      if (!automationAuthorized(req)) {
+        const admin = await requireAdmin(context, req);
+        if (!admin) return;
+      }
+      const result = await syncAllMileageLogs();
+      json(context, 200, { mileage: result.rows, syncError: result.error || '', synced: true });
+      return;
+    }
     if (body.action === 'confirm') {
       const admin = await requireAdmin(context, req);
       if (!admin) return;

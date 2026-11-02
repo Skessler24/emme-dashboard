@@ -357,6 +357,16 @@ async function mileage(context, req) {
     }
     if (verb === 'POST') {
         const body = (0, http_1.readBody)(req);
+        if (body.sync === true) {
+            if (!(0, auth_1.automationAuthorized)(req)) {
+                const admin = await (0, auth_1.requireAdmin)(context, req);
+                if (!admin)
+                    return;
+            }
+            const result = await (0, mileageWorkbook_1.syncAllMileageLogs)();
+            (0, http_1.json)(context, 200, { mileage: result.rows, syncError: result.error || '', synced: true });
+            return;
+        }
         if (body.action === 'confirm') {
             const admin = await (0, auth_1.requireAdmin)(context, req);
             if (!admin)

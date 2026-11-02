@@ -171,15 +171,6 @@
     .status--blank { background: #f0e8ef; color: var(--muted); }
 
     /* Schedule layout (boss-friendly day stacks) */
-    .sched-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.7fr);
-      gap: 1.25rem;
-      align-items: start;
-    }
-    @media (max-width: 980px) {
-      .sched-layout { grid-template-columns: 1fr; }
-    }
     .day-stack { display: flex; flex-direction: column; gap: 1rem; }
     .day-block {
       background: var(--surface); border-radius: var(--radius);
@@ -241,32 +232,6 @@
     }
     .slot-link--empty { display: none; }
 
-    .client-side {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
-      position: sticky; top: 4.5rem;
-    }
-    .client-side__header {
-      background: var(--day-blue); color: #fff;
-      padding: 0.7rem 0.9rem; font-family: var(--font-display);
-      font-weight: 700; display: flex; justify-content: space-between; align-items: center;
-    }
-    .client-side__list { max-height: min(70vh, 720px); overflow: auto; }
-    .client-side__row {
-      display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.5rem;
-      padding: 0.65rem 0.85rem; border-bottom: 1px solid rgba(8,67,57,0.06);
-      align-items: center; cursor: pointer;
-    }
-    .client-side__row:hover { background: rgba(8,67,57,0.03); }
-    .client-side__name { font-weight: 600; color: var(--green); font-size: 0.88rem; }
-    .client-side__meta { font-size: 0.75rem; color: var(--muted); }
-    .client-side__hours {
-      font-size: 0.78rem; font-weight: 700; color: var(--green-mid);
-      background: rgba(8,67,57,0.07); padding: 0.15rem 0.45rem; border-radius: 999px;
-    }
-
-    /* Schedule + Clients layouts */
-
     /* Clients layout */
     .client-grid {
       display: grid;
@@ -305,7 +270,9 @@
       width: 5.5rem; border: 1px solid var(--border); border-radius: 0.4rem;
       padding: 0.3rem 0.45rem; font: inherit; color: var(--body);
     }
+    .client-miles input[data-client-note] { width: auto; flex: 1; min-width: 8rem; }
     .client-miles__hint { margin: 0; font-size: 0.75rem; color: var(--muted); }
+    .client-card__travel h4 { margin: 0; font-size: 0.78rem; color: var(--green); }
     .info-row {
       display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 0.4rem;
       align-items: start; font-size: 0.84rem;
@@ -371,21 +338,6 @@
     @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
     .modal__actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
     #js-modal-delete { margin-right: auto; }
-
-    .dx-panel {
-      margin-top: 1.25rem; padding: 1rem;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius);
-    }
-    .dx-panel h3 {
-      font-family: var(--font-display); font-size: 0.95rem; color: var(--green);
-      margin-bottom: 0.5rem;
-    }
-    .dx-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .dx-chip {
-      font-size: 0.75rem; padding: 0.25rem 0.55rem;
-      background: rgba(8,67,57,0.06); border-radius: 999px; color: var(--green-mid);
-    }
 
     .search-bar { margin-bottom: 1rem; }
     .search-bar input {
@@ -462,14 +414,6 @@
 
     <div id="js-view-schedule"></div>
     <div id="js-view-clients" class="is-hidden"></div>
-
-    <section class="dx-panel" id="js-dx-panel" aria-label="Diagnostic codes">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
-        <h3 style="margin:0">Diagnostic codes</h3>
-        <button type="button" class="btn btn--soft btn--sm" id="js-edit-dx">Edit codes</button>
-      </div>
-      <div class="dx-list" id="js-dx-list"></div>
-    </section>
   </main>
 
   <div class="toast" id="js-toast" role="status" aria-live="polite"></div>
@@ -525,16 +469,6 @@
     { value: 'Lunch', label: 'Lunch', cls: 'lunch' },
     { value: 'Makeup', label: 'Makeup', cls: 'makeup' },
     { value: 'Not Open', label: 'Not Open', cls: 'closed' }
-  ];
-
-  var DEFAULT_DX = [
-    'F80.0 — Phonological Disorder',
-    'F80.1 — Expressive Language Disorder',
-    'F80.2 — Mixed Receptive-Expressive Language Disorder',
-    'F80.81 — Childhood Onset Fluency Disorder',
-    'F80.9 — Developmental Disorder of Speech and Language, Unspecified',
-    'F84.0 — Autistic Disorder',
-    'R48.8 — Other Symbolic Dysfunctions (Pragmatic Language)'
   ];
 
   var state = {
@@ -647,21 +581,53 @@
     return { id: uid('board'), name: name || 'Current Schedule', days: days };
   }
 
+  function isSummerBoard(name) {
+    var text = String(name || '').toLowerCase().replace(/['’]/g, '');
+    return text.indexOf('summer') !== -1 && text.indexOf('26') !== -1;
+  }
+
+  function isIrregularBoard(name) {
+    return String(name || '').toLowerCase().indexOf('not in regular spot') !== -1;
+  }
+
+  function irregularBoard() {
+    return {
+      id: uid('board'),
+      name: 'Clients not in regular spot',
+      days: [{ id: uid('day'), name: 'Clients', color: 'blue', slots: [] }]
+    };
+  }
+
+  function shapeWorkspace(workspace) {
+    if (!workspace) return false;
+    var boards = (workspace.boards || []).filter(function (board) { return !isSummerBoard(board.name); });
+    var changed = boards.length !== (workspace.boards || []).length;
+    var irregular = boards.find(function (board) { return isIrregularBoard(board.name); });
+    if (!irregular) {
+      boards.push(irregularBoard());
+      changed = true;
+    } else if (!(irregular.days || []).length) {
+      irregular.days = [{ id: uid('day'), name: 'Clients', color: 'blue', slots: [] }];
+      changed = true;
+    }
+    workspace.boards = boards;
+    if (state.activeBoardId && !boards.some(function (board) { return board.id === state.activeBoardId; })) {
+      state.activeBoardId = boards[0] ? boards[0].id : '';
+      if (userScope) localStorage.setItem(boardKey(), state.activeBoardId);
+    }
+    return changed;
+  }
+
   function seedWorkspace() {
     return {
       version: 1,
       updatedAt: new Date().toISOString(),
       boards: [
         defaultBoard('Current Schedule'),
-        { id: uid('board'), name: "Summer '26 Schedule", days: defaultBoard().days.map(function (d) {
-          return { id: uid('day'), name: d.name, color: d.color, slots: d.slots.map(function (s) {
-            return { id: uid('slot'), time: s.time, status: '', notes: '', lastDay: '' };
-          }) };
-        }) },
-        { id: uid('board'), name: 'Clients not in regular spot', days: [] }
+        irregularBoard()
       ],
       clients: [],
-      dxCodes: DEFAULT_DX.slice()
+      dxCodes: []
     };
   }
 
@@ -740,6 +706,7 @@
         var loaded = await loadCloud();
         if (loaded.configured && loaded.workspace) {
           state.workspace = loaded.workspace;
+          if (shapeWorkspace(state.workspace)) scheduleSave();
           state.lastRemoteUpdatedAt = loaded.workspace.updatedAt;
           saveLocal(state.workspace);
           renderAll();
@@ -758,6 +725,7 @@
 
   async function persist() {
     if (!state.workspace || !currentEmail) return;
+    shapeWorkspace(state.workspace);
     state.saving = true;
     state.suppressPoll = true;
     state.workspace.updatedAt = new Date().toISOString();
@@ -900,28 +868,6 @@
       '</span></td>';
   }
 
-  function renderClientSidebarHtml() {
-    var clients = state.workspace.clients || [];
-    var clientRows = clients.map(function (c) {
-      return '<div class="client-side__row" data-open-client="' + c.id + '">' +
-        '<div><div class="client-side__name">' + escapeHtml(c.name || 'Unnamed') + '</div>' +
-        '<div class="client-side__meta">' + escapeHtml(c.sessions || '') + '</div></div>' +
-        '<span class="client-side__hours">' + escapeHtml(c.hours || '') + '</span>' +
-        '<button type="button" class="btn btn--icon btn--soft" data-action="edit-client" data-client="' + c.id + '" title="Edit"><i data-lucide="pencil"></i></button>' +
-        '<button type="button" class="btn btn--danger btn--sm" data-action="del-client" data-client="' + c.id + '">Delete</button>' +
-      '</div>';
-    }).join('') || '<p class="empty" style="padding:1.25rem">No clients yet — add some, or open the Clients tab</p>';
-
-    return '<aside class="client-side">' +
-      '<div class="client-side__header"><span>Clients</span>' +
-        '<button type="button" class="btn btn--ghost btn--sm" id="js-side-add-client">+ Add</button></div>' +
-      '<div class="client-side__list">' + clientRows + '</div>' +
-      '<p style="padding:0.65rem 0.85rem;font-size:0.72rem;color:var(--muted);border-top:1px solid var(--border);margin:0">' +
-        'Full info cards with copyable email/phone live in the <strong>Clients</strong> tab.' +
-      '</p>' +
-    '</aside>';
-  }
-
   function renderScheduleView() {
     var root = document.getElementById('js-view-schedule');
     var board = activeBoard();
@@ -966,11 +912,7 @@
         '</tr></thead><tbody data-drop-day="' + day.id + '">' + rows + '</tbody></table></article>';
     }).join('');
 
-    root.innerHTML =
-      '<div class="sched-layout">' +
-        '<div class="day-stack">' + daysHtml + '</div>' +
-        renderClientSidebarHtml() +
-      '</div>';
+    root.innerHTML = '<div class="day-stack">' + daysHtml + '</div>';
   }
 
   function renderClientsView() {
@@ -1012,6 +954,7 @@
           infoRow('Hours', c.hours) +
         '</div>' +
         '<div class="client-card__travel">' +
+          '<h4>Mileage</h4>' +
           '<div class="client-card__checks">' +
             '<label><input type="checkbox" data-client-flag="virtualService" data-client="' + c.id + '"' + (c.virtualService ? ' checked' : '') + ' /> Virtual</label>' +
             '<label><input type="checkbox" data-client-flag="inPerson" data-client="' + c.id + '"' + (c.inPerson ? ' checked' : '') + ' /> In person</label>' +
@@ -1019,7 +962,10 @@
           '<label class="client-miles' + (c.inPerson ? '' : ' is-hidden') + '">Average miles per trip' +
             '<input type="number" min="0" max="400" step="0.1" inputmode="decimal" data-client-miles="' + c.id + '" value="' + escapeAttr(c.milesPerTrip || '') + '" />' +
           '</label>' +
-          '<p class="client-miles__hint' + (c.inPerson ? '' : ' is-hidden') + '">In person adds this mileage each time IntakeQ shows a session.</p>' +
+          '<label class="client-miles' + (c.inPerson ? '' : ' is-hidden') + '">Form note' +
+            '<input type="text" data-client-note="' + c.id + '" value="' + escapeAttr(c.mileagePurpose || '') + '" placeholder="Therapy session" />' +
+          '</label>' +
+          '<p class="client-miles__hint' + (c.inPerson ? '' : ' is-hidden') + '">Checked nightly. A row is added to your SharePoint mileage form when this visit is on your Outlook calendar and IntakeQ shows it happened.</p>' +
         '</div>' +
         '<div class="client-card__tasks">' +
           '<h4>Tasks to be completed</h4>' +
@@ -1050,14 +996,6 @@
       '<button type="button" class="copy-btn" data-copy="' + escapeAttr(value) + '" title="Copy"><i data-lucide="copy"></i></button></div>';
   }
 
-  function renderDx() {
-    var list = document.getElementById('js-dx-list');
-    var codes = state.workspace.dxCodes || [];
-    list.innerHTML = codes.map(function (c) {
-      return '<span class="dx-chip">' + escapeHtml(c) + '</span>';
-    }).join('') || '<span class="dx-chip">No codes</span>';
-  }
-
   function showLayout() {
     if (state.layout !== 'schedule' && state.layout !== 'clients') {
       state.layout = 'schedule';
@@ -1079,7 +1017,6 @@
     showLayout();
     renderScheduleView();
     renderClientsView();
-    renderDx();
     iconize();
   }
 
@@ -1141,7 +1078,9 @@
         '<label class="check-line"><input type="checkbox" id="m-virtual"' + (c.virtualService ? ' checked' : '') + ' /> Virtual</label>' +
         '<label class="check-line"><input type="checkbox" id="m-inperson"' + (c.inPerson ? ' checked' : '') + ' /> In person</label>' +
       '</div></div>' +
-      '<div class="field"><label>Average miles per trip</label><input id="m-miles" inputmode="decimal" value="' + escapeAttr(c.milesPerTrip || '') + '" placeholder="12.5" /></div>';
+      '<div class="field"><label>Average miles per trip</label><input id="m-miles" inputmode="decimal" value="' + escapeAttr(c.milesPerTrip || '') + '" placeholder="12.5" /></div>' +
+      '<div class="field"><label>Mileage form note</label><input id="m-note" value="' + escapeAttr(c.mileagePurpose || '') + '" placeholder="Therapy session" /></div>' +
+      '<p class="client-miles__hint">For In person clients. The nightly check writes the average miles on your SharePoint form after Outlook and IntakeQ both show the visit.</p>';
   }
 
   function readClientForm() {
@@ -1160,7 +1099,8 @@
       tasks: val('m-tasks'),
       virtualService: !!(document.getElementById('m-virtual') && document.getElementById('m-virtual').checked),
       inPerson: !!(document.getElementById('m-inperson') && document.getElementById('m-inperson').checked),
-      milesPerTrip: val('m-miles')
+      milesPerTrip: val('m-miles'),
+      mileagePurpose: val('m-note')
     };
   }
   function val(id) {
@@ -1301,6 +1241,14 @@
         scheduleSave();
       }
     }
+    if (t.matches('input[data-client-note]')) {
+      var noteId = t.getAttribute('data-client-note');
+      var noteClient = state.workspace.clients.find(function (c) { return c.id === noteId; });
+      if (noteClient) {
+        noteClient.mileagePurpose = t.value.trim();
+        scheduleSave();
+      }
+    }
   });
 
   document.addEventListener('change', function (e) {
@@ -1402,7 +1350,7 @@
       return;
     }
 
-    if (e.target.closest('#js-side-add-client') || e.target.closest('#js-empty-add-client')) {
+    if (e.target.closest('#js-empty-add-client')) {
       openClientEditor(null);
       return;
     }
@@ -1490,16 +1438,6 @@
     iconize();
   });
 
-  document.getElementById('js-edit-dx').addEventListener('click', function () {
-    openModal(
-      'Edit diagnostic codes',
-      '<div class="field"><label>One code per line</label><textarea id="m-dx" rows="10">' +
-        escapeHtml((state.workspace.dxCodes || []).join('\n')) + '</textarea></div>',
-      'edit-dx',
-      null
-    );
-  });
-
   document.getElementById('js-add-client').addEventListener('click', function () {
     openClientEditor(null);
   });
@@ -1527,14 +1465,6 @@
       });
       closeModal();
       toast('Client saved — linked schedule rows updated');
-    }
-    if (state.modalMode === 'edit-dx') {
-      var raw = val('m-dx');
-      mutate(function () {
-        state.workspace.dxCodes = raw.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
-      });
-      closeModal();
-      toast('Codes updated');
     }
   });
 
@@ -2057,8 +1987,9 @@
           updatedAt: new Date().toISOString(),
           boards: payload.boards,
           clients: payload.clients || [],
-          dxCodes: payload.dxCodes || DEFAULT_DX.slice()
+          dxCodes: payload.dxCodes || []
         };
+        shapeWorkspace(state.workspace);
         state.activeBoardId = state.workspace.boards[0] && state.workspace.boards[0].id;
       });
       toast('Imported schedule backup');
@@ -2205,6 +2136,7 @@
         var local = loadLocal();
         if (local && local.updatedAt === ev.data.updatedAt) {
           state.workspace = local;
+          shapeWorkspace(state.workspace);
           renderAll();
         }
       };
@@ -2244,6 +2176,7 @@
       setSyncLabel('Saved on this device', 'local');
     }
 
+    if (state.workspace && shapeWorkspace(state.workspace) && currentEmail) scheduleSave();
     if (!state.activeBoardId || !state.workspace.boards.some(function (b) { return b.id === state.activeBoardId; })) {
       state.activeBoardId = state.workspace.boards[0].id;
       localStorage.setItem(boardKey(), state.activeBoardId);
