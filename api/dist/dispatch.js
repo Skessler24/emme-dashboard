@@ -7,6 +7,7 @@ const intakeQService_1 = require("./intakeQService");
 const http_1 = require("./http");
 const conversationStore_1 = require("./conversationStore");
 const mileageWorkbook_1 = require("./mileageWorkbook");
+const providerSetup_1 = require("./providerSetup");
 const schedulingService_1 = require("./schedulingService");
 const sharepointService_1 = require("./sharepointService");
 function denverToday() {
@@ -77,6 +78,19 @@ async function onboarding(context, req) {
         return;
     }
     const verb = (0, http_1.methodOf)(req);
+    if (verb === 'GET' && parts[1] === 'folders') {
+        const employeeName = (0, http_1.queryOf)(req, 'employeeName');
+        try {
+            const found = await (0, providerSetup_1.searchProviderLibraries)(employeeId, employeeName);
+            (0, http_1.json)(context, 200, { created: false, found });
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : 'Could not search SharePoint folders';
+            const status = err instanceof graphClient_1.GraphError ? err.status : 502;
+            (0, http_1.json)(context, status === 400 ? 400 : 502, { error: message.slice(0, 200) });
+        }
+        return;
+    }
     if (verb === 'GET' && parts.length === 1) {
         const items = await (0, sharepointService_1.listItems)(sharepointService_1.LISTS.onboarding);
         const checklist = items.filter(function (item) {

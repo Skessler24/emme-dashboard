@@ -3,6 +3,7 @@
  * Uses the site sign-in, so the same person is recognized in any browser.
  * Requires AZURE_CLIENT_SECRET plus application permissions granted by an admin.
  */
+const { saveProviderFile } = require('./oneDrive');
 const DEFAULT_CLIENT_ID = 'b1e3bd77-c545-4716-afdc-8b0ec14ddcdf';
 const DEFAULT_TENANT_ID = '4da01280-a61e-44cc-b537-9b21b7f17c68';
 
@@ -244,6 +245,20 @@ module.exports = async function (context, req) {
         { method: 'PATCH', body: { status: body.completed ? 'completed' : 'notStarted' } }
       );
       json(context, 200, { configured: true });
+      return;
+    }
+
+    if (rest === 'files' && method === 'POST') {
+      let body = req.body;
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (_) { body = {}; }
+      }
+      body = body || {};
+      const fileName = String(body.fileName || '');
+      const contentBase64 = String(body.contentBase64 || '');
+      const bytes = Buffer.from(contentBase64, 'base64');
+      const saved = await saveProviderFile(email, fileName, bytes, String(body.contentType || ''));
+      json(context, 201, { configured: true, file: saved });
       return;
     }
 

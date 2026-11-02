@@ -379,8 +379,8 @@
         <span class="sync-dot" aria-hidden="true"></span>
         <span id="js-sync-label">Loading…</span>
       </span>
-      <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Download an Excel spreadsheet">Spreadsheet</button>
-      <button type="button" class="btn btn--ghost" id="js-pdf" title="Open a PDF you can save or print">PDF</button>
+      <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Save the spreadsheet to your OneDrive">Spreadsheet</button>
+      <button type="button" class="btn btn--ghost" id="js-pdf" title="Save a PDF to your OneDrive">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
       <button type="button" class="btn btn--ghost" id="js-import" title="Import clients from a spreadsheet, PDF, Word doc, or text file">Import</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
@@ -696,7 +696,7 @@
       return { configured: false };
     }
     if (!res.ok) throw new Error(data.error || 'Could not save schedule');
-    return { configured: true, workspace: data.workspace };
+    return { configured: true, workspace: data.workspace, sharePoint: data.sharePoint, oneDrive: data.oneDrive };
   }
 
   async function pollMeta() {
@@ -740,7 +740,7 @@
           state.workspace = result.workspace;
           state.lastRemoteUpdatedAt = result.workspace.updatedAt;
           saveLocal(state.workspace);
-          setSyncLabel(result.sharePoint && result.sharePoint.ok ? 'Live · saved to SharePoint' : 'Live sync on', 'live');
+          setSyncLabel(savedPlace(result), 'live');
         } else {
           state.cloudConfigured = false;
           setSyncLabel('Saved on this device', 'local');
@@ -1565,45 +1565,123 @@
     return rows;
   }
 
-  function downloadFile(filename, mime, contents) {
-    var blob = new Blob([contents], { type: mime });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+  function savedPlace(result) {
+    var drive = result.oneDrive && result.oneDrive.ok;
+    var sheet = result.sharePoint && result.sharePoint.ok;
+    if (drive && sheet) return 'Live · OneDrive and SharePoint';
+    if (drive) return 'Live · saved to OneDrive';
+    if (sheet) return 'Live · saved to SharePoint';
+    return 'Live sync on';
   }
 
-  function exportSpreadsheet() {
+  function toBase64(bytes) {
+    var binary = '';
+    var size = 0x8000;
+    for (var i = 0; i < bytes.length; i += size) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + size));
+    }
+    return btoa(binary);
+  }
+
+  async function saveToOneDrive(filename, mime, contents) {
+    var bytes = typeof contents === 'string' ? new TextEncoder().encode(contents) : contents;
+    var res = await fetch('/api/microsoft/files', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileName: filename,
+        contentType: mime,
+        contentBase64: toBase64(bytes)
+      })
+    });
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok || !data.file || !data.file.ok) throw new Error(data.error || 'Could not save to OneDrive');
+    var file = data.file || {};
+    return file.path || ('/Emme Dashboard/' + filename);
+  }
+
+  function pdfEscape(text) {
+    return String(text || '').replace(/[^\x20-\x7E]/g, ' ').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+  }
+
+  function buildSchedulePdf(lines) {
+    var wrapped = [];
+    lines.forEach(function (line) {
+      var text = String(line || '');
+      if (!text) { wrapped.push(''); return; }
+      while (text.length > 95) {
+        wrapped.push(text.slice(0, 95));
+        text = text.slice(95);
+      }
+      wrapped.push(text);
+    });
+    var pages = [];
+    for (var i = 0; i < wrapped.length; i += 46) pages.push(wrapped.slice(i, i + 46));
+    if (!pages.length) pages.push(['Emme schedule']);
+    var parts = [];
+    parts[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+    var kids = [];
+    pages.forEach(function (pageLines, index) {
+      var contentId = 4 + index * 2;
+      var pageId = contentId + 1;
+      var stream = 'BT\n/F1 11 Tf\n36 750 Td\n';
+      pageLines.forEach(function (line, lineIndex) {
+        if (lineIndex) stream += '0 -15 Td\n';
+        stream += '(' + pdfEscape(line) + ') Tj\n';
+      });
+      stream += 'ET';
+      parts[contentId] = '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream';
+      parts[pageId] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ' + contentId + ' 0 R /Resources << /Font << /F1 3 0 R >> >> >>';
+      kids.push(pageId + ' 0 R');
+    });
+    parts[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    parts[2] = '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + pages.length + ' >>';
+    var header = '%PDF-1.4\n';
+    var body = '';
+    var offsets = [];
+    for (var n = 1; n < parts.length; n++) {
+      offsets[n] = header.length + body.length;
+      body += n + ' 0 obj\n' + parts[n] + '\nendobj\n';
+    }
+    var xref = 'xref\n0 ' + parts.length + '\n0000000000 65535 f \n';
+    for (var p = 1; p < parts.length; p++) {
+      xref += String(offsets[p]).padStart(10, '0') + ' 00000 n \n';
+    }
+    var pdf = header + body + xref + 'trailer\n<< /Size ' + parts.length + ' /Root 1 0 R >>\nstartxref\n' + (header.length + body.length) + '\n%%EOF';
+    var bytes = new Uint8Array(pdf.length);
+    for (var c = 0; c < pdf.length; c++) bytes[c] = pdf.charCodeAt(c);
+    return bytes;
+  }
+
+  async function exportSpreadsheet() {
     if (!state.workspace) return;
     var csv = '\uFEFF' + scheduleRows().map(function (row) {
       return row.map(csvCell).join(',');
     }).join('\r\n');
     var stamp = new Date().toISOString().slice(0, 10);
-    downloadFile('Emme-schedule-' + stamp + '.csv', 'text/csv;charset=utf-8', csv);
-    toast('Spreadsheet downloaded — open it in Excel');
+    try {
+      var path = await saveToOneDrive('Emme-schedule-' + stamp + '.csv', 'text/csv', csv);
+      toast('Saved to your OneDrive ' + path);
+    } catch (err) {
+      toast(err.message || 'Could not save the spreadsheet to OneDrive');
+    }
   }
 
-  function exportPdf() {
+  async function exportPdf() {
     if (!state.workspace) return;
-    var rows = scheduleRows();
-    var body = rows.map(function (row) {
-      if (!row.length) return '';
-      if (row.length === 1) return '<h2>' + escapeHtml(row[0]) + '</h2>';
-      return '<tr>' + row.map(function (cell) { return '<td>' + escapeHtml(cell) + '</td>'; }).join('') + '</tr>';
-    }).join('');
-    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Emme schedule</title>' +
-      '<style>body{font-family:Segoe UI,sans-serif;color:#142028;padding:24px}h1{color:#084339}table{width:100%;border-collapse:collapse}td{border-bottom:1px solid #e4e4e4;padding:6px 8px;font-size:13px}h2{margin-top:28px;color:#084339}</style></head><body>' +
-      '<h1>Emme schedule</h1><p>In the print window, choose Save as PDF.</p><table>' + body + '</table></body></html>';
-    var popup = window.open('', '_blank');
-    if (!popup) { toast('Allow pop-ups to save a PDF'); return; }
-    popup.document.open();
-    popup.document.write(html);
-    popup.document.close();
-    popup.focus();
-    setTimeout(function () { popup.print(); }, 300);
+    var lines = ['Emme schedule', ''];
+    scheduleRows().forEach(function (row) {
+      if (!row.length) { lines.push(''); return; }
+      lines.push(row.join('  |  '));
+    });
+    var stamp = new Date().toISOString().slice(0, 10);
+    try {
+      var path = await saveToOneDrive('Emme-schedule-' + stamp + '.pdf', 'application/pdf', buildSchedulePdf(lines));
+      toast('Saved to your OneDrive ' + path);
+    } catch (err) {
+      toast(err.message || 'Could not save the PDF to OneDrive');
+    }
   }
 
   function shareLink() {

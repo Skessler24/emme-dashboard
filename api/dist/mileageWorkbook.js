@@ -12,6 +12,7 @@ const storage_blob_1 = require("@azure/storage-blob");
 const exceljs_1 = __importDefault(require("exceljs"));
 const graphClient_1 = require("./graphClient");
 const intakeQService_1 = require("./intakeQService");
+const providerSetup_1 = require("./providerSetup");
 /**
  * Adds a row to each provider's existing mileage reimbursement workbook.
  * The files live in EMME/PAYROLL & MILEAGE/Mileage, one folder per provider.
@@ -21,7 +22,6 @@ const intakeQService_1 = require("./intakeQService");
  */
 const RATE = 0.67;
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-const MILEAGE_ROOT = ['EMME', 'PAYROLL & MILEAGE', 'Mileage'];
 const ID_HEADER = 'Dashboard Id';
 function denverToday() {
     return new Intl.DateTimeFormat('en-CA', {
@@ -192,7 +192,7 @@ async function mileageSiteId() {
     catch (_) { /* personal site may still work */ }
     if (!tries.length)
         throw new graphClient_1.GraphError(503, 'SharePoint is not configured for mileage.');
-    const folder = MILEAGE_ROOT.map(encodeURIComponent).join('/');
+    const folder = providerSetup_1.MILEAGE_ROOT.map(encodeURIComponent).join('/');
     for (let i = 0; i < tries.length; i++) {
         try {
             await (0, graphClient_1.graphGet)('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
@@ -297,31 +297,11 @@ function chooseWorkbook(files, staffName, email) {
     return ranked[0].name;
 }
 async function locateForm(staffName, email) {
-    const entries = await listMileage(MILEAGE_ROOT);
-    let bestFolder = '';
-    let bestScore = 0;
-    entries.forEach(function (item) {
-        if (!item.isFolder)
-            return;
-        const score = scoreName(item.name, staffName, email);
-        if (score > bestScore) {
-            bestScore = score;
-            bestFolder = item.name;
-        }
-    });
-    if (bestFolder && bestScore >= 60) {
-        const inside = await listMileage(MILEAGE_ROOT.concat([bestFolder]));
-        const fileName = chooseWorkbook(inside, staffName, email);
-        if (fileName) {
-            const segments = MILEAGE_ROOT.concat([bestFolder]);
-            return { segments, fileName, path: '/' + segments.concat([fileName]).join('/') };
-        }
-    }
-    const rootFile = chooseWorkbook(entries, staffName, email);
-    if (rootFile && scoreName(rootFile, staffName, email) >= 60) {
-        return { segments: MILEAGE_ROOT.slice(), fileName: rootFile, path: '/' + MILEAGE_ROOT.concat([rootFile]).join('/') };
-    }
-    return null;
+    const found = await (0, providerSetup_1.findExistingProviderFile)(providerSetup_1.MILEAGE_ROOT, email, staffName, 'mileage');
+    if (!found || !found.fileName)
+        return null;
+    const segments = found.folder ? providerSetup_1.MILEAGE_ROOT.concat([found.folder]) : providerSetup_1.MILEAGE_ROOT.slice();
+    return { segments, fileName: found.fileName, path: found.path };
 }
 async function rowsFromWorkbook(bytes, staffName, staffEmail, path) {
     const opened = await openWorkbook(bytes);
@@ -518,7 +498,7 @@ async function syncMileageWorkbook(workspace, email, appointments) {
             return { ok: true, skipped: true, added: 0 };
         const form = await locateForm(staffName, staffEmail);
         if (!form) {
-            return { ok: false, error: 'No mileage form for ' + staffName + ' in EMME/PAYROLL & MILEAGE/Mileage.' };
+            return { ok: false, error: 'No existing mileage folder for ' + staffEmail + '. Nothing new was created.' };
         }
         const currentBytes = await readWorkbookBytes(form.segments.concat([form.fileName]));
         if (!currentBytes)

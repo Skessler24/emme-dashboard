@@ -2,6 +2,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import ExcelJS from 'exceljs';
 import { GraphError, getSharePointSiteId, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend } from './graphClient';
 import { getAppointments, isCancellationStatus, type AppointmentRow } from './intakeQService';
+import { findExistingProviderFile, MILEAGE_ROOT } from './providerSetup';
 
 /**
  * Adds a row to each provider's existing mileage reimbursement workbook.
@@ -13,7 +14,6 @@ import { getAppointments, isCancellationStatus, type AppointmentRow } from './in
 
 const RATE = 0.67;
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-const MILEAGE_ROOT = ['EMME', 'PAYROLL & MILEAGE', 'Mileage'];
 const ID_HEADER = 'Dashboard Id';
 
 export type MileageRow = {
@@ -306,30 +306,10 @@ function chooseWorkbook(files: Array<{ name: string; lastModified: string; isFol
 }
 
 async function locateForm(staffName: string, email: string): Promise<LocatedForm | null> {
-  const entries = await listMileage(MILEAGE_ROOT);
-  let bestFolder = '';
-  let bestScore = 0;
-  entries.forEach(function (item) {
-    if (!item.isFolder) return;
-    const score = scoreName(item.name, staffName, email);
-    if (score > bestScore) {
-      bestScore = score;
-      bestFolder = item.name;
-    }
-  });
-  if (bestFolder && bestScore >= 60) {
-    const inside = await listMileage(MILEAGE_ROOT.concat([bestFolder]));
-    const fileName = chooseWorkbook(inside, staffName, email);
-    if (fileName) {
-      const segments = MILEAGE_ROOT.concat([bestFolder]);
-      return { segments, fileName, path: '/' + segments.concat([fileName]).join('/') };
-    }
-  }
-  const rootFile = chooseWorkbook(entries, staffName, email);
-  if (rootFile && scoreName(rootFile, staffName, email) >= 60) {
-    return { segments: MILEAGE_ROOT.slice(), fileName: rootFile, path: '/' + MILEAGE_ROOT.concat([rootFile]).join('/') };
-  }
-  return null;
+  const found = await findExistingProviderFile(MILEAGE_ROOT, email, staffName, 'mileage');
+  if (!found || !found.fileName) return null;
+  const segments = found.folder ? MILEAGE_ROOT.concat([found.folder]) : MILEAGE_ROOT.slice();
+  return { segments, fileName: found.fileName, path: found.path };
 }
 
 export async function rowsFromWorkbook(bytes: Uint8Array, staffName: string, staffEmail: string, path: string): Promise<MileageRow[]> {
@@ -520,7 +500,7 @@ export async function syncMileageWorkbook(workspace: Workspace, email: string, a
     if (!hasInPerson) return { ok: true, skipped: true, added: 0 };
     const form = await locateForm(staffName, staffEmail);
     if (!form) {
-      return { ok: false, error: 'No mileage form for ' + staffName + ' in EMME/PAYROLL & MILEAGE/Mileage.' };
+      return { ok: false, error: 'No existing mileage folder for ' + staffEmail + '. Nothing new was created.' };
     }
     const currentBytes = await readWorkbookBytes(form.segments.concat([form.fileName]));
     if (!currentBytes) return { ok: false, error: 'The mileage form for ' + staffName + ' could not be read.' };

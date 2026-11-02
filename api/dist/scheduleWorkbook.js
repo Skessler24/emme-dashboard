@@ -12,6 +12,7 @@ exports.listScheduleOpenings = listScheduleOpenings;
 exports.syncScheduleWorkbook = syncScheduleWorkbook;
 const exceljs_1 = __importDefault(require("exceljs"));
 const graphClient_1 = require("./graphClient");
+const providerSetup_1 = require("./providerSetup");
 const schedulingService_1 = require("./schedulingService");
 /**
  * Updates each provider's existing schedule workbook in
@@ -46,7 +47,6 @@ const DAY_HEADER = {
     thursday: 'Thurs Appointment Time ',
     friday: 'Fri Appointment Time ',
 };
-const SCHEDULE_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'Referral Process', 'Provider Schedules'];
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 function dayKey(name) {
     const text = String(name || '').trim().toLowerCase();
@@ -342,7 +342,7 @@ async function scheduleSiteId() {
     catch (_) { /* personal site may still work */ }
     if (!tries.length)
         throw new graphClient_1.GraphError(503, 'SharePoint is not configured for schedules.');
-    const folder = SCHEDULE_ROOT.map(encodeURIComponent).join('/');
+    const folder = providerSetup_1.SCHEDULE_ROOT.map(encodeURIComponent).join('/');
     for (let i = 0; i < tries.length; i++) {
         try {
             await (0, graphClient_1.graphGet)('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
@@ -416,35 +416,11 @@ function chooseScheduleFile(files, staffName, email) {
     return ranked[0].name;
 }
 async function locateSchedule(staffName, email) {
-    const entries = await listScheduleFolder(SCHEDULE_ROOT);
-    let bestFolder = '';
-    let bestScore = 0;
-    entries.forEach(function (item) {
-        if (!item.isFolder)
-            return;
-        const score = scoreName(item.name, staffName, email);
-        if (score > bestScore) {
-            bestScore = score;
-            bestFolder = item.name;
-        }
-    });
-    if (bestFolder && bestScore >= 60) {
-        const inside = await listScheduleFolder(SCHEDULE_ROOT.concat([bestFolder]));
-        const fileName = chooseScheduleFile(inside, staffName, email);
-        if (fileName) {
-            const segments = SCHEDULE_ROOT.concat([bestFolder]);
-            return { segments, fileName, path: '/' + segments.concat([fileName]).join('/') };
-        }
-        const created = (normName(staffName).split(' ')[0] || 'Provider');
-        const file = created.charAt(0).toUpperCase() + created.slice(1) + ' Schedule.xlsx';
-        const segments = SCHEDULE_ROOT.concat([bestFolder]);
-        return { segments, fileName: file, path: '/' + segments.concat([file]).join('/') };
-    }
-    const rootFile = chooseScheduleFile(entries, staffName, email);
-    if (rootFile && scoreName(rootFile, staffName, email) >= 60) {
-        return { segments: SCHEDULE_ROOT.slice(), fileName: rootFile, path: '/' + SCHEDULE_ROOT.concat([rootFile]).join('/') };
-    }
-    return null;
+    const found = await (0, providerSetup_1.findExistingProviderFile)(providerSetup_1.SCHEDULE_ROOT, email, staffName, 'schedule');
+    if (!found || !found.fileName)
+        return null;
+    const segments = found.folder ? providerSetup_1.SCHEDULE_ROOT.concat([found.folder]) : providerSetup_1.SCHEDULE_ROOT.slice();
+    return { segments, fileName: found.fileName, path: found.path };
 }
 function cellPlain(cell) {
     return String(cell.text || '').trim();
@@ -528,17 +504,17 @@ async function applyScheduleWorkbook(bytes, workspace) {
     return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 async function listScheduleOpenings() {
-    const entries = await listScheduleFolder(SCHEDULE_ROOT);
+    const entries = await listScheduleFolder(providerSetup_1.SCHEDULE_ROOT);
     const found = [];
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
         if (!entry.isFolder)
             continue;
-        const inside = await listScheduleFolder(SCHEDULE_ROOT.concat([entry.name]));
+        const inside = await listScheduleFolder(providerSetup_1.SCHEDULE_ROOT.concat([entry.name]));
         const fileName = chooseScheduleFile(inside, entry.name, '');
         if (!fileName)
             continue;
-        const segments = SCHEDULE_ROOT.concat([entry.name, fileName]);
+        const segments = providerSetup_1.SCHEDULE_ROOT.concat([entry.name, fileName]);
         const bytes = await readScheduleBytes(segments);
         if (!bytes)
             continue;
@@ -558,12 +534,12 @@ async function syncScheduleWorkbook(workspace, email) {
         const staffName = (0, graphClient_1.graphIsConfigured)() && staffEmail ? await (0, graphClient_1.getUserDisplayName)(staffEmail) : (staffEmail || 'Provider');
         const form = await locateSchedule(staffName, staffEmail);
         if (!form) {
-            return { ok: false, error: 'No schedule folder for ' + staffName + ' in Provider Schedules.' };
+            return { ok: false, error: 'No existing schedule folder for ' + staffEmail + '. Nothing new was created.' };
         }
         const current = await readScheduleBytes(form.segments.concat([form.fileName]));
-        const next = current
-            ? await applyScheduleWorkbook(current, workspace)
-            : await buildScheduleWorkbook(workspace);
+        if (!current)
+            return { ok: false, error: 'The schedule file for ' + staffName + ' could not be read.' };
+        const next = await applyScheduleWorkbook(current, workspace);
         await writeScheduleBytes(form.segments.concat([form.fileName]), new Uint8Array(next));
         return { ok: true, path: form.path };
     }

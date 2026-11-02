@@ -4,6 +4,7 @@ import { IntakeQError, complianceByStaff, getCancellations, getInvoices, getNote
 import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, restParts } from './http';
 import { addAlert, addMessage, endAlert, listAlerts, listMessages, markSeen, replyToMessage, unreadCount } from './conversationStore';
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
+import { searchProviderLibraries } from './providerSetup';
 import { availabilityForWindow } from './schedulingService';
 import {
   LISTS,
@@ -91,6 +92,18 @@ async function onboarding(context: FnContext, req: HttpRequest): Promise<void> {
     return;
   }
   const verb = methodOf(req);
+  if (verb === 'GET' && parts[1] === 'folders') {
+    const employeeName = queryOf(req, 'employeeName');
+    try {
+      const found = await searchProviderLibraries(employeeId, employeeName);
+      json(context, 200, { created: false, found });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not search SharePoint folders';
+      const status = err instanceof GraphError ? err.status : 502;
+      json(context, status === 400 ? 400 : 502, { error: message.slice(0, 200) });
+    }
+    return;
+  }
   if (verb === 'GET' && parts.length === 1) {
     const items = await listItems(LISTS.onboarding);
     const checklist = items.filter(function (item) {

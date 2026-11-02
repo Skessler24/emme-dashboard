@@ -327,7 +327,19 @@ module.exports = async function (context, req) {
       } catch (err) {
         mileage = { ok: false, error: String((err && err.message) || 'Mileage update failed').slice(0, 200) };
       }
-      json(context, 200, { configured: true, workspace: workspace, owner: ownerEmail, sharePoint: sharePoint, mileage: mileage });
+      let oneDrive = { ok: false, skipped: true };
+      try {
+        const drive = require('../microsoft/oneDrive');
+        oneDrive = await drive.saveProviderFile(
+          ownerEmail,
+          'Schedule.json',
+          Buffer.from(JSON.stringify(workspace)),
+          'application/json'
+        );
+      } catch (err) {
+        oneDrive = { ok: false, error: String((err && err.message) || 'OneDrive save failed').slice(0, 220) };
+      }
+      json(context, 200, { configured: true, workspace: workspace, owner: ownerEmail, sharePoint: sharePoint, mileage: mileage, oneDrive: oneDrive });
       return;
     }
 
