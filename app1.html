@@ -3,43 +3,212 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Emme Guidebook</title>
+  <title>Emmé Therapy Services — Provider Guidebook</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <meta http-equiv="refresh" content="0; url=https://emmeco031-my.sharepoint.com/:w:/g/personal/jenriat_emmeco_org/IQBtpoWOjqKuQKKQa3HGgAXqARRet5OWW-QTF1gsabG4sIA?e=CYQ0Zw" />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Nunito:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #fef7fc;
-      color: #084339;
-      font-family: Inter, "Segoe UI", sans-serif;
+    :root {
+      --cream: #fef7fc;
+      --cream-card: #fdf3fb;
+      --cream-light: #ffffff;
+      --forest: #084339;
+      --forest-dark: #052a24;
+      --forest-medium: #245E4D;
+      --forest-light: #4A7C6B;
+      --gold: #ffca34;
+      --gold-light: #ffd966;
+      --gold-dark: #e6b320;
+      --pink: #dd9fa3;
+      --body: #2a3a38;
+      --body-muted: rgba(8, 67, 57, 0.50);
     }
-    main { text-align: center; padding: 2rem; }
-    h1 { font-family: Comfortaa, cursive; font-size: 1.8rem; margin: 0 0 0.5rem; }
-    p { margin: 0 0 1.25rem; }
-    a {
-      display: inline-block;
-      background: #084339;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 999px;
-      padding: 0.7rem 1.1rem;
-      font-weight: 600;
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: Inter, sans-serif; color: var(--body); line-height: 1.7; background: var(--cream); }
+    #progress-bar-emme { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--forest), var(--gold), var(--pink)); z-index: 100; width: 0%; }
+    #sidebar-emme { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: var(--forest-dark); z-index: 50; display: flex; flex-direction: column; overflow-y: auto; }
+    #sidebar-emme::-webkit-scrollbar { width: 4px; }
+    #sidebar-emme::-webkit-scrollbar-thumb { background: var(--forest-medium); border-radius: 4px; }
+    .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 20px; color: #c5d8c8; font-size: 13.5px; font-weight: 500; text-decoration: none; border-left: 3px solid transparent; cursor: pointer; }
+    .sidebar-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .sidebar-link.active { border-left-color: var(--gold); background: rgba(74,124,107,0.20); color: #fff; font-weight: 600; }
+    .sidebar-link .nav-icon { width: 22px; text-align: center; flex-shrink: 0; }
+    #main-content-emme { margin-left: 280px; min-height: 100vh; }
+    .section-number-watermark { position: absolute; top: -20px; right: 20px; font-family: Nunito, sans-serif; font-size: 120px; font-weight: 700; line-height: 1; pointer-events: none; color: rgba(255,202,52,0.18); }
+    .section-badge { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; font-size: 20px; background: rgba(255,202,52,0.20); }
+    .gb-prose p { margin: 0 0 1rem; }
+    .gb-prose h3, .gb-prose h4 { font-family: Comfortaa, Nunito, sans-serif; color: var(--forest); margin: 1.6rem 0 0.7rem; }
+    .gb-prose h3 { font-size: 1.25rem; }
+    .gb-prose h4 { font-size: 1.05rem; }
+    .gb-prose ul, .gb-prose ol { margin: 0.35rem 0 1rem 1.25rem; }
+    .gb-prose li { margin: 0.35rem 0; }
+    .gb-prose a { color: var(--forest); font-weight: 600; text-underline-offset: 3px; }
+    .gb-prose blockquote { background: var(--forest); color: var(--cream); border-left: 4px solid var(--gold); padding: 24px 28px; border-radius: 0 12px 12px 0; font-family: Nunito, sans-serif; font-style: italic; }
+    .gb-prose table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; font-size: 14px; margin: 0 0 1.25rem; }
+    .gb-prose th { background: var(--forest); color: #fff; padding: 12px 16px; text-align: left; }
+    .gb-prose td { padding: 11px 16px; border-bottom: 1px solid rgba(8,67,57,0.10); background: #fff; }
+    .gb-prose tr:nth-child(even) td { background: var(--cream-card); }
+    .gb-prose img { max-width: 100%; height: auto; border-radius: 12px; }
+    .section-block { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .section-block.visible { opacity: 1; transform: translateY(0); }
+    #back-to-top-emme { position: fixed; bottom: 30px; right: 30px; width: 46px; height: 46px; background: var(--gold); color: var(--forest-dark); border: none; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 60; font-weight: 700; }
+    .side-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--forest-light); color: var(--forest-light); background: transparent; font: inherit; font-size: 14px; cursor: pointer; }
+    .home-link { margin-top: 12px; display: flex; align-items: center; justify-content: center; color: var(--gold); border: 1px solid rgba(255,202,52,0.35); text-decoration: none; font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 8px; }
+    #mobile-header-emme { display: none; }
+    @media (max-width: 767px) {
+      #sidebar-emme { display: none; }
+      #sidebar-emme.mobile-open { display: flex; width: 100%; z-index: 90; }
+      #main-content-emme { margin-left: 0; }
+      #mobile-header-emme { display: flex; position: fixed; top: 0; left: 0; right: 0; z-index: 40; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--forest-dark); }
+      #mobile-close-btn-emme { display: block !important; }
+      .section-number-watermark { font-size: 70px; }
+    }
+    @media print {
+      #sidebar-emme, #progress-bar-emme, #back-to-top-emme, #mobile-header-emme { display: none !important; }
+      #main-content-emme { margin-left: 0 !important; }
+      body { background: #fff; }
     }
   </style>
-  <script>
-    location.replace('https://emmeco031-my.sharepoint.com/:w:/g/personal/jenriat_emmeco_org/IQBtpoWOjqKuQKKQa3HGgAXqARRet5OWW-QTF1gsabG4sIA?e=CYQ0Zw');
-  </script>
 </head>
 <body>
-  <main>
-    <h1>Emme Guidebook</h1>
-    <p>Opening the current SharePoint guidebook.</p>
-    <a href="https://emmeco031-my.sharepoint.com/:w:/g/personal/jenriat_emmeco_org/IQBtpoWOjqKuQKKQa3HGgAXqARRet5OWW-QTF1gsabG4sIA?e=CYQ0Zw">Open the guidebook</a>
-  </main>
+  <div id="progress-bar-emme"></div>
+  <header id="mobile-header-emme">
+    <img src="emme-logo.png" alt="Emmé Therapy Services" style="height:36px;width:auto;" />
+    <button id="mobile-menu-btn-emme" type="button" style="color:#fef7fc;background:none;border:0;font-size:22px;">Menu</button>
+  </header>
+  <nav id="sidebar-emme" aria-label="Guidebook navigation">
+    <div style="padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.1);text-align:center;position:relative;">
+      <button id="mobile-close-btn-emme" type="button" style="display:none;position:absolute;top:16px;right:16px;color:#fef7fc;background:none;border:0;">Close</button>
+      <img src="emme-logo.png" alt="Emmé Therapy Services" style="width:180px;max-width:100%;height:auto;" />
+      <p id="sidebar-kicker" style="margin:8px 0 0;color:var(--forest-light);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;">Provider Guidebook</p>
+      <a class="home-link" href="index.html">← Dashboard Home</a>
+    </div>
+    <div id="guidebook-nav" style="flex:1;padding:12px 0;overflow:auto;">
+      <a class="sidebar-link active" href="#hero-section"><span class="nav-icon">🏠</span><span>Cover</span></a>
+    </div>
+    <div style="padding:16px;border-top:1px solid rgba(255,255,255,0.1);display:grid;gap:10px;">
+      <button class="side-btn" id="print-btn-emme" type="button">Print Guidebook</button>
+      <p style="margin:0;text-align:center;color:var(--forest-light);font-size:12px;opacity:0.6;">emmé therapy services</p>
+    </div>
+  </nav>
+  <div id="main-content-emme">
+    <section id="hero-section" style="background:linear-gradient(135deg, var(--forest-dark), var(--forest) 55%, var(--forest-medium));min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:96px 24px 48px;">
+      <div>
+        <p style="letter-spacing:0.28em;text-transform:uppercase;color:var(--gold-light);font-size:13px;margin:0 0 18px;">EMME Therapy Services</p>
+        <h1 id="cover-title" style="font-family:Comfortaa, Nunito, sans-serif;color:#fef7fc;font-size:clamp(2rem, 5vw, 3.4rem);margin:0 0 14px;">Provider Guidebook</h1>
+        <p id="cover-updated" style="letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-light);font-size:13px;margin:0 0 22px;">Loading the current guidebook…</p>
+        <p style="max-width:36rem;margin:0 auto;color:#fef7fc;">Excellence for everyone: a place where people and providers live their best life.</p>
+      </div>
+    </section>
+    <div id="guidebook-sections"></div>
+  </div>
+  <button id="back-to-top-emme" type="button" aria-label="Back to top">↑</button>
+  <script>
+    (function () {
+      var ICONS = ['🌿', '💼', '📋', '⚖️', '🌟', '💛', '📚', '🩺', '🏡', '✨'];
+      var nav = document.getElementById('guidebook-nav');
+      var host = document.getElementById('guidebook-sections');
+      var sidebar = document.getElementById('sidebar-emme');
+
+      function escapeText(value) {
+        return String(value || '').replace(/[&<>"]/g, function (ch) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch];
+        });
+      }
+
+      function showMessage(text) {
+        host.innerHTML = '<section class="section-block visible" style="background:var(--cream);padding:64px 24px;"><div class="gb-prose" style="max-width:46rem;margin:0 auto;"><p>' + escapeText(text) + '</p></div></section>';
+      }
+
+      function sectionShell(section, index) {
+        var id = 'section-' + (index + 1);
+        var bg = index % 2 === 0 ? 'var(--cream)' : 'var(--cream-light)';
+        var number = String(index + 1).padStart(2, '0');
+        return '<section id="' + id + '" class="section-block" style="background:' + bg + ';padding:72px 24px;position:relative;">' +
+          '<div class="gb-prose" style="max-width:52rem;margin:0 auto;position:relative;">' +
+          '<span class="section-number-watermark">' + number + '</span>' +
+          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"><span class="section-badge">' + ICONS[index % ICONS.length] + '</span>' +
+          '<p style="margin:0;color:var(--gold-dark);font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;">Section ' + (index + 1) + '</p></div>' +
+          '<h2 style="font-family:Comfortaa, Nunito, sans-serif;color:var(--forest);font-size:clamp(1.7rem, 3vw, 2.3rem);margin:0 0 1.4rem;">' + escapeText(section.title) + '</h2>' +
+          (section.html || '') +
+          '</div></section>';
+      }
+
+      function bind() {
+        var links = Array.prototype.slice.call(document.querySelectorAll('.sidebar-link'));
+        var sections = links.map(function (link) {
+          return { link: link, el: document.querySelector(link.getAttribute('href')) };
+        }).filter(function (item) { return item.el; });
+        links.forEach(function (link) {
+          link.addEventListener('click', function () {
+            sidebar.classList.remove('mobile-open');
+          });
+        });
+        function updateActive() {
+          var pos = window.scrollY + 200;
+          var active = sections[0];
+          sections.forEach(function (item) {
+            if (item.el.offsetTop <= pos) active = item;
+          });
+          links.forEach(function (link) { link.classList.remove('active'); });
+          if (active) active.link.classList.add('active');
+        }
+        var progress = document.getElementById('progress-bar-emme');
+        var topBtn = document.getElementById('back-to-top-emme');
+        window.addEventListener('scroll', function () {
+          updateActive();
+          var height = document.documentElement.scrollHeight - window.innerHeight;
+          progress.style.width = (height > 0 ? Math.min(window.scrollY / height * 100, 100) : 0) + '%';
+          topBtn.style.display = window.scrollY > 600 ? 'flex' : 'none';
+        });
+        topBtn.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        var blocks = document.querySelectorAll('.section-block');
+        if ('IntersectionObserver' in window) {
+          var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+          }, { threshold: 0.05 });
+          blocks.forEach(function (block) { observer.observe(block); });
+        } else {
+          blocks.forEach(function (block) { block.classList.add('visible'); });
+        }
+        updateActive();
+      }
+
+      document.getElementById('print-btn-emme').addEventListener('click', function () { window.print(); });
+      document.getElementById('mobile-menu-btn-emme').addEventListener('click', function () { sidebar.classList.add('mobile-open'); });
+      document.getElementById('mobile-close-btn-emme').addEventListener('click', function () { sidebar.classList.remove('mobile-open'); });
+
+      fetch('/api/guidebook', { credentials: 'include' })
+        .then(function (res) {
+          return res.text().then(function (text) {
+            var data = {};
+            try { data = JSON.parse(text); } catch (_) { data = { error: 'The guidebook could not be loaded. Sign in, then try again.' }; }
+            return { ok: res.ok, data: data };
+          });
+        })
+        .then(function (result) {
+          if (!result.ok) throw new Error((result.data && result.data.error) || 'Could not load the guidebook');
+          var data = result.data || {};
+          if (data.title) document.getElementById('cover-title').textContent = data.title;
+          document.getElementById('cover-updated').textContent = data.updatedLabel ? 'Updated ' + data.updatedLabel : 'Current guidebook';
+          var sections = data.sections || [];
+          if (!sections.length) {
+            showMessage('The guidebook does not have any sections yet.');
+            return;
+          }
+          var links = '<a class="sidebar-link active" href="#hero-section"><span class="nav-icon">🏠</span><span>Cover</span></a>';
+          sections.forEach(function (section, index) {
+            links += '<a class="sidebar-link" href="#section-' + (index + 1) + '"><span class="nav-icon">' + ICONS[index % ICONS.length] + '</span><span>' + escapeText(section.title) + '</span></a>';
+          });
+          nav.innerHTML = links;
+          host.innerHTML = sections.map(sectionShell).join('');
+          bind();
+        })
+        .catch(function (err) {
+          document.getElementById('cover-updated').textContent = 'Guidebook unavailable';
+          showMessage(err.message || 'Could not load the guidebook');
+        });
+    })();
+  </script>
 </body>
 </html>
