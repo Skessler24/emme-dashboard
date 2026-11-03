@@ -1,0 +1,145 @@
+/**
+ * Reads headings, paragraphs, lists, tables, and links out of a .docx file.
+ * The dashboard theme renders that text. The Word editor is not shown.
+ */
+const zlib = require('zlib');
+
+function xmlText(value) {
+  return String(value || '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, function (_m, n) { return String.fromCharCode(Number(n)); })
+    .replace(/&amp;/g, '&');
+}
+
+function escapeHtml(value) {
+  return xmlText(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function unzip(buffer) {
+  const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+  const files = {};
+  let i = 0;
+  while (i + 30 <= buf.length && buf.readUInt32LE(i) === 0x04034b50) {
+    const method = buf.readUInt16LE(i + 8);
+    const compSize = buf.readUInt32LE(i + 18);
+    const nameLen = buf.readUInt16LE(i + 26);
+    const extraLen = buf.readUInt16LE(i + 28);
+    const name = buf.slice(i + 30, i + 30 + nameLen).toString('utf8');
+    const start = i + 30 + nameLen + extraLen;
+    const compressed = buf.slice(start, start + compSize);
+    let data = compressed;
+    if (method === 8) data = zlib.inflateRawSync(compressed);
+    else if (method !== 0) data = Buffer.alloc(0);
+    files[name] = data.toString('utf8');
+    i = start + compSize;
+  }
+  return files;
+}
+
+function relationships(xml) {
+  const map = {};
+  const re = /<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/?>/g;
+  let match;
+  while ((match = re.exec(xml || ''))) {
+    if (/hyperlink/i.test(match[0])) map[match[1]] = xmlText(match[2]);
+  }
+  return map;
+}
+
+function runHtml(run) {
+  let text = '';
+  const re = /<w:t\b[^>]*>([\s\S]*?)<\/w:t>|<w:tab\b[^>]*\/>|<w:br\b[^>]*\/>/g;
+  let match;
+  while ((match = re.exec(run))) {
+    if (match[1] != null) text += escapeHtml(match[1]);
+    else if (/<w:tab/.test(match[0])) text += ' ';
+    else text += '<br>';
+  }
+  if (!text) return '';
+  const bold = /<w:b\b/.test(run) && !/w:val="(?:0|false)"/.test(run.slice(0, run.indexOf('>') + 80));
+  const italic = /<w:i\b/.test(run) && !/<w:i\b[^>]*w:val="(?:0|false)"/.test(run);
+  if (bold) text = '<strong>' + text + '</strong>';
+  if (italic) text = '<em>' + text + '</em>';
+  return text;
+}
+
+function paragraphParts(paragraph, links) {
+  let html = '';
+  const re = /<w:hyperlink\b[^>]*r:id="([^"]+)"[^>]*>([\s\S]*?)<\/w:hyperlink>|<w:r\b[\s\S]*?<\/w:r>/g;
+  let match;
+  while ((match = re.exec(paragraph))) {
+    if (match[1]) {
+      const href = links[match[1]] || '';
+      const label = runHtml(match[2]) || escapeHtml(href);
+      if (/^https?:|^mailto:/i.test(href)) html += '<a href="' + escapeHtml(href) + '">' + label + '</a>';
+      else html += label;
+    } else {
+      html += runHtml(match[0]);
+    }
+  }
+  return html;
+}
+
+function headingTag(paragraph) {
+  const style = ((paragraph.match(/<w:pStyle\b[^>]*w:val="([^"]+)"/) || [])[1] || '').toLowerCase();
+  if (style === 'title' || style === 'heading1') return 'h2';
+  if (style === 'heading2') return 'h3';
+  if (style === 'heading3' || style === 'heading4') return 'h4';
+  return '';
+}
+
+function blocksFromXml(documentXml, relXml) {
+  const links = relationships(relXml);
+  const body = (documentXml.match(/<w:body\b[\s\S]*<\/w:body>/) || [documentXml])[0];
+  const chunks = body.match(/<w:tbl\b[\s\S]*?<\/w:tbl>|<w:p\b[\s\S]*?<\/w:p>/g) || [];
+  const html = [];
+  let list = [];
+  function flushList() {
+    if (!list.length) return;
+    html.push('<ul>' + list.map(function (item) { return '<li>' + item + '</li>'; }).join('') + '</ul>');
+    list = [];
+  }
+  chunks.forEach(function (chunk) {
+    if (chunk.indexOf('<w:tbl') === 0) {
+      flushList();
+      const rows = chunk.match(/<w:tr\b[\s\S]*?<\/w:tr>/g) || [];
+      const rendered = rows.map(function (row, index) {
+        const cells = row.match(/<w:tc\b[\s\S]*?<\/w:tc>/g) || [];
+        const tag = index === 0 ? 'th' : 'td';
+        const inner = cells.map(function (cell) {
+          const paras = cell.match(/<w:p\b[\s\S]*?<\/w:p>/g) || [];
+          return '<' + tag + '>' + paras.map(function (p) { return paragraphParts(p, links); }).filter(Boolean).join('<br>') + '</' + tag + '>';
+        }).join('');
+        return '<tr>' + inner + '</tr>';
+      }).join('');
+      if (rendered) html.push('<table>' + rendered + '</table>');
+      return;
+    }
+    const text = paragraphParts(chunk, links);
+    if (!text) return;
+    if (/<w:numPr\b/.test(chunk)) {
+      list.push(text);
+      return;
+    }
+    flushList();
+    const tag = headingTag(chunk);
+    html.push(tag ? '<' + tag + '>' + text + '</' + tag + '>' : '<p>' + text + '</p>');
+  });
+  flushList();
+  return html.join('');
+}
+
+function docxToHtml(buffer) {
+  const files = unzip(buffer);
+  const documentXml = files['word/document.xml'] || '';
+  if (!documentXml) throw new Error('The guidebook file could not be read.');
+  return blocksFromXml(documentXml, files['word/_rels/document.xml.rels'] || '');
+}
+
+module.exports = { docxToHtml };

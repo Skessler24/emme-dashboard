@@ -4,6 +4,7 @@
  */
 const { requireUser } = require('../dist/auth');
 const { graphGet, graphGetBytes, GraphError } = require('../dist/graphClient');
+const { docxToHtml } = require('./docx');
 const { splitSections } = require('./render');
 
 const GUIDE_URL = 'https://emmeco031-my.sharepoint.com/:w:/g/personal/jenriat_emmeco_org/IQBtpoWOjqKuQKKQa3HGgAXqARRet5OWW-QTF1gsabG4sIA?e=CYQ0Zw';
@@ -46,7 +47,6 @@ module.exports = async function (context, req) {
     return;
   }
   try {
-    const mammoth = require('mammoth');
     const id = encodeURIComponent(shareId(GUIDE_URL));
     const item = await graphGet('/shares/' + id + '/driveItem?$select=name,lastModifiedDateTime,eTag,size');
     const etag = String((item && item.eTag) || '');
@@ -60,21 +60,7 @@ module.exports = async function (context, req) {
       return;
     }
     const bytes = await graphGetBytes('/shares/' + id + '/driveItem/content');
-    const converted = await mammoth.convertToHtml(
-      { buffer: Buffer.from(bytes) },
-      {
-        convertImage: mammoth.images.imgElement(function (image) {
-          if (image.contentType && !/^image\/(png|jpeg|gif|webp)$/i.test(image.contentType)) {
-            return Promise.resolve({ src: '' });
-          }
-          return image.read('base64').then(function (data) {
-            if (!data || data.length > 700000) return { src: '' };
-            return { src: 'data:' + image.contentType + ';base64,' + data };
-          });
-        }),
-      }
-    );
-    const shaped = splitSections(converted.value || '');
+    const shaped = splitSections(docxToHtml(Buffer.from(bytes)));
     const payload = {
       title: shaped.coverTitle || 'Provider Guidebook',
       updated: (item && item.lastModifiedDateTime) || '',
