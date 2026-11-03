@@ -33,6 +33,7 @@
     .sidebar-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
     .sidebar-link.active { border-left-color: var(--gold); background: rgba(74,124,107,0.20); color: #fff; font-weight: 600; }
     .sidebar-link .nav-icon { width: 22px; text-align: center; flex-shrink: 0; }
+    .sidebar-link.sub { padding-left: 42px; font-size: 12.5px; }
     #main-content-emme { margin-left: 280px; min-height: 100vh; }
     .section-number-watermark { position: absolute; top: -20px; right: 20px; font-family: Nunito, sans-serif; font-size: 120px; font-weight: 700; line-height: 1; pointer-events: none; color: rgba(255,202,52,0.18); }
     .section-badge { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; font-size: 20px; background: rgba(255,202,52,0.20); }
@@ -199,6 +200,9 @@
           var links = '<a class="sidebar-link active" href="#hero-section"><span class="nav-icon">🏠</span><span>Cover</span></a>';
           sections.forEach(function (section, index) {
             links += '<a class="sidebar-link" href="#section-' + (index + 1) + '"><span class="nav-icon">' + ICONS[index % ICONS.length] + '</span><span>' + escapeText(section.title) + '</span></a>';
+            (section.subsections || []).forEach(function (sub) {
+              links += '<a class="sidebar-link sub" href="#' + escapeText(sub.id) + '"><span class="nav-icon">·</span><span>' + escapeText(sub.title) + '</span></a>';
+            });
           });
           nav.innerHTML = links;
           host.innerHTML = sections.map(sectionShell).join('');

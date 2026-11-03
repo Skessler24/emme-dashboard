@@ -53,8 +53,32 @@ function promotePlainHeadings(html) {
   });
 }
 
+function promoteNumberedSections(html) {
+  return String(html || '').replace(/<h3>([\s\S]*?)<\/h3>/gi, function (full, inner) {
+    const title = textOf(inner);
+    if (/^\d+\.\s+\S/.test(title) && !/^\d+[a-z]\./i.test(title)) return '<h2>' + inner + '</h2>';
+    return full;
+  });
+}
+
+function attachSubsections(section, index) {
+  const subsections = [];
+  let count = 0;
+  section.html = String(section.html || '').replace(/<h([34])([^>]*)>([\s\S]*?)<\/h\1>/gi, function (full, level, attrs, inner) {
+    const title = textOf(inner);
+    if (!title) return full;
+    if (level === '4' && !/^\d/.test(title)) return full;
+    count += 1;
+    const id = 's' + (index + 1) + '-' + count;
+    subsections.push({ title: title, id: id });
+    return '<h' + level + ' id="' + id + '"' + attrs + '>' + inner + '</h' + level + '>';
+  });
+  section.subsections = subsections;
+  return section;
+}
+
 function splitSections(html) {
-  const cleaned = promotePlainHeadings(sanitize(html));
+  const cleaned = promoteNumberedSections(promotePlainHeadings(sanitize(html)));
   const chunks = cleaned.split(/(?=<h[12]\b)/i).map(function (part) { return part.trim(); }).filter(Boolean);
   const sections = [];
   let coverTitle = '';
@@ -73,6 +97,7 @@ function splitSections(html) {
     sections.push({ title: title, html: body });
   });
   if (!sections.length && cleaned) sections.push({ title: 'Guidebook', html: cleaned });
+  sections.forEach(attachSubsections);
   return { coverTitle: coverTitle, sections: sections };
 }
 

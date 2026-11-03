@@ -87,10 +87,19 @@ function paragraphParts(paragraph, links) {
 }
 
 function headingTag(paragraph) {
-  const style = ((paragraph.match(/<w:pStyle\b[^>]*w:val="([^"]+)"/) || [])[1] || '').toLowerCase();
+  const style = ((paragraph.match(/<w:pStyle\b[^>]*w:val="([^"]+)"/) || [])[1] || '')
+    .toLowerCase()
+    .replace(/[\s_-]/g, '');
   if (style === 'title' || style === 'heading1') return 'h2';
   if (style === 'heading2') return 'h3';
   if (style === 'heading3' || style === 'heading4') return 'h4';
+  const level = paragraph.match(/<w:outlineLvl\b[^>]*w:val="(\d+)"/);
+  if (level) {
+    const depth = Number(level[1]);
+    if (depth === 0) return 'h2';
+    if (depth === 1) return 'h3';
+    if (depth <= 3) return 'h4';
+  }
   return '';
 }
 
@@ -123,12 +132,12 @@ function blocksFromXml(documentXml, relXml) {
     }
     const text = paragraphParts(chunk, links);
     if (!text) return;
-    if (/<w:numPr\b/.test(chunk)) {
+    const tag = headingTag(chunk);
+    if (!tag && /<w:numPr\b/.test(chunk)) {
       list.push(text);
       return;
     }
     flushList();
-    const tag = headingTag(chunk);
     html.push(tag ? '<' + tag + '>' + text + '</' + tag + '>' : '<p>' + text + '</p>');
   });
   flushList();
