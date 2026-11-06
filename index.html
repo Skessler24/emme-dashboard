@@ -1462,7 +1462,7 @@
             <p>2nd and 4th Friday at 7:00 AM</p>
             <p>Meeting ID: 227 556 6715</p>
             <p>Passcode: 617507</p>
-            <a class="btn btn--green team-meet__link" href="https://zoom.us/j/2275566715" target="_blank" rel="noopener noreferrer">Join Zoom meeting</a>
+            <a class="btn btn--green team-meet__link" href="zoommtg://zoom.us/join?action=join&amp;confno=2275566715&amp;pwd=617507">Join Zoom meeting</a>
           </div>
         </details>
 
@@ -1554,7 +1554,7 @@
             </li>
 
             <li role="listitem">
-              <a class="card card--blue" href="https://outlook.office365.com" target="_blank" rel="noopener noreferrer" aria-label="Microsoft Outlook — opens in new tab">
+              <a class="card card--blue" data-account-link="https://outlook.office365.com/mail/" href="https://outlook.office365.com/mail/" target="_blank" rel="noopener noreferrer" aria-label="Microsoft Outlook — opens in new tab">
                 <div class="card__icon-wrap card__icon-wrap--blue" aria-hidden="true">
                   <i data-lucide="mail" class="icon-md"></i>
                 </div>
@@ -1651,7 +1651,7 @@
             </div>
             <div class="widget__actions">
               <button type="button" class="btn btn--outline" id="js-tasks-refresh" style="display:none">Refresh</button>
-              <a class="btn btn--green" href="https://to.microsoft.com" target="_blank" rel="noopener noreferrer">Open Microsoft To‑Do →</a>
+              <a class="btn btn--green" data-account-link="https://to.microsoft.com" href="https://to.microsoft.com" target="_blank" rel="noopener noreferrer">Open Microsoft To‑Do →</a>
             </div>
           </header>
           <div class="widget__body">
@@ -1679,8 +1679,8 @@
             </div>
             <div class="widget__actions">
               <button type="button" class="btn btn--outline" id="js-cal-refresh" style="display:none">Refresh</button>
-              <a class="btn btn--green" href="https://outlook.office365.com/calendar" target="_blank" rel="noopener noreferrer">Open Outlook Calendar →</a>
-              <a class="btn btn--pink" href="https://outlook.office365.com/calendar/action/compose" target="_blank" rel="noopener noreferrer">New Event +</a>
+              <a class="btn btn--green" data-account-link="https://outlook.office365.com/calendar" href="https://outlook.office365.com/calendar" target="_blank" rel="noopener noreferrer">Open Outlook Calendar →</a>
+              <a class="btn btn--pink" data-account-link="https://outlook.office365.com/calendar/action/compose" href="https://outlook.office365.com/calendar/action/compose" target="_blank" rel="noopener noreferrer">New Event +</a>
             </div>
           </header>
           <div class="widget__body">
@@ -2251,6 +2251,13 @@
           if (user && user.name) titleEl.textContent = 'Good ' + period + ', ' + user.name;
           const label = document.getElementById('js-site-user');
           if (label && user && user.email) label.textContent = user.email;
+          if (user && user.email) {
+            const hint = '?login_hint=' + encodeURIComponent(user.email);
+            document.querySelectorAll('[data-account-link]').forEach(function (link) {
+              const base = link.getAttribute('data-account-link');
+              if (base) link.href = base + hint;
+            });
+          }
         },
       };
 
@@ -2284,18 +2291,19 @@
           } catch (_) { return null; }
         },
         emailFromPrincipal: function (principal) {
-          const details = String((principal && principal.userDetails) || '').trim().toLowerCase();
-          if (details.indexOf('@') !== -1) return details;
-          const claims = (principal && principal.claims) || [];
-          let fallback = '';
-          for (let i = 0; i < claims.length; i++) {
-            const typ = String(claims[i].typ || '').toLowerCase();
-            const val = String(claims[i].val || '').trim().toLowerCase();
-            if (val.indexOf('@') === -1) continue;
-            if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) return val;
-            if (!fallback) fallback = val;
+          const found = [];
+          function add(value) {
+            const email = String(value || '').trim().toLowerCase();
+            if (email.indexOf('@') !== -1 && found.indexOf(email) === -1) found.push(email);
           }
-          return fallback;
+          add(principal && principal.userDetails);
+          ((principal && principal.claims) || []).forEach(function (claim) {
+            const typ = String((claim && claim.typ) || '').toLowerCase();
+            const val = String((claim && claim.val) || '').trim().toLowerCase();
+            if (val.indexOf('@') === -1) return;
+            if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) add(val);
+          });
+          return found.find(function (email) { return /@emmeco\.org$/.test(email); }) || found[0] || '';
         },
         scopeKey: function (user) {
           return String((user && user.email) || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 80);

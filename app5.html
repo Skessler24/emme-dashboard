@@ -253,7 +253,11 @@
     .client-card__body { padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
     .client-card.is-collapsed .client-card__body,
     .client-card.is-collapsed .client-card__travel,
-    .client-card.is-collapsed .client-card__tasks { display: none; }
+    .client-card.is-collapsed .client-card__tasks,
+    .client-card.is-collapsed .client-card__sessions,
+    .client-card.is-collapsed [data-action="edit-client"],
+    .client-card.is-collapsed [data-action="del-client"] { display: none; }
+    .client-card.is-collapsed .client-card__head { align-items: center; padding: 0.55rem 1rem; }
     .client-card__travel {
       padding: 0.75rem 1rem 0.15rem;
       display: grid;
@@ -493,18 +497,21 @@
   var bc = null;
 
   function emailFromPrincipal(principal) {
-    var details = String((principal && principal.userDetails) || '').trim().toLowerCase();
-    if (details.indexOf('@') !== -1) return details;
-    var claims = (principal && principal.claims) || [];
-    var fallback = '';
-    for (var i = 0; i < claims.length; i++) {
-      var typ = String(claims[i].typ || '').toLowerCase();
-      var val = String(claims[i].val || '').trim().toLowerCase();
-      if (val.indexOf('@') === -1) continue;
-      if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) return val;
-      if (!fallback) fallback = val;
+    var found = [];
+    function add(value) {
+      var email = String(value || '').trim().toLowerCase();
+      if (email.indexOf('@') !== -1 && found.indexOf(email) === -1) found.push(email);
     }
-    return fallback;
+    add(principal && principal.userDetails);
+    var claims = (principal && principal.claims) || [];
+    claims.forEach(function (claim) {
+      var typ = String((claim && claim.typ) || '').toLowerCase();
+      var val = String((claim && claim.val) || '').trim().toLowerCase();
+      if (val.indexOf('@') === -1) return;
+      if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) add(val);
+    });
+    var emme = found.filter(function (email) { return /@emmeco\.org$/.test(email); })[0];
+    return emme || found[0] || '';
   }
 
   function scopeFromEmail(email) {

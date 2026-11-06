@@ -25,6 +25,15 @@ function header(req, name) {
   return key ? String(headers[key]) : '';
 }
 
+function pickProviderEmail(values) {
+  const emails = [];
+  (values || []).forEach(function (value) {
+    const email = String(value || '').trim().toLowerCase();
+    if (email.indexOf('@') !== -1 && emails.indexOf(email) === -1) emails.push(email);
+  });
+  return emails.find(function (email) { return /@emmeco\.org$/.test(email); }) || emails[0] || '';
+}
+
 function readEmail(req) {
   const directName = header(req, 'x-ms-client-principal-name');
   const encoded = header(req, 'x-ms-client-principal');
@@ -32,16 +41,17 @@ function readEmail(req) {
   if (encoded) {
     try { parsed = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')); } catch (_) { parsed = null; }
   }
+  const found = [];
   const details = String(directName || (parsed && parsed.userDetails) || '').trim().toLowerCase();
-  if (details.indexOf('@') !== -1) return details;
+  if (details.indexOf('@') !== -1) found.push(details);
   const claims = (parsed && parsed.claims) || [];
-  for (let i = 0; i < claims.length; i++) {
-    const typ = String(claims[i].typ || '').toLowerCase();
-    const val = String(claims[i].val || '').trim().toLowerCase();
-    if (val.indexOf('@') === -1) continue;
-    if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) return val;
-  }
-  return '';
+  claims.forEach(function (claim) {
+    const typ = String((claim && claim.typ) || '').toLowerCase();
+    const val = String((claim && claim.val) || '').trim().toLowerCase();
+    if (val.indexOf('@') === -1) return;
+    if (typ.indexOf('email') !== -1 || typ.indexOf('preferred_username') !== -1 || typ.endsWith('/upn')) found.push(val);
+  });
+  return pickProviderEmail(found);
 }
 
 function configured() {

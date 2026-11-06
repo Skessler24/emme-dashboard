@@ -24,7 +24,7 @@ function readPrincipal(req) {
         }
     }
     const claims = (parsed && parsed.claims) || [];
-    let email = '';
+    const emails = [];
     let name = '';
     function consider(value, prefer) {
         const text = String(value || '').trim();
@@ -34,8 +34,13 @@ function readPrincipal(req) {
             name = text;
         if (text.indexOf('@') === -1)
             return;
-        if (prefer || !email)
-            email = text.toLowerCase();
+        const emailText = text.toLowerCase();
+        if (emails.indexOf(emailText) !== -1)
+            return;
+        if (prefer)
+            emails.unshift(emailText);
+        else
+            emails.push(emailText);
     }
     claims.forEach(function (claim) {
         const typ = String((claim && claim.typ) || '').toLowerCase();
@@ -47,6 +52,7 @@ function readPrincipal(req) {
             consider(val, prefer);
     });
     consider(directName, directName.indexOf('@') !== -1);
+    const email = emails.find(function (item) { return /@emmeco\.org$/.test(item); }) || emails[0] || '';
     const userId = directId || (parsed && parsed.userId) || '';
     if (!email && !userId)
         return null;

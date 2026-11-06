@@ -212,7 +212,7 @@ module.exports = async function (context, req) {
     const personal = container.getBlockBlobClient(emailBlobName(principal));
     const previous = container.getBlockBlobClient(idBlobName(principal));
     const legacy = container.getBlockBlobClient(LEGACY_BLOB);
-    const ownerEmail = principal.emails[0] || '';
+    const ownerEmail = (principal.emails.find(function (email) { return /@emmeco\.org$/i.test(email); }) || principal.emails[0] || '');
 
     const rest = String((req.params && (req.params.rest || req.params.id)) || '')
       .replace(/^\/+|\/+$/g, '');

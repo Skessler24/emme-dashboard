@@ -41,26 +41,14 @@ function providerMatchScore(candidate, staffName, email) {
     const name = compact(staffName);
     const code = shortCode(staffName);
     const local = compact((email || '').split('@')[0] || '');
-    const first = compact(normName(staffName).split(' ')[0] || '');
     if (!folder)
         return 0;
     if (local && folder === local)
         return 100;
     if (name && folder === name)
         return 95;
-    if (code && (folder === code || folder.indexOf(code) === 0))
+    if (code && folder === code)
         return 90;
-    if (first && (folder === first || folder.indexOf(first) === 0))
-        return 80;
-    if (first && folder.length >= 3 && first.indexOf(folder) === 0)
-        return 78;
-    const tokens = normName(staffName).split(' ').filter(function (token) { return token.length > 2; });
-    if (tokens.length >= 2 && tokens.every(function (token) { return folder.includes(token); }))
-        return 85;
-    if (local && folder.includes(local))
-        return 75;
-    if (code && folder.includes(code))
-        return 70;
     return 0;
 }
 let librarySiteCache = '';
@@ -166,7 +154,7 @@ async function findExistingProviderFile(root, email, displayName, kind) {
             }
         });
     }
-    if (bestFolder && (emailFolder || bestScore >= 60)) {
+    if (bestFolder && (emailFolder || bestScore >= 90)) {
         const inside = await listChildren(root.concat([bestFolder]));
         const fileName = workbookName(inside, kind);
         const segments = fileName ? root.concat([bestFolder, fileName]) : root.concat([bestFolder]);
@@ -182,7 +170,7 @@ async function findExistingProviderFile(root, email, displayName, kind) {
             bestFile = item.name;
         }
     });
-    if (!bestFile || fileScore < 60 || !/\.xlsx$/i.test(bestFile))
+    if (!bestFile || fileScore < 90 || !/\.xlsx$/i.test(bestFile))
         return null;
     return {
         folder: '',

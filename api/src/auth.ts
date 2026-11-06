@@ -20,14 +20,17 @@ export function readPrincipal(req: HttpRequest): Principal | null {
     try { parsed = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')); } catch (_) { parsed = null; }
   }
   const claims = (parsed && parsed.claims) || [];
-  let email = '';
+  const emails: string[] = [];
   let name = '';
   function consider(value: string, prefer: boolean) {
     const text = String(value || '').trim();
     if (!text) return;
     if (!name && text.indexOf('@') === -1) name = text;
     if (text.indexOf('@') === -1) return;
-    if (prefer || !email) email = text.toLowerCase();
+    const emailText = text.toLowerCase();
+    if (emails.indexOf(emailText) !== -1) return;
+    if (prefer) emails.unshift(emailText);
+    else emails.push(emailText);
   }
   claims.forEach(function (claim: { typ?: string; val?: string }) {
     const typ = String((claim && claim.typ) || '').toLowerCase();
@@ -37,6 +40,7 @@ export function readPrincipal(req: HttpRequest): Principal | null {
     if (prefer || val.indexOf('@') !== -1) consider(val, prefer);
   });
   consider(directName, directName.indexOf('@') !== -1);
+  const email = emails.find(function (item) { return /@emmeco\.org$/.test(item); }) || emails[0] || '';
   const userId = directId || (parsed && parsed.userId) || '';
   if (!email && !userId) return null;
   return {
