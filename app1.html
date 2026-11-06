@@ -29,7 +29,8 @@
     #sidebar-emme { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: var(--forest-dark); z-index: 50; display: flex; flex-direction: column; overflow-y: auto; }
     #sidebar-emme::-webkit-scrollbar { width: 4px; }
     #sidebar-emme::-webkit-scrollbar-thumb { background: var(--forest-medium); border-radius: 4px; }
-    .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 20px; color: #c5d8c8; font-size: 13.5px; font-weight: 500; text-decoration: none; border-left: 3px solid transparent; cursor: pointer; }
+    .sidebar-link { display: flex; align-items: flex-start; gap: 10px; padding: 10px 16px 10px 20px; color: #c5d8c8; font-size: 13.5px; font-weight: 500; text-decoration: none; border-left: 3px solid transparent; cursor: pointer; }
+    .sidebar-link span:last-child { min-width: 0; line-height: 1.35; }
     .sidebar-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
     .sidebar-link.active { border-left-color: var(--gold); background: rgba(74,124,107,0.20); color: #fff; font-weight: 600; }
     .sidebar-link .nav-icon { width: 22px; text-align: center; flex-shrink: 0; }

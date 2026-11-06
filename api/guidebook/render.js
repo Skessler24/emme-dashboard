@@ -41,16 +41,64 @@ function sanitize(html) {
 }
 
 function textOf(html) {
-  return decodeBasic(String(html || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+  return decodeBasic(String(html || '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/(p|div|li|tr|h[1-6])>/gi, ' ')
+    .replace(/<[^>]+>/g, ''))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function splitHtmlAt(html, count) {
+  const src = String(html || '');
+  let seen = 0;
+  let i = 0;
+  while (i < src.length && seen < count) {
+    if (src.charAt(i) === '<') {
+      const end = src.indexOf('>', i);
+      if (end < 0) break;
+      i = end + 1;
+      continue;
+    }
+    if (src.charAt(i) === '&') {
+      const end = src.indexOf(';', i);
+      const entity = end < 0 ? src.charAt(i) : src.slice(i, end + 1);
+      seen += decodeBasic(entity).length || 1;
+      i = end < 0 ? i + 1 : end + 1;
+      continue;
+    }
+    seen += 1;
+    i += 1;
+  }
+  if (seen < count) return null;
+  return { head: src.slice(0, i), rest: src.slice(i) };
 }
 
 function promotePlainHeadings(html) {
-  return String(html || '').replace(/<p>\s*<strong>([^<]{2,90})<\/strong>\s*<\/p>/gi, function (_full, inner) {
-    const title = textOf(inner);
-    if (/^\d+[a-z]\.\s+\S/.test(title)) return '<h3>' + inner + '</h3>';
-    if (/^\d+\.\s+\S/.test(title)) return '<h2>' + inner + '</h2>';
-    return '<p><strong>' + inner + '</strong></p>';
+  return String(html || '').replace(/<p>([\s\S]*?)<\/p>/gi, function (_full, inner) {
+    let title = textOf(inner);
+    if (!/^\d+[a-z]?\.\s+\S/.test(title)) return '<p>' + inner + '</p>';
+    let headHtml = inner;
+    let restHtml = '';
+    if (title.length > 140) {
+      const cut = title.match(/^(\d+[a-z]?\.\s+[^:]{2,100}?):\s+/);
+      if (!cut) return '<p>' + inner + '</p>';
+      const parts = splitHtmlAt(inner, cut[1].length);
+      if (!parts || !textOf(parts.rest)) return '<p>' + inner + '</p>';
+      headHtml = parts.head;
+      restHtml = parts.rest.replace(/^(?:\s|<br>)*:?\s*/i, '');
+      title = textOf(headHtml);
+    }
+    const level = /^\d+[a-z]\./i.test(title) ? 'h3' : 'h2';
+    const heading = '<' + level + '>' + headHtml + '</' + level + '>';
+    return restHtml && textOf(restHtml) ? heading + '<p>' + restHtml + '</p>' : heading;
   });
+}
+
+function isWordContents(html) {
+  const withoutList = String(html || '').replace(/<ul[\s\S]*<\/ul>/gi, ' ');
+  const rest = textOf(withoutList);
+  return /table of contents/i.test(textOf(html)) && rest.length < 140 && /guidebook|contents/i.test(rest);
 }
 
 function promoteNumberedSections(html) {
@@ -85,6 +133,10 @@ function splitSections(html) {
   chunks.forEach(function (chunk) {
     const heading = chunk.match(/^<h([12])[^>]*>([\s\S]*?)<\/h\1>/i);
     if (!heading) {
+      if (isWordContents(chunk)) {
+        if (!coverTitle) coverTitle = 'Provider Guidebook';
+        return;
+      }
       if (textOf(chunk)) sections.push({ title: 'Overview', html: chunk });
       return;
     }

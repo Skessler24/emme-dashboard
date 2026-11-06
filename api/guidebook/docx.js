@@ -36,20 +36,44 @@ function unzip(buffer) {
     let data = compressed;
     if (method === 8) data = zlib.inflateRawSync(compressed);
     else if (method !== 0) data = Buffer.alloc(0);
-    files[name] = data.toString('utf8');
+    files[name] = data;
     i = start + compSize;
   }
   return files;
 }
 
+function attr(tag, name) {
+  const match = String(tag || '').match(new RegExp('\\b' + name + '="([^"]*)"', 'i'));
+  return match ? match[1] : '';
+}
+
 function relationships(xml) {
-  const map = {};
-  const re = /<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/?>/g;
+  const links = {};
+  const images = {};
+  const re = /<Relationship\b[^>]*\/?>/g;
   let match;
   while ((match = re.exec(xml || ''))) {
-    if (/hyperlink/i.test(match[0])) map[match[1]] = xmlText(match[2]);
+    const tag = match[0];
+    const id = attr(tag, 'Id');
+    const target = xmlText(attr(tag, 'Target'));
+    if (!id || !target) continue;
+    if (/hyperlink/i.test(tag)) links[id] = target;
+    else if (/\/image\b/i.test(attr(tag, 'Type'))) images[id] = target;
   }
-  return map;
+  return { links: links, images: images };
+}
+
+function mediaDataUri(files, target) {
+  const clean = String(target || '').replace(/^\/+/, '');
+  const base = clean.split('/').pop();
+  const key = [clean, 'word/' + clean, base].concat(Object.keys(files)).find(function (name) {
+    return files[name] && (name === clean || name === 'word/' + clean || name === base || name.endsWith('/' + base));
+  });
+  const data = key ? files[key] : null;
+  if (!data || !data.length) return '';
+  const ext = String(key.split('.').pop() || 'png').toLowerCase();
+  const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'gif' ? 'image/gif' : ext === 'webp' ? 'image/webp' : 'image/png';
+  return 'data:' + mime + ';base64,' + data.toString('base64');
 }
 
 function runHtml(run) {
@@ -69,18 +93,28 @@ function runHtml(run) {
   return text;
 }
 
-function paragraphParts(paragraph, links) {
+function imageTags(fragment, images) {
   let html = '';
-  const re = /<w:hyperlink\b[^>]*r:id="([^"]+)"[^>]*>([\s\S]*?)<\/w:hyperlink>|<w:r\b[\s\S]*?<\/w:r>/g;
+  const re = /r:embed="([^"]+)"/g;
+  let match;
+  while ((match = re.exec(fragment || ''))) {
+    if (images[match[1]]) html += '<img src="' + images[match[1]] + '" alt="">';
+  }
+  return html;
+}
+
+function paragraphParts(paragraph, links, images) {
+  let html = '';
+  const re = /<w:hyperlink\b[^>]*r:id="([^"]+)"[^>]*>([\s\S]*?)<\/w:hyperlink>|<w:r\b[\s\S]*?<\/w:r>/gi;
   let match;
   while ((match = re.exec(paragraph))) {
     if (match[1]) {
       const href = links[match[1]] || '';
-      const label = runHtml(match[2]) || escapeHtml(href);
+      const label = (runHtml(match[2]) || escapeHtml(href)) + imageTags(match[2], images);
       if (/^https?:|^mailto:/i.test(href)) html += '<a href="' + escapeHtml(href) + '">' + label + '</a>';
       else html += label;
     } else {
-      html += runHtml(match[0]);
+      html += runHtml(match[0]) + imageTags(match[0], images);
     }
   }
   return html;
@@ -103,8 +137,14 @@ function headingTag(paragraph) {
   return '';
 }
 
-function blocksFromXml(documentXml, relXml) {
-  const links = relationships(relXml);
+function blocksFromXml(documentXml, relXml, files) {
+  const rels = relationships(relXml);
+  const links = rels.links;
+  const images = {};
+  Object.keys(rels.images).forEach(function (id) {
+    const uri = mediaDataUri(files || {}, rels.images[id]);
+    if (uri) images[id] = uri;
+  });
   const body = (documentXml.match(/<w:body\b[\s\S]*<\/w:body>/) || [documentXml])[0];
   const chunks = body.match(/<w:tbl\b[\s\S]*?<\/w:tbl>|<w:p\b[\s\S]*?<\/w:p>/g) || [];
   const html = [];
@@ -123,14 +163,14 @@ function blocksFromXml(documentXml, relXml) {
         const tag = index === 0 ? 'th' : 'td';
         const inner = cells.map(function (cell) {
           const paras = cell.match(/<w:p\b[\s\S]*?<\/w:p>/g) || [];
-          return '<' + tag + '>' + paras.map(function (p) { return paragraphParts(p, links); }).filter(Boolean).join('<br>') + '</' + tag + '>';
+          return '<' + tag + '>' + paras.map(function (p) { return paragraphParts(p, links, images); }).filter(Boolean).join('<br>') + '</' + tag + '>';
         }).join('');
         return '<tr>' + inner + '</tr>';
       }).join('');
       if (rendered) html.push('<table>' + rendered + '</table>');
       return;
     }
-    const text = paragraphParts(chunk, links);
+    const text = paragraphParts(chunk, links, images);
     if (!text) return;
     const tag = headingTag(chunk);
     if (!tag && /<w:numPr\b/.test(chunk)) {
@@ -146,9 +186,10 @@ function blocksFromXml(documentXml, relXml) {
 
 function docxToHtml(buffer) {
   const files = unzip(buffer);
-  const documentXml = files['word/document.xml'] || '';
+  const documentXml = files['word/document.xml'] ? files['word/document.xml'].toString('utf8') : '';
   if (!documentXml) throw new Error('The guidebook file could not be read.');
-  return blocksFromXml(documentXml, files['word/_rels/document.xml.rels'] || '');
+  const relXml = files['word/_rels/document.xml.rels'] ? files['word/_rels/document.xml.rels'].toString('utf8') : '';
+  return blocksFromXml(documentXml, relXml, files);
 }
 
 module.exports = { docxToHtml };

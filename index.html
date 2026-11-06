@@ -1792,7 +1792,10 @@
       };
 
       function pad(n) { return String(n).padStart(2, '0'); }
-      function ymd(y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); }
+      function ymd(y, m, d) {
+        const date = new Date(y, m, d);
+        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+      }
       function isHttpsHost() {
         return location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       }
@@ -2084,6 +2087,18 @@
           return popup.accessToken;
         },
 
+        graphPages: async function (path, options) {
+          const items = [];
+          let next = path;
+          for (let page = 0; page < 8 && next; page++) {
+            const data = await MsGraph.graph(next, options) || {};
+            (data.value || []).forEach(function (item) { items.push(item); });
+            const link = data && data['@odata.nextLink'] ? String(data['@odata.nextLink']) : '';
+            next = link.replace(/^https:\/\/graph\.microsoft\.com\/v1\.0/i, '');
+          }
+          return items;
+        },
+
         graph: async function (path, options) {
           options = options || {};
           const token = await MsGraph.getToken();
@@ -2366,13 +2381,13 @@
               const path = sources[i].id
                 ? '/me/calendars/' + encodeURIComponent(sources[i].id) + '/calendarView'
                 : '/me/calendarView';
-              const data = await MsGraph.graph(
+              const events = await MsGraph.graphPages(
                 path + '?startDateTime=' + encodeURIComponent(startISO) +
                 '&endDateTime=' + encodeURIComponent(endISO) +
                 '&$select=subject,start,end,isAllDay,webLink&$orderby=start/dateTime&$top=100',
                 { headers: { Prefer: 'outlook.timezone="America/Denver"' } }
               );
-              (data.value || []).forEach(function (ev) {
+              events.forEach(function (ev) {
                 const raw = (ev.start && (ev.start.dateTime || ev.start.date)) || '';
                 const dayKey = raw.slice(0, 10);
                 if (!dayKey) return;
@@ -2628,11 +2643,11 @@
 
             const items = [];
             for (let i = 0; i < listsArr.length; i++) {
-              const data = await MsGraph.graph(
+              const tasks = await MsGraph.graphPages(
                 '/me/todo/lists/' + encodeURIComponent(listsArr[i].id) +
                 '/tasks?$top=50&$orderby=createdDateTime desc'
               );
-              (data.value || []).forEach(function (t) {
+              tasks.forEach(function (t) {
                 items.push({
                   id: t.id,
                   listId: listsArr[i].id,

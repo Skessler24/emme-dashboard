@@ -73,8 +73,9 @@ module.exports = async function (context, req) {
   } catch (err) {
     const status = err instanceof GraphError ? err.status : 502;
     const message = err instanceof Error ? err.message : 'Could not read the guidebook';
-    json(context, status === 401 || status === 403 ? 502 : (status || 502), {
-      error: message.slice(0, 240) + ' The guidebook needs Files.ReadWrite.All or Sites.ReadWrite.All admin consent.',
+    const needsConsent = status === 401 || status === 403;
+    json(context, needsConsent ? 502 : (status || 502), {
+      error: message.slice(0, 240) + (needsConsent ? ' The guidebook needs Files.ReadWrite.All or Sites.ReadWrite.All admin consent.' : ''),
     });
   }
 };

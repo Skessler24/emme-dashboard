@@ -100,6 +100,18 @@ function userPath(email) {
   return '/users/' + encodeURIComponent(email);
 }
 
+async function graphList(token, path, options) {
+  const items = [];
+  let next = path;
+  for (let page = 0; page < 8 && next; page++) {
+    const data = await graph(token, next, options) || {};
+    (data.value || []).forEach(function (item) { items.push(item); });
+    const link = data['@odata.nextLink'] ? String(data['@odata.nextLink']) : '';
+    next = link.replace(/^https:\/\/graph\.microsoft\.com\/v1\.0/i, '');
+  }
+  return items;
+}
+
 async function calendarFor(token, email, start, end) {
   const calendars = await graph(token, userPath(email) + '/calendars?$select=id,owner,isDefaultCalendar');
   const owned = (calendars.value || []).filter(function (cal) {
@@ -113,14 +125,14 @@ async function calendarFor(token, email, start, end) {
     const base = sources[i].id
       ? userPath(email) + '/calendars/' + encodeURIComponent(sources[i].id) + '/calendarView'
       : userPath(email) + '/calendarView';
-    const data = await graph(
+    const page = await graphList(
       token,
       base + '?startDateTime=' + encodeURIComponent(start) +
         '&endDateTime=' + encodeURIComponent(end) +
         '&$select=subject,start,end,isAllDay,webLink&$orderby=start/dateTime&$top=100',
       { prefer: 'outlook.timezone="America/Denver"' }
     );
-    (data.value || []).forEach(function (ev) { events.push(ev); });
+    page.forEach(function (ev) { events.push(ev); });
   }
   return events;
 }
@@ -130,12 +142,12 @@ async function tasksFor(token, email) {
   const listsArr = lists.value || [];
   const items = [];
   for (let i = 0; i < listsArr.length; i++) {
-    const data = await graph(
+    const tasks = await graphList(
       token,
       userPath(email) + '/todo/lists/' + encodeURIComponent(listsArr[i].id) +
         '/tasks?$top=50&$orderby=createdDateTime desc'
     );
-    (data.value || []).forEach(function (task) {
+    tasks.forEach(function (task) {
       items.push({
         id: task.id,
         listId: listsArr[i].id,
