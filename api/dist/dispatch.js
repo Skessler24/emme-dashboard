@@ -606,6 +606,24 @@ async function scheduling(context, req) {
     }
     (0, http_1.json)(context, 404, { error: 'Not found' });
 }
+async function reflectiveSupervision(context, req) {
+    const admin = await (0, auth_1.requireAdmin)(context, req);
+    if (!admin)
+        return;
+    if ((0, http_1.methodOf)(req) !== 'GET') {
+        (0, http_1.json)(context, 405, { error: 'Method not allowed' });
+        return;
+    }
+    const raw = (0, http_1.queryOf)(req, 'path');
+    const relative = raw.split('/').filter(Boolean);
+    const folder = await (0, providerSetup_1.listObservationProcess)(relative);
+    (0, http_1.json)(context, 200, {
+        source: 'sharepoint',
+        path: folder.path,
+        webUrl: folder.webUrl,
+        items: folder.items,
+    });
+}
 const AREAS = {
     me,
     onboarding,
@@ -619,6 +637,7 @@ const AREAS = {
     'documentation-compliance': documentation,
     billing,
     scheduling,
+    'reflective-supervision': reflectiveSupervision,
 };
 async function dispatch(context, req, area) {
     if ((0, http_1.methodOf)(req) === 'OPTIONS') {

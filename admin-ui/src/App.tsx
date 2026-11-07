@@ -4,6 +4,7 @@ import { AlertBanner } from './components/AlertBanner';
 import { BillingTile } from './components/tiles/BillingTile';
 import { OnboardingTile } from './components/tiles/OnboardingTile';
 import { ReferralsTile } from './components/tiles/ReferralsTile';
+import { ReflectiveSupervisionTile } from './components/tiles/ReflectiveSupervisionTile';
 import { StaffExpectationsTile } from './components/tiles/StaffExpectationsTile';
 import { StaffInformationTile } from './components/tiles/StaffInformationTile';
 import { AnnouncementPanel } from './components/AnnouncementPanel';
@@ -15,6 +16,7 @@ const TILES = [
   { id: 'referrals', href: '#/referrals', title: 'Referrals', text: 'Incoming referrals' },
   { id: 'staff', href: '#/staff', title: 'Staff Information', text: 'Trainings and open notes' },
   { id: 'expectations', href: '#/expectations', title: 'Staff Expectations', text: 'Openings, mileage, and compliance' },
+  { id: 'reflective-supervision', href: '#/reflective-supervision', title: 'Reflective Supervision', text: 'Observation process files' },
 ];
 
 function useHash(): string {
@@ -50,6 +52,7 @@ export function App() {
     : view === 'referrals' ? <ReferralsTile />
     : view === 'staff' ? <StaffInformationTile />
     : view === 'expectations' ? <StaffExpectationsTile />
+    : view === 'reflective-supervision' ? <ReflectiveSupervisionTile />
     : null;
 
   return (

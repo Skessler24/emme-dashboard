@@ -9,6 +9,7 @@ import { GraphError, getSharePointSiteId, getUserDisplayName, graphGet, graphGet
 
 export const MILEAGE_ROOT = ['EMME', 'PAYROLL & MILEAGE', 'Mileage'];
 export const SCHEDULE_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'Referral Process', 'Provider Schedules'];
+export const RS_OBSERVATION_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'RS_Observation Process'];
 const MARKER = 'emme-provider.json';
 
 export type FoundProviderFile = {
@@ -192,4 +193,105 @@ export async function searchProviderLibraries(email: string, displayName: string
   const mileage = await findExistingProviderFile(MILEAGE_ROOT, providerEmail, name, 'mileage');
   const schedule = await findExistingProviderFile(SCHEDULE_ROOT, providerEmail, name, 'schedule');
   return { email: providerEmail, name, mileage, schedule };
+}
+
+export type ObservationItem = {
+  name: string;
+  kind: 'folder' | 'file';
+  lastModified: string;
+  webUrl: string;
+  size: number | null;
+};
+
+function assertFolderSegment(segment: string): string {
+  const name = String(segment || '').trim();
+  if (!name || name === '.' || name === '..' || /[\\/]/.test(name) || name.length > 180) {
+    throw new GraphError(400, 'Folder path is not valid');
+  }
+  return name;
+}
+
+let observationSiteCache = '';
+
+async function folderOnSite(siteId: string, segments: string[]): Promise<{ webUrl: string } | null> {
+  try {
+    const hit = await graphGet('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + '?$select=id,webUrl,folder');
+    if (!hit || !hit.folder) return null;
+    return { webUrl: String(hit.webUrl || '') };
+  } catch (err) {
+    if (err instanceof GraphError && (err.status === 404 || /itemNotFound/i.test(err.message))) return null;
+    throw err;
+  }
+}
+
+/**
+ * Reflective Supervision files live in
+ * EMME/LEADERSHIP TEAM/EMME Processes/RS_Observation Process.
+ * The personal library is checked first, then the site already used for mileage.
+ */
+async function observationSiteId(): Promise<string> {
+  if (observationSiteCache) return observationSiteCache;
+  const tries: string[] = [];
+  try {
+    const personal = await graphGet('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
+    if (personal && personal.id) tries.push(String(personal.id));
+  } catch (_) { /* the mileage library site is the fallback */ }
+  try {
+    const known = await librarySiteId();
+    if (tries.indexOf(known) === -1) tries.push(known);
+  } catch (_) { /* the personal library may still contain the folder */ }
+  let last: unknown = null;
+  for (let i = 0; i < tries.length; i++) {
+    try {
+      const found = await folderOnSite(tries[i], RS_OBSERVATION_ROOT);
+      if (found) {
+        observationSiteCache = tries[i];
+        return observationSiteCache;
+      }
+    } catch (err) {
+      last = err;
+      if (err instanceof GraphError && (err.status === 401 || err.status === 403 || err.status === 404)) continue;
+      throw err;
+    }
+  }
+  if (last instanceof GraphError && last.status !== 404) throw last;
+  throw new GraphError(404, 'The Reflective Supervision folder was not found in SharePoint.');
+}
+
+async function listDriveChildren(siteId: string, segments: string[]): Promise<ObservationItem[]> {
+  let next: string | null = '/sites/' + siteId + '/drive/root:/' + drivePath(segments) +
+    ':/children?$select=name,lastModifiedDateTime,folder,file,webUrl,size&$top=200';
+  const items: ObservationItem[] = [];
+  for (let page = 0; page < 10 && next; page++) {
+    const data = await graphGet(next);
+    const value = (data && data.value) || [];
+    value.forEach(function (item: { name?: string; lastModifiedDateTime?: string; folder?: unknown; webUrl?: string; size?: number }) {
+      const name = String(item.name || '');
+      if (!name || name.indexOf('~$') === 0) return;
+      const isFolder = !!item.folder;
+      items.push({
+        name,
+        kind: isFolder ? 'folder' : 'file',
+        lastModified: String(item.lastModifiedDateTime || ''),
+        webUrl: String(item.webUrl || ''),
+        size: isFolder || typeof item.size !== 'number' ? null : item.size,
+      });
+    });
+    next = data && data['@odata.nextLink'] ? String(data['@odata.nextLink']) : null;
+  }
+  items.sort(function (a, b) {
+    if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
+  return items;
+}
+
+export async function listObservationProcess(relative: string[]): Promise<{ path: string; webUrl: string; items: ObservationItem[] }> {
+  const extra = (relative || []).map(assertFolderSegment);
+  const siteId = await observationSiteId();
+  const segments = RS_OBSERVATION_ROOT.concat(extra);
+  const folder = await folderOnSite(siteId, segments);
+  if (!folder) throw new GraphError(404, 'That Reflective Supervision folder was not found.');
+  const items = await listDriveChildren(siteId, segments);
+  return { path: '/' + segments.join('/'), webUrl: folder.webUrl, items };
 }

@@ -4,7 +4,7 @@ import { IntakeQError, complianceByStaff, getCancellations, getInvoices, getNote
 import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, restParts } from './http';
 import { addAlert, addMessage, endAlert, listAlerts, listMessages, markSeen, replyToMessage, unreadCount } from './conversationStore';
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
-import { searchProviderLibraries } from './providerSetup';
+import { listObservationProcess, searchProviderLibraries } from './providerSetup';
 import { availabilityForWindow } from './schedulingService';
 import {
   LISTS,
@@ -596,6 +596,24 @@ async function scheduling(context: FnContext, req: HttpRequest): Promise<void> {
   json(context, 404, { error: 'Not found' });
 }
 
+async function reflectiveSupervision(context: FnContext, req: HttpRequest): Promise<void> {
+  const admin = await requireAdmin(context, req);
+  if (!admin) return;
+  if (methodOf(req) !== 'GET') {
+    json(context, 405, { error: 'Method not allowed' });
+    return;
+  }
+  const raw = queryOf(req, 'path');
+  const relative = raw.split('/').filter(Boolean);
+  const folder = await listObservationProcess(relative);
+  json(context, 200, {
+    source: 'sharepoint',
+    path: folder.path,
+    webUrl: folder.webUrl,
+    items: folder.items,
+  });
+}
+
 const AREAS: Record<string, (context: FnContext, req: HttpRequest) => Promise<void>> = {
   me,
   onboarding,
@@ -609,6 +627,7 @@ const AREAS: Record<string, (context: FnContext, req: HttpRequest) => Promise<vo
   'documentation-compliance': documentation,
   billing,
   scheduling,
+  'reflective-supervision': reflectiveSupervision,
 };
 
 export async function dispatch(context: FnContext, req: HttpRequest, area: string): Promise<void> {
