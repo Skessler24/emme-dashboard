@@ -873,6 +873,33 @@
       margin-left: auto;
     }
 
+    .help { position: relative; }
+    .help__menu {
+      position: absolute;
+      top: calc(100% + 0.45rem);
+      right: 0;
+      min-width: 22rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 0.35rem;
+      z-index: 120;
+    }
+    .help__menu a {
+      display: block;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.55rem;
+      color: var(--color-green);
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: 700;
+    }
+    .help__menu a:hover,
+    .help__menu a:focus-visible {
+      background: var(--color-green-subtle);
+    }
+
     /* ── COMPONENTS — TASKS ── */
     .task-form {
       display: flex;
@@ -1405,6 +1432,13 @@
       <span class="site-header__date" id="js-site-user"></span>
       <button type="button" class="btn btn--yellow" id="js-ms-connect" style="display:none">Connect Microsoft</button>
       <button type="button" class="btn btn--outline" id="js-ms-settings" style="display:none;color:#fff;border-color:rgba(255,255,255,.4)">MS Setup</button>
+      <div class="help">
+        <button type="button" class="btn btn--outline" id="js-help" aria-expanded="false" aria-controls="js-help-menu" style="color:#fff;border-color:rgba(255,255,255,.4)">Help</button>
+        <div class="help__menu" id="js-help-menu" hidden>
+          <a href="provider-guide/index.html">How to use the dashboard</a>
+          <a href="provider-guide/pin.html">Pin it to your desktop, tab, or Start</a>
+        </div>
+      </div>
       <button type="button" class="btn btn--outline" id="js-ms-signout" style="color:#fff;border-color:rgba(255,255,255,.4)">Sign out</button>
     </div>
   </header>
@@ -3094,6 +3128,27 @@
         init: async function () {
           const signout = document.getElementById('js-ms-signout');
           if (signout) signout.addEventListener('click', function () { MsGraph.signOutSite(); });
+          const helpBtn = document.getElementById('js-help');
+          const helpMenu = document.getElementById('js-help-menu');
+          if (helpBtn && helpMenu) {
+            helpBtn.addEventListener('click', function (event) {
+              event.stopPropagation();
+              const open = helpMenu.hidden;
+              helpMenu.hidden = !open;
+              helpBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+            document.addEventListener('click', function (event) {
+              if (helpMenu.hidden || helpMenu.contains(event.target)) return;
+              helpMenu.hidden = true;
+              helpBtn.setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('keydown', function (event) {
+              if (event.key !== 'Escape' || helpMenu.hidden) return;
+              helpMenu.hidden = true;
+              helpBtn.setAttribute('aria-expanded', 'false');
+              helpBtn.focus();
+            });
+          }
           await SiteUser.current();
           await AdminHome.init();
           Header.init();

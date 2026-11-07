@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emme provider dashboard guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #084339;
+      --pink: #f8cacb;
+      --yellow: #ffca34;
+      --bg: #fef7fc;
+      --surface: #fff;
+      --text: #2a3a38;
+      --muted: rgba(8, 67, 57, 0.62);
+      --line: rgba(8, 67, 57, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--green);
+      color: #fff;
+      padding: 2.2rem 1.25rem 1.8rem;
+    }
+    header, main { max-width: 980px; margin: 0 auto; }
+    header { max-width: none; }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    h1, h2, h3 { font-family: Comfortaa, cursive; color: var(--green); }
+    header h1 { color: #fff; margin: 0 0 0.4rem; font-size: 2rem; }
+    header p { margin: 0; max-width: 40rem; color: rgba(255,255,255,0.86); }
+    main { padding: 1.5rem 1.25rem 4rem; }
+    .player {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      overflow: hidden;
+      margin: 0.5rem 0 2rem;
+    }
+    .stage { position: relative; background: #123; aspect-ratio: 16 / 9; }
+    .stage img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+    .caption {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 0.85rem 1rem 0.75rem;
+      background: linear-gradient(transparent, rgba(8, 67, 57, 0.92));
+      color: #fff;
+    }
+    .caption strong { display: block; font-family: Comfortaa, cursive; }
+    .controls {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      padding: 0.7rem 0.85rem;
+    }
+    button, .jump {
+      font: inherit;
+      border: 0;
+      background: var(--green);
+      color: #fff;
+      border-radius: 999px;
+      padding: 0.4rem 0.85rem;
+      cursor: pointer;
+    }
+    .jump { background: transparent; color: var(--green); border: 1px solid var(--line); }
+    .bar { flex: 1; height: 6px; background: var(--pink); border-radius: 999px; overflow: hidden; }
+    .bar span { display: block; height: 100%; width: 0; background: var(--green); }
+    section { margin: 2rem 0; }
+    figure {
+      margin: 0.8rem 0 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+    figure img { width: 100%; display: block; }
+    figcaption { padding: 0.7rem 0.9rem 0.85rem; color: var(--muted); font-size: 0.92rem; }
+    ol { padding-left: 1.2rem; }
+    li { margin: 0.35rem 0; }
+    .note { color: var(--muted); font-size: 0.92rem; }
+    a { color: var(--green); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Provider dashboard</h1>
+      <p>A short guide for using the Emme home page, guidebook, forms, resource hub, and schedule. Sign in with your emmeco.org account first. Each person’s tasks, calendar, and schedule stay with that account.</p>
+      <p style="margin-top:0.8rem"><a href="../index.html" style="color:#fff">Back to the dashboard</a> · <a href="pin.html" style="color:#ffca34">Pin it to your desktop, taskbar, tab, or Dock</a></p>
+    </div>
+  </header>
+  <main>
+    <section id="watch">
+      <h2>Watch the walkthrough</h2>
+      <p class="note">This plays the real screens in order. The guidebook and schedule pictures were taken before sign-in, so those two show the signed-out message. After you sign in, the same pages fill in with your guidebook sections and your own schedule.</p>
+      <div class="player">
+        <div class="stage">
+          <img id="frame" alt="" src="images/home.png" />
+          <div class="caption">
+            <strong id="cap-title">Home</strong>
+            <span id="cap-text"></span>
+          </div>
+        </div>
+        <div class="controls">
+          <button type="button" id="play">Pause</button>
+          <div class="bar" aria-hidden="true"><span id="progress"></span></div>
+          <button type="button" class="jump" id="prev">Back</button>
+          <button type="button" class="jump" id="next">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>1. Start on the home page</h2>
+      <p>The green bar across the top is how you move around. Dashboard brings you back here. The other tabs open the guidebook, reference forms, resource hub, and schedule. Sign out is at the top right.</p>
+      <p>The greeting changes with the time of day. Under Resources &amp; Tools, each card opens that tool. Zoom, IntakeQ, Outlook, and the newsletter open the outside sites.</p>
+      <figure>
+        <img src="images/home.png" alt="Emme home dashboard with the resource cards" />
+        <figcaption>Home, with the tabs and the resource cards.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>2. Join a team meeting</h2>
+      <p>Open Team Meetings. It lists the standing times: 1st and 3rd Thursday at 1:00 PM, and 2nd and 4th Friday at 7:00 AM. The meeting ID and passcode are in that panel. Join Zoom meeting opens the Zoom app.</p>
+      <figure>
+        <img src="images/meetings.png" alt="Team meetings panel with times, meeting ID, passcode, and Join Zoom meeting" />
+        <figcaption>Team meetings, opened from the bar under the tabs.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>3. Keep a task list</h2>
+      <p>Type a task and press Enter, or use the plus button. Check a task when it is done, and use Clear completed to remove the finished ones.</p>
+      <p>Until Microsoft is connected, the list is saved in this browser and starts with three example tasks. After you connect Microsoft, the list reads your Microsoft To Do. Open Microsoft To‑Do leaves the dashboard and opens To Do itself.</p>
+      <figure>
+        <img src="images/tasks.png" alt="Tasks box with three example tasks and the calendar starting below" />
+        <figcaption>Tasks sit under the resource cards. The calendar starts just below them.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>4. See your Outlook calendar</h2>
+      <p>The month view is on the home page. Today is highlighted. Select a day to see that day’s events underneath the grid. Events appear after Microsoft is connected. Until then, the day says your Outlook events will show here.</p>
+      <p>Open Outlook Calendar leaves the dashboard and opens Outlook. New Event opens Outlook’s new-event page.</p>
+    </section>
+
+    <section>
+      <h2>5. Message the admin team</h2>
+      <p>The round button at the top right opens Admin Communication. Write a question or comment and press Send. Replies from the admin team show in that same panel. A count appears on the button when a reply is waiting.</p>
+      <figure>
+        <img src="images/messages.png" alt="Admin Communication panel open over the calendar" />
+        <figcaption>The message panel stays on the page while you write.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>6. Read the guidebook</h2>
+      <p>Open Emme Guidebook from a tab or a card. The cover is on the right, and the section list is on the left. After you are signed in, the sections come from the current SharePoint guidebook. Choose a section in the sidebar to jump to it. Print Guidebook is at the bottom of the sidebar. Dashboard Home returns you to the start.</p>
+      <figure>
+        <img src="images/guidebook.png" alt="Provider guidebook cover with the sidebar" />
+        <figcaption>The cover and sidebar. The “unavailable” line in this picture is only because the preview was not signed in.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>7. Use the reference forms</h2>
+      <p>Reference Forms has two tools. Age Anchoring Tool lists milestones by age. Filter with All Outcomes or one outcome, pick an age range, or search. Copy copies a milestone list. Print prints the page.</p>
+      <figure>
+        <img src="images/forms.png" alt="Age Anchoring Tool with outcome and age filters" />
+        <figcaption>Age Anchoring Tool, filtered to all outcomes and all ages.</figcaption>
+      </figure>
+      <p>COS Decision Tree walks the Child Outcomes Summary questions. Pick Outcome 1, 2, or 3, then answer Yes or No from the top of the tree down. The rating key runs from 1, very early skills, to 7, all skills expected.</p>
+      <figure>
+        <img src="images/cos.png" alt="COS Decision Tree on the first question" />
+        <figcaption>The first question of the COS decision tree.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>8. Find a resource</h2>
+      <p>The Resource Hub is the therapy library. Search by topic, category, or keyword, or use the topic buttons on the left. Favorites, All, and the category chips narrow the cards. Open in SharePoint opens that folder. The star marks a favorite.</p>
+      <figure>
+        <img src="images/hub.png" alt="Resource hub showing Communication and Language folders" />
+        <figcaption>Communication &amp; Language in the resource hub.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>9. Build your schedule and caseload</h2>
+      <p>Schedule &amp; Caseload is your own board. Sign in with your Emme email first. Someone else’s schedule does not show on your page.</p>
+      <ul>
+        <li>Schedule shows the week. Clients shows the client cards. Search clients by name, email, phone, or agency.</li>
+        <li>+ Board, Rename, and Delete manage extra boards. One board is kept for clients who are not in a regular spot.</li>
+        <li>+ Day adds a day column. + Slot adds a time. Each slot has a status such as Full, Open 4x, Lunch, Makeup, or Not Open.</li>
+        <li>+ Client saves a card with name, date of birth, parents, Medicaid number, email, phone, agency, service coordinator, and whether the visit is virtual or in person. For in-person clients, average miles are used on the mileage form after Outlook and IntakeQ both show the visit.</li>
+        <li>Email and phone on a card can be copied.</li>
+        <li>Spreadsheet and PDF save a copy to your OneDrive. Share makes a link your bosses can open while they are signed in to Emme. Import reads clients from a spreadsheet, PDF, Word document, or text file.</li>
+      </ul>
+      <figure>
+        <img src="images/schedule.png" alt="Schedule and caseload toolbar before sign-in" />
+        <figcaption>The schedule toolbar. The empty message is what you see before sign-in. After sign-in, your days and clients fill this space.</figcaption>
+      </figure>
+    </section>
+  </main>
+  <script>
+    const slides = [
+      { src: 'images/home.png', title: 'Home', text: 'Start here. The tabs and cards open each tool.' },
+      { src: 'images/meetings.png', title: 'Team meetings', text: 'Open the bar for the times, meeting ID, passcode, and Zoom.' },
+      { src: 'images/tasks.png', title: 'Tasks', text: 'Add a task and press Enter. The calendar is just below.' },
+      { src: 'images/messages.png', title: 'Admin communication', text: 'Use the round button to send a note. Replies show in this panel.' },
+      { src: 'images/guidebook.png', title: 'Guidebook', text: 'After sign-in, the SharePoint sections appear in the left sidebar.' },
+      { src: 'images/forms.png', title: 'Age anchoring', text: 'Filter by outcome or age, search, and copy a milestone list.' },
+      { src: 'images/cos.png', title: 'COS decision tree', text: 'Pick an outcome, then answer the questions from top to bottom.' },
+      { src: 'images/hub.png', title: 'Resource hub', text: 'Search or browse, then open the folder in SharePoint.' },
+      { src: 'images/schedule.png', title: 'Schedule and caseload', text: 'After sign-in, build days, slots, and client cards for your own email.' }
+    ];
+    const frame = document.getElementById('frame');
+    const title = document.getElementById('cap-title');
+    const text = document.getElementById('cap-text');
+    const progress = document.getElementById('progress');
+    const playBtn = document.getElementById('play');
+    let index = 0;
+    let playing = true;
+    let timer = 0;
+    const hold = 7000;
+    function show(i) {
+      index = (i + slides.length) % slides.length;
+      const slide = slides[index];
+      frame.src = slide.src;
+      frame.alt = slide.title;
+      title.textContent = slide.title;
+      text.textContent = slide.text;
+      progress.style.width = ((index + 1) / slides.length * 100) + '%';
+    }
+    function tick() {
+      if (!playing) return;
+      timer = setTimeout(function () { show(index + 1); tick(); }, hold);
+    }
+    playBtn.addEventListener('click', function () {
+      playing = !playing;
+      playBtn.textContent = playing ? 'Pause' : 'Play';
+      clearTimeout(timer);
+      if (playing) tick();
+    });
+    document.getElementById('next').addEventListener('click', function () {
+      clearTimeout(timer);
+      show(index + 1);
+      if (playing) tick();
+    });
+    document.getElementById('prev').addEventListener('click', function () {
+      clearTimeout(timer);
+      show(index - 1);
+      if (playing) tick();
+    });
+    show(0);
+    tick();
+  </script>
+</body>
+</html>

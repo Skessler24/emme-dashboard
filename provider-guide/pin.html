@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pin the Emme dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #084339;
+      --pink: #f8cacb;
+      --yellow: #ffca34;
+      --bg: #fef7fc;
+      --surface: #fff;
+      --text: #2a3a38;
+      --muted: rgba(8, 67, 57, 0.62);
+      --line: rgba(8, 67, 57, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    header { background: var(--green); color: #fff; padding: 2.2rem 1.25rem 1.8rem; }
+    .wrap, main { max-width: 980px; margin: 0 auto; }
+    h1, h2 { font-family: Comfortaa, cursive; }
+    header h1 { color: #fff; margin: 0 0 0.4rem; font-size: 2rem; }
+    header p, header a { color: rgba(255,255,255,0.86); }
+    header a { color: var(--yellow); }
+    main { padding: 1.5rem 1.25rem 4rem; }
+    h2 { color: var(--green); }
+    .player { background: var(--surface); border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; margin: 0.5rem 0 2rem; }
+    .stage { position: relative; background: var(--green); min-height: 28rem; }
+    .slide { display: none; height: 100%; }
+    .slide.is-on { display: grid; grid-template-columns: 1.1fr 0.9fr; min-height: 28rem; }
+    .slide img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+    .copy { padding: 1.4rem 1.3rem; color: #fff; display: flex; flex-direction: column; justify-content: center; }
+    .kicker { letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.75rem; color: var(--yellow); margin: 0 0 0.4rem; }
+    .copy h3 { font-family: Comfortaa, cursive; margin: 0 0 0.6rem; font-size: 1.55rem; }
+    .copy ol, .copy p { margin: 0; }
+    .copy li { margin: 0.35rem 0; }
+    .controls { display: flex; gap: 0.6rem; align-items: center; padding: 0.7rem 0.85rem; }
+    button { font: inherit; border: 0; background: var(--green); color: #fff; border-radius: 999px; padding: 0.4rem 0.85rem; cursor: pointer; }
+    .jump { background: transparent; color: var(--green); border: 1px solid var(--line); }
+    .bar { flex: 1; height: 6px; background: var(--pink); border-radius: 999px; overflow: hidden; }
+    .bar span { display: block; height: 100%; width: 0; background: var(--green); }
+    section { margin: 2rem 0; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem 1.1rem; }
+    .note { color: var(--muted); }
+    code { font-family: Consolas, monospace; font-size: 0.92em; }
+    a { color: var(--green); }
+    @media (max-width: 740px) {
+      .slide.is-on { grid-template-columns: 1fr; }
+      .slide img { max-height: 14rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Pin the dashboard</h1>
+      <p>Put Emme on your desktop, keep the tab pinned, or add it to Start on Windows and the Dock on a Mac. Open the dashboard and sign in with your emmeco.org account first: <a href="https://lively-river-0c3792c10.7.azurestaticapps.net/">lively-river-0c3792c10.7.azurestaticapps.net</a></p>
+      <p style="margin-top:0.7rem"><a href="../index.html">Back to the dashboard</a> · <a href="index.html">Back to the provider guide</a></p>
+    </div>
+  </header>
+  <main>
+    <section>
+      <h2>Watch the steps</h2>
+      <p class="note">Windows uses Microsoft Edge. A Mac uses Safari. Chrome notes are under each section.</p>
+      <div class="player">
+        <div class="stage" id="stage"></div>
+        <div class="controls">
+          <button type="button" id="play">Pause</button>
+          <div class="bar" aria-hidden="true"><span id="progress"></span></div>
+          <button type="button" class="jump" id="prev">Back</button>
+          <button type="button" class="jump" id="next">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Windows</h2>
+      <div class="card">
+        <h2>Pin the browser tab</h2>
+        <ol>
+          <li>Open the dashboard in Edge.</li>
+          <li>Right-click the tab.</li>
+          <li>Choose Pin. The tab shrinks to an icon on the left and stays there when you reopen Edge.</li>
+        </ol>
+        <p class="note">In Chrome, right-click the tab and choose Pin.</p>
+      </div>
+      <div class="card" style="margin-top:0.8rem">
+        <h2>Desktop, taskbar, and Start</h2>
+        <ol>
+          <li>In Edge, choose Settings and more (…), then More tools, then Apps, then Install this site as an app.</li>
+          <li>Name it Emme and choose Install. It opens in its own window.</li>
+          <li>In the address bar, go to <code>edge://apps</code>.</li>
+          <li>On the Emme card, choose Details.</li>
+          <li>Choose Create Desktop shortcut, Pin to taskbar, or Pin to Start. You can use all three.</li>
+        </ol>
+        <p class="note">Start only, without an app window: Settings and more (…) &gt; More tools &gt; Pin to Start. In Chrome, use the three-dot menu, then Cast, save, and share, then Install page as app. Search for Emme in the Start menu, right-click it, and pin it to Start or the taskbar.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Mac</h2>
+      <div class="card">
+        <h2>Pin the Safari tab</h2>
+        <ol>
+          <li>Open the dashboard in Safari.</li>
+          <li>Control-click the tab.</li>
+          <li>Choose Pin Tab. You can also drag the tab to the left side of the tab bar until it shrinks to the site icon.</li>
+        </ol>
+        <p class="note">A Mac does not have a Start menu. The Dock is the matching place.</p>
+      </div>
+      <div class="card" style="margin-top:0.8rem">
+        <h2>Dock and desktop</h2>
+        <ol>
+          <li>In Safari, open the dashboard.</li>
+          <li>From the menu bar, choose File, then Add to Dock. The Share button in the toolbar has the same command.</li>
+          <li>Name it Emme and click Add.</li>
+          <li>The icon lands in the Dock. Spotlight and Launchpad can open it too.</li>
+          <li>For a desktop icon, open Finder, choose Go, then Home, then Applications, and drag Emme onto the desktop.</li>
+        </ol>
+        <p class="note">This needs macOS Sonoma or newer. In Chrome, use the three-dot menu, then Cast, save, and share, then Install page as app. After it opens, Control-click its Dock icon, choose Options, then Keep in Dock.</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const slides = [
+      { kicker: 'Start', title: 'Open Emme and sign in', html: '<p>Use the dashboard address and your emmeco.org account. Leave that page open. The next steps pin that page.</p>', image: 'images/home.png' },
+      { kicker: 'Windows · tab', title: 'Pin the Edge tab', html: '<ol><li>Right-click the dashboard tab.</li><li>Choose Pin.</li><li>The tab stays on the left as an icon.</li></ol>' },
+      { kicker: 'Windows · app', title: 'Install it as an app', html: '<ol><li>Choose Settings and more (…).</li><li>More tools, then Apps.</li><li>Install this site as an app.</li><li>Name it Emme, then Install.</li></ol>' },
+      { kicker: 'Windows · places', title: 'Desktop, taskbar, or Start', html: '<ol><li>Open edge://apps.</li><li>Choose Details on the Emme card.</li><li>Create Desktop shortcut, Pin to taskbar, or Pin to Start.</li></ol>' },
+      { kicker: 'Mac · tab', title: 'Pin the Safari tab', html: '<ol><li>Control-click the dashboard tab.</li><li>Choose Pin Tab.</li><li>Or drag the tab to the left until it becomes an icon.</li></ol>' },
+      { kicker: 'Mac · Dock', title: 'Add it to the Dock', html: '<ol><li>Choose File, then Add to Dock.</li><li>Name it Emme and click Add.</li><li>The icon stays in the Dock. The Mac Dock is the match for the Windows taskbar and Start menu.</li></ol>' },
+      { kicker: 'Mac · desktop', title: 'Put a copy on the desktop', html: '<ol><li>In Finder, choose Go, then Home, then Applications.</li><li>Drag Emme onto the desktop.</li></ol>' }
+    ];
+    const stage = document.getElementById('stage');
+    const progress = document.getElementById('progress');
+    const playBtn = document.getElementById('play');
+    slides.forEach(function (slide, i) {
+      const el = document.createElement('div');
+      el.className = 'slide' + (i === 0 ? ' is-on' : '');
+      el.innerHTML = (slide.image ? '<img alt="Emme home dashboard" src="' + slide.image + '">' : '') +
+        '<div class="copy"><p class="kicker">' + slide.kicker + '</p><h3>' + slide.title + '</h3>' + slide.html + '</div>';
+      if (!slide.image) el.style.gridTemplateColumns = '1fr';
+      stage.appendChild(el);
+    });
+    const nodes = Array.prototype.slice.call(stage.children);
+    let index = 0;
+    let playing = true;
+    let timer = 0;
+    function show(i) {
+      index = (i + slides.length) % slides.length;
+      nodes.forEach(function (node, n) { node.classList.toggle('is-on', n === index); });
+      progress.style.width = ((index + 1) / slides.length * 100) + '%';
+    }
+    function tick() {
+      if (!playing) return;
+      timer = setTimeout(function () { show(index + 1); tick(); }, 7000);
+    }
+    playBtn.addEventListener('click', function () {
+      playing = !playing;
+      playBtn.textContent = playing ? 'Pause' : 'Play';
+      clearTimeout(timer);
+      if (playing) tick();
+    });
+    document.getElementById('next').addEventListener('click', function () { clearTimeout(timer); show(index + 1); if (playing) tick(); });
+    document.getElementById('prev').addEventListener('click', function () { clearTimeout(timer); show(index - 1); if (playing) tick(); });
+    show(0);
+    tick();
+  </script>
+</body>
+</html>
