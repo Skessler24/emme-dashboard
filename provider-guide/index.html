@@ -99,7 +99,7 @@
   <main>
     <section id="watch">
       <h2>Watch the walkthrough</h2>
-      <p class="note">This plays the real screens in order. The guidebook and schedule pictures were taken before sign-in, so those two show the signed-out message. After you sign in, the same pages fill in with your guidebook sections and your own schedule.</p>
+      <p class="note">This plays the real screens in order. The guidebook picture was taken before sign-in, so it shows the signed-out message. The schedule pictures are from a signed-in board. Names and contact details are hidden.</p>
       <div class="player">
         <div class="stage">
           <img id="frame" alt="" src="images/home.png" />
@@ -205,8 +205,16 @@
         <li>Spreadsheet and PDF save a copy to your OneDrive. Share makes a link your bosses can open while they are signed in to Emme. Import reads clients from a spreadsheet, PDF, Word document, or text file.</li>
       </ul>
       <figure>
-        <img src="images/schedule.png" alt="Schedule and caseload toolbar before sign-in" />
-        <figcaption>The schedule toolbar. The empty message is what you see before sign-in. After sign-in, your days and clients fill this space.</figcaption>
+        <img src="images/schedule-board.png" alt="Schedule board with days, times, and status. Notes that contain names are hidden." />
+        <figcaption>The schedule board. Each day has slots with a time and a status such as Full or Open. Names in the notes are hidden in this picture.</figcaption>
+      </figure>
+      <figure>
+        <img src="images/clients-list.png" alt="Collapsed client list. Names are hidden. Each card has an Expand button." />
+        <figcaption>Clients, collapsed. Search by name, email, phone, or agency, then press Expand.</figcaption>
+      </figure>
+      <figure>
+        <img src="images/client-cards.png" alt="Expanded client cards. Names, dates, and contact details are hidden. Field labels stay visible." />
+        <figcaption>An open card shows the visit time, the field labels, mileage, and tasks. Names, dates, and contact details are hidden in this picture.</figcaption>
       </figure>
     </section>
   </main>
@@ -220,7 +228,9 @@
       { src: 'images/forms.png', title: 'Age anchoring', text: 'Filter by outcome or age, search, and copy a milestone list.' },
       { src: 'images/cos.png', title: 'COS decision tree', text: 'Pick an outcome, then answer the questions from top to bottom.' },
       { src: 'images/hub.png', title: 'Resource hub', text: 'Search or browse, then open the folder in SharePoint.' },
-      { src: 'images/schedule.png', title: 'Schedule and caseload', text: 'After sign-in, build days, slots, and client cards for your own email.' }
+      { src: 'images/schedule-board.png', title: 'Schedule board', text: 'Each day has slots with a time and a status. Names in the notes are hidden here.' },
+      { src: 'images/clients-list.png', title: 'Client list', text: 'Search the list, then press Expand. Names are hidden in this picture.' },
+      { src: 'images/client-cards.png', title: 'Client card', text: 'A card holds the visit, contact fields, and mileage. Personal details are hidden here.' }
     ];
     const frame = document.getElementById('frame');
     const title = document.getElementById('cap-title');
