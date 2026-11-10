@@ -1494,7 +1494,7 @@
       return;
     }
     var board = activeBoard();
-    if (!board || !confirm('Delete “‘ + board.name + ’”?')) return;
+    if (!board || !confirm('Delete “' + board.name + '”?')) return;
     mutate(function () {
       state.workspace.boards = state.workspace.boards.filter(function (b) { return b.id !== board.id; });
       state.activeBoardId = state.workspace.boards[0].id;
