@@ -116,7 +116,7 @@ function hasProviderData(workspace) {
   return (workspace.boards || []).some(function (board) {
     return (board.days || []).some(function (day) {
       return (day.slots || []).some(function (slot) {
-        return slot.notes || slot.clientName || slot.status;
+        return !!slot;
       });
     });
   });

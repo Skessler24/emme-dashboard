@@ -486,6 +486,7 @@
     clientQuery: '',
     saving: false,
     dirty: false,
+    rev: 0,
     lastRemoteUpdatedAt: null,
     pollTimer: null,
     saveTimer: null,
@@ -708,12 +709,14 @@
 
   async function pollMeta() {
     if (!state.cloudConfigured || state.suppressPoll || state.dirty || state.saving) return;
+    var revAtStart = state.rev;
     try {
       var res = await fetch('/api/schedule/meta', { credentials: 'include' });
       var data = await res.json().catch(function () { return {}; });
       if (!res.ok || !data.configured) return;
       if (data.updatedAt && state.lastRemoteUpdatedAt && data.updatedAt !== state.lastRemoteUpdatedAt) {
         var loaded = await loadCloud();
+        if (state.dirty || state.saving || state.rev !== revAtStart) return;
         if (loaded.configured && loaded.workspace) {
           state.workspace = loaded.workspace;
           if (shapeWorkspace(state.workspace)) scheduleSave();
@@ -728,6 +731,7 @@
 
   function scheduleSave() {
     state.dirty = true;
+    state.rev++;
     setSyncLabel(state.cloudConfigured ? 'Saving…' : 'Saving on device…', state.cloudConfigured ? 'live' : 'local');
     clearTimeout(state.saveTimer);
     state.saveTimer = setTimeout(persist, SAVE_DEBOUNCE_MS);
@@ -735,16 +739,28 @@
 
   async function persist() {
     if (!state.workspace || !currentEmail) return;
+    if (state.saving) {
+      clearTimeout(state.saveTimer);
+      state.saveTimer = setTimeout(persist, SAVE_DEBOUNCE_MS);
+      return;
+    }
     shapeWorkspace(state.workspace);
     state.saving = true;
     state.suppressPoll = true;
+    var revAtSave = state.rev;
     state.workspace.updatedAt = new Date().toISOString();
     saveLocal(state.workspace);
+    var failed = false;
     try {
       if (state.cloudConfigured) {
-        var result = await saveCloud(state.workspace);
+        var result = await saveCloud(JSON.parse(JSON.stringify(state.workspace)));
         if (result.configured && result.workspace) {
-          state.workspace = result.workspace;
+          if (state.rev === revAtSave) {
+            state.workspace = result.workspace;
+          } else {
+            state.workspace.version = result.workspace.version;
+            state.workspace.updatedAt = result.workspace.updatedAt;
+          }
           state.lastRemoteUpdatedAt = result.workspace.updatedAt;
           saveLocal(state.workspace);
           setSyncLabel(savedPlace(result), 'live');
@@ -755,13 +771,18 @@
       } else {
         setSyncLabel('Saved on this device', 'local');
       }
-      state.dirty = false;
+      if (state.rev === revAtSave) state.dirty = false;
     } catch (err) {
+      failed = true;
       setSyncLabel('Save failed — retrying', state.cloudConfigured ? 'live' : 'local');
       toast(err.message || 'Save failed');
     } finally {
       state.saving = false;
       setTimeout(function () { state.suppressPoll = false; }, 1200);
+    }
+    if (state.dirty) {
+      clearTimeout(state.saveTimer);
+      state.saveTimer = setTimeout(persist, failed ? 5000 : SAVE_DEBOUNCE_MS);
     }
   }
 
