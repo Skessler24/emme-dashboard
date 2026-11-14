@@ -93,9 +93,10 @@ export async function graphSend(path: string, options: {
   jsonBody?: unknown;
   rawBody?: Uint8Array;
   contentType?: string;
+  headers?: Record<string, string>;
 }): Promise<any> {
   const token = await appToken();
-  const headers: Record<string, string> = { Authorization: 'Bearer ' + token };
+  const headers: Record<string, string> = Object.assign({ Authorization: 'Bearer ' + token }, options.headers || {});
   let body: BodyInit | undefined;
   if (options.rawBody) {
     headers['Content-Type'] = options.contentType || 'application/octet-stream';

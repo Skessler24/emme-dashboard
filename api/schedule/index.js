@@ -10,6 +10,7 @@
  */
 const crypto = require('crypto');
 const { BlobServiceClient } = require('@azure/storage-blob');
+const scheduleMerge = require('./merge');
 
 const CONTAINER = process.env.AZURE_STORAGE_CONTAINER || 'emme-reports';
 const LEGACY_BLOB = process.env.AZURE_SCHEDULE_BLOB || 'emme-schedule-workspace.json';
@@ -185,6 +186,50 @@ function ownerMatches(owner, principal) {
   return principal.emails.indexOf(owner) !== -1;
 }
 
+
+const PULL_THROTTLE_MS = process.env.SCHEDULE_PULL_THROTTLE_MS === undefined ? 5000 : Number(process.env.SCHEDULE_PULL_THROTTLE_MS) || 0;
+const lastPull = new Map();
+const locks = new Map();
+
+function withLock(key, fn) {
+  const previous = locks.get(key) || Promise.resolve();
+  const run = previous.catch(function () {}).then(fn);
+  const tail = run.catch(function () {});
+  locks.set(key, tail);
+  tail.then(function () { if (locks.get(key) === tail) locks.delete(key); });
+  return run;
+}
+
+function loadSyncModule() {
+  try {
+    return require('../dist/scheduleSync');
+  } catch (_) {
+    return null;
+  }
+}
+
+function syncBlobName(principal) {
+  return 'schedules/sync/' + safeBlobKey((principal.emails && principal.emails[0]) || principal.userId) + '.json';
+}
+
+async function readJsonBlob(blob) {
+  if (!(await blob.exists())) return {};
+  const download = await blob.download();
+  try {
+    const parsed = JSON.parse(await streamToString(download.readableStreamBody));
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+async function writeJsonBlob(blob, value) {
+  const payload = JSON.stringify(value);
+  await blob.upload(payload, Buffer.byteLength(payload), {
+    blobHTTPHeaders: { blobContentType: 'application/json' }
+  });
+}
+
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') {
     context.res = { status: 204, headers: { 'Content-Type': 'application/json' } };
@@ -212,6 +257,8 @@ module.exports = async function (context, req) {
     const personal = container.getBlockBlobClient(emailBlobName(principal));
     const previous = container.getBlockBlobClient(idBlobName(principal));
     const legacy = container.getBlockBlobClient(LEGACY_BLOB);
+    const syncBlob = container.getBlockBlobClient(syncBlobName(principal));
+    const lockKey = emailBlobName(principal);
     const ownerEmail = (principal.emails.find(function (email) { return /@emmeco\.org$/i.test(email); }) || principal.emails[0] || '');
 
     const rest = String((req.params && (req.params.rest || req.params.id)) || '')
@@ -237,6 +284,90 @@ module.exports = async function (context, req) {
         if (fromLegacy) return fromLegacy;
       }
       return emptyWorkspace();
+    }
+
+    async function pullFromSharePoint(workspace, force) {
+      const sync = loadSyncModule();
+      if (!sync || !ownerEmail || !workspace || !(workspace.boards || []).length) {
+        return { workspace: workspace, status: 'skipped' };
+      }
+      const now = Date.now();
+      if (!force && now - (lastPull.get(lockKey) || 0) < PULL_THROTTLE_MS) {
+        return { workspace: workspace, status: 'throttled' };
+      }
+      lastPull.set(lockKey, now);
+      const meta = await readJsonBlob(syncBlob);
+      const result = await sync.pullSchedule(workspace, ownerEmail, meta);
+      if (result.status === 'imported' && result.workspace) {
+        const next = normalizeWorkspace(result.workspace);
+        next.ownerEmail = ownerEmail;
+        next.updatedAt = new Date().toISOString();
+        next.version = (Number(workspace.version) || 0) + 1;
+        await writeWorkspace(personal, next, ownerEmail);
+        await writeJsonBlob(syncBlob, result.meta);
+        return { workspace: next, status: 'imported' };
+      }
+      if (JSON.stringify(result.meta || {}) !== JSON.stringify(meta)) {
+        await writeJsonBlob(syncBlob, result.meta);
+      }
+      return { workspace: workspace, status: result.status, error: result.error };
+    }
+
+    async function pullAndReconcile(loaded, force) {
+      const pulled = await pullFromSharePoint(loaded, force);
+      let workspace = pulled.workspace;
+      if (pulled.status === 'unchanged' || pulled.status === 'imported') {
+        const sync = loadSyncModule();
+        const meta = sync ? await readJsonBlob(syncBlob) : null;
+        if (sync && sync.needsPush(workspace, meta)) {
+          workspace = (await pushToSharePoint(workspace)).workspace;
+        }
+      }
+      return workspace;
+    }
+
+    async function bootstrapFromSharePoint() {
+      const sync = loadSyncModule();
+      if (!sync || !ownerEmail) return null;
+      const meta = await readJsonBlob(syncBlob);
+      const result = await sync.importInitialSchedule(ownerEmail, meta);
+      if (result.status !== 'imported' || !result.workspace) return null;
+      const next = normalizeWorkspace(result.workspace);
+      next.ownerEmail = ownerEmail;
+      next.updatedAt = new Date().toISOString();
+      next.version = 1;
+      await writeWorkspace(personal, next, ownerEmail);
+      await writeJsonBlob(syncBlob, result.meta);
+      return next;
+    }
+
+    async function pushToSharePoint(workspace) {
+      const sync = loadSyncModule();
+      if (!sync) {
+        try {
+          const workbook = require('../dist/scheduleWorkbook');
+          return { workspace: workspace, result: await workbook.syncScheduleWorkbook(workspace, ownerEmail) };
+        } catch (err) {
+          return { workspace: workspace, result: { ok: false, error: String((err && err.message) || 'SharePoint update failed').slice(0, 200) } };
+        }
+      }
+      let current = workspace;
+      let result = { ok: false, skipped: true };
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const meta = await readJsonBlob(syncBlob);
+        result = await sync.pushSchedule(current, ownerEmail, meta);
+        if (result.conflict) {
+          const pulled = await pullFromSharePoint(current, true);
+          current = pulled.workspace;
+          continue;
+        }
+        if (result.meta && JSON.stringify(result.meta) !== JSON.stringify(meta)) {
+          await writeJsonBlob(syncBlob, result.meta);
+        }
+        break;
+      }
+      if (result.conflict) result = { ok: false, error: 'The SharePoint schedule keeps changing. It will sync on the next save.' };
+      return { workspace: current, result: { ok: !!result.ok, skipped: result.skipped, path: result.path, error: result.error } };
     }
 
     if (rest === 'share' && method === 'POST') {
@@ -286,7 +417,10 @@ module.exports = async function (context, req) {
     }
 
     if (method === 'GET' && rest === 'meta') {
-      const workspace = await loadForProvider();
+      const workspace = await withLock(lockKey, async function () {
+        const loaded = await loadForProvider();
+        return pullAndReconcile(loaded, false);
+      });
       json(context, 200, {
         configured: true,
         exists: hasProviderData(workspace) || (workspace.boards || []).length > 0,
@@ -296,7 +430,14 @@ module.exports = async function (context, req) {
     }
 
     if (method === 'GET') {
-      const workspace = await loadForProvider();
+      const workspace = await withLock(lockKey, async function () {
+        const loaded = await loadForProvider();
+        if (!(loaded.boards || []).length) {
+          const fromSheet = await bootstrapFromSharePoint();
+          if (fromSheet) return fromSheet;
+        }
+        return pullAndReconcile(loaded, true);
+      });
       json(context, 200, { configured: true, workspace: workspace, owner: ownerEmail });
       return;
     }
@@ -308,38 +449,62 @@ module.exports = async function (context, req) {
       }
       body = body || {};
       const incoming = body.workspace || body;
-      const workspace = normalizeWorkspace(incoming);
-      workspace.ownerEmail = ownerEmail;
-      workspace.updatedAt = new Date().toISOString();
-      workspace.version = (Number(workspace.version) || 0) + 1;
-      await writeWorkspace(personal, workspace, ownerEmail);
-      let sharePoint = { ok: false, skipped: true };
+      const baseCopy = body.base && typeof body.base === 'object' ? body.base : null;
+      const outcome = await withLock(lockKey, async function () {
+        const hasStored = await personal.exists();
+        let current = hasStored ? await loadForProvider() : null;
+        if (current) current = (await pullFromSharePoint(current, true)).workspace;
+
+        let workspace = normalizeWorkspace(incoming);
+        let merged = false;
+        if (current && baseCopy && Number(baseCopy.version) !== Number(current.version)) {
+          workspace = normalizeWorkspace(scheduleMerge.merge(baseCopy, workspace, current));
+          merged = true;
+        }
+        workspace.ownerEmail = ownerEmail;
+        workspace.updatedAt = new Date().toISOString();
+        workspace.version = (current ? Number(current.version) || 0 : 0) + 1;
+        await writeWorkspace(personal, workspace, ownerEmail);
+
+        const pushed = await pushToSharePoint(workspace);
+        workspace = pushed.workspace;
+        return { workspace: workspace, merged: merged, sharePoint: pushed.result };
+      });
+      const workspace = outcome.workspace;
       let mileage = { ok: false, skipped: true };
-      try {
-        const workbook = require('../dist/scheduleWorkbook');
-        sharePoint = await workbook.syncScheduleWorkbook(workspace, ownerEmail);
-      } catch (err) {
-        sharePoint = { ok: false, error: String((err && err.message) || 'SharePoint update failed').slice(0, 200) };
-      }
-      try {
-        const mileageBook = require('../dist/mileageWorkbook');
-        mileage = await mileageBook.syncMileageWorkbook(workspace, ownerEmail);
-      } catch (err) {
-        mileage = { ok: false, error: String((err && err.message) || 'Mileage update failed').slice(0, 200) };
-      }
       let oneDrive = { ok: false, skipped: true };
-      try {
-        const drive = require('../microsoft/oneDrive');
-        oneDrive = await drive.saveProviderFile(
-          ownerEmail,
-          'Schedule.json',
-          Buffer.from(JSON.stringify(workspace)),
-          'application/json'
-        );
-      } catch (err) {
-        oneDrive = { ok: false, error: String((err && err.message) || 'OneDrive save failed').slice(0, 220) };
-      }
-      json(context, 200, { configured: true, workspace: workspace, owner: ownerEmail, sharePoint: sharePoint, mileage: mileage, oneDrive: oneDrive });
+      await Promise.all([
+        (async function () {
+          try {
+            const mileageBook = require('../dist/mileageWorkbook');
+            mileage = await mileageBook.syncMileageWorkbook(workspace, ownerEmail);
+          } catch (err) {
+            mileage = { ok: false, error: String((err && err.message) || 'Mileage update failed').slice(0, 200) };
+          }
+        })(),
+        (async function () {
+          try {
+            const drive = require('../microsoft/oneDrive');
+            oneDrive = await drive.saveProviderFile(
+              ownerEmail,
+              'Schedule.json',
+              Buffer.from(JSON.stringify(workspace)),
+              'application/json'
+            );
+          } catch (err) {
+            oneDrive = { ok: false, error: String((err && err.message) || 'OneDrive save failed').slice(0, 220) };
+          }
+        })()
+      ]);
+      json(context, 200, {
+        configured: true,
+        workspace: workspace,
+        merged: outcome.merged,
+        owner: ownerEmail,
+        sharePoint: outcome.sharePoint,
+        mileage: mileage,
+        oneDrive: oneDrive
+      });
       return;
     }
 

@@ -44,7 +44,7 @@ type Slot = { time?: string; status?: string; notes?: string; lastDay?: string }
 type Day = { name?: string; slots?: Slot[] };
 type Client = { name?: string; dob?: string; parExpires?: string };
 type Workspace = { boards?: Array<{ name?: string; days?: Day[] }>; clients?: Client[] };
-type LocatedSchedule = { segments: string[]; fileName: string; path: string };
+export type LocatedSchedule = { segments: string[]; fileName: string; path: string };
 
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -97,8 +97,10 @@ function timeFraction(text: string): number | null {
 
 function formatExcelTime(value: unknown): string {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    const hour = value.getUTCHours();
-    const minute = value.getUTCMinutes();
+    const ms = value.getUTCHours() * 3600000 + value.getUTCMinutes() * 60000 + value.getUTCSeconds() * 1000 + value.getUTCMilliseconds();
+    const total = Math.round(ms / 60000) % 1440;
+    const hour = Math.floor(total / 60);
+    const minute = total % 60;
     const suffix = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
     return hour12 + ':' + String(minute).padStart(2, '0') + ' ' + suffix;
@@ -190,6 +192,70 @@ function weekdayFromHeader(text: string): string {
   return DAY_ORDER.includes(lowered) ? dayLabel(lowered) : '';
 }
 
+function isFilledSlot(slot: Slot): boolean {
+  return !!(String(slot.time || '').trim() || String(slot.status || '').trim() || String(slot.notes || '').trim());
+}
+
+/**
+ * Writes one weekday table starting at headerRow and returns the last row used.
+ * listCount is the number of rows in the hidden Lists sheet, or 0 to skip the status drop-down.
+ */
+function addDayTable(
+  sheet: ExcelJS.Worksheet,
+  key: string,
+  headerRow: number,
+  slots: Slot[],
+  clients: Client[] | undefined,
+  usedNames: Set<string>,
+  listCount: number,
+): number {
+  const data = (slots.length ? slots : [{ time: '', status: '', notes: '', lastDay: '' }]).map(function (slot) {
+    const fraction = timeFraction(String(slot.time || ''));
+    const visitText = visitForSlot(slot, clients);
+    const visit = parseLooseDate(visitText);
+    return [
+      fraction == null ? String(slot.time || '') : fraction,
+      spreadsheetStatus(String(slot.status || '')),
+      String(slot.notes || ''),
+      visit ? excelDateSerial(visit) : visitText,
+    ];
+  });
+  sheet.getCell(headerRow, 6).value = 'Notes, Upcoming Changes';
+  sheet.addTable({
+    name: tableName(key, usedNames),
+    ref: 'A' + headerRow,
+    headerRow: true,
+    columns: [
+      { name: timeHeader(key), filterButton: true },
+      { name: 'Status ', filterButton: true },
+      { name: 'Notes (i.e. client names)', filterButton: true },
+      { name: 'Date of Last Visit', filterButton: true },
+    ],
+    rows: data,
+  });
+  for (let i = 0; i < data.length; i++) {
+    const timeCell = sheet.getCell(headerRow + 1 + i, 1);
+    if (typeof timeCell.value === 'number') timeCell.numFmt = 'h:mm AM/PM';
+    const visitCell = sheet.getCell(headerRow + 1 + i, 4);
+    if (typeof visitCell.value === 'number' && visitCell.value > 1000) visitCell.numFmt = 'mm/dd/yyyy';
+  }
+  const statusEnd = headerRow + data.length;
+  if (listCount > 0) {
+    const validations = sheet as ExcelJS.Worksheet & {
+      dataValidations: { add: (address: string, rule: ExcelJS.DataValidation) => void };
+    };
+    validations.dataValidations.add('B' + (headerRow + 1) + ':B' + statusEnd, {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['Lists!$A$1:$A$' + listCount],
+      showErrorMessage: true,
+      errorTitle: 'Status',
+      error: 'Choose a status from the list.',
+    });
+  }
+  return statusEnd;
+}
+
 export async function buildScheduleWorkbook(workspace: Workspace): Promise<Buffer> {
   const board = currentBoard(workspace.boards);
   const days = ((board && board.days) || []).slice().sort(function (a, b) {
@@ -214,54 +280,8 @@ export async function buildScheduleWorkbook(workspace: Workspace): Promise<Buffe
   let row = 1;
   days.forEach(function (day) {
     const key = dayKey(String(day.name || ''));
-    const slots = (day.slots || []).filter(function (slot) {
-      return String(slot.time || '').trim() || String(slot.status || '').trim() || String(slot.notes || '').trim();
-    });
-    const data = (slots.length ? slots : [{ time: '', status: '', notes: '', lastDay: '' }]).map(function (slot) {
-      const fraction = timeFraction(String(slot.time || ''));
-      const visitText = visitForSlot(slot, workspace.clients);
-      const visit = parseLooseDate(visitText);
-      return [
-        fraction == null ? String(slot.time || '') : fraction,
-        spreadsheetStatus(String(slot.status || '')),
-        String(slot.notes || ''),
-        visit ? excelDateSerial(visit) : visitText,
-      ];
-    });
-    const headerRow = row;
-    sheet.getCell(headerRow, 6).value = 'Notes, Upcoming Changes';
-    sheet.addTable({
-      name: tableName(key, usedNames),
-      ref: 'A' + headerRow,
-      headerRow: true,
-      columns: [
-        { name: timeHeader(key), filterButton: true },
-        { name: 'Status ', filterButton: true },
-        { name: 'Notes (i.e. client names)', filterButton: true },
-        { name: 'Date of Last Visit', filterButton: true },
-      ],
-      rows: data,
-    });
-    for (let i = 0; i < data.length; i++) {
-      const timeCell = sheet.getCell(headerRow + 1 + i, 1);
-      if (typeof timeCell.value === 'number') timeCell.numFmt = 'h:mm AM/PM';
-      const visitCell = sheet.getCell(headerRow + 1 + i, 4);
-      if (typeof visitCell.value === 'number' && visitCell.value > 1000) visitCell.numFmt = 'mm/dd/yyyy';
-    }
-    const statusStart = headerRow + 1;
-    const statusEnd = headerRow + data.length;
-    const validations = sheet as ExcelJS.Worksheet & {
-      dataValidations: { add: (address: string, rule: ExcelJS.DataValidation) => void };
-    };
-    validations.dataValidations.add('B' + statusStart + ':B' + statusEnd, {
-      type: 'list',
-      allowBlank: true,
-      formulae: ['Lists!$A$1:$A$' + STATUSES.length],
-      showErrorMessage: true,
-      errorTitle: 'Status',
-      error: 'Choose a status from the list.',
-    });
-    row = statusEnd + 2;
+    const slots = (day.slots || []).filter(isFilledSlot);
+    row = addDayTable(sheet, key, row, slots, workspace.clients, usedNames, STATUSES.length) + 2;
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -323,7 +343,7 @@ function scoreName(candidate: string, staffName: string, email: string): number 
 
 let scheduleSiteCache = '';
 
-async function scheduleSiteId(): Promise<string> {
+export async function scheduleSiteId(): Promise<string> {
   if (scheduleSiteCache) return scheduleSiteCache;
   const tries: string[] = [];
   try {
@@ -350,7 +370,7 @@ async function scheduleSiteId(): Promise<string> {
   return scheduleSiteCache;
 }
 
-function drivePath(segments: string[]): string {
+export function drivePath(segments: string[]): string {
   return segments.map(encodeURIComponent).join('/');
 }
 
@@ -372,7 +392,7 @@ async function listScheduleFolder(segments: string[]): Promise<Array<{ name: str
   }
 }
 
-async function readScheduleBytes(segments: string[]): Promise<Uint8Array | null> {
+export async function readScheduleBytes(segments: string[]): Promise<Uint8Array | null> {
   try {
     const siteId = await scheduleSiteId();
     return await graphGetBytes('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/content');
@@ -382,13 +402,29 @@ async function readScheduleBytes(segments: string[]): Promise<Uint8Array | null>
   }
 }
 
-async function writeScheduleBytes(segments: string[], bytes: Uint8Array): Promise<void> {
+export type ScheduleItemInfo = { eTag: string; lastModified: string };
+
+export async function scheduleItemInfo(segments: string[]): Promise<ScheduleItemInfo | null> {
   const siteId = await scheduleSiteId();
-  await graphSend('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/content', {
+  try {
+    const item = await graphGet('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + '?$select=id,eTag,lastModifiedDateTime');
+    return { eTag: String((item && item.eTag) || ''), lastModified: String((item && item.lastModifiedDateTime) || '') };
+  } catch (err) {
+    if (err instanceof GraphError && (err.status === 404 || /itemNotFound/i.test(err.message))) return null;
+    throw err;
+  }
+}
+
+/** Writes the workbook. When ifMatch is given, SharePoint refuses the write if someone saved the file since. */
+export async function writeScheduleBytes(segments: string[], bytes: Uint8Array, ifMatch?: string): Promise<ScheduleItemInfo> {
+  const siteId = await scheduleSiteId();
+  const saved = await graphSend('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/content', {
     method: 'PUT',
     rawBody: bytes,
     contentType: XLSX_TYPE,
+    headers: ifMatch ? { 'If-Match': ifMatch } : undefined,
   });
+  return { eTag: String((saved && saved.eTag) || ''), lastModified: String((saved && saved.lastModifiedDateTime) || '') };
 }
 
 function chooseScheduleFile(files: Array<{ name: string; lastModified: string; isFolder: boolean }>, staffName: string, email: string): string {
@@ -407,28 +443,78 @@ function chooseScheduleFile(files: Array<{ name: string; lastModified: string; i
   return ranked[0].name;
 }
 
-async function locateSchedule(staffName: string, email: string): Promise<LocatedSchedule | null> {
+export async function locateSchedule(staffName: string, email: string): Promise<LocatedSchedule | null> {
   const found = await findExistingProviderFile(SCHEDULE_ROOT, email, staffName, 'schedule');
   if (!found || !found.fileName) return null;
   const segments = found.folder ? SCHEDULE_ROOT.concat([found.folder]) : SCHEDULE_ROOT.slice();
   return { segments, fileName: found.fileName, path: found.path };
 }
 
-type DayBlock = { headerRow: number; rows: number[] };
+type TableLike = {
+  table: { ref?: string; tableRef?: string; totalsRow?: boolean; rows?: unknown[]; tl?: unknown };
+  validate: () => void;
+};
+type DayBlock = { headerRow: number; rows: number[]; table: TableLike | null; column: number };
 
 function cellPlain(cell: ExcelJS.Cell): string {
   return String(cell.text || '').trim();
 }
 
+function columnNumber(letters: string): number {
+  let n = 0;
+  for (let i = 0; i < letters.length; i++) n = n * 26 + (letters.charCodeAt(i) - 64);
+  return n;
+}
+
+function columnLetters(n: number): string {
+  let out = '';
+  let rest = n;
+  while (rest > 0) {
+    const mod = (rest - 1) % 26;
+    out = String.fromCharCode(65 + mod) + out;
+    rest = Math.floor((rest - 1) / 26);
+  }
+  return out;
+}
+
+function sheetTables(sheet: ExcelJS.Worksheet): TableLike[] {
+  const raw = (sheet as unknown as { tables?: Record<string, TableLike> }).tables || {};
+  return Object.keys(raw).map(function (name) { return raw[name]; });
+}
+
+function tableExtent(table: TableLike): { row: number; col: number; endRow: number } | null {
+  const model = table.table || {};
+  if (model.totalsRow) return null;
+  const ref = String(model.tableRef || model.ref || '');
+  const match = ref.match(/^([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?$/);
+  if (!match) return null;
+  const row = Number(match[2]);
+  return { row, col: columnNumber(match[1]), endRow: match[4] ? Number(match[4]) : row };
+}
+
 function dayBlocks(sheet: ExcelJS.Worksheet): DayBlock[] {
   const blocks: DayBlock[] = [];
+  const extents = sheetTables(sheet).map(function (table) {
+    return { table, extent: tableExtent(table) };
+  });
   let block: DayBlock | null = null;
   const max = Math.max(sheet.rowCount || 0, 1);
   for (let index = 1; index <= max; index++) {
     const row = sheet.getRow(index);
     const header = weekdayFromHeader(cellPlain(row.getCell(1)));
     if (header) {
-      block = { headerRow: index, rows: [] };
+      const found = extents.find(function (entry) {
+        return entry.extent && entry.extent.row === index && entry.extent.col === 1;
+      });
+      if (found && found.extent) {
+        const rows: number[] = [];
+        for (let r = index + 1; r <= found.extent.endRow; r++) rows.push(r);
+        blocks.push({ headerRow: index, rows, table: found.table, column: found.extent.col });
+        index = found.extent.endRow;
+        block = null;
+        continue;
+      }
+      block = { headerRow: index, rows: [], table: null, column: 1 };
       blocks.push(block);
       continue;
     }
@@ -447,9 +533,7 @@ function slotsForBlock(workspace: Workspace, headerText: string): Slot[] {
   const board = currentBoard(workspace.boards);
   const wanted = dayKey(weekdayFromHeader(headerText) || headerText);
   const day = ((board && board.days) || []).find(function (item) { return dayKey(String(item.name || '')) === wanted; });
-  return ((day && day.slots) || []).filter(function (slot) {
-    return String(slot.time || '').trim() || String(slot.status || '').trim() || String(slot.notes || '').trim();
-  });
+  return ((day && day.slots) || []).filter(isFilledSlot);
 }
 
 function writeVisitCell(cell: ExcelJS.Cell, text: string): void {
@@ -462,6 +546,194 @@ function writeVisitCell(cell: ExcelJS.Cell, text: string): void {
   cell.numFmt = 'mm/dd/yyyy';
 }
 
+function cellDateText(cell: ExcelJS.Cell): string {
+  const value = cell.value;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return formatLooseDate(new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate())));
+  }
+  return cellPlain(cell);
+}
+
+export type SheetRow = { id?: string; time: string; status: string; notes: string; lastDay: string };
+export type SheetDays = Record<string, SheetRow[]>;
+
+/** Reads every weekday table in the provider's workbook. Blank rows are skipped. */
+export async function readScheduleDays(bytes: Uint8Array): Promise<SheetDays> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(Buffer.from(bytes) as unknown as ExcelJS.Buffer);
+  const sheet = workbook.getWorksheet('Current Schedule') || workbook.worksheets[0];
+  const days: SheetDays = {};
+  if (!sheet) return days;
+  dayBlocks(sheet).forEach(function (block) {
+    const key = dayKey(weekdayFromHeader(cellPlain(sheet.getRow(block.headerRow).getCell(1))));
+    const rows: SheetRow[] = days[key] || [];
+    block.rows.forEach(function (index) {
+      const row = sheet.getRow(index);
+      const entry: SheetRow = {
+        time: formatExcelTime(row.getCell(1).value),
+        status: cellPlain(row.getCell(2)),
+        notes: cellPlain(row.getCell(3)),
+        lastDay: cellDateText(row.getCell(4)),
+      };
+      if (entry.time || entry.status || entry.notes) rows.push(entry);
+    });
+    days[key] = rows;
+  });
+  return days;
+}
+
+function normTime(text: string): string {
+  const fraction = timeFraction(String(text || ''));
+  return fraction == null ? String(text || '').trim().toLowerCase() : String(Math.round(fraction * 1440));
+}
+
+function canonicalStatus(text: string): string {
+  return spreadsheetStatus(String(text || '')).trim().toLowerCase();
+}
+
+function normDate(text: string): string {
+  const parsed = parseLooseDate(String(text || ''));
+  return parsed ? parsed.toISOString().slice(0, 10) : String(text || '').trim().toLowerCase();
+}
+
+function rowKey(row: SheetRow): string {
+  return [normTime(row.time), canonicalStatus(row.status), String(row.notes || '').trim().toLowerCase()].join('|');
+}
+
+function rowFingerprint(row: SheetRow): string {
+  return rowKey(row) + '|' + normDate(row.lastDay);
+}
+
+export function fingerprintDays(days: SheetDays): string {
+  const out: Record<string, string[]> = {};
+  Object.keys(days || {}).sort().forEach(function (key) {
+    out[key] = (days[key] || []).map(rowFingerprint);
+  });
+  return JSON.stringify(out);
+}
+
+/** What the dashboard writes to SharePoint for the current board: filled slots only, keyed by weekday. */
+export function exportedDays(workspace: Workspace): SheetDays {
+  const board = currentBoard(workspace.boards);
+  const out: SheetDays = {};
+  ((board && board.days) || []).forEach(function (day) {
+    const key = dayKey(String(day.name || ''));
+    if (out[key]) return;
+    out[key] = (day.slots || []).filter(isFilledSlot).map(function (slot) {
+      return {
+        id: String((slot as { id?: string }).id || ''),
+        time: String(slot.time || ''),
+        status: String(slot.status || ''),
+        notes: String(slot.notes || ''),
+        lastDay: visitForSlot(slot, workspace.clients),
+      };
+    });
+  });
+  return out;
+}
+
+/**
+ * Gives rows read from the workbook the ids of the rows they replace, so edits made in
+ * Excel line up with the dashboard's slots instead of looking like deletes and adds.
+ */
+export function alignRows(previous: SheetRow[], current: SheetRow[], makeId: () => string): SheetRow[] {
+  const n = previous.length;
+  const m = current.length;
+  const table: number[][] = [];
+  for (let i = 0; i <= n; i++) table.push(new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      table[i][j] = rowKey(previous[i]) === rowKey(current[j])
+        ? table[i + 1][j + 1] + 1
+        : Math.max(table[i + 1][j], table[i][j + 1]);
+    }
+  }
+  const matches: Array<[number, number]> = [];
+  let a = 0;
+  let b = 0;
+  while (a < n && b < m) {
+    if (rowKey(previous[a]) === rowKey(current[b])) {
+      matches.push([a, b]);
+      a++;
+      b++;
+    } else if (table[a + 1][b] >= table[a][b + 1]) {
+      a++;
+    } else {
+      b++;
+    }
+  }
+  matches.push([n, m]);
+  const out: SheetRow[] = new Array(m);
+  let pi = 0;
+  let ci = 0;
+  matches.forEach(function (match) {
+    const gapPrev = match[0] - pi;
+    const gapCurrent = match[1] - ci;
+    for (let k = 0; k < gapCurrent; k++) {
+      const source = k < gapPrev ? previous[pi + k] : null;
+      out[ci + k] = Object.assign({}, current[ci + k], { id: (source && source.id) || makeId() });
+    }
+    if (match[0] < n) {
+      out[match[1]] = Object.assign({}, current[match[1]], { id: previous[match[0]].id || makeId() });
+    }
+    pi = match[0] + 1;
+    ci = match[1] + 1;
+  });
+  return out;
+}
+
+const DASHBOARD_STATUS: Record<string, string> = {
+  'lunch/paperwork': 'Lunch',
+  'scheduling in progress': 'Scheduling In Progress',
+};
+
+/**
+ * Applies rows read from the workbook onto a copy of the workspace's current board.
+ * Slots that are blank on the dashboard are not in the workbook, so they stay at the end of their day.
+ */
+export function applyDaysToWorkspace<T extends Workspace>(workspace: T, days: SheetDays, makeId: () => string): T {
+  const copy = JSON.parse(JSON.stringify(workspace)) as T;
+  const board = currentBoard(copy.boards) as { days?: Array<Day & { id?: string; color?: string }> } | null;
+  if (!board) return copy;
+  board.days = board.days || [];
+  const boardDays = board.days;
+  Object.keys(days || {}).forEach(function (key) {
+    let day = boardDays.find(function (item) { return dayKey(String(item.name || '')) === key; });
+    if (!day) {
+      day = { id: 'day_sp_' + key, name: dayLabel(key), color: boardDays.length % 2 ? 'maroon' : 'blue', slots: [] };
+      boardDays.push(day);
+    }
+    const existing = (day.slots || []) as Array<Slot & { id?: string }>;
+    const byId: Record<string, Slot & { id?: string }> = {};
+    existing.forEach(function (slot) { if (slot.id) byId[slot.id] = slot; });
+    const rows = (days[key] || []).map(function (row) {
+      const prev = row.id ? byId[row.id] : undefined;
+      const next: Slot & { id?: string } = Object.assign({}, prev || {}, { id: row.id || makeId() });
+      next.time = prev && normTime(prev.time || '') === normTime(row.time) ? prev.time : row.time;
+      next.status = prev && canonicalStatus(prev.status || '') === canonicalStatus(row.status)
+        ? prev.status
+        : (DASHBOARD_STATUS[canonicalStatus(row.status)] || String(row.status || '').trim());
+      next.notes = row.notes;
+      const computed = prev ? visitForSlot(prev, (workspace as Workspace).clients) : '';
+      if (normDate(row.lastDay) === normDate(computed)) next.lastDay = prev ? prev.lastDay : '';
+      else next.lastDay = row.lastDay;
+      return next;
+    });
+    day.slots = rows.concat(existing.filter(function (slot) { return !isFilledSlot(slot); }));
+  });
+  return copy;
+}
+
+function lastUsedRow(sheet: ExcelJS.Worksheet): number {
+  let last = 0;
+  const max = sheet.rowCount || 0;
+  for (let index = 1; index <= max; index++) {
+    const row = sheet.getRow(index);
+    if ([1, 2, 3, 4, 5, 6].some(function (col) { return cellPlain(row.getCell(col)) !== ''; })) last = index;
+  }
+  return last;
+}
+
 export async function applyScheduleWorkbook(bytes: Uint8Array, workspace: Workspace): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(Buffer.from(bytes) as unknown as ExcelJS.Buffer);
@@ -469,14 +741,26 @@ export async function applyScheduleWorkbook(bytes: Uint8Array, workspace: Worksp
   if (!sheet) throw new Error('The schedule workbook has no worksheet.');
   const blocks = dayBlocks(sheet);
   if (!blocks.length) throw new Error('The schedule form needs a weekday appointment table.');
+
+  const originalHeaders = blocks.map(function (block) { return block.headerRow; });
+  const added = blocks.map(function () { return 0; });
+  const seenKeys = new Set<string>();
+  blocks.forEach(function (block) {
+    seenKeys.add(dayKey(weekdayFromHeader(cellPlain(sheet.getRow(block.headerRow).getCell(1)))));
+  });
+
+  const dashboardKeys = new Set<string>(Object.keys(exportedDays(workspace)));
   for (let b = blocks.length - 1; b >= 0; b--) {
     const block = blocks[b];
     const headerText = cellPlain(sheet.getRow(block.headerRow).getCell(1));
+    if (!dashboardKeys.has(dayKey(weekdayFromHeader(headerText) || headerText))) continue;
     const slots = slotsForBlock(workspace, headerText);
-    while (block.rows.length < slots.length) {
+    const want = Math.max(slots.length, 1);
+    while (block.rows.length < want) {
       const insertAt = (block.rows.length ? block.rows[block.rows.length - 1] : block.headerRow) + 1;
-      sheet.insertRow(insertAt, []);
+      sheet.insertRow(insertAt, [], block.rows.length ? 'i' : 'n');
       block.rows.push(insertAt);
+      added[b] += 1;
     }
     slots.forEach(function (slot, index) {
       const row = sheet.getRow(block.rows[index]);
@@ -494,6 +778,58 @@ export async function applyScheduleWorkbook(bytes: Uint8Array, workspace: Worksp
       row.getCell(3).value = null;
       row.getCell(4).value = null;
     }
+  }
+
+  // insertRow moves cells but not tables or drop-downs, so put them back where the rows now are.
+  const validationModel = ((sheet as unknown as { dataValidations: { model: Record<string, unknown> } }).dataValidations || { model: {} }).model;
+  let rule: unknown = null;
+  Object.keys(validationModel).forEach(function (key) {
+    if (/^B\d+(:B\d+)?$/.test(key) && validationModel[key]) {
+      rule = rule || validationModel[key];
+      delete validationModel[key];
+    }
+  });
+  const listsSheet = workbook.getWorksheet('Lists');
+  if (!rule && listsSheet && listsSheet.rowCount > 0) {
+    rule = {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['Lists!$A$1:$A$' + listsSheet.rowCount],
+      showErrorMessage: true,
+      errorTitle: 'Status',
+      error: 'Choose a status from the list.',
+    };
+  }
+  let shift = 0;
+  blocks.forEach(function (block, b) {
+    shift += b > 0 ? added[b - 1] : 0;
+    const header = originalHeaders[b] + shift;
+    if (block.table) {
+      const model = block.table.table;
+      model.ref = columnLetters(block.column) + header;
+      model.rows = new Array(block.rows.length).fill([]);
+      block.table.validate();
+    }
+    if (rule && block.rows.length) {
+      (validationModel as Record<string, unknown>)['B' + (header + 1) + ':B' + (header + block.rows.length)] = rule;
+    }
+  });
+
+  const missing = Object.keys(exportedDays(workspace)).filter(function (key) {
+    return !seenKeys.has(key) && exportedDays(workspace)[key].length > 0;
+  });
+  if (missing.length) {
+    const usedNames = new Set<string>(Object.keys((sheet as unknown as { tables?: Record<string, unknown> }).tables || {}));
+    const order = missing.slice().sort(function (a, b) {
+      const ia = DAY_ORDER.indexOf(a);
+      const ib = DAY_ORDER.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    let next = lastUsedRow(sheet) + 2;
+    order.forEach(function (key) {
+      const slots = slotsForBlock(workspace, dayLabel(key));
+      next = addDayTable(sheet, key, next, slots, workspace.clients, usedNames, listsSheet ? listsSheet.rowCount : 0) + 2;
+    });
   }
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }

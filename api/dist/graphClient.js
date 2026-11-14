@@ -94,7 +94,7 @@ async function graphGetText(path) {
 }
 async function graphSend(path, options) {
     const token = await appToken();
-    const headers = { Authorization: 'Bearer ' + token };
+    const headers = Object.assign({ Authorization: 'Bearer ' + token }, options.headers || {});
     let body;
     if (options.rawBody) {
         headers['Content-Type'] = options.contentType || 'application/octet-stream';
