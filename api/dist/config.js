@@ -34,6 +34,7 @@ function getConfig() {
         adminGroupName: env('EMME_ADMIN_GROUP_NAME') || 'Emme Admin',
         adminGroupId: env('EMME_ADMIN_GROUP_ID'),
         adminEmails: env('EMME_ADMIN_EMAILS').toLowerCase().split(/[,;\s]+/).filter(Boolean),
+        allowedEmailDomains: (env('EMME_ALLOWED_EMAIL_DOMAINS') || 'emmeco.org').toLowerCase().split(/[,;\s]+/).filter(Boolean),
         automationKey: env('AUTOMATION_API_KEY'),
         storageConnection: env('AZURE_STORAGE_CONNECTION_STRING'),
         storageContainer: env('AZURE_STORAGE_CONTAINER') || 'emme-reports',

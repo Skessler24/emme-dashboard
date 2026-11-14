@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.NOT_EMME_MESSAGE = void 0;
+exports.emailAllowed = emailAllowed;
 exports.readPrincipal = readPrincipal;
 exports.automationAuthorized = automationAuthorized;
 exports.resolveIsAdmin = resolveIsAdmin;
@@ -10,6 +12,12 @@ const config_1 = require("./config");
 const graphClient_1 = require("./graphClient");
 const http_1 = require("./http");
 const adminCache = new Map();
+/** Anyone with a Microsoft work or school account can sign in to the site, so the API only trusts Emme staff addresses. */
+function emailAllowed(email) {
+    const domain = String(email || '').trim().toLowerCase().split('@')[1] || '';
+    return !!domain && (0, config_1.getConfig)().allowedEmailDomains.indexOf(domain) !== -1;
+}
+exports.NOT_EMME_MESSAGE = 'This dashboard is only for Emme staff. Sign in with your @emmeco.org account.';
 function readPrincipal(req) {
     const directId = (0, http_1.header)(req, 'x-ms-client-principal-id');
     const directName = (0, http_1.header)(req, 'x-ms-client-principal-name');
@@ -101,6 +109,10 @@ async function requireUser(context, req) {
     const principal = readPrincipal(req);
     if (!principal || !principal.email) {
         (0, http_1.json)(context, 401, { error: 'Sign in required' });
+        return null;
+    }
+    if (!emailAllowed(principal.email)) {
+        (0, http_1.json)(context, 403, { error: exports.NOT_EMME_MESSAGE });
         return null;
     }
     return principal;

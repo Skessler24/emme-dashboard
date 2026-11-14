@@ -1,4 +1,4 @@
-import { automationAuthorized, readPrincipal, requireAdmin, requireUser, resolveIsAdmin } from './auth';
+import { NOT_EMME_MESSAGE, automationAuthorized, emailAllowed, readPrincipal, requireAdmin, requireUser, resolveIsAdmin } from './auth';
 import { GraphError } from './graphClient';
 import { IntakeQError, complianceByStaff, getCancellations, getInvoices, getNoteSummaries } from './intakeQService';
 import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, restParts } from './http';
@@ -71,6 +71,10 @@ async function me(context: FnContext, req: HttpRequest): Promise<void> {
   const principal = readPrincipal(req);
   if (!principal || !principal.email) {
     json(context, 401, { isAdmin: false, error: 'Sign in required' });
+    return;
+  }
+  if (!emailAllowed(principal.email)) {
+    json(context, 403, { isAdmin: false, error: NOT_EMME_MESSAGE });
     return;
   }
   const admin = await resolveIsAdmin(principal.email);

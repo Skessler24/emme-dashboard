@@ -252,6 +252,15 @@ module.exports = async function (context, req) {
       return;
     }
 
+    const allowedDomains = String(process.env.EMME_ALLOWED_EMAIL_DOMAINS || 'emmeco.org').toLowerCase().split(/[,;\s]+/).filter(Boolean);
+    const staffEmail = principal.emails.some(function (email) {
+      return allowedDomains.indexOf(email.split('@')[1] || '') !== -1;
+    });
+    if (!staffEmail) {
+      json(context, 403, { configured: true, error: 'This dashboard is only for Emme staff. Sign in with your @emmeco.org account.' });
+      return;
+    }
+
     const container = service.getContainerClient(CONTAINER);
     await container.createIfNotExists();
     const personal = container.getBlockBlobClient(emailBlobName(principal));
