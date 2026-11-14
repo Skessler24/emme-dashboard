@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="schedule-merge.js"></script>
   <style>
     :root {
       --green: #084339;
@@ -163,6 +164,7 @@
     }
     .status--full { background: #f8cacb; color: #7a2f38; }
     .status--open4 { background: #d4edda; color: #1e5c33; }
+    .status--open3 { background: #e6f0b8; color: #4a5a12; }
     .status--open2, .status--open1 { background: #ffe8a3; color: #6b4e00; }
     .status--progress { background: #ffd0a8; color: #7a3d00; }
     .status--lunch { background: #cfe8f5; color: #1a4d66; }
@@ -360,6 +362,7 @@
 
     .cell-select.status-tint--full { background: #f8cacb; }
     .cell-select.status-tint--open4 { background: #d4edda; }
+    .cell-select.status-tint--open3 { background: #e6f0b8; }
     .cell-select.status-tint--open2,
     .cell-select.status-tint--open1 { background: #ffe8a3; }
     .cell-select.status-tint--progress { background: #ffd0a8; }
@@ -466,6 +469,9 @@
     { value: '', label: '—', cls: 'blank' },
     { value: 'Full', label: 'Full', cls: 'full' },
     { value: 'Open 4x', label: 'Open 4x', cls: 'open4' },
+    { value: 'Open 3x (1,2,3)', label: 'Open 3x (1,2,3)', cls: 'open3' },
+    { value: 'Open 3x (2,3,4)', label: 'Open 3x (2,3,4)', cls: 'open3' },
+    { value: 'Open 3x (1,3,4)', label: 'Open 3x (1,3,4)', cls: 'open3' },
     { value: 'Open 2x (1&3)', label: 'Open 2x (1&3)', cls: 'open2' },
     { value: 'Open 2x (2&4)', label: 'Open 2x (2&4)', cls: 'open2' },
     { value: 'Open 1x (1)', label: 'Open 1x (1)', cls: 'open1' },
@@ -487,6 +493,7 @@
     saving: false,
     dirty: false,
     rev: 0,
+    base: null,
     lastRemoteUpdatedAt: null,
     pollTimer: null,
     saveTimer: null,
@@ -692,19 +699,60 @@
     return { configured: true, workspace: data.workspace };
   }
 
-  async function saveCloud(workspace) {
+  async function saveCloud(workspace, base) {
     var res = await fetch('/api/schedule', {
       method: 'PUT',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspace: workspace })
+      body: JSON.stringify({ workspace: workspace, base: base || null })
     });
     var data = await res.json().catch(function () { return {}; });
     if (res.status === 503 || data.configured === false) {
       return { configured: false };
     }
     if (!res.ok) throw new Error(data.error || 'Could not save schedule');
-    return { configured: true, workspace: data.workspace, sharePoint: data.sharePoint, oneDrive: data.oneDrive };
+    return { configured: true, workspace: data.workspace, merged: !!data.merged, sharePoint: data.sharePoint, oneDrive: data.oneDrive };
+  }
+
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+
+  function mergeAvailable() {
+    return window.ScheduleMerge && typeof window.ScheduleMerge.merge === 'function';
+  }
+
+  function focusSnapshot() {
+    var el = document.activeElement;
+    if (!el || !el.closest) return null;
+    var tr = el.closest('tr[data-slot]');
+    var field = el.getAttribute && el.getAttribute('data-field');
+    if (!tr || !field) return null;
+    var snap = { day: tr.getAttribute('data-day'), slot: tr.getAttribute('data-slot'), field: field };
+    try { snap.start = el.selectionStart; snap.end = el.selectionEnd; } catch (_) {}
+    return snap;
+  }
+
+  function restoreFocus(snap) {
+    if (!snap) return;
+    var tr = document.querySelector('tr[data-slot="' + snap.slot + '"]');
+    var el = tr && tr.querySelector('[data-field="' + snap.field + '"]');
+    if (!el) return;
+    el.focus();
+    try { if (snap.start != null) el.setSelectionRange(snap.start, snap.end); } catch (_) {}
+  }
+
+  function renderKeepingFocus() {
+    var snap = focusSnapshot();
+    renderAll();
+    restoreFocus(snap);
+  }
+
+  function adoptRemote(workspace) {
+    state.workspace = workspace;
+    state.base = clone(workspace);
+    state.lastRemoteUpdatedAt = workspace.updatedAt;
+    if (shapeWorkspace(state.workspace)) scheduleSave();
+    saveLocal(state.workspace);
+    renderKeepingFocus();
   }
 
   async function pollMeta() {
@@ -718,11 +766,7 @@
         var loaded = await loadCloud();
         if (state.dirty || state.saving || state.rev !== revAtStart) return;
         if (loaded.configured && loaded.workspace) {
-          state.workspace = loaded.workspace;
-          if (shapeWorkspace(state.workspace)) scheduleSave();
-          state.lastRemoteUpdatedAt = loaded.workspace.updatedAt;
-          saveLocal(state.workspace);
-          renderAll();
+          adoptRemote(loaded.workspace);
           setSyncLabel('Live · updated', 'live');
         }
       }
@@ -753,16 +797,29 @@
     var failed = false;
     try {
       if (state.cloudConfigured) {
-        var result = await saveCloud(JSON.parse(JSON.stringify(state.workspace)));
+        var sent = clone(state.workspace);
+        var result = await saveCloud(sent, state.base);
         if (result.configured && result.workspace) {
+          var saved = result.workspace;
+          var changedByOthers = !window.ScheduleMerge || !window.ScheduleMerge.equal(
+            { boards: saved.boards, clients: saved.clients, dxCodes: saved.dxCodes },
+            { boards: sent.boards, clients: sent.clients, dxCodes: sent.dxCodes });
           if (state.rev === revAtSave) {
-            state.workspace = result.workspace;
+            state.workspace = clone(saved);
+          } else if (mergeAvailable()) {
+            var rebased = window.ScheduleMerge.merge(sent, state.workspace, saved);
+            rebased.version = saved.version;
+            rebased.updatedAt = saved.updatedAt;
+            rebased.ownerEmail = saved.ownerEmail;
+            state.workspace = rebased;
           } else {
-            state.workspace.version = result.workspace.version;
-            state.workspace.updatedAt = result.workspace.updatedAt;
+            state.workspace.version = saved.version;
+            state.workspace.updatedAt = saved.updatedAt;
           }
-          state.lastRemoteUpdatedAt = result.workspace.updatedAt;
+          state.base = clone(saved);
+          state.lastRemoteUpdatedAt = saved.updatedAt;
           saveLocal(state.workspace);
+          if (changedByOthers) renderKeepingFocus();
           setSyncLabel(savedPlace(result), 'live');
         } else {
           state.cloudConfigured = false;
@@ -807,11 +864,13 @@
 
   function renderStatusSelect(value, attrs) {
     var cls = statusClass(value);
+    var known = STATUS_OPTIONS.some(function (s) { return s.value === value; });
+    var extra = !known && value ? '<option value="' + escapeAttr(value) + '" selected>' + escapeHtml(value) + '</option>' : '';
     return '<select class="cell-select status-tint--' + cls + '" ' + (attrs || '') + '>' +
       STATUS_OPTIONS.map(function (s) {
         return '<option value="' + escapeAttr(s.value) + '"' + (s.value === value ? ' selected' : '') + '>' +
           escapeHtml(s.label) + '</option>';
-      }).join('') + '</select>';
+      }).join('') + extra + '</select>';
   }
 
   function tintStatusSelect(el) {
@@ -986,6 +1045,7 @@
           '<span>' + escapeHtml(day.name) + '</span>' +
           '<div style="display:flex;gap:0.35rem">' +
             '<button type="button" class="btn btn--ghost btn--sm" data-action="add-slot-day" data-day="' + day.id + '">+ Slot</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-action="add-slots-day" data-day="' + day.id + '" title="Add 5 slots">+5</button>' +
             '<button type="button" class="btn btn--ghost btn--sm" data-action="rename-day" data-day="' + day.id + '" title="Rename day">Rename</button>' +
             '<button type="button" class="btn btn--ghost btn--sm" data-action="toggle-day-color" data-day="' + day.id + '" title="Toggle header color">Color</button>' +
             '<button type="button" class="btn btn--ghost btn--sm" data-action="del-day" data-day="' + day.id + '" title="Delete day">✕</button>' +
@@ -1114,6 +1174,15 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
   function escapeAttr(str) { return escapeHtml(str); }
+
+  function focusSlotTime(slotId) {
+    var tr = document.querySelector('tr[data-slot="' + slotId + '"]');
+    var input = tr && tr.querySelector('[data-field="time"]');
+    if (input) {
+      input.focus();
+      if (input.scrollIntoView) input.scrollIntoView({ block: 'nearest' });
+    }
+  }
 
   function findSlot(dayId, slotId) {
     var board = activeBoard();
@@ -1417,11 +1486,27 @@
         });
       }
       if (action === 'add-slot-day' && dayId) {
+        var newSlotId = uid('slot');
         mutate(function () {
           var board = activeBoard();
           var day = board.days.find(function (d) { return d.id === dayId; });
-          if (day) day.slots.push({ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' });
+          if (day) day.slots.push({ id: newSlotId, time: '', status: '', notes: '', lastDay: '' });
         });
+        focusSlotTime(newSlotId);
+      }
+      if (action === 'add-slots-day' && dayId) {
+        var firstNewId = '';
+        mutate(function () {
+          var board = activeBoard();
+          var day = board.days.find(function (d) { return d.id === dayId; });
+          if (!day) return;
+          for (var n = 0; n < 5; n++) {
+            var id = uid('slot');
+            if (!firstNewId) firstNewId = id;
+            day.slots.push({ id: id, time: '', status: '', notes: '', lastDay: '' });
+          }
+        });
+        if (firstNewId) focusSlotTime(firstNewId);
       }
       if (action === 'toggle-day-color' && dayId) {
         mutate(function () {
@@ -1513,9 +1598,11 @@
     var idx = (parseInt(pick, 10) || 1) - 1;
     var day = board.days[idx];
     if (!day) return;
+    var addedSlotId = uid('slot');
     mutate(function () {
-      day.slots.push({ id: uid('slot'), time: '', status: '', notes: '', lastDay: '' });
+      day.slots.push({ id: addedSlotId, time: '', status: '', notes: '', lastDay: '' });
     });
+    focusSlotTime(addedSlotId);
   });
 
   document.getElementById('js-add-day').addEventListener('click', function () {
@@ -1596,6 +1683,8 @@
   function savedPlace(result) {
     var drive = result.oneDrive && result.oneDrive.ok;
     var sheet = result.sharePoint && result.sharePoint.ok;
+    var sheetFailed = result.sharePoint && result.sharePoint.error && !result.sharePoint.skipped;
+    if (sheetFailed) return 'Saved · SharePoint will retry';
     if (drive && sheet) return 'Live · OneDrive and SharePoint';
     if (drive) return 'Live · saved to OneDrive';
     if (sheet) return 'Live · saved to SharePoint';
@@ -2313,6 +2402,10 @@
       bc.onmessage = function (ev) {
         if (!ev.data || ev.data.type !== 'workspace') return;
         if (state.dirty || state.saving) return;
+        if (state.cloudConfigured) {
+          setTimeout(pollMeta, 1500);
+          return;
+        }
         var local = loadLocal();
         if (local && local.updatedAt === ev.data.updatedAt) {
           state.workspace = local;
@@ -2332,6 +2425,7 @@
         }
         if (cloud.workspace && (cloud.workspace.boards || []).length) {
           state.workspace = cloud.workspace;
+          state.base = clone(cloud.workspace);
         } else if (local && (local.boards || []).length) {
           state.workspace = local;
           await persist();
