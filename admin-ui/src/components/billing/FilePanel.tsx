@@ -24,7 +24,10 @@ export function FilePanel(props: {
   /** Saves answers first so a funding source exists on the server before its files are uploaded. */
   ensureSaved: () => Promise<boolean>;
   onChanged: () => void;
+  /** Where the files are kept. Billing is the default. */
+  base?: string;
 }) {
+  const base = props.base || '/api/billing-intake';
   const mine = props.files.filter((file) => file.scope === props.scope);
   const [kind, setKind] = useState('');
   const [note, setNote] = useState('');
@@ -45,7 +48,7 @@ export function FilePanel(props: {
     setBusy(true);
     try {
       if (!(await props.ensureSaved())) throw new Error('Your answers could not be saved yet, so the file was not uploaded. Try again in a moment.');
-      await api('/api/billing-intake/files', {
+      await api(base + '/files', {
         method: 'POST',
         body: { scope: props.scope, kind, note, name: chosen.name, contentBase64: await toBase64(chosen), confirmedNoClientInfo: true },
       });
@@ -65,7 +68,7 @@ export function FilePanel(props: {
     if (!window.confirm('Remove "' + file.name + '"?')) return;
     setError('');
     try {
-      await api('/api/billing-intake/files/' + encodeURIComponent(file.id), { method: 'DELETE' });
+      await api(base + '/files/' + encodeURIComponent(file.id), { method: 'DELETE' });
       props.onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not remove the file');
@@ -82,7 +85,7 @@ export function FilePanel(props: {
         <ul className="setup-files__list">
           {mine.map((file) => (
             <li key={file.id}>
-              <a href={'/api/billing-intake/files/' + encodeURIComponent(file.id)}>{file.name}</a>
+              <a href={base + '/files/' + encodeURIComponent(file.id)}>{file.name}</a>
               <span className="muted"> · {kindLabel(file.kind)} · {sizeText(file.size)} · added by {file.uploadedBy}</span>
               {file.note ? <div className="muted">{file.note}</div> : null}
               <button type="button" className="btn btn--ghost" onClick={() => remove(file)}>Remove</button>

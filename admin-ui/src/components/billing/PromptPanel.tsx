@@ -4,11 +4,11 @@ import { LEVEL_TEXT, type Assessment } from './types';
 
 type PromptResult = {
   prompt: string;
-  assessments: Assessment[];
+  assessments?: Assessment[];
   missing: Array<{ where: string; question: string; reason: 'unanswered' | 'not-sure' }>;
 };
 
-export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCount: number }) {
+export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCount: number; base?: string; fileName?: string }) {
   const [result, setResult] = useState<PromptResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +20,7 @@ export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCo
     setCopied(false);
     try {
       if (!(await props.ensureSaved())) throw new Error('Your answers could not be saved, so the prompt was not created.');
-      setResult(await api<PromptResult>('/api/billing-intake/prompt'));
+      setResult(await api<PromptResult>((props.base || '/api/billing-intake') + '/prompt'));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not create the prompt');
     } finally {
@@ -43,7 +43,7 @@ export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCo
     const url = URL.createObjectURL(new Blob([result.prompt], { type: 'text/markdown' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'billing-build-prompt.md';
+    link.download = props.fileName || 'billing-build-prompt.md';
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -68,7 +68,7 @@ export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCo
             <strong>{unanswered}</strong> questions are unanswered and <strong>{unsure}</strong> are marked “not sure”.
             {props.fileCount ? ' ' + props.fileCount + ' uploaded files are listed in the prompt. Download them from the file lists above and attach them to the chat with the prompt.' : ' No files are uploaded yet.'}
           </p>
-          {result.assessments.length ? (
+          {result.assessments && result.assessments.length ? (
             <div className="table-wrap">
               <table>
                 <thead>

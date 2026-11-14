@@ -1,7 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MAX_FILES = exports.MAX_FILE_BYTES = void 0;
+exports.FILE_TYPES = exports.MAX_FILES = exports.MAX_FILE_BYTES = void 0;
+exports.requireHumanAdmin = requireHumanAdmin;
+exports.cleanAnswers = cleanAnswers;
 exports.safeFileName = safeFileName;
+exports.extensionOf = extensionOf;
+exports.contentDisposition = contentDisposition;
 exports.handleBillingIntake = handleBillingIntake;
 const auth_1 = require("./auth");
 const http_1 = require("./http");
@@ -13,7 +17,7 @@ exports.MAX_FILE_BYTES = 6 * 1024 * 1024;
 exports.MAX_FILES = 100;
 const MAX_SOURCES = 40;
 const MAX_TEXT = 6000;
-const FILE_TYPES = {
+exports.FILE_TYPES = {
     xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     xlsm: 'application/vnd.ms-excel.sheet.macroEnabled.12',
     xls: 'application/vnd.ms-excel',
@@ -107,7 +111,7 @@ function questionBank() {
         sourceKinds: billingQuestions_1.SOURCE_KINDS,
         fileKinds: billingQuestions_1.FILE_KINDS,
         connectionGuide: billingQuestions_1.CONNECTION_GUIDE,
-        limits: { maxFileBytes: exports.MAX_FILE_BYTES, fileTypes: Object.keys(FILE_TYPES) },
+        limits: { maxFileBytes: exports.MAX_FILE_BYTES, fileTypes: Object.keys(exports.FILE_TYPES) },
     };
 }
 async function readState(context) {
@@ -142,8 +146,8 @@ async function upload(context, req, who) {
     }
     const name = safeFileName((0, http_1.asText)(body.name, 300));
     const ext = extensionOf(name);
-    if (!FILE_TYPES[ext]) {
-        (0, http_1.json)(context, 400, { error: 'That kind of file is not allowed. Use one of: ' + Object.keys(FILE_TYPES).join(', ') + '.' });
+    if (!exports.FILE_TYPES[ext]) {
+        (0, http_1.json)(context, 400, { error: 'That kind of file is not allowed. Use one of: ' + Object.keys(exports.FILE_TYPES).join(', ') + '.' });
         return;
     }
     const kind = (0, http_1.asText)(body.kind, 40);
@@ -179,7 +183,7 @@ async function upload(context, req, who) {
         kind,
         note: (0, http_1.asText)(body.note, 300),
         name,
-        contentType: FILE_TYPES[ext],
+        contentType: exports.FILE_TYPES[ext],
         uploadedBy: who.email,
     }, data);
     (0, http_1.json)(context, 200, { ok: true, file });
