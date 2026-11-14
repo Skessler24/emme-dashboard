@@ -249,3 +249,10 @@ th { color: var(--green); font-size: 0.78rem; letter-spacing: 0.02em; }
 .setup-list { margin: 0; padding-left: 1.1rem; }
 .setup-prompt { width: 100%; min-height: 28rem; font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
 .btn:disabled { opacity: 0.6; cursor: default; }
+
+.setup-note {
+  background: #eaf4ea;
+  border: 1px solid var(--green);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.8rem;
+}

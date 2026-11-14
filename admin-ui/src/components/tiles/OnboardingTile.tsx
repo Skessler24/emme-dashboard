@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../../api';
 import { DataTable } from '../DataTable';
+import { TileWithSetup } from '../setup/TileSetup';
 
 type Docs = { name: string; lastModified: string };
 type FoundFile = { folder: string; fileName: string; path: string; matchedBy: string };
@@ -11,7 +12,7 @@ function folderLine(label: string, found: FoundFile | null): string {
   return label + ': ' + found.path + ' (' + found.matchedBy + ')';
 }
 
-export function OnboardingTile() {
+function OnboardingOverview() {
   const [employeeId, setEmployeeId] = useState('');
   const [employeeName, setEmployeeName] = useState('');
   const [checklist, setChecklist] = useState<Array<Record<string, unknown>>>([]);
@@ -139,4 +140,12 @@ function fileToBase64(file: File): Promise<string> {
     };
     reader.readAsDataURL(file);
   });
+}
+
+export function OnboardingTile() {
+  return (
+    <TileWithSetup hashId="onboarding" tileId="onboarding" label="Onboarding">
+      <OnboardingOverview />
+    </TileWithSetup>
+  );
 }
