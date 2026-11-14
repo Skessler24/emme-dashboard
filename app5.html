@@ -255,6 +255,7 @@
     .client-card__body { padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
     .client-card.is-collapsed .client-card__body,
     .client-card.is-collapsed .client-card__travel,
+    .client-card.is-collapsed .client-card__funding,
     .client-card.is-collapsed .client-card__tasks,
     .client-card.is-collapsed .client-card__sessions,
     .client-card.is-collapsed [data-action="edit-client"],
@@ -265,6 +266,17 @@
       display: grid;
       gap: 0.45rem;
       border-top: 1px solid var(--border);
+    }
+    .client-card__funding {
+      padding: 0.75rem 1rem 0.15rem;
+      display: grid;
+      gap: 0.35rem;
+      border-top: 1px solid var(--border);
+    }
+    .client-card__funding label { font-size: 0.78rem; font-weight: 700; color: var(--green); }
+    .client-card__funding select {
+      width: 100%; border: 1px solid var(--border); border-radius: 0.4rem;
+      padding: 0.4rem 0.45rem; font: inherit; font-size: 0.84rem; color: var(--body); background: #fff;
     }
     .client-card__checks { display: flex; flex-wrap: wrap; gap: 0.9rem; }
     .client-card__checks label, .check-line {
@@ -1059,12 +1071,37 @@
     root.innerHTML = '<div class="day-stack">' + daysHtml + '</div>';
   }
 
+  // Choices for each client's "Note Type & Funding Source". The chosen text is saved on the client.
+  var NOTE_FUNDING_SOURCES = [
+    'Declination',
+    'DHMC RAE or Other Trust',
+    'In Network, Billing Insurance',
+    'In Network Exemption',
+    'Out of Network Exemption',
+    'PAR Req HealthFirst',
+    'PAR Req HealthFirst Secondary, Billing Primary OON',
+    'Par Req HealthFirst Tertiary, Billing Primary & Secondary OON',
+    'PAR Req DHMC',
+    'COA EI-No PAR Req',
+    'PAR Req COA RAE benefit',
+    'SGF Bill to Broker'
+  ];
+
+  function fundingOptionsHtml(selected) {
+    var list = NOTE_FUNDING_SOURCES.slice();
+    // Keep a saved value visible even if it is no longer in the list.
+    if (selected && list.indexOf(selected) === -1) list.push(selected);
+    return '<option value="">Please Choose...</option>' + list.map(function (name) {
+      return '<option value="' + escapeAttr(name) + '"' + (name === selected ? ' selected' : '') + '>' + escapeHtml(name) + '</option>';
+    }).join('');
+  }
+
   function renderClientsView() {
     var root = document.getElementById('js-view-clients');
     var q = (state.clientQuery || '').toLowerCase().trim();
     var clients = (state.workspace.clients || []).filter(function (c) {
       if (!q) return true;
-      var blob = [c.name, c.email, c.phone, c.agency, c.parents, c.sessions, c.serviceCoordinator, c.scEmail, c.medicaid, c.parExpires, c.tasks]
+      var blob = [c.name, c.email, c.phone, c.agency, c.parents, c.sessions, c.serviceCoordinator, c.scEmail, c.medicaid, c.parExpires, c.tasks, c.noteFundingSource]
         .join(' ').toLowerCase();
       return blob.indexOf(q) !== -1;
     });
@@ -1100,6 +1137,10 @@
           infoRow('Service Coord.', c.serviceCoordinator) +
           contactRow('SC Email', c.scEmail, 'mailto') +
           infoRow('Hours', c.hours) +
+        '</div>' +
+        '<div class="client-card__funding">' +
+          '<label for="funding-' + c.id + '">Note Type &amp; Funding Source</label>' +
+          '<select id="funding-' + c.id + '" data-client-funding="' + c.id + '">' + fundingOptionsHtml(c.noteFundingSource || '') + '</select>' +
         '</div>' +
         '<div class="client-card__travel">' +
           '<h4>Mileage</h4>' +
@@ -1232,6 +1273,7 @@
         '<div class="field"><label>Service Coordinator</label><input id="m-sc" value="' + escapeAttr(c.serviceCoordinator || '') + '" /></div>' +
         '<div class="field"><label>SC Email</label><input id="m-scemail" type="email" value="' + escapeAttr(c.scEmail || '') + '" /></div>' +
       '</div>' +
+      '<div class="field"><label>Note Type &amp; Funding Source</label><select id="m-funding">' + fundingOptionsHtml(c.noteFundingSource || '') + '</select></div>' +
       '<div class="field"><label>Tasks</label><textarea id="m-tasks" rows="3">' + escapeHtml(c.tasks || '') + '</textarea></div>' +
       '<div class="field"><div class="client-card__checks">' +
         '<label class="check-line"><input type="checkbox" id="m-virtual"' + (c.virtualService ? ' checked' : '') + ' /> Virtual</label>' +
@@ -1257,6 +1299,7 @@
       serviceCoordinator: val('m-sc'),
       scEmail: val('m-scemail'),
       tasks: val('m-tasks'),
+      noteFundingSource: val('m-funding'),
       virtualService: !!(document.getElementById('m-virtual') && document.getElementById('m-virtual').checked),
       inPerson: !!(document.getElementById('m-inperson') && document.getElementById('m-inperson').checked),
       milesPerTrip: val('m-miles'),
@@ -1413,6 +1456,13 @@
 
   document.addEventListener('change', function (e) {
     if (e.target.matches('.cell-select')) onSlotFieldChange(e.target);
+    if (e.target.matches('select[data-client-funding]') && state.workspace) {
+      var fundedClient = state.workspace.clients.find(function (c) { return c.id === e.target.getAttribute('data-client-funding'); });
+      if (fundedClient) {
+        fundedClient.noteFundingSource = e.target.value;
+        scheduleSave();
+      }
+    }
     var flag = e.target.closest('[data-client-flag]');
     if (flag && state.workspace) {
       var flagged = state.workspace.clients.find(function (c) { return c.id === flag.getAttribute('data-client'); });
