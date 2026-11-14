@@ -106,6 +106,12 @@ async function graph(token, path, options) {
   return data;
 }
 
+function allowedEmail(email) {
+  const domains = String(process.env.EMME_ALLOWED_EMAIL_DOMAINS || 'emmeco.org').toLowerCase().split(/[,;\s]+/).filter(Boolean);
+  const domain = String(email || '').trim().toLowerCase().split('@')[1] || '';
+  return !!domain && domains.indexOf(domain) !== -1;
+}
+
 function userPath(email) {
   return '/users/' + encodeURIComponent(email);
 }
@@ -185,6 +191,11 @@ module.exports = async function (context, req) {
   const email = readEmail(req);
   if (!email) {
     json(context, 401, { configured: configured(), error: 'Sign in required' });
+    return;
+  }
+
+  if (!allowedEmail(email)) {
+    json(context, 403, { configured: configured(), error: 'This dashboard is only for Emme staff. Sign in with your @emmeco.org account.' });
     return;
   }
 

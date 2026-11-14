@@ -59,6 +59,10 @@ async function me(context, req) {
         (0, http_1.json)(context, 401, { isAdmin: false, error: 'Sign in required' });
         return;
     }
+    if (!(0, auth_1.emailAllowed)(principal.email)) {
+        (0, http_1.json)(context, 403, { isAdmin: false, error: auth_1.NOT_EMME_MESSAGE });
+        return;
+    }
     const admin = await (0, auth_1.resolveIsAdmin)(principal.email);
     (0, http_1.json)(context, 200, {
         isAdmin: admin.isAdmin,

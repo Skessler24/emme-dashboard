@@ -11,6 +11,14 @@ export type Principal = {
 
 const adminCache = new Map<string, { value: boolean; expires: number }>();
 
+/** Anyone with a Microsoft work or school account can sign in to the site, so the API only trusts Emme staff addresses. */
+export function emailAllowed(email: string): boolean {
+  const domain = String(email || '').trim().toLowerCase().split('@')[1] || '';
+  return !!domain && getConfig().allowedEmailDomains.indexOf(domain) !== -1;
+}
+
+export const NOT_EMME_MESSAGE = 'This dashboard is only for Emme staff. Sign in with your @emmeco.org account.';
+
 export function readPrincipal(req: HttpRequest): Principal | null {
   const directId = header(req, 'x-ms-client-principal-id');
   const directName = header(req, 'x-ms-client-principal-name');
@@ -86,6 +94,10 @@ export async function requireUser(context: FnContext, req: HttpRequest): Promise
   const principal = readPrincipal(req);
   if (!principal || !principal.email) {
     json(context, 401, { error: 'Sign in required' });
+    return null;
+  }
+  if (!emailAllowed(principal.email)) {
+    json(context, 403, { error: NOT_EMME_MESSAGE });
     return null;
   }
   return principal;
