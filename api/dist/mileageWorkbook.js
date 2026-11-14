@@ -177,19 +177,7 @@ let mileageSiteCache = '';
 async function mileageSiteId() {
     if (mileageSiteCache)
         return mileageSiteCache;
-    const tries = [];
-    try {
-        const personal = await (0, graphClient_1.graphGet)('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
-        if (personal && personal.id)
-            tries.push(String(personal.id));
-    }
-    catch (_) { /* the configured site is the fallback */ }
-    try {
-        const configured = await (0, graphClient_1.getSharePointSiteId)();
-        if (tries.indexOf(configured) === -1)
-            tries.push(configured);
-    }
-    catch (_) { /* personal site may still work */ }
+    const tries = await (0, graphClient_1.candidateSiteIds)();
     if (!tries.length)
         throw new graphClient_1.GraphError(503, 'SharePoint is not configured for mileage.');
     const folder = providerSetup_1.MILEAGE_ROOT.map(encodeURIComponent).join('/');

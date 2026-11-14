@@ -4,6 +4,7 @@ import { AlertBanner } from './components/AlertBanner';
 import { BillingTile } from './components/tiles/BillingTile';
 import { OnboardingTile } from './components/tiles/OnboardingTile';
 import { ReferralsTile } from './components/tiles/ReferralsTile';
+import { SetupTile } from './components/tiles/SetupTile';
 import { ReflectiveSupervisionTile } from './components/tiles/ReflectiveSupervisionTile';
 import { StaffExpectationsTile } from './components/tiles/StaffExpectationsTile';
 import { StaffInformationTile } from './components/tiles/StaffInformationTile';
@@ -17,6 +18,7 @@ const TILES = [
   { id: 'staff', href: '#/staff', title: 'Staff Information', text: 'Trainings and open notes' },
   { id: 'expectations', href: '#/expectations', title: 'Staff Expectations', text: 'Openings, mileage, and compliance' },
   { id: 'reflective-supervision', href: '#/reflective-supervision', title: 'Reflective Supervision', text: 'Observation process files' },
+  { id: 'setup', href: '#/setup', title: 'Setup', text: 'SharePoint site, lists, and folders' },
 ];
 
 function useHash(): string {
@@ -53,6 +55,7 @@ export function App() {
     : view === 'staff' ? <StaffInformationTile />
     : view === 'expectations' ? <StaffExpectationsTile />
     : view === 'reflective-supervision' ? <ReflectiveSupervisionTile />
+    : view === 'setup' ? <SetupTile />
     : null;
 
   return (

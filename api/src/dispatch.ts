@@ -6,6 +6,7 @@ import { addAlert, addMessage, endAlert, listAlerts, listMessages, markSeen, rep
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
 import { listObservationProcess, searchProviderLibraries } from './providerSetup';
 import { availabilityForWindow } from './schedulingService';
+import { checkSetup, createMissingLists } from './siteSetup';
 import {
   LISTS,
   createItem,
@@ -618,6 +619,22 @@ async function reflectiveSupervision(context: FnContext, req: HttpRequest): Prom
   });
 }
 
+async function setup(context: FnContext, req: HttpRequest): Promise<void> {
+  const admin = await requireAdmin(context, req);
+  if (!admin) return;
+  const verb = methodOf(req);
+  if (verb === 'GET') {
+    json(context, 200, await checkSetup());
+    return;
+  }
+  if (verb === 'POST') {
+    const created = await createMissingLists();
+    json(context, 200, { ok: true, created, status: await checkSetup() });
+    return;
+  }
+  json(context, 405, { error: 'Method not allowed' });
+}
+
 const AREAS: Record<string, (context: FnContext, req: HttpRequest) => Promise<void>> = {
   me,
   onboarding,
@@ -632,6 +649,7 @@ const AREAS: Record<string, (context: FnContext, req: HttpRequest) => Promise<vo
   billing,
   scheduling,
   'reflective-supervision': reflectiveSupervision,
+  setup,
 };
 
 export async function dispatch(context: FnContext, req: HttpRequest, area: string): Promise<void> {

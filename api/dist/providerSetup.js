@@ -57,19 +57,7 @@ let librarySiteCache = '';
 async function librarySiteId() {
     if (librarySiteCache)
         return librarySiteCache;
-    const tries = [];
-    try {
-        const personal = await (0, graphClient_1.graphGet)('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
-        if (personal && personal.id)
-            tries.push(String(personal.id));
-    }
-    catch (_) { /* the configured site is the fallback */ }
-    try {
-        const configured = await (0, graphClient_1.getSharePointSiteId)();
-        if (tries.indexOf(configured) === -1)
-            tries.push(configured);
-    }
-    catch (_) { /* the personal library may still be reachable */ }
+    const tries = await (0, graphClient_1.candidateSiteIds)();
     if (!tries.length)
         throw new graphClient_1.GraphError(503, 'SharePoint is not configured.');
     const folder = exports.MILEAGE_ROOT.map(encodeURIComponent).join('/');
@@ -218,24 +206,12 @@ async function folderOnSite(siteId, segments) {
 /**
  * Reflective Supervision files live in
  * EMME/LEADERSHIP TEAM/EMME Processes/RS_Observation Process.
- * The personal library is checked first, then the site already used for mileage.
+ * The shared Emme site is checked first, then the legacy personal library.
  */
 async function observationSiteId() {
     if (observationSiteCache)
         return observationSiteCache;
-    const tries = [];
-    try {
-        const personal = await (0, graphClient_1.graphGet)('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
-        if (personal && personal.id)
-            tries.push(String(personal.id));
-    }
-    catch (_) { /* the mileage library site is the fallback */ }
-    try {
-        const known = await librarySiteId();
-        if (tries.indexOf(known) === -1)
-            tries.push(known);
-    }
-    catch (_) { /* the personal library may still contain the folder */ }
+    const tries = await (0, graphClient_1.candidateSiteIds)();
     let last = null;
     for (let i = 0; i < tries.length; i++) {
         try {

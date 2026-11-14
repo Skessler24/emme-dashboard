@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { GraphError, getSharePointSiteId, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend } from './graphClient';
+import { GraphError, candidateSiteIds, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend } from './graphClient';
 import { findExistingProviderFile, SCHEDULE_ROOT } from './providerSetup';
 import { currentBoard } from './schedulingService';
 
@@ -345,15 +345,7 @@ let scheduleSiteCache = '';
 
 export async function scheduleSiteId(): Promise<string> {
   if (scheduleSiteCache) return scheduleSiteCache;
-  const tries: string[] = [];
-  try {
-    const personal = await graphGet('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
-    if (personal && personal.id) tries.push(String(personal.id));
-  } catch (_) { /* the configured site is the fallback */ }
-  try {
-    const configured = await getSharePointSiteId();
-    if (tries.indexOf(configured) === -1) tries.push(configured);
-  } catch (_) { /* personal site may still work */ }
+  const tries = await candidateSiteIds();
   if (!tries.length) throw new GraphError(503, 'SharePoint is not configured for schedules.');
   const folder = SCHEDULE_ROOT.map(encodeURIComponent).join('/');
   for (let i = 0; i < tries.length; i++) {

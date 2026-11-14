@@ -134,6 +134,28 @@ export async function getSharePointSiteId(): Promise<string> {
   return siteIdCache;
 }
 
+const LEGACY_PERSONAL_SITE = '/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org';
+
+/** The shared Emme site from the Azure settings, then Jenny's old OneDrive, which is only used until the folders are moved. */
+export async function knownSites(): Promise<{ shared: string; personal: string }> {
+  let shared = '';
+  let personal = '';
+  try { shared = await getSharePointSiteId(); } catch (_) { /* not configured or not reachable */ }
+  try {
+    const found = await graphGet(LEGACY_PERSONAL_SITE + '?$select=id');
+    personal = found && found.id ? String(found.id) : '';
+  } catch (_) { /* the legacy library is optional */ }
+  return { shared, personal };
+}
+
+export async function candidateSiteIds(): Promise<string[]> {
+  const sites = await knownSites();
+  const ids: string[] = [];
+  if (sites.shared) ids.push(sites.shared);
+  if (sites.personal && ids.indexOf(sites.personal) === -1) ids.push(sites.personal);
+  return ids;
+}
+
 const nameCache = new Map<string, { name: string; expires: number }>();
 
 export async function getUserDisplayName(email: string): Promise<string> {
