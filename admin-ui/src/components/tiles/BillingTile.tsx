@@ -1,8 +1,22 @@
 import { useEffect, useState } from 'react';
 import { api, type Row } from '../../api';
+import { BillingSetup } from '../billing/BillingSetup';
 import { DataTable } from '../DataTable';
 
 export function BillingTile() {
+  const onSetup = window.location.hash.replace(/\/+$/, '').endsWith('/billing/setup');
+  return (
+    <section>
+      <nav className="subtabs" aria-label="Billing sections">
+        <a className={onSetup ? 'subtab' : 'subtab subtab--active'} href="#/billing">Invoices</a>
+        <a className={onSetup ? 'subtab subtab--active' : 'subtab'} href="#/billing/setup">Billing setup questions</a>
+      </nav>
+      {onSetup ? <BillingSetup /> : <InvoiceList />}
+    </section>
+  );
+}
+
+function InvoiceList() {
   const [status, setStatus] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
   const [error, setError] = useState('');

@@ -102,6 +102,9 @@
             <button data-id="22" id="tab-cos-btn" class="tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2" data-tab="cos">
                 <span data-id="23">🌳</span> COS Decision Tree
             </button>
+            <button id="tab-conditions-btn" class="tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2" data-tab="conditions">
+                <span>🩺</span> Established Conditions
+            </button>
         </div>
     </div>
 
@@ -284,6 +287,46 @@
                 <div data-id="119" id="breadcrumb-path-p2v6" class="flex flex-wrap items-center text-sm font-medium text-forest"></div>
             </div>
         </section>
+
+        <!-- ==================== TAB 3: ESTABLISHED CONDITIONS ==================== -->
+        <section id="tab-conditions-content" class="mt-6 hidden">
+
+            <div class="bg-cream border-2 border-forest/20 rounded-xl p-4 mb-5 flex items-start gap-3">
+                <i data-lucide="info" class="w-5 h-5 text-forest mt-0.5 flex-shrink-0"></i>
+                <p class="text-sm text-forest/80 leading-relaxed">Look up a diagnosis to see whether it is an Established Condition. Search by diagnosis name or by any word in its details (for example an alternate name). If you can't find a diagnosis, try a shorter search or a different spelling. Based on the EI Colorado Established Conditions list; the "Reviewed" date is when each diagnosis was last reviewed.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-4 mb-4 no-print">
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input id="conditions-search" type="search" autocomplete="off" placeholder="Search diagnoses..." aria-label="Search diagnoses" class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-sage focus:outline-none text-base bg-white shadow-sm" />
+                </div>
+                <div class="flex flex-wrap gap-2" role="group" aria-label="Filter by established condition">
+                    <button class="conditions-filter-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-filter="all">All</button>
+                    <button class="conditions-filter-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-filter="yes">Established: Yes</button>
+                    <button class="conditions-filter-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px]" data-filter="no">Established: No</button>
+                </div>
+                <button id="conditions-print-btn" class="flex items-center justify-center gap-2 px-4 py-2 bg-forest text-white rounded-lg font-semibold text-sm hover:bg-forest-light transition-colors min-h-[44px] whitespace-nowrap">
+                    <span>🖨️</span> Print
+                </button>
+            </div>
+
+            <p id="conditions-count" class="text-sm text-gray-500 mb-3" aria-live="polite"></p>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead class="bg-forest text-white text-left">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 font-semibold">Diagnosis</th>
+                            <th scope="col" class="px-4 py-3 font-semibold whitespace-nowrap"><span class="hidden sm:inline">Established Condition?</span><span class="sm:hidden">Established?</span></th>
+                            <th scope="col" class="px-4 py-3 font-semibold whitespace-nowrap hidden sm:table-cell">Reviewed</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conditions-body"></tbody>
+                </table>
+                <p id="conditions-status" class="px-4 py-6 text-center text-sm text-gray-500"></p>
+            </div>
+        </section>
     </main>
 
     <!-- Toast -->
@@ -297,7 +340,7 @@
     <!-- FOOTER -->
     <footer data-id="124" id="footer-f7g3" class="bg-forest text-white py-6 mt-8">
         <div data-id="125" class="max-w-[1600px] mx-auto px-4 md:px-6 text-center">
-            <p data-id="126" class="text-sm text-white/80">📋 EMME Reference Forms · Larimer County Age Anchoring Tool · COS Decision Tree 2016</p>
+            <p data-id="126" class="text-sm text-white/80">📋 EMME Reference Forms · Larimer County Age Anchoring Tool · COS Decision Tree 2016 · EI Colorado Established Conditions</p>
             <p data-id="127" class="text-xs text-white/50 mt-2">Made by Copilot</p>
         </div>
     </footer>
@@ -823,26 +866,162 @@
     function setTab(tab) {
         activeTab = tab;
         localStorage.setItem('emme-active-tab', tab);
-        const ageContent = document.getElementById('tab-age-content');
-        const cosContent = document.getElementById('tab-cos-content');
-        const ageBtn = document.getElementById('tab-age-btn');
-        const cosBtn = document.getElementById('tab-cos-btn');
-
-        if (tab === 'age') {
-            ageContent.classList.remove('hidden');
-            cosContent.classList.add('hidden');
-            ageBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-forest text-white border-forest shadow-md scale-[1.02]';
-            cosBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-white text-forest border-forest/30 hover:border-forest/50';
-        } else {
-            ageContent.classList.add('hidden');
-            cosContent.classList.remove('hidden');
-            cosBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-forest text-white border-forest shadow-md scale-[1.02]';
-            ageBtn.className = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2 bg-white text-forest border-forest/30 hover:border-forest/50';
-        }
+        const tabs = {
+            age: { content: 'tab-age-content', button: 'tab-age-btn' },
+            cos: { content: 'tab-cos-content', button: 'tab-cos-btn' },
+            conditions: { content: 'tab-conditions-content', button: 'tab-conditions-btn' }
+        };
+        if (!tabs[tab]) tab = 'age';
+        const base = 'tab-btn-main flex-1 py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg transition-all border-2 flex items-center justify-center gap-2';
+        Object.keys(tabs).forEach(key => {
+            const isActive = key === tab;
+            document.getElementById(tabs[key].content).classList.toggle('hidden', !isActive);
+            document.getElementById(tabs[key].button).className = base + (isActive
+                ? ' bg-forest text-white border-forest shadow-md scale-[1.02]'
+                : ' bg-white text-forest border-forest/30 hover:border-forest/50');
+        });
+        if (tab === 'conditions') loadConditions();
     }
 
     document.getElementById('tab-age-btn').addEventListener('click', () => setTab('age'));
     document.getElementById('tab-cos-btn').addEventListener('click', () => setTab('cos'));
+    document.getElementById('tab-conditions-btn').addEventListener('click', () => setTab('conditions'));
+
+    // ===== ESTABLISHED CONDITIONS =====
+    let conditions = [];
+    let conditionsLoad = null;
+    let conditionsFilter = 'all';
+    let conditionsQuery = '';
+
+    function formatReviewed(iso) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+        if (!m) return '';
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return `${months[parseInt(m[2], 10) - 1]} ${parseInt(m[3], 10)}, ${m[1]}`;
+    }
+
+    // Adds text to a parent, wrapping every match of the search words in a highlight.
+    function appendHighlighted(parent, text, words) {
+        if (!words.length) { parent.appendChild(document.createTextNode(text)); return; }
+        const pattern = new RegExp('(' + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+        text.split(pattern).forEach((part, i) => {
+            if (i % 2 === 1) {
+                const mark = document.createElement('span');
+                mark.className = 'highlight-match';
+                mark.textContent = part;
+                parent.appendChild(mark);
+            } else if (part) {
+                parent.appendChild(document.createTextNode(part));
+            }
+        });
+    }
+
+    function renderConditions() {
+        const body = document.getElementById('conditions-body');
+        const status = document.getElementById('conditions-status');
+        const count = document.getElementById('conditions-count');
+        if (!conditions.length) return; // still loading, or failed (loadConditions shows the message)
+        const words = conditionsQuery.toLowerCase().split(/\s+/).filter(Boolean);
+
+        // Every search word must appear in the name or the details.
+        const matches = conditions.filter(c => {
+            if (conditionsFilter === 'yes' && !c.established) return false;
+            if (conditionsFilter === 'no' && c.established) return false;
+            const haystack = (c.name + ' ' + (c.details || '')).toLowerCase();
+            return words.every(w => haystack.includes(w));
+        });
+
+        body.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        matches.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-t border-gray-100 align-top';
+
+            const nameCell = document.createElement('td');
+            nameCell.className = 'px-4 py-3';
+            const name = document.createElement('div');
+            name.className = 'font-semibold text-forest';
+            appendHighlighted(name, c.name, words);
+            nameCell.appendChild(name);
+            if (c.details) {
+                const details = document.createElement('div');
+                details.className = 'text-xs text-gray-600 mt-1 leading-relaxed';
+                appendHighlighted(details, c.details, words);
+                nameCell.appendChild(details);
+            }
+            const reviewedText = formatReviewed(c.reviewed);
+            if (reviewedText) {
+                const reviewed = document.createElement('div');
+                reviewed.className = 'text-xs text-gray-400 mt-1 sm:hidden';
+                reviewed.textContent = 'Reviewed ' + reviewedText;
+                nameCell.appendChild(reviewed);
+            }
+            tr.appendChild(nameCell);
+
+            const answerCell = document.createElement('td');
+            answerCell.className = 'px-4 py-3 whitespace-nowrap';
+            const badge = document.createElement('span');
+            badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold ' +
+                (c.established ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700');
+            badge.textContent = c.established ? 'Yes' : 'No';
+            answerCell.appendChild(badge);
+            tr.appendChild(answerCell);
+
+            const dateCell = document.createElement('td');
+            dateCell.className = 'px-4 py-3 whitespace-nowrap text-xs text-gray-500 hidden sm:table-cell';
+            dateCell.textContent = reviewedText;
+            tr.appendChild(dateCell);
+
+            fragment.appendChild(tr);
+        });
+        body.appendChild(fragment);
+
+        count.textContent = `Showing ${matches.length} of ${conditions.length} diagnoses`;
+        status.textContent = matches.length === 0 ? 'No diagnoses match your search.' : '';
+        status.classList.toggle('hidden', matches.length > 0);
+    }
+
+    function loadConditions() {
+        if (conditionsLoad) return conditionsLoad;
+        const status = document.getElementById('conditions-status');
+        status.classList.remove('hidden');
+        status.textContent = 'Loading the Established Conditions list...';
+        conditionsLoad = fetch('established-conditions.json', { cache: 'no-cache' })
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                conditions = Array.isArray(data.conditions) ? data.conditions : [];
+                renderConditions();
+            })
+            .catch(() => {
+                conditionsLoad = null; // allow another try next time the tab is opened
+                status.classList.remove('hidden');
+                status.textContent = 'The Established Conditions list could not be loaded. Please refresh the page and try again.';
+            });
+        return conditionsLoad;
+    }
+
+    function setConditionsFilter(filter) {
+        conditionsFilter = filter;
+        document.querySelectorAll('.conditions-filter-pill').forEach(p => {
+            p.className = 'conditions-filter-pill px-3 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-h-[44px] ' +
+                (p.dataset.filter === filter
+                    ? 'bg-forest text-white border-forest'
+                    : 'bg-white text-forest border-forest/30 hover:border-forest/50');
+        });
+        renderConditions();
+    }
+
+    document.querySelectorAll('.conditions-filter-pill').forEach(p => {
+        p.addEventListener('click', () => setConditionsFilter(p.dataset.filter));
+    });
+    document.getElementById('conditions-search').addEventListener('input', function() {
+        conditionsQuery = this.value.trim();
+        renderConditions();
+    });
+    document.getElementById('conditions-print-btn').addEventListener('click', () => window.print());
 
     // ===== OUTCOME FILTER =====
     function setOutcomeFilter(outcome) {
@@ -1122,6 +1301,7 @@
 
     // ===== INIT =====
     function init() {
+        setConditionsFilter('all');
         setTab(activeTab);
         setOutcomeFilter('all');
         setAgeFilter('all');
