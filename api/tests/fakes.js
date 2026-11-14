@@ -11,7 +11,9 @@ class FakeBlob {
   async exists() { return blobs.has(this.name); }
   async getProperties() { return { metadata: blobs.get(this.name).meta }; }
   async download() { return { readableStreamBody: Readable.from([blobs.get(this.name).data]) }; }
+  async downloadToBuffer() { return Buffer.from(blobs.get(this.name).data); }
   async upload(data, length, options) { blobs.set(this.name, { data, meta: options && options.metadata }); }
+  async deleteIfExists() { return { succeeded: blobs.delete(this.name) }; }
 }
 const fakeStorage = {
   BlobServiceClient: {
