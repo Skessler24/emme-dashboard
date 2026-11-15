@@ -371,7 +371,94 @@ const EXPECTATIONS: TileDef = {
   ],
 };
 
-export const TILE_SETUPS: TileDef[] = [ONBOARDING, REFERRALS, STAFF_INFO, EXPECTATIONS];
+/* ------------------------------------------------------------------ */
+/* Reflective Supervision                                              */
+/* ------------------------------------------------------------------ */
+
+const REFLECTIVE: TileDef = {
+  id: 'reflective-supervision',
+  title: 'Reflective Supervision',
+  goal: 'Let leaders see, for each person, whether their reflective supervision sessions and observation steps are on schedule and how many hours are complete, without anyone chasing forms. Remind the right person ahead of time, and protect the private content of sessions.',
+  existing: [
+    'The Reflective Supervision tile already exists (`admin-ui/src/components/tiles/ReflectiveSupervisionTile.tsx`). It lists the files and folders in the "RS_Observation Process" SharePoint folder and lets administrators click through them. Extend it rather than replacing it.',
+    'The tile\'s web address carries the SharePoint folder path (`#/reflective-supervision/<folder>/...`). The setup tab therefore uses the marker `~setup`, which can never match a folder name. Do not use a plain word for any new tab.',
+    'Reflective supervision is a private, reflective conversation. Do not show or log the content of a session unless the answers below clearly say who may see it. Showing that a session happened, and its hours, is a different and safer thing.',
+    'Reminders need a timer. The API on Static Web Apps cannot run by itself, so scheduled work should be a Power Automate flow that calls the API with the automation key.',
+  ],
+  sections: [
+    { id: 'what', title: '1. What it is and who takes part' },
+    { id: 'schedule', title: '2. How often and how it is scheduled' },
+    { id: 'process', title: '3. The observation process, step by step', intro: 'The tile already lists the files in the "RS_Observation Process" folder. These questions explain what those files are for.' },
+    { id: 'records', title: '4. What is written down and where it is kept' },
+    { id: 'hours', title: '5. Tracking completed hours' },
+    { id: 'privacy', title: '6. Privacy and who can see what' },
+    { id: 'alerts', title: '7. Reminders and reports' },
+    FINISH,
+  ],
+  questions: [
+    { id: 'rs_what', section: 'what', kind: 'text', text: 'In your own words, what is reflective supervision at Emme and why does Emme do it? Is it different from ordinary supervision?' },
+    { id: 'rs_required', section: 'what', kind: 'many', text: 'Who requires it? (Pick all that apply.)', options: [
+      { id: 'emme', label: 'Emme chooses to do it' },
+      { id: 'funding', label: 'A funding source requires it' },
+      { id: 'state', label: 'The state requires it' },
+      { id: 'license', label: 'A license or certification requires it' },
+      { id: 'not-sure', label: 'I am not sure' },
+    ], help: 'Say below which requirement, and where it is written down.' },
+    { id: 'rs_who', section: 'what', kind: 'text', text: 'Who receives reflective supervision, and who gives it? List by role (and first name where it helps). Is it one to one or in a group? Is it different for new staff, students, or contractors?' },
+    { id: 'rs_observed', section: 'what', kind: 'text', text: 'The folder is called an observation process. Who observes whom, and what is being observed?' },
+
+    { id: 'rs_rule', section: 'schedule', kind: 'text', text: 'How often must each person have reflective supervision, and how long is each session?' },
+    { id: 'rs_book', section: 'schedule', kind: 'text', text: 'How are sessions scheduled today? Who books them, with what calendar or program, and what happens when one is missed or moved?' },
+    { id: 'rs_slips', section: 'schedule', kind: 'text', text: 'Are there times of year when this slips? What gets in the way?' },
+
+    { id: 'rs_steps', section: 'process', kind: 'text', text: 'Walk me through one full observation process, one step at a time, from before it happens to after it is finished. Say who does each step and which form or file is used.' },
+    { id: 'rs_files', section: 'process', kind: 'text', text: 'What is each file in the "RS_Observation Process" folder for, and who fills it in? Upload a blank copy of each form in the files area.' },
+    { id: 'rs_after', section: 'process', kind: 'text', text: 'What happens after a session? (For example: goals are set, the supervisor writes a summary, the staff member signs, a follow-up date is chosen.)' },
+    { id: 'rs_done', section: 'process', kind: 'text', text: 'How do you know a person\'s observation process is finished? Who says so, and where is that recorded?' },
+
+    { id: 'rs_record_what', section: 'records', kind: 'text', text: 'What is written down for each session, who writes it, and how soon afterward?' },
+    { id: 'rs_record_where', section: 'records', kind: 'text', text: 'Where are these records kept today? Is it always the same folder, and who can open them?' },
+    { id: 'rs_record_form', section: 'records', kind: 'many', text: 'In what form are the records kept? (Pick all that apply.)', options: [
+      { id: 'word', label: 'Word documents' },
+      { id: 'excel', label: 'Spreadsheets' },
+      { id: 'scans', label: 'Saved document files or scanned pages' },
+      { id: 'forms', label: 'Forms in IntakeQ' },
+      { id: 'paper', label: 'Paper' },
+      { id: 'other', label: 'Something else (describe below)' },
+    ] },
+    { id: 'rs_find', section: 'records', kind: 'one', text: 'The tile lets administrators click through folders. Is that how you want to find things?', options: [
+      { id: 'folders', label: 'Yes, folders are fine' },
+      { id: 'list', label: 'No, I would rather see a list by person with their status' },
+      { id: 'both', label: 'Both' },
+    ] },
+
+    { id: 'rs_hours_track', section: 'hours', kind: 'text', text: 'How are completed hours tracked today (a spreadsheet, a form, a folder)? Who keeps the count?' },
+    { id: 'rs_hours_goal', section: 'hours', kind: 'text', text: 'What total does each person need to reach, over what period (a month, a year), and what happens if they fall behind?' },
+    { id: 'rs_hours_view', section: 'hours', kind: 'text', text: 'What should the dashboard show about hours? (For example: hours completed against hours needed, who is behind, who is finished.)' },
+
+    { id: 'rs_who_sees', section: 'privacy', kind: 'text', text: 'Should the content of a session ever be visible to administrators, or only the fact that it happened and its hours? Who is promised confidentiality, and by whom?' },
+    { id: 'rs_agreement', section: 'privacy', kind: 'one', text: 'Do you have a signed privacy agreement with Microsoft? (Under the federal Health Insurance Portability and Accountability Act this is called a business associate agreement.)', options: YES_NO },
+
+    { id: 'rs_remind', section: 'alerts', kind: 'text', text: 'Who should be reminded about what, and when? (For example: the supervisor two days before a session, an administrator when a person is behind on hours.)' },
+    { id: 'rs_alert_how', section: 'alerts', kind: 'many', text: 'How should reminders reach people? (Pick all that apply.)', options: [
+      { id: 'email', label: 'Email' },
+      { id: 'banner', label: 'The alert banner on their dashboard' },
+      { id: 'teams', label: 'A message in Microsoft Teams' },
+    ] },
+    { id: 'rs_outside', section: 'alerts', kind: 'text', text: 'Does anyone outside Emme ask to see reflective supervision records or hours (a funding source, an auditor, a licensing board)? Who, how often, and in what form?' },
+    ...closing('rs'),
+  ],
+  fileKinds: [
+    { id: 'observation-form', label: 'A blank observation form or template from the folder' },
+    { id: 'hours-sheet', label: 'The sheet used to count hours (copy with fake names)' },
+    { id: 'sample-summary', label: 'A sample session summary (all private details removed)' },
+    { id: 'rules-document', label: 'A policy, contract, or rules document' },
+    SCREENSHOT,
+    OTHER_FILE,
+  ],
+};
+
+export const TILE_SETUPS: TileDef[] = [ONBOARDING, REFERRALS, STAFF_INFO, EXPECTATIONS, REFLECTIVE];
 
 export function tileSetup(id: string): TileDef | undefined {
   return TILE_SETUPS.find(function (tile) { return tile.id === id; });

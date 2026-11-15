@@ -190,13 +190,21 @@ export function TileSetup(props: { tileId: string }) {
 }
 
 /** A tile page with two tabs: the tile itself and its setup questions. */
-export function TileWithSetup(props: { hashId: string; tileId: string; label: string; children: ReactNode }) {
-  const onSetup = window.location.hash.replace(/\/+$/, '').endsWith('/' + props.hashId + '/setup');
+export function TileWithSetup(props: {
+  hashId: string;
+  tileId: string;
+  label: string;
+  /** The last part of the web address for the setup tab. Tiles whose address holds folder names must use one that no folder can have, like ~setup. */
+  mark?: string;
+  children: ReactNode;
+}) {
+  const mark = props.mark || 'setup';
+  const onSetup = window.location.hash.replace(/\/+$/, '').endsWith('/' + props.hashId + '/' + mark);
   return (
     <section>
       <nav className="subtabs" aria-label={props.label + ' sections'}>
         <a className={onSetup ? 'subtab' : 'subtab subtab--active'} href={'#/' + props.hashId}>Overview</a>
-        <a className={onSetup ? 'subtab subtab--active' : 'subtab'} href={'#/' + props.hashId + '/setup'}>Setup questions</a>
+        <a className={onSetup ? 'subtab subtab--active' : 'subtab'} href={'#/' + props.hashId + '/' + mark}>Setup questions</a>
       </nav>
       {onSetup ? <TileSetup tileId={props.tileId} /> : props.children}
     </section>

@@ -9,7 +9,7 @@ const { TILE_SETUPS } = require('../dist/tileSetupQuestions');
 const { buildTilePrompt, missingItems, seededAnswers } = require('../dist/tilePrompt');
 
 const ADMIN = 'skessler@emmeco.org';
-const IDS = ['onboarding', 'referrals', 'staff-information', 'staff-expectations'];
+const IDS = ['onboarding', 'referrals', 'staff-information', 'staff-expectations', 'reflective-supervision'];
 
 function principal(email) {
   return Buffer.from(JSON.stringify({ userId: 'u-' + email, userDetails: email, claims: [{ typ: 'preferred_username', val: email }] })).toString('base64');
@@ -25,7 +25,7 @@ function reset() { for (const key of [...blobs.keys()]) if (key.startsWith('tile
 function b64(text) { return Buffer.from(text).toString('base64'); }
 function tile(id) { return TILE_SETUPS.find((item) => item.id === id); }
 
-test('the four tiles are all there', () => {
+test('all five tiles are all there', () => {
   assert.deepStrictEqual(TILE_SETUPS.map((item) => item.id), IDS);
 });
 
@@ -40,7 +40,7 @@ test('only a signed-in Emme Admin can open a tile setup, and the automation key 
   assert.strictEqual(ok.body.tile.id, 'onboarding');
   assert.ok(ok.body.questions.length > 10);
   assert.strictEqual((await call(ADMIN, 'GET', 'billing')).status, 404);
-  assert.strictEqual((await call(ADMIN, 'GET', '')).body.tiles.length, 4);
+  assert.strictEqual((await call(ADMIN, 'GET', '')).body.tiles.length, 5);
 });
 
 test('before anyone saves, the answers start as a first draft from the documents, and the draft is not sent as part of the questions', async () => {
