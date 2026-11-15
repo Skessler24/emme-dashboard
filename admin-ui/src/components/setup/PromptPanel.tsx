@@ -8,7 +8,14 @@ type PromptResult = {
   missing: Array<{ where: string; question: string; reason: 'unanswered' | 'not-sure' }>;
 };
 
-export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCount: number }) {
+export function PromptPanel(props: {
+  apiBase: string;
+  topicId: string;
+  /** For example "funding source". Empty when the topic has no repeating group. */
+  groupLabel: string;
+  ensureSaved: () => Promise<boolean>;
+  fileCount: number;
+}) {
   const [result, setResult] = useState<PromptResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +27,7 @@ export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCo
     setCopied(false);
     try {
       if (!(await props.ensureSaved())) throw new Error('Your answers could not be saved, so the prompt was not created.');
-      setResult(await api<PromptResult>('/api/billing-intake/prompt'));
+      setResult(await api<PromptResult>(props.apiBase + '/prompt'));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not create the prompt');
     } finally {
@@ -43,7 +50,7 @@ export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCo
     const url = URL.createObjectURL(new Blob([result.prompt], { type: 'text/markdown' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'billing-build-prompt.md';
+    link.download = props.topicId + '-build-prompt.md';
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -72,14 +79,17 @@ export function PromptPanel(props: { ensureSaved: () => Promise<boolean>; fileCo
             <div className="table-wrap">
               <table>
                 <thead>
-                  <tr><th>Funding source</th><th>Sending bills</th><th>Finding out about payment</th><th>Blocked or needs a person</th></tr>
+                  <tr>
+                    <th>{props.groupLabel ? props.groupLabel.charAt(0).toUpperCase() + props.groupLabel.slice(1) : 'Name'}</th>
+                    {result.assessments[0].rows.map((row) => <th key={row.key}>{row.label}</th>)}
+                    <th>Blocked or needs a person</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {result.assessments.map((item) => (
                     <tr key={item.sourceId}>
                       <td>{item.name}</td>
-                      <td>{LEVEL_TEXT[item.sending.level]}</td>
-                      <td>{LEVEL_TEXT[item.checking.level]}</td>
+                      {item.rows.map((row) => <td key={row.key}>{LEVEL_TEXT[row.level]}</td>)}
                       <td>
                         {[...item.blockers, ...item.cautions].length
                           ? <ul className="setup-list">{[...item.blockers, ...item.cautions].map((text) => <li key={text}>{text}</li>)}</ul>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
+import { WithSetup } from '../setup/WithSetup';
 
 type Item = {
   name: string;
@@ -47,6 +48,10 @@ function sizeLabel(bytes: number | null): string {
 }
 
 export function ReflectiveSupervisionTile() {
+  return <WithSetup topicId="reflective-supervision" mainLabel="Files"><ReflectiveSupervisionView /></WithSetup>;
+}
+
+function ReflectiveSupervisionView() {
   const [hash, setHash] = useState(function () { return window.location.hash || '#/'; });
   const [items, setItems] = useState<Item[]>([]);
   const [webUrl, setWebUrl] = useState('');

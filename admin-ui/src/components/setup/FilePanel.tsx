@@ -21,7 +21,9 @@ export function FilePanel(props: {
   fileKinds: Option[];
   maxFileBytes: number;
   fileTypes: string[];
-  /** Saves answers first so a funding source exists on the server before its files are uploaded. */
+  /** The topic's address, for example /api/intake/onboarding. */
+  apiBase: string;
+  /** Saves answers first so a group entry (for example a funding source) exists on the server before its files are uploaded. */
   ensureSaved: () => Promise<boolean>;
   onChanged: () => void;
 }) {
@@ -45,7 +47,7 @@ export function FilePanel(props: {
     setBusy(true);
     try {
       if (!(await props.ensureSaved())) throw new Error('Your answers could not be saved yet, so the file was not uploaded. Try again in a moment.');
-      await api('/api/billing-intake/files', {
+      await api(props.apiBase + '/files', {
         method: 'POST',
         body: { scope: props.scope, kind, note, name: chosen.name, contentBase64: await toBase64(chosen), confirmedNoClientInfo: true },
       });
@@ -65,7 +67,7 @@ export function FilePanel(props: {
     if (!window.confirm('Remove "' + file.name + '"?')) return;
     setError('');
     try {
-      await api('/api/billing-intake/files/' + encodeURIComponent(file.id), { method: 'DELETE' });
+      await api(props.apiBase + '/files/' + encodeURIComponent(file.id), { method: 'DELETE' });
       props.onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not remove the file');
@@ -76,13 +78,13 @@ export function FilePanel(props: {
     <div className="setup-files">
       <h4>Templates and sample files</h4>
       <p className="muted">
-        Upload blank templates and samples that show how things work. <strong>Before uploading, replace every real client name, birth date, member number, and diagnosis with fake ones, or black them out.</strong>
+        Upload blank templates and samples that show how things work. <strong>Before uploading, replace every real client or staff name, birth date, member number, and diagnosis with fake ones, or black them out.</strong>
       </p>
       {mine.length ? (
         <ul className="setup-files__list">
           {mine.map((file) => (
             <li key={file.id}>
-              <a href={'/api/billing-intake/files/' + encodeURIComponent(file.id)}>{file.name}</a>
+              <a href={props.apiBase + '/files/' + encodeURIComponent(file.id)}>{file.name}</a>
               <span className="muted"> · {kindLabel(file.kind)} · {sizeText(file.size)} · added by {file.uploadedBy}</span>
               {file.note ? <div className="muted">{file.note}</div> : null}
               <button type="button" className="btn btn--ghost" onClick={() => remove(file)}>Remove</button>

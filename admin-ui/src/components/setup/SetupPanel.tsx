@@ -7,14 +7,14 @@ import {
   LEVEL_TEXT,
   hasAnswer,
   type Answer,
-  type FundingSource,
+  type GroupEntry,
   type Question,
   type Section,
   type SetupState,
   type StoredFile,
 } from './types';
 
-type Data = { general: Record<string, Answer>; sources: FundingSource[] };
+type Data = { general: Record<string, Answer>; sources: GroupEntry[] };
 type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error' | 'conflict';
 
 const STATUS_TEXT: Record<SaveStatus, string> = {
@@ -65,13 +65,14 @@ function SectionBlock(props: {
   );
 }
 
-export function BillingSetup() {
+export function SetupPanel(props: { topicId: string }) {
+  const apiBase = '/api/intake/' + encodeURIComponent(props.topicId);
   const [state, setState] = useState<SetupState | null>(null);
   const [data, setData] = useState<Data>({ general: {}, sources: [] });
   const [files, setFiles] = useState<StoredFile[]>([]);
   const [status, setStatus] = useState<SaveStatus>('saved');
   const [error, setError] = useState('');
-  const [newKind, setNewKind] = useState('ei');
+  const [newKind, setNewKind] = useState('');
   const [newName, setNewName] = useState('');
   const [openId, setOpenId] = useState('');
 
@@ -89,7 +90,7 @@ export function BillingSetup() {
     setStatus('saving');
     const sent = dataRef.current;
     try {
-      const res = await api<{ updatedAt: string }>('/api/billing-intake', {
+      const res = await api<{ updatedAt: string }>(apiBase + '/state', {
         method: 'PUT',
         body: { baseUpdatedAt: base.current, general: sent.general, sources: sent.sources },
       });
@@ -107,7 +108,7 @@ export function BillingSetup() {
       }
       return false;
     }
-  }, []);
+  }, [apiBase]);
 
   const save = useCallback((): Promise<boolean> => {
     window.clearTimeout(timer.current);
@@ -126,15 +127,16 @@ export function BillingSetup() {
   }
 
   const reloadFiles = useCallback(() => {
-    api<SetupState>('/api/billing-intake')
+    api<SetupState>(apiBase + '/state')
       .then((fresh) => setFiles(fresh.files))
       .catch((err: Error) => setError(err.message));
-  }, []);
+  }, [apiBase]);
 
   useEffect(() => {
-    api<SetupState>('/api/billing-intake')
+    api<SetupState>(apiBase + '/state')
       .then((loaded) => {
         setState(loaded);
+        if (loaded.topic.group) setNewKind(loaded.topic.group.kinds[0].id);
         const initial = { general: loaded.answers.general, sources: loaded.answers.sources };
         dataRef.current = initial;
         setData(initial);
@@ -150,39 +152,43 @@ export function BillingSetup() {
       window.removeEventListener('beforeunload', warn);
       void save();
     };
-  }, [save]);
+  }, [save, apiBase]);
 
   if (error && !state) return <p className="error">{error}</p>;
-  if (!state) return <p className="muted">Loading the Billing setup…</p>;
+  if (!state) return <p className="muted">Loading the setup questions…</p>;
 
   const generalDone = state.generalQuestions.filter((q) => hasAnswer(data.general[q.id])).length;
 
+  const group = state.topic.group;
+  const noun = group ? group.singular : '';
+
   function addSource() {
     const name = newName.trim();
-    if (!name) return setError('Type the name of the funding source first.');
+    if (!name) return setError('Type the name of the ' + noun + ' first.');
     setError('');
-    const source: FundingSource = { id: newId(), kind: newKind, name, answers: {} };
+    const source: GroupEntry = { id: newId(), kind: newKind, name, answers: {} };
     edit((current) => ({ ...current, sources: [...current.sources, source] }));
     setNewName('');
     setOpenId(source.id);
   }
 
-  function removeSource(source: FundingSource) {
+  function removeSource(source: GroupEntry) {
     if (!window.confirm('Remove "' + source.name + '" and every answer and file for it? This cannot be undone.')) return;
     edit((current) => ({ ...current, sources: current.sources.filter((item) => item.id !== source.id) }));
     setFiles((current) => current.filter((file) => file.scope !== source.id));
   }
 
-  function updateSource(id: string, change: (source: FundingSource) => FundingSource) {
+  function updateSource(id: string, change: (source: GroupEntry) => GroupEntry) {
     edit((current) => ({ ...current, sources: current.sources.map((item) => (item.id === id ? change(item) : item)) }));
   }
 
-  const kindLabel = (id: string) => state.sourceKinds.find((item) => item.id === id)?.label || id;
+  const kindLabel = (id: string) => group?.kinds.find((item) => item.id === id)?.label || id;
   const fileProps = {
     files,
     fileKinds: state.fileKinds,
     maxFileBytes: state.limits.maxFileBytes,
     fileTypes: state.limits.fileTypes,
+    apiBase,
     ensureSaved: save,
     onChanged: reloadFiles,
   };
@@ -190,7 +196,7 @@ export function BillingSetup() {
   return (
     <div className="setup">
       <p className="lede">
-        Answer what you can. Skip anything you do not know, or tick “I am not sure”. Nothing here connects to a funding source or sends a bill.
+        Answer what you can. Skip anything you do not know, or tick “I am not sure”. Nothing here connects to anything outside Emme, sends anything, or changes the {state.topic.title} screen.
         Your answers are saved as you type and are shared by every administrator.
       </p>
       <p className={'setup-status setup-status--' + status} role="status">
@@ -203,7 +209,7 @@ export function BillingSetup() {
       {error ? <p className="error">{error}</p> : null}
 
       <section className="setup-block">
-        <h2>Billing overall <span className="muted">· {generalDone} of {state.generalQuestions.length} answered</span></h2>
+        <h2>{group ? state.topic.title + ' overall' : state.topic.title + ' setup questions'} <span className="muted">· {generalDone} of {state.generalQuestions.length} answered</span></h2>
         <SectionBlock
           sections={state.generalSections}
           questions={state.generalQuestions}
@@ -213,14 +219,12 @@ export function BillingSetup() {
         <FilePanel scope="general" {...fileProps} />
       </section>
 
+      {group ? (
       <section className="setup-block">
-        <h2>Funding sources</h2>
-        <p className="muted">
-          Add each organization that pays Emme. Each Early Intervention Community Centered Board is a separate funding source because each has its own rules.
-          The same goes for each insurance company or Medicaid plan whose process is different.
-        </p>
+        <h2>{group.plural.charAt(0).toUpperCase() + group.plural.slice(1)}</h2>
+        <p className="muted">{group.intro}</p>
         {data.sources.map((source) => {
-          const relevant = state.sourceQuestions.filter((q) => !q.kinds || q.kinds.includes(source.kind));
+          const relevant = group.questions.filter((q) => !q.kinds || q.kinds.includes(source.kind));
           const done = relevant.filter((q) => hasAnswer(source.answers[q.id])).length;
           return (
             <details key={source.id} className="setup-source" open={openId === source.id ? true : undefined}>
@@ -230,17 +234,17 @@ export function BillingSetup() {
               </summary>
               <div className="row">
                 <label>
-                  Name of this funding source
+                  Name of this {group.singular}
                   <input
                     value={source.name}
                     maxLength={120}
                     onChange={(event) => updateSource(source.id, (item) => ({ ...item, name: event.target.value }))}
                   />
                 </label>
-                <button type="button" className="btn btn--ghost" onClick={() => removeSource(source)}>Remove this funding source</button>
+                <button type="button" className="btn btn--ghost" onClick={() => removeSource(source)}>Remove this {group.singular}</button>
               </div>
               <SectionBlock
-                sections={state.sourceSections}
+                sections={group.sections}
                 questions={relevant}
                 answers={source.answers}
                 onChange={(id, answer) => updateSource(source.id, (item) => ({ ...item, answers: { ...item.answers, [id]: answer } }))}
@@ -250,29 +254,30 @@ export function BillingSetup() {
           );
         })}
         <div className="setup-add">
-          <h3>Add a funding source</h3>
+          <h3>Add a {group.singular}</h3>
           <div className="row">
             <label>
               What kind is it?
               <select value={newKind} onChange={(event) => setNewKind(event.target.value)}>
-                {state.sourceKinds.map((kind) => <option key={kind.id} value={kind.id}>{kind.label}</option>)}
+                {group.kinds.map((kind) => <option key={kind.id} value={kind.id}>{kind.label}</option>)}
               </select>
             </label>
             <label>
               Its name
-              <input value={newName} maxLength={120} onChange={(event) => setNewName(event.target.value)} placeholder="For example: the name of the board or company" />
+              <input value={newName} maxLength={120} onChange={(event) => setNewName(event.target.value)} placeholder={group.namePlaceholder} />
             </label>
             <button type="button" className="btn" onClick={addSource}>Add it</button>
           </div>
-          <p className="muted">{state.sourceKinds.find((kind) => kind.id === newKind)?.description}</p>
+          <p className="muted">{group.kinds.find((kind) => kind.id === newKind)?.description}</p>
         </div>
       </section>
+      ) : null}
 
       <section className="setup-block">
         <h2>What is possible, and what may need hand work</h2>
         <p className="muted">
-          This is how the dashboard could connect to a funding source, and where each way gets stuck.
-          The table at the bottom uses your answers to say which funding sources can be automated.
+          {state.topic.guideIntro}
+          {state.topic.hasAssessment ? ' The table at the bottom uses your answers to say which ones can be automated.' : ''}
         </p>
         <div className="table-wrap">
           <table>
@@ -294,7 +299,7 @@ export function BillingSetup() {
         </div>
       </section>
 
-      <PromptPanel ensureSaved={save} fileCount={files.length} />
+      <PromptPanel apiBase={apiBase} topicId={props.topicId} groupLabel={group ? group.singular : ''} ensureSaved={save} fileCount={files.length} />
     </div>
   );
 }

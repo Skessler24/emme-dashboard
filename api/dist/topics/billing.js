@@ -6,15 +6,14 @@
  * build prompt together.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CONNECTION_GUIDE = exports.SOURCE_QUESTIONS = exports.SOURCE_SECTIONS = exports.GENERAL_QUESTIONS = exports.GENERAL_SECTIONS = exports.FILE_KINDS = exports.SOURCE_KINDS = void 0;
-exports.questionsForKind = questionsForKind;
-exports.SOURCE_KINDS = [
+exports.billing = void 0;
+const SOURCE_KINDS = [
     { id: 'ei', label: 'Early Intervention Community Centered Board', description: 'A regional board that pays for Early Intervention services. Each board has its own rules, so add each board separately.' },
     { id: 'medicaid', label: 'Medicaid', description: 'Medicaid or a managed plan that administers it.' },
     { id: 'private', label: 'Private insurance company', description: 'Add each insurance company separately if their rules differ.' },
     { id: 'other', label: 'Other funding source', description: 'School district, county program, grant, military insurance, families paying on their own, and so on.' },
 ];
-exports.FILE_KINDS = [
+const FILE_KINDS = [
     { id: 'spreadsheet', label: 'The spreadsheet used to confirm invoices (copy with fake client details)' },
     { id: 'blank-bill', label: 'A blank bill, claim form, or invoice template' },
     { id: 'sample-bill', label: 'A sample bill that was sent (client details replaced with fake ones)' },
@@ -45,7 +44,7 @@ const PAY_HOW = [
     { id: 'bank-only', label: 'We only see a deposit in the bank and match it by hand' },
     { id: 'other', label: 'Something else (describe below)' },
 ];
-exports.GENERAL_SECTIONS = [
+const GENERAL_SECTIONS = [
     { id: 'people', title: '1. People and time', intro: 'Who does this work today and how much time it takes.' },
     { id: 'today', title: '2. How a visit becomes an invoice today' },
     { id: 'sheet', title: '3. The invoice confirmation spreadsheet', intro: 'The spreadsheet your bosses use to confirm invoices. Upload a copy in the files area with all real client names and numbers replaced by fake ones.' },
@@ -56,7 +55,7 @@ exports.GENERAL_SECTIONS = [
     { id: 'privacy', title: '8. Privacy and who can see what' },
     { id: 'hand', title: '9. What may have to stay by hand, and what success looks like' },
 ];
-exports.GENERAL_QUESTIONS = [
+const GENERAL_QUESTIONS = [
     { id: 'g_who_bills', section: 'people', kind: 'text', text: 'Who does the billing work today? List each person by first name and job title, and say what each one does (for example: enters bills, checks payments, re-bills unpaid bills, approves).' },
     { id: 'g_who_approves', section: 'people', kind: 'text', text: 'Who has the final say that an invoice is correct and ready to send? Who confirms that it was paid?' },
     { id: 'g_hours', section: 'people', kind: 'text', text: 'About how many hours each week do your bosses and billing staff spend checking whether invoices were paid and re-billing the unpaid ones?' },
@@ -136,7 +135,7 @@ exports.GENERAL_QUESTIONS = [
     { id: 'g_success', section: 'hand', kind: 'text', text: 'How will you know this project worked? Give a goal we can measure. (For example: "Unpaid invoices are noticed within one day instead of thirty" or "We save ten hours a week.")' },
     { id: 'g_deadline', section: 'hand', kind: 'text', text: 'Is there a date or event this needs to be ready for (a contract renewal, an audit, a staff change)?' },
 ];
-exports.SOURCE_SECTIONS = [
+const SOURCE_SECTIONS = [
     { id: 'basics', title: 'The basics' },
     { id: 'permission', title: 'Permission to bill and who is covered' },
     { id: 'sending', title: 'Sending bills' },
@@ -145,7 +144,7 @@ exports.SOURCE_SECTIONS = [
     { id: 'special', title: 'Rules that belong to this kind of funding source' },
     { id: 'connection', title: 'Connecting the dashboard to this funding source', intro: 'Never type a password, a code, or a key here. We only need to know how the funding source works.' },
 ];
-exports.SOURCE_QUESTIONS = [
+const SOURCE_QUESTIONS = [
     { id: 's_what', section: 'basics', kind: 'text', text: 'In your own words, what is this funding source, who runs it, and which area or clients does it cover?' },
     { id: 's_services', section: 'basics', kind: 'text', text: 'Which Emme services are billed to this funding source? List each service by the name you use and how it is described on the bill. (For example: "occupational therapy home visit, 45 minutes".)' },
     { id: 's_contacts', section: 'basics', kind: 'text', text: 'Who can Emme call or email at this funding source when a bill has a problem? Give the role or department and how to reach them.' },
@@ -212,10 +211,8 @@ exports.SOURCE_QUESTIONS = [
             { id: 'not-sure', label: 'I do not know' },
         ] },
 ];
-function questionsForKind(kind) {
-    return exports.SOURCE_QUESTIONS.filter(function (q) { return !q.kinds || q.kinds.indexOf(kind) !== -1; });
-}
-exports.CONNECTION_GUIDE = [
+/** Plain explanations of each way the dashboard could connect, so people can see what is possible. */
+const CONNECTION_GUIDE = [
     {
         id: 'clearinghouse', level: 'automatic',
         title: 'A clearinghouse connection',
@@ -289,3 +286,150 @@ exports.CONNECTION_GUIDE = [
         needs: 'Your answer to how often the checking must run.',
     },
 ];
+// ---------------------------------------------------------------------------
+// What is possible for one funding source, worked out from its answers.
+// ---------------------------------------------------------------------------
+const ORDER = ['by-hand', 'partly', 'automatic'];
+function choices(item, id) {
+    const answer = item.answers[id];
+    return answer && Array.isArray(answer.choice) ? answer.choice : [];
+}
+function best(levels) {
+    let top = -1;
+    levels.forEach(function (level) {
+        top = Math.max(top, ORDER.indexOf(level));
+    });
+    return top < 0 ? 'unknown' : ORDER[top];
+}
+const SENDING = {
+    clearinghouse: { level: 'automatic', note: 'Sent through a clearinghouse. The dashboard can prepare the bills and a person approves them. This needs the connection the clearinghouse offers.' },
+    'portal-upload': { level: 'partly', note: 'Uploaded to a website. The dashboard can prepare the file, but the upload stays by hand unless the funding source offers an automatic connection or a secure file transfer site.' },
+    'portal-typed': { level: 'by-hand', note: 'Typed into a website. This stays by hand unless an official automatic connection exists. The dashboard can show a ready-to-type worksheet.' },
+    email: { level: 'partly', note: 'Sent by email. The dashboard can prepare the attachment and a draft message for a person to send.' },
+    fax: { level: 'by-hand', note: 'Faxed. This stays by hand. The dashboard can prepare the pages and remind people.' },
+    mail: { level: 'by-hand', note: 'Mailed on paper. This stays by hand. The dashboard can prepare the pages and remind people.' },
+};
+const CHECKING = {
+    'remittance-file': { level: 'automatic', note: 'Payment explanation files can be read automatically once there is a safe way to receive them.' },
+    'clearinghouse-reports': { level: 'automatic', note: 'The clearinghouse returns results that can be read automatically.' },
+    'portal-report': { level: 'partly', note: 'Payments are only on a website screen. A person can download the report and drop it into the dashboard. Signing in automatically is fragile.' },
+    'email-notice': { level: 'partly', note: 'Notices arrive by email. Spreadsheet or text attachments can be read automatically; scanned pictures cannot be read reliably.' },
+    'paper-remittance': { level: 'by-hand', note: 'Payment explanations arrive on paper. A person has to key in the result.' },
+    phone: { level: 'by-hand', note: 'Payment status requires a phone call. This stays by hand. The dashboard can list who to call and when.' },
+    'bank-only': { level: 'by-hand', note: 'Only a bank deposit is visible. A person must match deposits to invoices.' },
+};
+const SECOND_STEP = ['text-code', 'app-approval', 'email-code', 'hardware-key'];
+function assess(source) {
+    const sendPicked = choices(source, 's_send_how');
+    const payPicked = choices(source, 's_pay_how');
+    const official = choices(source, 's_official_connection')[0] || '';
+    const allowed = choices(source, 's_automation_allowed')[0] || '';
+    const second = choices(source, 's_second_step')[0] || '';
+    const hasOfficial = official === 'connection' || official === 'files';
+    const sendNotes = [];
+    const checkNotes = [];
+    const blockers = [];
+    const cautions = [];
+    const toConfirm = [];
+    const sendLevels = [];
+    sendPicked.forEach(function (id) {
+        const rule = SENDING[id];
+        if (rule) {
+            sendLevels.push(rule.level);
+            sendNotes.push(rule.note);
+        }
+        else if (id === 'other')
+            toConfirm.push('Review the "something else" way of sending bills and decide how it can be handled.');
+    });
+    const payLevels = [];
+    payPicked.forEach(function (id) {
+        const rule = CHECKING[id];
+        if (rule) {
+            payLevels.push(rule.level);
+            checkNotes.push(rule.note);
+        }
+        else if (id === 'other')
+            toConfirm.push('Review the "something else" way of finding out about payment and decide how it can be handled.');
+    });
+    if (hasOfficial) {
+        const note = 'The funding source offers an official ' + (official === 'files' ? 'secure file transfer site' : 'automatic connection')
+            + ', so both sending and checking can likely be automated once Emme is given access.';
+        sendLevels.push('automatic');
+        payLevels.push('automatic');
+        sendNotes.push(note);
+        checkNotes.push(note);
+    }
+    const sending = best(sendLevels);
+    const checking = best(payLevels);
+    if (sending === 'unknown')
+        toConfirm.push('How bills are sent to this funding source has not been answered.');
+    if (checking === 'unknown')
+        toConfirm.push('How payment is found out has not been answered.');
+    if (allowed === 'no') {
+        blockers.push('The funding source rules do not allow a computer program to sign in for Emme. Do not automate through the website. Use an official connection if one exists, otherwise keep these steps by hand.');
+    }
+    if (!hasOfficial && SECOND_STEP.indexOf(second) !== -1) {
+        blockers.push('Signing in needs a second step. A computer program cannot do that on its own without a person approving each time, unless the funding source issues an account made for programs.');
+    }
+    if (!hasOfficial && payPicked.length === 1 && payPicked[0] === 'portal-report' && allowed !== 'no') {
+        cautions.push('The only way to see payments is by signing in to a website. Automating that is fragile and cannot run on the dashboard hosting alone. Plan on a person downloading the report, with the dashboard doing the comparing.');
+    }
+    if (sending === 'by-hand' || checking === 'by-hand') {
+        cautions.push('Some steps stay by hand. Give those a to-do list with due dates and reminders so nothing is forgotten.');
+    }
+    if (official === 'not-sure' || official === 'will-ask')
+        toConfirm.push('Ask whether the funding source offers an official automatic connection or a secure file transfer site.');
+    if (!official)
+        toConfirm.push('Whether an official automatic connection exists has not been answered.');
+    if (allowed === 'not-sure' || allowed === 'will-ask')
+        toConfirm.push('Ask whether the funding source rules allow a computer program to sign in.');
+    if (second === 'not-sure')
+        toConfirm.push('Find out whether signing in has a second step.');
+    return {
+        sourceId: source.id,
+        name: source.name,
+        kind: source.kind,
+        rows: [
+            { key: 'sending', label: 'Sending bills', level: sending, notes: sendNotes },
+            { key: 'checking', label: 'Finding out about payment', level: checking, notes: checkNotes },
+        ],
+        blockers,
+        cautions,
+        toConfirm,
+    };
+}
+exports.billing = {
+    id: 'billing',
+    title: 'Billing',
+    // Kept as it was so answers saved before the other topics existed still load.
+    storagePrefix: 'billing-intake/',
+    goal: [
+        'Build the Billing area of the Administration Dashboard so that my bosses no longer check invoices by hand. The system must find out which invoices were paid and which were not, show the reason when one is rejected or underpaid, prepare or perform the re-billing the way each funding source requires, and keep checking on a schedule until every invoice is settled.',
+        'Emme bills several kinds of funding sources: Early Intervention Community Centered Boards (each board has its own rules and process), Medicaid, private insurance companies, and others, because Emme provides more than Early Intervention services. Do not assume one funding source works like another.',
+    ],
+    existing: [
+        'The Billing screen already lists invoices read live from IntakeQ (`api/src/intakeQService.ts`, `admin-ui/src/components/tiles/BillingTile.tsx`). Extend it rather than replacing it.',
+    ],
+    rules: [
+        'Client billing information is sensitive health related information. Do not write client names, birth dates, member numbers, or diagnoses to logs. Only show them to the administrators who need them.',
+        'A person must approve anything that is sent to a funding source or that changes money, unless I clearly say otherwise in my answers below. Keep a history of who did what to each invoice and when.',
+        'Anything that cannot be automated must still appear as a to-do item with an owner, a due date, and a reminder, so nothing is lost.',
+    ],
+    sections: GENERAL_SECTIONS,
+    questions: GENERAL_QUESTIONS,
+    group: {
+        singular: 'funding source',
+        plural: 'funding sources',
+        intro: 'Each funding source has its own rules, so answer these separately for each one. Add every Early Intervention Community Centered Board on its own.',
+        namePlaceholder: 'For example: Jefferson County Community Centered Board',
+        kinds: SOURCE_KINDS,
+        sections: SOURCE_SECTIONS,
+        questions: SOURCE_QUESTIONS,
+    },
+    firstId: 'g_first_source',
+    firstLabel: 'First funding source to automate',
+    guideIntro: 'Plain explanations of each way the dashboard could connect to a funding source, and where each one stops working.',
+    guide: CONNECTION_GUIDE,
+    fileKinds: FILE_KINDS,
+    assess,
+};

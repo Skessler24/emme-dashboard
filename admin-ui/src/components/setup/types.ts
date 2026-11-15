@@ -14,7 +14,8 @@ export type Section = { id: string; title: string; intro?: string };
 
 export type Answer = { choice: string[]; text: string; unsure: boolean };
 
-export type FundingSource = {
+/** One block of a repeating group, such as a funding source or a referral source. */
+export type GroupEntry = {
   id: string;
   kind: string;
   name: string;
@@ -44,25 +45,34 @@ export type ConnectionOption = {
 
 export type Level = 'automatic' | 'partly' | 'by-hand' | 'unknown';
 
+export type AssessmentRow = { key: string; label: string; level: Level; notes: string[] };
+
 export type Assessment = {
   sourceId: string;
   name: string;
   kind: string;
-  sending: { level: Level; notes: string[] };
-  checking: { level: Level; notes: string[] };
+  rows: AssessmentRow[];
   blockers: string[];
   cautions: string[];
   toConfirm: string[];
 };
 
+export type GroupDef = {
+  singular: string;
+  plural: string;
+  intro: string;
+  namePlaceholder: string;
+  kinds: Array<Option & { description: string }>;
+  sections: Section[];
+  questions: Question[];
+};
+
 export type SetupState = {
-  answers: { updatedAt: string; updatedBy: string; general: Record<string, Answer>; sources: FundingSource[] };
+  topic: { id: string; title: string; guideIntro: string; group: GroupDef | null; hasAssessment: boolean };
+  answers: { updatedAt: string; updatedBy: string; general: Record<string, Answer>; sources: GroupEntry[] };
   files: StoredFile[];
   generalSections: Section[];
   generalQuestions: Question[];
-  sourceSections: Section[];
-  sourceQuestions: Question[];
-  sourceKinds: Array<Option & { description: string }>;
   fileKinds: Option[];
   connectionGuide: ConnectionOption[];
   limits: { maxFileBytes: number; fileTypes: string[] };

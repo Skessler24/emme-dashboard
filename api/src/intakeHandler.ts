@@ -1,28 +1,19 @@
 import { NOT_EMME_MESSAGE, emailAllowed, readPrincipal, resolveIsAdmin } from './auth';
 import { FnContext, HttpRequest, asText, json, methodOf, readBody, restParts } from './http';
-import {
-  CONNECTION_GUIDE,
-  FILE_KINDS,
-  GENERAL_QUESTIONS,
-  GENERAL_SECTIONS,
-  Question,
-  SOURCE_KINDS,
-  SOURCE_QUESTIONS,
-  SOURCE_SECTIONS,
-  questionsForKind,
-} from './billingQuestions';
+import { Question, TopicDef } from './intakeTypes';
+import { getTopic } from './intakeTopics';
 import {
   Answer,
   ConflictError,
-  FundingSource,
+  GroupEntry,
   addFile,
   listFiles,
   readAnswers,
   readFile,
   removeFile,
   saveAnswers,
-} from './billingIntakeStore';
-import { assessSource, buildPrompt, missingItems } from './billingPrompt';
+} from './intakeStore';
+import { assessAll, buildPrompt, missingItems, questionsForKind } from './intakePrompt';
 import { randomBytes } from 'crypto';
 
 export const MAX_FILE_BYTES = 6 * 1024 * 1024;
@@ -80,23 +71,26 @@ function cleanAnswers(raw: unknown, questions: Question[]): Record<string, Answe
   return out;
 }
 
-function cleanSources(raw: unknown): FundingSource[] | null {
+function cleanSources(topic: TopicDef, raw: unknown): GroupEntry[] | null {
+  const group = topic.group;
+  // A topic without a group never stores any entries; ignore whatever was sent.
+  if (!group) return [];
   if (!Array.isArray(raw)) return null;
   const seen = new Set<string>();
-  const out: FundingSource[] = [];
+  const out: GroupEntry[] = [];
   for (let i = 0; i < raw.length && out.length < MAX_SOURCES; i++) {
     const item = raw[i] as Record<string, any>;
     if (!item || typeof item !== 'object') continue;
     const kind = String(item.kind || '');
-    if (!SOURCE_KINDS.some(function (k) { return k.id === kind; })) continue;
+    if (!group.kinds.some(function (k) { return k.id === kind; })) continue;
     let id = String(item.id || '');
     if (!/^[a-z0-9-]{3,40}$/.test(id) || id === 'general' || seen.has(id)) id = 'src-' + randomBytes(5).toString('hex');
     seen.add(id);
     out.push({
       id,
       kind,
-      name: asText(item.name, 120) || 'Unnamed funding source',
-      answers: cleanAnswers(item.answers, questionsForKind(kind)),
+      name: asText(item.name, 120) || 'Unnamed ' + group.singular,
+      answers: cleanAnswers(item.answers, questionsForKind(topic, kind)),
     });
   }
   return out;
@@ -113,34 +107,47 @@ function extensionOf(name: string): string {
   return dot === -1 ? '' : name.slice(dot + 1).toLowerCase();
 }
 
-function questionBank() {
+function questionBank(topic: TopicDef) {
+  const group = topic.group;
   return {
-    generalSections: GENERAL_SECTIONS,
-    generalQuestions: GENERAL_QUESTIONS,
-    sourceSections: SOURCE_SECTIONS,
-    sourceQuestions: SOURCE_QUESTIONS,
-    sourceKinds: SOURCE_KINDS,
-    fileKinds: FILE_KINDS,
-    connectionGuide: CONNECTION_GUIDE,
+    topic: {
+      id: topic.id,
+      title: topic.title,
+      guideIntro: topic.guideIntro,
+      group: group ? {
+        singular: group.singular,
+        plural: group.plural,
+        intro: group.intro,
+        namePlaceholder: group.namePlaceholder,
+        kinds: group.kinds,
+        sections: group.sections,
+        questions: group.questions,
+      } : null,
+      hasAssessment: !!topic.assess,
+    },
+    generalSections: topic.sections,
+    generalQuestions: topic.questions,
+    fileKinds: topic.fileKinds,
+    connectionGuide: topic.guide,
     limits: { maxFileBytes: MAX_FILE_BYTES, fileTypes: Object.keys(FILE_TYPES) },
   };
 }
 
-async function readState(context: FnContext): Promise<void> {
-  const [answers, files] = await Promise.all([readAnswers(), listFiles()]);
-  json(context, 200, Object.assign({ answers, files }, questionBank()));
+async function readState(context: FnContext, topic: TopicDef): Promise<void> {
+  const [answers, files] = await Promise.all([readAnswers(topic.storagePrefix), listFiles(topic.storagePrefix)]);
+  json(context, 200, Object.assign({ answers, files }, questionBank(topic)));
 }
 
-async function save(context: FnContext, req: HttpRequest, who: { email: string }): Promise<void> {
+async function save(context: FnContext, req: HttpRequest, topic: TopicDef, who: { email: string }): Promise<void> {
   const body = readBody(req);
-  const sources = cleanSources(body.sources);
+  const sources = cleanSources(topic, body.sources);
   if (!sources) {
-    json(context, 400, { error: 'Send the list of funding sources' });
+    json(context, 400, { error: 'Send the list of ' + (topic.group ? topic.group.plural : 'entries') });
     return;
   }
-  const general = cleanAnswers(body.general, GENERAL_QUESTIONS);
+  const general = cleanAnswers(body.general, topic.questions);
   try {
-    const saved = await saveAnswers({ general, sources }, asText(body.baseUpdatedAt, 40), who.email);
+    const saved = await saveAnswers(topic.storagePrefix, { general, sources }, asText(body.baseUpdatedAt, 40), who.email);
     json(context, 200, { ok: true, updatedAt: saved.updatedAt, updatedBy: saved.updatedBy, sources: saved.sources.map(function (s) { return { id: s.id, name: s.name }; }) });
   } catch (err) {
     if (err instanceof ConflictError) {
@@ -151,7 +158,7 @@ async function save(context: FnContext, req: HttpRequest, who: { email: string }
   }
 }
 
-async function upload(context: FnContext, req: HttpRequest, who: { email: string }): Promise<void> {
+async function upload(context: FnContext, req: HttpRequest, topic: TopicDef, who: { email: string }): Promise<void> {
   const body = readBody(req);
   if (body.confirmedNoClientInfo !== true) {
     json(context, 400, { error: 'Confirm that the file has no real client information in it. Replace names, birth dates, and member numbers with fake ones first.' });
@@ -164,7 +171,7 @@ async function upload(context: FnContext, req: HttpRequest, who: { email: string
     return;
   }
   const kind = asText(body.kind, 40);
-  if (!FILE_KINDS.some(function (item) { return item.id === kind; })) {
+  if (!topic.fileKinds.some(function (item) { return item.id === kind; })) {
     json(context, 400, { error: 'Choose what kind of file this is' });
     return;
   }
@@ -180,18 +187,18 @@ async function upload(context: FnContext, req: HttpRequest, who: { email: string
   }
   const scope = asText(body.scope, 40);
   if (scope !== 'general') {
-    const answers = await readAnswers();
+    const answers = await readAnswers(topic.storagePrefix);
     if (!answers.sources.some(function (source) { return source.id === scope; })) {
-      json(context, 400, { error: 'Save the funding source first, then upload its files' });
+      json(context, 400, { error: 'Save the ' + (topic.group ? topic.group.singular : 'entry') + ' first, then upload its files' });
       return;
     }
   }
-  const existing = await listFiles();
+  const existing = await listFiles(topic.storagePrefix);
   if (existing.length >= MAX_FILES) {
     json(context, 400, { error: 'The file limit was reached. Remove files you no longer need.' });
     return;
   }
-  const file = await addFile({
+  const file = await addFile(topic.storagePrefix, {
     scope,
     kind,
     note: asText(body.note, 300),
@@ -206,8 +213,8 @@ function contentDisposition(name: string): string {
   return 'attachment; filename="' + name.replace(/"/g, '') + '"; filename*=UTF-8\'\'' + encodeURIComponent(name);
 }
 
-async function download(context: FnContext, id: string): Promise<void> {
-  const found = await readFile(id);
+async function download(context: FnContext, topic: TopicDef, id: string): Promise<void> {
+  const found = await readFile(topic.storagePrefix, id);
   if (!found) {
     json(context, 404, { error: 'File not found' });
     return;
@@ -226,40 +233,51 @@ async function download(context: FnContext, id: string): Promise<void> {
   } as FnContext['res'];
 }
 
-async function prompt(context: FnContext): Promise<void> {
-  const [answers, files] = await Promise.all([readAnswers(), listFiles()]);
+async function prompt(context: FnContext, topic: TopicDef): Promise<void> {
+  const [answers, files] = await Promise.all([readAnswers(topic.storagePrefix), listFiles(topic.storagePrefix)]);
   const known = new Set(['general'].concat(answers.sources.map(function (s) { return s.id; })));
   json(context, 200, {
-    prompt: buildPrompt(answers, files.filter(function (file) { return known.has(file.scope); }), new Date()),
-    assessments: answers.sources.map(assessSource),
-    missing: missingItems(answers),
+    prompt: buildPrompt(topic, answers, files.filter(function (file) { return known.has(file.scope); }), new Date()),
+    assessments: assessAll(topic, answers),
+    missing: missingItems(topic, answers),
   });
 }
 
-export async function handleBillingIntake(context: FnContext, req: HttpRequest): Promise<void> {
+/**
+ * Routes: /api/intake/{topic}/state (GET, PUT), /prompt (GET), /files (POST),
+ * /files/{id} (GET, DELETE). Every address is spelled out so nothing depends on
+ * an empty catch-all path.
+ */
+export async function handleIntake(context: FnContext, req: HttpRequest): Promise<void> {
   if (methodOf(req) === 'OPTIONS') {
     context.res = { status: 204, headers: { 'Content-Type': 'application/json' } };
     return;
   }
   const who = await requireHumanAdmin(context, req);
   if (!who) return;
+  const topic = getTopic(asText(req.params && req.params.topic, 60));
+  if (!topic) {
+    json(context, 404, { error: 'Unknown setup topic' });
+    return;
+  }
   try {
     const verb = methodOf(req);
     const parts = restParts(req);
-    if (!parts.length && verb === 'GET') return await readState(context);
-    if (!parts.length && verb === 'PUT') return await save(context, req, who);
-    if (parts[0] === 'prompt' && verb === 'GET') return await prompt(context);
-    if (parts[0] === 'files' && !parts[1] && verb === 'POST') return await upload(context, req, who);
-    if (parts[0] === 'files' && parts[1] && verb === 'GET') return await download(context, parts[1]);
-    if (parts[0] === 'files' && parts[1] && verb === 'DELETE') {
-      const removed = await removeFile(parts[1]);
+    const first = parts[0] || 'state';
+    if (first === 'state' && !parts[1] && verb === 'GET') return await readState(context, topic);
+    if (first === 'state' && !parts[1] && verb === 'PUT') return await save(context, req, topic, who);
+    if (first === 'prompt' && verb === 'GET') return await prompt(context, topic);
+    if (first === 'files' && !parts[1] && verb === 'POST') return await upload(context, req, topic, who);
+    if (first === 'files' && parts[1] && verb === 'GET') return await download(context, topic, parts[1]);
+    if (first === 'files' && parts[1] && verb === 'DELETE') {
+      const removed = await removeFile(topic.storagePrefix, parts[1]);
       json(context, removed ? 200 : 404, removed ? { ok: true } : { error: 'File not found' });
       return;
     }
     json(context, 404, { error: 'Not found' });
   } catch (err) {
     // Do not echo storage details back to the browser.
-    const message = err instanceof Error && /not configured/i.test(err.message) ? err.message : 'Billing setup could not be saved or read. Try again in a moment.';
+    const message = err instanceof Error && /not configured/i.test(err.message) ? err.message : 'The setup answers could not be saved or read. Try again in a moment.';
     json(context, 500, { error: message });
   }
 }

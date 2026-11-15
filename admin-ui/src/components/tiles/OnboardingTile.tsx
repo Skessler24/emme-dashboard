@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../../api';
 import { DataTable } from '../DataTable';
+import { WithSetup } from '../setup/WithSetup';
 
 type Docs = { name: string; lastModified: string };
 type FoundFile = { folder: string; fileName: string; path: string; matchedBy: string };
@@ -12,6 +13,10 @@ function folderLine(label: string, found: FoundFile | null): string {
 }
 
 export function OnboardingTile() {
+  return <WithSetup topicId="onboarding" mainLabel="Checklists and documents"><OnboardingView /></WithSetup>;
+}
+
+function OnboardingView() {
   const [employeeId, setEmployeeId] = useState('');
   const [employeeName, setEmployeeName] = useState('');
   const [checklist, setChecklist] = useState<Array<Record<string, unknown>>>([]);

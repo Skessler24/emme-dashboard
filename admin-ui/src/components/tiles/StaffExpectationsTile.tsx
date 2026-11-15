@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
+import { WithSetup } from '../setup/WithSetup';
 
 type SummaryFile = {
   employee: string;
@@ -13,6 +14,10 @@ type SummaryFile = {
 };
 
 export function StaffExpectationsTile() {
+  return <WithSetup topicId="expectations" mainLabel="Weekly view"><StaffExpectationsView /></WithSetup>;
+}
+
+function StaffExpectationsView() {
   const [openings, setOpenings] = useState<Row[]>([]);
   const [mileage, setMileage] = useState<Row[]>([]);
   const [cancellations, setCancellations] = useState<Row[]>([]);

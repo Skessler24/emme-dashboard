@@ -1,8 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
+import { WithSetup } from '../setup/WithSetup';
 
 export function StaffInformationTile() {
+  return <WithSetup topicId="staff" mainLabel="Staff and trainings"><StaffInformationView /></WithSetup>;
+}
+
+function StaffInformationView() {
   const [catalog, setCatalog] = useState<Row[]>([]);
   const [staffId, setStaffId] = useState('');
   const [trainings, setTrainings] = useState<Row[]>([]);

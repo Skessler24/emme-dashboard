@@ -1,8 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
+import { WithSetup } from '../setup/WithSetup';
 
 export function ReferralsTile() {
+  return <WithSetup topicId="referrals" mainLabel="Referral list"><ReferralsView /></WithSetup>;
+}
+
+function ReferralsView() {
   const [rows, setRows] = useState<Row[]>([]);
   const [error, setError] = useState('');
   const [referrerName, setReferrerName] = useState('');
