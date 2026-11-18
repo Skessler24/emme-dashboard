@@ -2,7 +2,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import ExcelJS from 'exceljs';
 import { GraphError, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend, siteHoldingFolder } from './graphClient';
 import { getAppointments, isCancellationStatus, type AppointmentRow } from './intakeQService';
-import { findExistingProviderFile, MILEAGE_ROOT } from './providerSetup';
+import { findExistingProviderFile, MILEAGE_ROOT, resolveMileageRoot } from './providerSetup';
 
 /**
  * Adds a row to each provider's existing mileage reimbursement workbook.
@@ -191,6 +191,7 @@ function cellString(cell: ExcelJS.Cell): string {
 }
 
 async function mileageSiteId(): Promise<string> {
+  await resolveMileageRoot();
   return siteHoldingFolder(MILEAGE_ROOT, 'SharePoint is not configured for mileage.');
 }
 
@@ -281,6 +282,7 @@ function chooseWorkbook(files: Array<{ name: string; lastModified: string; isFol
 }
 
 async function locateForm(staffName: string, email: string): Promise<LocatedForm | null> {
+  await resolveMileageRoot();
   const found = await findExistingProviderFile(MILEAGE_ROOT, email, staffName, 'mileage');
   if (!found || !found.fileName) return null;
   const segments = found.folder ? MILEAGE_ROOT.concat([found.folder]) : MILEAGE_ROOT.slice();

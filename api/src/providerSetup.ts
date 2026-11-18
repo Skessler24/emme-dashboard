@@ -59,7 +59,30 @@ export function providerMatchScore(candidate: string, staffName: string, email: 
   return 0;
 }
 
+/**
+ * When the MILEAGE_FOLDER_URL setting holds a sharing link to the Mileage folder, the folder's real place is
+ * read from SharePoint and used in place of the fixed path above. The answer is kept for ten minutes.
+ */
+let mileageResolvedAt = 0;
+export async function resolveMileageRoot(): Promise<string[]> {
+  const url = String(process.env.MILEAGE_FOLDER_URL || '').trim();
+  if (!url || !graphIsConfigured() || Date.now() - mileageResolvedAt < 10 * 60 * 1000) return MILEAGE_ROOT;
+  try {
+    const id = 'u!' + Buffer.from(url, 'utf8').toString('base64').replace(/=+$/g, '').replace(/\//g, '_').replace(/\+/g, '-');
+    const item = await graphGet('/shares/' + encodeURIComponent(id) + '/driveItem?$select=name,parentReference');
+    const parent = String((item && item.parentReference && item.parentReference.path) || '');
+    const match = parent.match(/root:(.*)$/);
+    if (match && item && item.name) {
+      const segments = match[1].split('/').filter(Boolean).map(function (part) { return decodeURIComponent(part); }).concat([String(item.name)]);
+      MILEAGE_ROOT.splice(0, MILEAGE_ROOT.length, ...segments);
+      mileageResolvedAt = Date.now();
+    }
+  } catch (_) { /* keep the folder path that is already set */ }
+  return MILEAGE_ROOT;
+}
+
 async function librarySiteId(): Promise<string> {
+  await resolveMileageRoot();
   return siteHoldingFolder(MILEAGE_ROOT, 'SharePoint is not configured.');
 }
 
@@ -166,6 +189,7 @@ export async function searchProviderLibraries(email: string, displayName: string
   let name = String(displayName || '').trim();
   if (!name && graphIsConfigured()) name = await getUserDisplayName(providerEmail);
   if (!name) name = providerEmail;
+  await resolveMileageRoot();
   const mileage = await findExistingProviderFile(MILEAGE_ROOT, providerEmail, name, 'mileage');
   const schedule = await findExistingProviderFile(SCHEDULE_ROOT, providerEmail, name, 'schedule');
   return { email: providerEmail, name, mileage, schedule };
