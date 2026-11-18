@@ -7,7 +7,8 @@ const { graphGet, graphGetBytes, GraphError } = require('../dist/graphClient');
 const { docxToHtml } = require('./docx');
 const { splitSections } = require('./render');
 
-const GUIDE_URL = 'https://emmeco031-my.sharepoint.com/:w:/g/personal/jenriat_emmeco_org/IQBtpoWOjqKuQKKQa3HGgAXqARRet5OWW-QTF1gsabG4sIA?e=CYQ0Zw';
+// The GUIDEBOOK_URL application setting wins, so the link can be changed in Azure without a code change when the document moves.
+const GUIDE_URL = process.env.GUIDEBOOK_URL || 'https://emmeco031-my.sharepoint.com/:w:/g/personal/jenriat_emmeco_org/IQBtpoWOjqKuQKKQa3HGgAXqARRet5OWW-QTF1gsabG4sIA?e=CYQ0Zw';
 const MAX_BYTES = 15 * 1024 * 1024;
 
 let cache = { etag: '', payload: null };

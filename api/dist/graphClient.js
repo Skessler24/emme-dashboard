@@ -9,6 +9,8 @@ exports.graphSend = graphSend;
 exports.getSharePointSiteId = getSharePointSiteId;
 exports.knownSites = knownSites;
 exports.candidateSiteIds = candidateSiteIds;
+exports.forgetFolderSites = forgetFolderSites;
+exports.siteHoldingFolder = siteHoldingFolder;
 exports.getUserDisplayName = getUserDisplayName;
 exports.userIsAdmin = userIsAdmin;
 const config_1 = require("./config");
@@ -165,6 +167,42 @@ async function candidateSiteIds() {
     if (sites.personal && ids.indexOf(sites.personal) === -1)
         ids.push(sites.personal);
     return ids;
+}
+const SITE_MEMORY_MS = 5 * 60 * 1000;
+const folderSites = new Map();
+/** Forgets every remembered answer to "which site holds this folder". Used by tests. */
+function forgetFolderSites() {
+    folderSites.clear();
+}
+/**
+ * Finds which site holds a fixed folder: the shared Emme site first, then the
+ * old personal library. The answer is remembered for a few minutes only, so a
+ * folder that is moved is found again without restarting anything. When the
+ * folder is on neither site, the first site is returned but never remembered,
+ * so the next request looks again.
+ */
+async function siteHoldingFolder(segments, notConfigured) {
+    const key = segments.join('/');
+    const hit = folderSites.get(key);
+    if (hit && hit.expires > Date.now())
+        return hit.siteId;
+    const tries = await candidateSiteIds();
+    if (!tries.length)
+        throw new GraphError(503, notConfigured);
+    const folder = segments.map(encodeURIComponent).join('/');
+    for (let i = 0; i < tries.length; i++) {
+        try {
+            await graphGet('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
+            folderSites.set(key, { siteId: tries[i], expires: Date.now() + SITE_MEMORY_MS });
+            return tries[i];
+        }
+        catch (err) {
+            if (err instanceof GraphError && (err.status === 401 || err.status === 403 || err.status === 404))
+                continue;
+            throw err;
+        }
+    }
+    return tries[0];
 }
 const nameCache = new Map();
 async function getUserDisplayName(email) {

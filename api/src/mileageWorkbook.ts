@@ -1,6 +1,6 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import ExcelJS from 'exceljs';
-import { GraphError, candidateSiteIds, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend } from './graphClient';
+import { GraphError, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend, siteHoldingFolder } from './graphClient';
 import { getAppointments, isCancellationStatus, type AppointmentRow } from './intakeQService';
 import { findExistingProviderFile, MILEAGE_ROOT } from './providerSetup';
 
@@ -190,25 +190,8 @@ function cellString(cell: ExcelJS.Cell): string {
   return String(value).trim();
 }
 
-let mileageSiteCache = '';
-
 async function mileageSiteId(): Promise<string> {
-  if (mileageSiteCache) return mileageSiteCache;
-  const tries = await candidateSiteIds();
-  if (!tries.length) throw new GraphError(503, 'SharePoint is not configured for mileage.');
-  const folder = MILEAGE_ROOT.map(encodeURIComponent).join('/');
-  for (let i = 0; i < tries.length; i++) {
-    try {
-      await graphGet('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
-      mileageSiteCache = tries[i];
-      return mileageSiteCache;
-    } catch (err) {
-      if (err instanceof GraphError && (err.status === 401 || err.status === 403 || err.status === 404)) continue;
-      throw err;
-    }
-  }
-  mileageSiteCache = tries[0];
-  return mileageSiteCache;
+  return siteHoldingFolder(MILEAGE_ROOT, 'SharePoint is not configured for mileage.');
 }
 
 function drivePath(segments: string[]): string {

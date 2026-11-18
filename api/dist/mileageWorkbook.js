@@ -173,28 +173,8 @@ function cellString(cell) {
         return String(cell.text || '').trim();
     return String(value).trim();
 }
-let mileageSiteCache = '';
 async function mileageSiteId() {
-    if (mileageSiteCache)
-        return mileageSiteCache;
-    const tries = await (0, graphClient_1.candidateSiteIds)();
-    if (!tries.length)
-        throw new graphClient_1.GraphError(503, 'SharePoint is not configured for mileage.');
-    const folder = providerSetup_1.MILEAGE_ROOT.map(encodeURIComponent).join('/');
-    for (let i = 0; i < tries.length; i++) {
-        try {
-            await (0, graphClient_1.graphGet)('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
-            mileageSiteCache = tries[i];
-            return mileageSiteCache;
-        }
-        catch (err) {
-            if (err instanceof graphClient_1.GraphError && (err.status === 401 || err.status === 403 || err.status === 404))
-                continue;
-            throw err;
-        }
-    }
-    mileageSiteCache = tries[0];
-    return mileageSiteCache;
+    return (0, graphClient_1.siteHoldingFolder)(providerSetup_1.MILEAGE_ROOT, 'SharePoint is not configured for mileage.');
 }
 function drivePath(segments) {
     return segments.map(encodeURIComponent).join('/');

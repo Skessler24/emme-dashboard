@@ -1,4 +1,4 @@
-import { GraphError, candidateSiteIds, getUserDisplayName, graphGet, graphGetText, graphIsConfigured } from './graphClient';
+import { GraphError, candidateSiteIds, getUserDisplayName, graphGet, graphGetText, graphIsConfigured, siteHoldingFolder } from './graphClient';
 
 /**
  * Finds a provider's existing SharePoint folder by their emmeco.org email.
@@ -58,25 +58,8 @@ export function providerMatchScore(candidate: string, staffName: string, email: 
   return 0;
 }
 
-let librarySiteCache = '';
-
 async function librarySiteId(): Promise<string> {
-  if (librarySiteCache) return librarySiteCache;
-  const tries = await candidateSiteIds();
-  if (!tries.length) throw new GraphError(503, 'SharePoint is not configured.');
-  const folder = MILEAGE_ROOT.map(encodeURIComponent).join('/');
-  for (let i = 0; i < tries.length; i++) {
-    try {
-      await graphGet('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
-      librarySiteCache = tries[i];
-      return librarySiteCache;
-    } catch (err) {
-      if (err instanceof GraphError && (err.status === 401 || err.status === 403 || err.status === 404)) continue;
-      throw err;
-    }
-  }
-  librarySiteCache = tries[0];
-  return librarySiteCache;
+  return siteHoldingFolder(MILEAGE_ROOT, 'SharePoint is not configured.');
 }
 
 function drivePath(segments: string[]): string {
@@ -203,7 +186,7 @@ function assertFolderSegment(segment: string): string {
   return name;
 }
 
-let observationSiteCache = '';
+let observationSiteCache = { id: '', expires: 0 };
 
 async function folderOnSite(siteId: string, segments: string[]): Promise<{ webUrl: string } | null> {
   try {
@@ -222,15 +205,16 @@ async function folderOnSite(siteId: string, segments: string[]): Promise<{ webUr
  * The shared Emme site is checked first, then the legacy personal library.
  */
 async function observationSiteId(): Promise<string> {
-  if (observationSiteCache) return observationSiteCache;
+  if (observationSiteCache.id && observationSiteCache.expires > Date.now()) return observationSiteCache.id;
   const tries = await candidateSiteIds();
   let last: unknown = null;
   for (let i = 0; i < tries.length; i++) {
     try {
       const found = await folderOnSite(tries[i], RS_OBSERVATION_ROOT);
       if (found) {
-        observationSiteCache = tries[i];
-        return observationSiteCache;
+        // Remembered for a few minutes only, so a moved folder is found again without a restart.
+        observationSiteCache = { id: tries[i], expires: Date.now() + 5 * 60 * 1000 };
+        return tries[i];
       }
     } catch (err) {
       last = err;
