@@ -14,8 +14,9 @@ const graphClient_1 = require("./graphClient");
  * Otherwise the folder or workbook name is matched to the provider's name and email.
  */
 exports.MILEAGE_ROOT = ['EMME', 'PAYROLL & MILEAGE', 'Mileage'];
-exports.SCHEDULE_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'Referral Process', 'Provider Schedules'];
-exports.RS_OBSERVATION_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'RS_Observation Process'];
+// The leadership files now sit at the top of the Documents library on the Emme team site (no "EMME" folder above them).
+exports.SCHEDULE_ROOT = ['LEADERSHIP TEAM', 'EMME Processes', 'Referral Process', 'Provider Schedules'];
+exports.RS_OBSERVATION_ROOT = ['LEADERSHIP TEAM', 'EMME Processes', 'RS_Observation Process'];
 const MARKER = 'emme-provider.json';
 function emmeEmail(value) {
     const email = String(value || '').trim().toLowerCase();

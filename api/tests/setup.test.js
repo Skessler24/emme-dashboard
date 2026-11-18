@@ -6,7 +6,7 @@ process.env.SHAREPOINT_HOSTNAME = 'emmeco031.sharepoint.com';
 process.env.SHAREPOINT_SITE_PATH = '/sites/Emme';
 process.env.EMME_ADMIN_EMAILS = 'skessler@emmeco.org';
 
-const SCHEDULES = 'EMME/LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules';
+const SCHEDULES = 'LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules';
 const MILEAGE = 'EMME/PAYROLL & MILEAGE/Mileage';
 
 const lists = new Map();

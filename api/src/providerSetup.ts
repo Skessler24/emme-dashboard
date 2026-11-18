@@ -8,8 +8,9 @@ import { GraphError, candidateSiteIds, getUserDisplayName, graphGet, graphGetTex
  */
 
 export const MILEAGE_ROOT = ['EMME', 'PAYROLL & MILEAGE', 'Mileage'];
-export const SCHEDULE_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'Referral Process', 'Provider Schedules'];
-export const RS_OBSERVATION_ROOT = ['EMME', 'LEADERSHIP TEAM', 'EMME Processes', 'RS_Observation Process'];
+// The leadership files now sit at the top of the Documents library on the Emme team site (no "EMME" folder above them).
+export const SCHEDULE_ROOT = ['LEADERSHIP TEAM', 'EMME Processes', 'Referral Process', 'Provider Schedules'];
+export const RS_OBSERVATION_ROOT = ['LEADERSHIP TEAM', 'EMME Processes', 'RS_Observation Process'];
 const MARKER = 'emme-provider.json';
 
 export type FoundProviderFile = {
