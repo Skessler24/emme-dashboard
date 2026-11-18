@@ -58,6 +58,12 @@ function configured() {
   return !!process.env.AZURE_CLIENT_SECRET;
 }
 
+/** A call to Microsoft that takes too long is cut off instead of holding the page up. */
+function timedFetch(url, init) {
+  const limit = Number(process.env.GRAPH_TIMEOUT_MS) || 10000;
+  return fetch(url, Object.assign({}, init || {}, { signal: AbortSignal.timeout(limit) }));
+}
+
 async function appToken() {
   if (!configured()) return '';
   if (tokenCache.value && tokenCache.expires > Date.now() + 60000) return tokenCache.value;
@@ -69,7 +75,7 @@ async function appToken() {
     scope: 'https://graph.microsoft.com/.default',
     grant_type: 'client_credentials'
   });
-  const res = await fetch('https://login.microsoftonline.com/' + tenant + '/oauth2/v2.0/token', {
+  const res = await timedFetch('https://login.microsoftonline.com/' + tenant + '/oauth2/v2.0/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString()
@@ -92,7 +98,7 @@ async function graph(token, path, options) {
     'Content-Type': 'application/json'
   };
   if (options.prefer) headers.Prefer = options.prefer;
-  const res = await fetch('https://graph.microsoft.com/v1.0' + path, {
+  const res = await timedFetch('https://graph.microsoft.com/v1.0' + path, {
     method: options.method || 'GET',
     headers: headers,
     body: options.body ? JSON.stringify(options.body) : undefined

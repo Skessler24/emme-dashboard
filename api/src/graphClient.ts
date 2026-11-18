@@ -19,6 +19,40 @@ export function graphIsConfigured(): boolean {
   return graphConfigured();
 }
 
+/**
+ * Every call to Microsoft goes through here. A call that takes too long is cut off,
+ * and after a call fails to connect, further calls fail at once for a short while.
+ * Without this, one slow or unreachable Microsoft service made every schedule save
+ * wait until the web host gave up, so nothing was saved.
+ */
+let graphDownUntil = 0;
+
+function graphTimeoutMs(): number {
+  return Number(process.env.GRAPH_TIMEOUT_MS) || 10000;
+}
+
+function graphPauseMs(): number {
+  const set = process.env.GRAPH_PAUSE_MS;
+  return set === undefined || set === '' ? 30000 : Number(set) || 0;
+}
+
+/** Forgets a recent connection failure. Used by tests. */
+export function resetGraphBreaker(): void {
+  graphDownUntil = 0;
+}
+
+async function graphFetch(url: string, init?: RequestInit): Promise<Response> {
+  if (Date.now() < graphDownUntil) {
+    throw new GraphError(503, 'Microsoft 365 is not answering right now. It will be tried again shortly.');
+  }
+  try {
+    return await fetch(url, Object.assign({}, init || {}, { signal: AbortSignal.timeout(graphTimeoutMs()) }));
+  } catch (_) {
+    graphDownUntil = Date.now() + graphPauseMs();
+    throw new GraphError(503, 'Microsoft 365 did not answer in time.');
+  }
+}
+
 async function appToken(): Promise<string> {
   const cfg = getConfig();
   if (!cfg.graphClientSecret) {
@@ -31,7 +65,7 @@ async function appToken(): Promise<string> {
     scope: 'https://graph.microsoft.com/.default',
     grant_type: 'client_credentials',
   });
-  const res = await fetch('https://login.microsoftonline.com/' + cfg.graphTenantId + '/oauth2/v2.0/token', {
+  const res = await graphFetch('https://login.microsoftonline.com/' + cfg.graphTenantId + '/oauth2/v2.0/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
@@ -54,7 +88,7 @@ function toUrl(path: string): string {
 
 export async function graphGet(path: string, extraHeaders?: Record<string, string>): Promise<any> {
   const token = await appToken();
-  const res = await fetch(toUrl(path), {
+  const res = await graphFetch(toUrl(path), {
     headers: Object.assign({ Authorization: 'Bearer ' + token, Accept: 'application/json' }, extraHeaders || {}),
   });
   if (res.status === 204) return null;
@@ -68,7 +102,7 @@ export async function graphGet(path: string, extraHeaders?: Record<string, strin
 
 export async function graphGetBytes(path: string): Promise<Uint8Array> {
   const token = await appToken();
-  const res = await fetch(toUrl(path), {
+  const res = await graphFetch(toUrl(path), {
     headers: { Authorization: 'Bearer ' + token },
   });
   if (!res.ok) {
@@ -79,7 +113,7 @@ export async function graphGetBytes(path: string): Promise<Uint8Array> {
 
 export async function graphGetText(path: string): Promise<string> {
   const token = await appToken();
-  const res = await fetch(toUrl(path), {
+  const res = await graphFetch(toUrl(path), {
     headers: { Authorization: 'Bearer ' + token },
   });
   if (!res.ok) {
@@ -107,7 +141,7 @@ export async function graphSend(path: string, options: {
     headers['Content-Type'] = 'application/json';
     body = JSON.stringify(options.jsonBody);
   }
-  const res = await fetch(toUrl(path), { method: options.method, headers, body });
+  const res = await graphFetch(toUrl(path), { method: options.method, headers, body });
   if (res.status === 204) return null;
   const text = await res.text();
   let data: any = {};
