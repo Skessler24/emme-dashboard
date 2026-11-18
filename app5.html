@@ -238,6 +238,7 @@
     .client-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      align-items: start;
       gap: 1rem;
     }
     .client-card {
@@ -1255,6 +1256,8 @@
     var deleteBtn = document.getElementById('js-modal-delete');
     if (deleteBtn) deleteBtn.classList.toggle('is-hidden', mode !== 'edit-client');
     document.getElementById('js-modal').classList.remove('is-hidden');
+    var firstInput = document.querySelector('#js-modal-body input, #js-modal-body textarea');
+    if (firstInput) firstInput.focus();
   }
 
   function closeModal() {
@@ -1699,6 +1702,15 @@
   });
   document.getElementById('js-modal').addEventListener('click', function (e) {
     if (e.target.id === 'js-modal') closeModal();
+  });
+  // Pressing Enter in a text box of the client window saves it (never closes or loses it).
+  document.getElementById('js-modal').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    var t = e.target;
+    if (!t || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON') return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (t.tagName === 'INPUT' || t.tagName === 'SELECT') document.getElementById('js-modal-save').click();
   });
   document.getElementById('js-modal-save').addEventListener('click', function () {
     if (state.modalMode === 'add-client' || state.modalMode === 'edit-client') {
