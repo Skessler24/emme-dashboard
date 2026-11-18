@@ -9,6 +9,7 @@ const conversationStore_1 = require("./conversationStore");
 const mileageWorkbook_1 = require("./mileageWorkbook");
 const providerSetup_1 = require("./providerSetup");
 const schedulingService_1 = require("./schedulingService");
+const siteSetup_1 = require("./siteSetup");
 const sharepointService_1 = require("./sharepointService");
 function denverToday() {
     return new Intl.DateTimeFormat('en-CA', {
@@ -628,6 +629,22 @@ async function reflectiveSupervision(context, req) {
         items: folder.items,
     });
 }
+async function setup(context, req) {
+    const admin = await (0, auth_1.requireAdmin)(context, req);
+    if (!admin)
+        return;
+    const verb = (0, http_1.methodOf)(req);
+    if (verb === 'GET') {
+        (0, http_1.json)(context, 200, await (0, siteSetup_1.checkSetup)());
+        return;
+    }
+    if (verb === 'POST') {
+        const created = await (0, siteSetup_1.createMissingLists)();
+        (0, http_1.json)(context, 200, { ok: true, created, status: await (0, siteSetup_1.checkSetup)() });
+        return;
+    }
+    (0, http_1.json)(context, 405, { error: 'Method not allowed' });
+}
 const AREAS = {
     me,
     onboarding,
@@ -642,6 +659,7 @@ const AREAS = {
     billing,
     scheduling,
     'reflective-supervision': reflectiveSupervision,
+    setup,
 };
 async function dispatch(context, req, area) {
     if ((0, http_1.methodOf)(req) === 'OPTIONS') {

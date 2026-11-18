@@ -7,6 +7,8 @@ exports.graphGetBytes = graphGetBytes;
 exports.graphGetText = graphGetText;
 exports.graphSend = graphSend;
 exports.getSharePointSiteId = getSharePointSiteId;
+exports.knownSites = knownSites;
+exports.candidateSiteIds = candidateSiteIds;
 exports.getUserDisplayName = getUserDisplayName;
 exports.userIsAdmin = userIsAdmin;
 const config_1 = require("./config");
@@ -138,6 +140,31 @@ async function getSharePointSiteId() {
         throw new GraphError(502, 'SharePoint site was not found.');
     siteIdCache = String(data.id);
     return siteIdCache;
+}
+const LEGACY_PERSONAL_SITE = '/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org';
+/** The shared Emme site from the Azure settings, then Jenny's old OneDrive, which is only used until the folders are moved. */
+async function knownSites() {
+    let shared = '';
+    let personal = '';
+    try {
+        shared = await getSharePointSiteId();
+    }
+    catch (_) { /* not configured or not reachable */ }
+    try {
+        const found = await graphGet(LEGACY_PERSONAL_SITE + '?$select=id');
+        personal = found && found.id ? String(found.id) : '';
+    }
+    catch (_) { /* the legacy library is optional */ }
+    return { shared, personal };
+}
+async function candidateSiteIds() {
+    const sites = await knownSites();
+    const ids = [];
+    if (sites.shared)
+        ids.push(sites.shared);
+    if (sites.personal && ids.indexOf(sites.personal) === -1)
+        ids.push(sites.personal);
+    return ids;
 }
 const nameCache = new Map();
 async function getUserDisplayName(email) {

@@ -1,4 +1,4 @@
-import { GraphError, getSharePointSiteId, getUserDisplayName, graphGet, graphGetText, graphIsConfigured } from './graphClient';
+import { GraphError, candidateSiteIds, getUserDisplayName, graphGet, graphGetText, graphIsConfigured } from './graphClient';
 
 /**
  * Finds a provider's existing SharePoint folder by their emmeco.org email.
@@ -62,15 +62,7 @@ let librarySiteCache = '';
 
 async function librarySiteId(): Promise<string> {
   if (librarySiteCache) return librarySiteCache;
-  const tries: string[] = [];
-  try {
-    const personal = await graphGet('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
-    if (personal && personal.id) tries.push(String(personal.id));
-  } catch (_) { /* the configured site is the fallback */ }
-  try {
-    const configured = await getSharePointSiteId();
-    if (tries.indexOf(configured) === -1) tries.push(configured);
-  } catch (_) { /* the personal library may still be reachable */ }
+  const tries = await candidateSiteIds();
   if (!tries.length) throw new GraphError(503, 'SharePoint is not configured.');
   const folder = MILEAGE_ROOT.map(encodeURIComponent).join('/');
   for (let i = 0; i < tries.length; i++) {
@@ -227,19 +219,11 @@ async function folderOnSite(siteId: string, segments: string[]): Promise<{ webUr
 /**
  * Reflective Supervision files live in
  * EMME/LEADERSHIP TEAM/EMME Processes/RS_Observation Process.
- * The personal library is checked first, then the site already used for mileage.
+ * The shared Emme site is checked first, then the legacy personal library.
  */
 async function observationSiteId(): Promise<string> {
   if (observationSiteCache) return observationSiteCache;
-  const tries: string[] = [];
-  try {
-    const personal = await graphGet('/sites/emmeco031-my.sharepoint.com:/personal/jenriat_emmeco_org?$select=id');
-    if (personal && personal.id) tries.push(String(personal.id));
-  } catch (_) { /* the mileage library site is the fallback */ }
-  try {
-    const known = await librarySiteId();
-    if (tries.indexOf(known) === -1) tries.push(known);
-  } catch (_) { /* the personal library may still contain the folder */ }
+  const tries = await candidateSiteIds();
   let last: unknown = null;
   for (let i = 0; i < tries.length; i++) {
     try {
