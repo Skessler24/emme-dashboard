@@ -174,6 +174,7 @@ function cellString(cell) {
     return String(value).trim();
 }
 async function mileageSiteId() {
+    await (0, providerSetup_1.resolveMileageRoot)();
     return (0, graphClient_1.siteHoldingFolder)(providerSetup_1.MILEAGE_ROOT, 'SharePoint is not configured for mileage.');
 }
 function drivePath(segments) {
@@ -265,6 +266,7 @@ function chooseWorkbook(files, staffName, email) {
     return ranked[0].name;
 }
 async function locateForm(staffName, email) {
+    await (0, providerSetup_1.resolveMileageRoot)();
     const found = await (0, providerSetup_1.findExistingProviderFile)(providerSetup_1.MILEAGE_ROOT, email, staffName, 'mileage');
     if (!found || !found.fileName)
         return null;

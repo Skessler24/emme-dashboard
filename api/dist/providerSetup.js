@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RS_OBSERVATION_ROOT = exports.SCHEDULE_ROOT = exports.MILEAGE_ROOT = void 0;
 exports.emmeEmail = emmeEmail;
 exports.providerMatchScore = providerMatchScore;
+exports.resolveMileageRoot = resolveMileageRoot;
 exports.findExistingProviderFile = findExistingProviderFile;
 exports.searchProviderLibraries = searchProviderLibraries;
 exports.listObservationProcess = listObservationProcess;
@@ -54,7 +55,31 @@ function providerMatchScore(candidate, staffName, email) {
         return 90;
     return 0;
 }
+/**
+ * When the MILEAGE_FOLDER_URL setting holds a sharing link to the Mileage folder, the folder's real place is
+ * read from SharePoint and used in place of the fixed path above. The answer is kept for ten minutes.
+ */
+let mileageResolvedAt = 0;
+async function resolveMileageRoot() {
+    const url = String(process.env.MILEAGE_FOLDER_URL || '').trim();
+    if (!url || !(0, graphClient_1.graphIsConfigured)() || Date.now() - mileageResolvedAt < 10 * 60 * 1000)
+        return exports.MILEAGE_ROOT;
+    try {
+        const id = 'u!' + Buffer.from(url, 'utf8').toString('base64').replace(/=+$/g, '').replace(/\//g, '_').replace(/\+/g, '-');
+        const item = await (0, graphClient_1.graphGet)('/shares/' + encodeURIComponent(id) + '/driveItem?$select=name,parentReference');
+        const parent = String((item && item.parentReference && item.parentReference.path) || '');
+        const match = parent.match(/root:(.*)$/);
+        if (match && item && item.name) {
+            const segments = match[1].split('/').filter(Boolean).map(function (part) { return decodeURIComponent(part); }).concat([String(item.name)]);
+            exports.MILEAGE_ROOT.splice(0, exports.MILEAGE_ROOT.length, ...segments);
+            mileageResolvedAt = Date.now();
+        }
+    }
+    catch (_) { /* keep the folder path that is already set */ }
+    return exports.MILEAGE_ROOT;
+}
 async function librarySiteId() {
+    await resolveMileageRoot();
     return (0, graphClient_1.siteHoldingFolder)(exports.MILEAGE_ROOT, 'SharePoint is not configured.');
 }
 function drivePath(segments) {
@@ -159,6 +184,7 @@ async function searchProviderLibraries(email, displayName) {
         name = await (0, graphClient_1.getUserDisplayName)(providerEmail);
     if (!name)
         name = providerEmail;
+    await resolveMileageRoot();
     const mileage = await findExistingProviderFile(exports.MILEAGE_ROOT, providerEmail, name, 'mileage');
     const schedule = await findExistingProviderFile(exports.SCHEDULE_ROOT, providerEmail, name, 'schedule');
     return { email: providerEmail, name, mileage, schedule };

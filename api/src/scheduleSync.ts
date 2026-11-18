@@ -87,6 +87,19 @@ function dropLocation(email: string): void {
   locationCache.delete(email.toLowerCase());
 }
 
+function hasRows(days: SheetDays): boolean {
+  return Object.keys(days || {}).some(function (key) { return (days[key] || []).length > 0; });
+}
+
+/**
+ * When the workbook is somewhere else than last time (the folder was moved, or a different file was found),
+ * what was remembered about the old file no longer applies. The next sync treats it as a first contact.
+ */
+function forgetOldFile(meta: SyncMeta, location: LocatedSchedule): SyncMeta {
+  if (!meta.location || meta.location.path === location.path) return meta;
+  return { location, syncedAt: meta.syncedAt };
+}
+
 function fileSegments(location: LocatedSchedule): string[] {
   return location.segments.concat([location.fileName]);
 }
@@ -101,6 +114,7 @@ export async function pullSchedule(workspace: Workspace, email: string, meta: Sy
   try {
     const location = await findLocation(email, meta);
     if (!location) return { status: 'no-file', meta };
+    meta = forgetOldFile(meta, location);
     const segments = fileSegments(location);
     const info = await scheduleItemInfo(segments);
     if (!info) {
@@ -117,6 +131,17 @@ export async function pullSchedule(workspace: Workspace, email: string, meta: Sy
     if (!meta.baseDays) {
       // First contact. The dashboard is the source of truth, so the workbook is overwritten on the next push.
       const mine = exportedDays(workspace);
+      if (!hasRows(mine) && hasRows(sheetDays)) {
+        // Unless the dashboard has nothing yet: then the workbook's schedule is brought in, never wiped.
+        const withIds: SheetDays = {};
+        Object.keys(sheetDays).forEach(function (key) {
+          withIds[key] = sheetDays[key].map(function (row) { return Object.assign({}, row, { id: newId() }); });
+        });
+        nextMeta.baseDays = withIds;
+        nextMeta.eTag = info.eTag;
+        nextMeta.syncedAt = new Date().toISOString();
+        return { status: 'imported', meta: nextMeta, workspace: applyDaysToWorkspace(workspace, withIds, newId) };
+      }
       const base: SheetDays = {};
       Object.keys(sheetDays).forEach(function (key) {
         base[key] = alignRows(mine[key] || [], sheetDays[key], newId);
@@ -156,6 +181,7 @@ export async function pushSchedule(workspace: Workspace, email: string, meta: Sy
     if (!location) {
       return { ok: false, meta, error: 'No existing schedule folder for ' + email + '. Nothing new was created.' };
     }
+    meta = forgetOldFile(meta, location);
     const segments = fileSegments(location);
     const info = await scheduleItemInfo(segments);
     if (!info) {
@@ -172,6 +198,10 @@ export async function pushSchedule(workspace: Workspace, email: string, meta: Sy
 
     const current = await readScheduleBytes(segments);
     if (!current) return { ok: false, meta, error: 'The schedule file could not be read.' };
+    if (!meta.baseDays && !hasRows(desired) && hasRows(await readScheduleDays(current))) {
+      // An empty dashboard never blanks a workbook that has a schedule in it.
+      return { ok: true, unchanged: true, path: location.path, meta: nextMeta };
+    }
     const next = await applyScheduleWorkbook(current, workspace);
     let saved;
     try {

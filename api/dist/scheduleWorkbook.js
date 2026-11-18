@@ -686,6 +686,15 @@ function applyDaysToWorkspace(workspace, days, makeId) {
     });
     return copy;
 }
+/** True when a row holds anything outside the four table columns (a side note, for example). */
+function rowHasOtherContent(row) {
+    let found = false;
+    row.eachCell({ includeEmpty: false }, function (cell, col) {
+        if (col > 4 && cellPlain(cell) !== '')
+            found = true;
+    });
+    return found || [1, 2, 3, 4].some(function (col) { return cellPlain(row.getCell(col)) !== ''; });
+}
 function lastUsedRow(sheet) {
     let last = 0;
     const max = sheet.rowCount || 0;
@@ -741,6 +750,15 @@ async function applyScheduleWorkbook(bytes, workspace) {
             row.getCell(2).value = null;
             row.getCell(3).value = null;
             row.getCell(4).value = null;
+        }
+        // Rows the dashboard no longer has are removed from the sheet, as long as nothing else sits on that row.
+        while (block.rows.length > want) {
+            const lastRow = block.rows[block.rows.length - 1];
+            if (rowHasOtherContent(sheet.getRow(lastRow)))
+                break;
+            sheet.spliceRows(lastRow, 1);
+            block.rows.pop();
+            added[b] -= 1;
         }
     }
     // insertRow moves cells but not tables or drop-downs, so put them back where the rows now are.

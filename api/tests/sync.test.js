@@ -251,3 +251,57 @@ test('a SharePoint write that fails is retried on the next sync check', async ()
   const after = (await call('GET', '')).body.workspace.boards[0].days[0].slots.map((s) => s.notes);
   assert.ok(after.includes('Client 12 saved while file was locked'), 'dashboard kept the edit');
 });
+
+test('a provider deleting clients removes those rows from the workbook, and the tables stay intact', async () => {
+  const current = (await call('GET', '')).body.workspace;
+  const before = await sheetDays();
+  const rowsBefore = (() => before.monday.length)();
+  const edited = JSON.parse(JSON.stringify(current));
+  const mon = edited.boards[0].days.find((d) => d.name === 'Monday');
+  const lengthBefore = mon.slots.filter((s) => s.time || s.status || s.notes).length;
+  mon.slots = mon.slots.filter((s) => !/^Client (1|2|3|4|5)$/.test(s.notes));
+  const removedCount = lengthBefore - mon.slots.filter((s) => s.time || s.status || s.notes).length;
+  assert.ok(removedCount >= 2, 'the test removes some clients: ' + removedCount);
+  const saved = await call('PUT', '', { workspace: edited, base: current });
+  assert.strictEqual(saved.body.sharePoint.ok, true, JSON.stringify(saved.body.sharePoint));
+  const after = await sheetDays();
+  assert.strictEqual(after.monday.length, rowsBefore - removedCount);
+  assert.ok(!after.monday.some((r) => /^Client (1|2|3|4|5)$/.test(r.notes)));
+  assert.ok(after.tuesday.length > 0 && after.friday.length > 0, 'the other days were not disturbed');
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(drive.bytes);
+  const sheet = wb.getWorksheet('Current Schedule');
+  Object.values(sheet.tables).forEach((t) => {
+    const ref = t.table.tableRef;
+    const header = Number(ref.split(':')[0].replace(/\D/g, ''));
+    assert.match(String(sheet.getRow(header).getCell(1).text), /Appointment Time/, 'table ' + t.table.name + ' sits on its header: ' + ref);
+  });
+  // Nothing is left as a gap inside Monday's table.
+  const monday = Object.values(sheet.tables).find((t) => /^Monday/.test(t.table.name));
+  const [from, to] = monday.table.tableRef.split(':').map((a) => Number(a.replace(/\D/g, '')));
+  for (let r = from + 1; r <= to; r++) assert.ok([1, 2, 3].some((c) => String(sheet.getRow(r).getCell(c).text).trim()), 'row ' + r + ' is filled');
+  // And the dashboard reads the same schedule back.
+  const reread = (await call('GET', '')).body.workspace.boards[0].days.find((d) => d.name === 'Monday');
+  assert.ok(!reread.slots.some((s) => /^Client (1|2|3|4|5)$/.test(s.notes)));
+});
+
+test('an empty dashboard never blanks a workbook that already has a schedule', async () => {
+  const bytesBefore = Buffer.from(drive.bytes);
+  require('./fakes').blobs.clear();
+  const empty = { version: 1, boards: [board([day('dMon', 'Monday', []), day('dTue', 'Tuesday', [])])], clients: [], dxCodes: [] };
+  const saved = await call('PUT', '', { workspace: empty });
+  assert.strictEqual(saved.status, 200);
+  const days = await sheetDays();
+  assert.ok(days.monday.length > 10, 'the schedule in SharePoint is still there: ' + days.monday.length);
+  assert.ok(Buffer.compare(bytesBefore, Buffer.from(drive.bytes)) === 0 || days.monday.length > 10);
+});
+
+test('when the workbook has moved, what was remembered about the old file is dropped, not merged in', async () => {
+  const sync = require('../dist/scheduleSync.js');
+  const current = (await call('GET', '')).body.workspace;
+  const oldMeta = { location: { segments: ['old', 'place'], fileName: 'Old.xlsx', path: '/old/place/Old.xlsx' }, eTag: '"{999},1"', baseDays: { monday: [] } };
+  const pulled = await sync.pullSchedule(current, 'ndelgado@emmeco.org', oldMeta);
+  assert.strictEqual(pulled.status, 'unchanged', 'the dashboard stays as it is: ' + pulled.status + ' ' + (pulled.error || ''));
+  assert.notStrictEqual(pulled.meta.location.path, '/old/place/Old.xlsx');
+  assert.ok(pulled.meta.baseDays.monday.length > 10, 'the new file is the new starting point');
+});
