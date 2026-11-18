@@ -818,8 +818,23 @@ async function listScheduleOpenings() {
     const found = [];
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
-        if (!entry.isFolder)
+        if (!entry.isFolder) {
+            // Workbooks kept straight in the folder ("Kelly Schedule.xlsx"), not inside a provider folder.
+            if (!/\.xlsx$/i.test(entry.name) || entry.name.indexOf('~$') === 0)
+                continue;
+            const fileSegments = providerSetup_1.SCHEDULE_ROOT.concat([entry.name]);
+            const fileBytes = await readScheduleBytes(fileSegments);
+            if (!fileBytes)
+                continue;
+            const label = entry.name.replace(/\.xlsx$/i, '').replace(/\bschedule\b/gi, '').replace(/\s+/g, ' ').trim() || entry.name;
+            found.push({
+                staffName: label,
+                fileName: entry.name,
+                path: '/' + fileSegments.join('/'),
+                summary: await openingsFromWorkbook(fileBytes, label),
+            });
             continue;
+        }
         const inside = await listScheduleFolder(providerSetup_1.SCHEDULE_ROOT.concat([entry.name]));
         const fileName = chooseScheduleFile(inside, entry.name, '');
         if (!fileName)

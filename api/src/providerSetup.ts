@@ -59,6 +59,18 @@ export function providerMatchScore(candidate: string, staffName: string, email: 
   return 0;
 }
 
+/** Looser match for files named by first name ("Kelly Schedule.xlsx") or initials ("SB Schedule.xlsx"). */
+export function looseFileScore(candidate: string, staffName: string): number {
+  const label = labelOf(candidate);
+  const parts = normName(staffName).split(' ').filter(Boolean);
+  if (!label || !parts.length) return 0;
+  const first = parts[0];
+  const last = parts.length > 1 ? parts[parts.length - 1] : '';
+  if (label === first) return 85;
+  if (last && (label === first + last[0] || label === first[0] + last[0])) return 85;
+  return 0;
+}
+
 /**
  * When the MILEAGE_FOLDER_URL setting holds a sharing link to the Mileage folder, the folder's real place is
  * read from SharePoint and used in place of the fixed path above. The answer is kept for ten minutes.
@@ -159,17 +171,22 @@ export async function findExistingProviderFile(root: string[], email: string, di
     const segments = fileName ? root.concat([bestFolder, fileName]) : root.concat([bestFolder]);
     return { folder: bestFolder, fileName, path: '/' + segments.join('/'), matchedBy };
   }
-  const rootBooks = entries.filter(function (item) { return !item.isFolder; });
+  const rootBooks = entries.filter(function (item) { return !item.isFolder && /\.xlsx$/i.test(item.name) && item.name.indexOf('~$') !== 0; });
   let bestFile = '';
   let fileScore = 0;
+  let tied = false;
   rootBooks.forEach(function (item) {
-    const score = providerMatchScore(item.name, displayName, providerEmail);
+    const score = Math.max(providerMatchScore(item.name, displayName, providerEmail), looseFileScore(item.name, displayName));
     if (score > fileScore) {
       fileScore = score;
       bestFile = item.name;
+      tied = false;
+    } else if (score === fileScore && score > 0) {
+      tied = true;
     }
   });
-  if (!bestFile || fileScore < 90 || !/\.xlsx$/i.test(bestFile)) return null;
+  // Files named only by first name ("Kelly Schedule.xlsx") count, but only when exactly one file fits.
+  if (!bestFile || fileScore < 85 || (fileScore < 90 && tied) || !/\.xlsx$/i.test(bestFile)) return null;
   return {
     folder: '',
     fileName: bestFile,
