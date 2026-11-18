@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RS_OBSERVATION_ROOT = exports.SCHEDULE_ROOT = exports.MILEAGE_ROOT = void 0;
 exports.emmeEmail = emmeEmail;
 exports.providerMatchScore = providerMatchScore;
+exports.looseFileScore = looseFileScore;
 exports.resolveMileageRoot = resolveMileageRoot;
 exports.findExistingProviderFile = findExistingProviderFile;
 exports.searchProviderLibraries = searchProviderLibraries;
@@ -53,6 +54,20 @@ function providerMatchScore(candidate, staffName, email) {
         return 95;
     if (code && folder === code)
         return 90;
+    return 0;
+}
+/** Looser match for files named by first name ("Kelly Schedule.xlsx") or initials ("SB Schedule.xlsx"). */
+function looseFileScore(candidate, staffName) {
+    const label = labelOf(candidate);
+    const parts = normName(staffName).split(' ').filter(Boolean);
+    if (!label || !parts.length)
+        return 0;
+    const first = parts[0];
+    const last = parts.length > 1 ? parts[parts.length - 1] : '';
+    if (label === first)
+        return 85;
+    if (last && (label === first + last[0] || label === first[0] + last[0]))
+        return 85;
     return 0;
 }
 /**
@@ -156,17 +171,23 @@ async function findExistingProviderFile(root, email, displayName, kind) {
         const segments = fileName ? root.concat([bestFolder, fileName]) : root.concat([bestFolder]);
         return { folder: bestFolder, fileName, path: '/' + segments.join('/'), matchedBy };
     }
-    const rootBooks = entries.filter(function (item) { return !item.isFolder; });
+    const rootBooks = entries.filter(function (item) { return !item.isFolder && /\.xlsx$/i.test(item.name) && item.name.indexOf('~$') !== 0; });
     let bestFile = '';
     let fileScore = 0;
+    let tied = false;
     rootBooks.forEach(function (item) {
-        const score = providerMatchScore(item.name, displayName, providerEmail);
+        const score = Math.max(providerMatchScore(item.name, displayName, providerEmail), looseFileScore(item.name, displayName));
         if (score > fileScore) {
             fileScore = score;
             bestFile = item.name;
+            tied = false;
+        }
+        else if (score === fileScore && score > 0) {
+            tied = true;
         }
     });
-    if (!bestFile || fileScore < 90 || !/\.xlsx$/i.test(bestFile))
+    // Files named only by first name ("Kelly Schedule.xlsx") count, but only when exactly one file fits.
+    if (!bestFile || fileScore < 85 || (fileScore < 90 && tied) || !/\.xlsx$/i.test(bestFile))
         return null;
     return {
         folder: '',
