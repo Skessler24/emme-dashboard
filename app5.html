@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -13,6 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script src="schedule-merge.js"></script>
+  <script src="client-import.js"></script>
   <style>
     :root {
       --green: #084339;
@@ -402,7 +403,7 @@
       <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Save the spreadsheet to your OneDrive">Spreadsheet</button>
       <button type="button" class="btn btn--ghost" id="js-pdf" title="Save a PDF to your OneDrive">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
-      <button type="button" class="btn btn--ghost" id="js-import" title="Import clients from a spreadsheet, PDF, Word doc, or text file">Import</button>
+      <button type="button" class="btn btn--ghost" id="js-import" title="Import clients from any spreadsheet, PDF, Word doc, web page, contact file, or text. It does not need rows and columns.">Import</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
       <a class="btn btn--yellow" href="index.html">← Dashboard</a>
     </div>
@@ -2310,8 +2311,10 @@
       if (!clientHasIdentity(client)) return;
       var nameKey = normalizePersonName(client.name);
       var emailKey = String(client.email || '').toLowerCase();
+      // Brothers and sisters often share one email, so two named people only match by name.
       var existing = state.workspace.clients.find(function (current) {
-        if (nameKey && normalizePersonName(current.name) === nameKey) return true;
+        var currentName = normalizePersonName(current.name);
+        if (nameKey && currentName) return nameKey === currentName;
         return emailKey && String(current.email || '').toLowerCase() === emailKey;
       });
       if (existing) {
@@ -2393,16 +2396,41 @@
       for (var pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         var page = await pdf.getPage(pageNum);
         var content = await page.getTextContent();
-        text += content.items.map(function (item) { return item.str + (item.hasEOL ? '\n' : ' '); }).join('');
+        // Lines are rebuilt from where each piece sits on the page, so printed web pages and tables read correctly.
+        text += EmmeClientImport.pdfItemsToText(content.items) + '\n';
+      }
+      if (text.replace(/\s+/g, '').length < 10) {
+        throw new Error(file.name + ' has no selectable text. It looks like a scan or a picture. Save the original as a PDF (not a photo) or paste the text into a .txt file.');
       }
       return { kind: 'text', text: text };
     }
-    if (/\.docx$/.test(name)) {
+    if (/\.docx$/.test(name) || /wordprocessingml/i.test(file.type || '')) {
       if (typeof mammoth === 'undefined') throw new Error('Word reader did not load. Save the document as PDF or CSV.');
       var result = await mammoth.extractRawText({ arrayBuffer: buffer });
       return { kind: 'text', text: result.value || '' };
     }
+    if (/\.(png|jpe?g|gif|bmp|webp|heic|tiff?)$/.test(name) || /^image\//i.test(file.type || '')) {
+      throw new Error(file.name + ' is a picture, and pictures cannot be read. Save the page as a PDF or copy the text into a .txt file.');
+    }
+    if (/\.vcf$/.test(name) || /vcard/i.test(file.type || '')) {
+      return { kind: 'vcard', text: decodeBuffer(buffer) };
+    }
     var decoded = decodeBuffer(buffer);
+    if (/\.(html?|xhtml|mht|mhtml)$/.test(name) || /html/i.test(file.type || '') || /^\s*(<!doctype html|<html)/i.test(decoded)) {
+      return { kind: 'text', text: EmmeClientImport.htmlToText(decoded) };
+    }
+    if (/\.rtf$/.test(name) || /^\s*\{\\rtf/.test(decoded)) {
+      return { kind: 'text', text: EmmeClientImport.rtfToText(decoded) };
+    }
+    // Older Word files (.doc) and other binary files: pull out whatever readable text is inside.
+    var odd = (decoded.match(/[\u0000-\u0008\u000e-\u001f\ufffd]/g) || []).length;
+    if (odd > decoded.length * 0.02) {
+      var latin = '';
+      var bytes = new Uint8Array(buffer);
+      for (var b = 0; b < bytes.length; b++) latin += String.fromCharCode(bytes[b]);
+      var runs = (latin.match(/[\x20-\x7e\t]{4,}/g) || []).concat(decodeBuffer(buffer).match(/[\x20-\x7e\t]{4,}/g) || []);
+      return { kind: 'text', text: runs.join('\n') };
+    }
     return { kind: 'text', text: decoded };
   }
 
@@ -2410,8 +2438,20 @@
     var extracted = await textFromFile(file);
     if (extracted.kind === 'matrix') {
       var fromSheet = clientsFromMatrix(extracted.rows);
-      if (!fromSheet.length) throw new Error('No client columns found in ' + file.name);
+      if (!fromSheet.length) {
+        // No headings: read the cells like plain text, one row per line.
+        fromSheet = EmmeClientImport.clientsFromFreeText(extracted.rows.map(function (row) {
+          return row.map(function (cell) { return String(cell == null ? '' : cell).trim(); }).filter(Boolean).join('\t');
+        }).join('\n'));
+      }
+      if (!fromSheet.length) throw new Error('Could not find client names, emails, or phones in ' + file.name);
       applyImport('clients', fromSheet);
+      return;
+    }
+    if (extracted.kind === 'vcard') {
+      var fromCards = EmmeClientImport.clientsFromVcard(extracted.text);
+      if (!fromCards.length) throw new Error('No contacts found in ' + file.name);
+      applyImport('clients', fromCards);
       return;
     }
     var text = String(extracted.text || '').replace(/^\uFEFF/, '').trim();
@@ -2431,9 +2471,12 @@
       } catch (_) {}
     }
     var firstLine = text.split(/\n/).slice(0, 8).join('\n');
+    var fromTable = [];
     if ((firstLine.match(/[,;\t]/g) || []).length) {
-      var fromTable = clientsFromMatrix(parseDelimited(text));
-      if (fromTable.length) {
+      var matrix = parseDelimited(text);
+      fromTable = clientsFromMatrix(matrix);
+      // A table with real column headings is trusted. Anything else is read as loose text below, which is more accurate.
+      if (fromTable.length && matrix.some(function (row) { return headerScore(row) >= 4; })) {
         applyImport('clients', fromTable);
         return;
       }
@@ -2443,7 +2486,17 @@
       applyImport('clients', fromLabels);
       return;
     }
-    throw new Error('Could not find client names, emails, or phones in ' + file.name);
+    // No headings and no rows and columns: look for names, emails, phones and birth dates anywhere in the text.
+    var fromLoose = EmmeClientImport.clientsFromFreeText(text);
+    if (fromLoose.length) {
+      applyImport('clients', fromLoose);
+      return;
+    }
+    if (fromTable.length) {
+      applyImport('clients', fromTable);
+      return;
+    }
+    throw new Error('Could not find any client names, emails, or phones in ' + file.name);
   }
 
   document.getElementById('js-import').addEventListener('click', function () {
