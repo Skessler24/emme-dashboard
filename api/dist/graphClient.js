@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GraphError = void 0;
 exports.graphIsConfigured = graphIsConfigured;
+exports.resetGraphBreaker = resetGraphBreaker;
 exports.graphGet = graphGet;
 exports.graphGetBytes = graphGetBytes;
 exports.graphGetText = graphGetText;
@@ -29,6 +30,36 @@ exports.GraphError = GraphError;
 function graphIsConfigured() {
     return (0, config_1.graphConfigured)();
 }
+/**
+ * Every call to Microsoft goes through here. A call that takes too long is cut off,
+ * and after a call fails to connect, further calls fail at once for a short while.
+ * Without this, one slow or unreachable Microsoft service made every schedule save
+ * wait until the web host gave up, so nothing was saved.
+ */
+let graphDownUntil = 0;
+function graphTimeoutMs() {
+    return Number(process.env.GRAPH_TIMEOUT_MS) || 10000;
+}
+function graphPauseMs() {
+    const set = process.env.GRAPH_PAUSE_MS;
+    return set === undefined || set === '' ? 30000 : Number(set) || 0;
+}
+/** Forgets a recent connection failure. Used by tests. */
+function resetGraphBreaker() {
+    graphDownUntil = 0;
+}
+async function graphFetch(url, init) {
+    if (Date.now() < graphDownUntil) {
+        throw new GraphError(503, 'Microsoft 365 is not answering right now. It will be tried again shortly.');
+    }
+    try {
+        return await fetch(url, Object.assign({}, init || {}, { signal: AbortSignal.timeout(graphTimeoutMs()) }));
+    }
+    catch (_) {
+        graphDownUntil = Date.now() + graphPauseMs();
+        throw new GraphError(503, 'Microsoft 365 did not answer in time.');
+    }
+}
 async function appToken() {
     const cfg = (0, config_1.getConfig)();
     if (!cfg.graphClientSecret) {
@@ -42,7 +73,7 @@ async function appToken() {
         scope: 'https://graph.microsoft.com/.default',
         grant_type: 'client_credentials',
     });
-    const res = await fetch('https://login.microsoftonline.com/' + cfg.graphTenantId + '/oauth2/v2.0/token', {
+    const res = await graphFetch('https://login.microsoftonline.com/' + cfg.graphTenantId + '/oauth2/v2.0/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString(),
@@ -64,7 +95,7 @@ function toUrl(path) {
 }
 async function graphGet(path, extraHeaders) {
     const token = await appToken();
-    const res = await fetch(toUrl(path), {
+    const res = await graphFetch(toUrl(path), {
         headers: Object.assign({ Authorization: 'Bearer ' + token, Accept: 'application/json' }, extraHeaders || {}),
     });
     if (res.status === 204)
@@ -78,7 +109,7 @@ async function graphGet(path, extraHeaders) {
 }
 async function graphGetBytes(path) {
     const token = await appToken();
-    const res = await fetch(toUrl(path), {
+    const res = await graphFetch(toUrl(path), {
         headers: { Authorization: 'Bearer ' + token },
     });
     if (!res.ok) {
@@ -88,7 +119,7 @@ async function graphGetBytes(path) {
 }
 async function graphGetText(path) {
     const token = await appToken();
-    const res = await fetch(toUrl(path), {
+    const res = await graphFetch(toUrl(path), {
         headers: { Authorization: 'Bearer ' + token },
     });
     if (!res.ok) {
@@ -110,7 +141,7 @@ async function graphSend(path, options) {
         headers['Content-Type'] = 'application/json';
         body = JSON.stringify(options.jsonBody);
     }
-    const res = await fetch(toUrl(path), { method: options.method, headers, body });
+    const res = await graphFetch(toUrl(path), { method: options.method, headers, body });
     if (res.status === 204)
         return null;
     const text = await res.text();

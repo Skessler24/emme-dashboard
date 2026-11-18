@@ -200,6 +200,17 @@ function withLock(key, fn) {
   return run;
 }
 
+const EXTRAS_DEADLINE_MS = Number(process.env.SCHEDULE_EXTRAS_DEADLINE_MS) || 12000;
+
+/** Waits for `work`, but no longer than the deadline. If it runs late, onLate records that and the save moves on. */
+function withDeadline(work, onLate) {
+  let timer = null;
+  const late = new Promise(function (resolve) {
+    timer = setTimeout(function () { onLate(); resolve(); }, EXTRAS_DEADLINE_MS);
+  });
+  return Promise.race([work, late]).then(function () { clearTimeout(timer); });
+}
+
 function loadSyncModule() {
   try {
     return require('../dist/scheduleSync');
@@ -428,7 +439,8 @@ module.exports = async function (context, req) {
     if (method === 'GET' && rest === 'meta') {
       const workspace = await withLock(lockKey, async function () {
         const loaded = await loadForProvider();
-        return pullAndReconcile(loaded, false);
+        // SharePoint is only a copy. If it cannot be reached, the saved schedule is still the answer.
+        try { return await pullAndReconcile(loaded, false); } catch (_) { return loaded; }
       });
       json(context, 200, {
         configured: true,
@@ -441,11 +453,16 @@ module.exports = async function (context, req) {
     if (method === 'GET') {
       const workspace = await withLock(lockKey, async function () {
         const loaded = await loadForProvider();
-        if (!(loaded.boards || []).length) {
-          const fromSheet = await bootstrapFromSharePoint();
-          if (fromSheet) return fromSheet;
+        // SharePoint is only a copy. If it cannot be reached, the saved schedule is still the answer.
+        try {
+          if (!(loaded.boards || []).length) {
+            const fromSheet = await bootstrapFromSharePoint();
+            if (fromSheet) return fromSheet;
+          }
+          return await pullAndReconcile(loaded, true);
+        } catch (_) {
+          return loaded;
         }
-        return pullAndReconcile(loaded, true);
       });
       json(context, 200, { configured: true, workspace: workspace, owner: ownerEmail });
       return;
@@ -460,9 +477,11 @@ module.exports = async function (context, req) {
       const incoming = body.workspace || body;
       const baseCopy = body.base && typeof body.base === 'object' ? body.base : null;
       const outcome = await withLock(lockKey, async function () {
+        // The provider's schedule is saved first, from what is already stored. SharePoint
+        // comes after and is only a copy, so it can be slow, down, or wrong without ever
+        // stopping a provider from saving.
         const hasStored = await personal.exists();
-        let current = hasStored ? await loadForProvider() : null;
-        if (current) current = (await pullFromSharePoint(current, true)).workspace;
+        const current = hasStored ? await loadForProvider() : null;
 
         let workspace = normalizeWorkspace(incoming);
         let merged = false;
@@ -475,23 +494,37 @@ module.exports = async function (context, req) {
         workspace.version = (current ? Number(current.version) || 0 : 0) + 1;
         await writeWorkspace(personal, workspace, ownerEmail);
 
-        const pushed = await pushToSharePoint(workspace);
-        workspace = pushed.workspace;
-        return { workspace: workspace, merged: merged, sharePoint: pushed.result };
+        let sharePoint = { ok: false, skipped: true };
+        try {
+          // Pick up anything an administrator changed in the workbook, then write this save to it.
+          if (hasStored) {
+            const pulled = await pullFromSharePoint(workspace, true);
+            workspace = pulled.workspace;
+            if (pulled.status === 'imported') merged = true;
+          }
+          const pushed = await pushToSharePoint(workspace);
+          workspace = pushed.workspace;
+          sharePoint = pushed.result;
+        } catch (err) {
+          sharePoint = { ok: false, error: String((err && err.message) || 'SharePoint update failed').slice(0, 200) };
+        }
+        return { workspace: workspace, merged: merged, sharePoint: sharePoint };
       });
       const workspace = outcome.workspace;
       let mileage = { ok: false, skipped: true };
       let oneDrive = { ok: false, skipped: true };
+      // The mileage workbook and the OneDrive copy are extras too. Each gets a time limit,
+      // so a slow one is reported as not done instead of making the save wait.
       await Promise.all([
-        (async function () {
+        withDeadline((async function () {
           try {
             const mileageBook = require('../dist/mileageWorkbook');
             mileage = await mileageBook.syncMileageWorkbook(workspace, ownerEmail);
           } catch (err) {
             mileage = { ok: false, error: String((err && err.message) || 'Mileage update failed').slice(0, 200) };
           }
-        })(),
-        (async function () {
+        })(), function () { mileage = { ok: false, error: 'The mileage workbook did not answer in time.' }; }),
+        withDeadline((async function () {
           try {
             const drive = require('../microsoft/oneDrive');
             oneDrive = await drive.saveProviderFile(
@@ -503,7 +536,7 @@ module.exports = async function (context, req) {
           } catch (err) {
             oneDrive = { ok: false, error: String((err && err.message) || 'OneDrive save failed').slice(0, 220) };
           }
-        })()
+        })(), function () { oneDrive = { ok: false, error: 'OneDrive did not answer in time.' }; })
       ]);
       json(context, 200, {
         configured: true,

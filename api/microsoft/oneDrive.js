@@ -9,6 +9,12 @@ const MAX_BYTES = 4 * 1024 * 1024;
 
 let tokenCache = { value: '', expires: 0 };
 
+/** A call to Microsoft that takes too long is cut off, so a slow OneDrive can never hold up a schedule save. */
+function timedFetch(url, init) {
+  const limit = Number(process.env.GRAPH_TIMEOUT_MS) || 10000;
+  return fetch(url, Object.assign({}, init || {}, { signal: AbortSignal.timeout(limit) }));
+}
+
 function emmeEmail(value) {
   const email = String(value || '').trim().toLowerCase();
   return /@emmeco\.org$/.test(email) ? email : '';
@@ -35,7 +41,7 @@ async function appToken() {
     scope: 'https://graph.microsoft.com/.default',
     grant_type: 'client_credentials'
   });
-  const res = await fetch('https://login.microsoftonline.com/' + tenant + '/oauth2/v2.0/token', {
+  const res = await timedFetch('https://login.microsoftonline.com/' + tenant + '/oauth2/v2.0/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString()
@@ -62,13 +68,13 @@ async function graphError(res) {
 
 async function ensureFolder(token, email) {
   const headers = { Authorization: 'Bearer ' + token };
-  const existing = await fetch(
+  const existing = await timedFetch(
     'https://graph.microsoft.com/v1.0/users/' + encodeURIComponent(email) + '/drive/root:/' + encodeURIComponent(FOLDER),
     { headers: headers }
   );
   if (existing.ok) return;
   if (existing.status !== 404) throw new Error(await graphError(existing));
-  const created = await fetch(
+  const created = await timedFetch(
     'https://graph.microsoft.com/v1.0/users/' + encodeURIComponent(email) + '/drive/root/children',
     {
       method: 'POST',
@@ -96,7 +102,7 @@ async function saveProviderFile(email, fileName, bytes, contentType) {
   const token = await appToken();
   await ensureFolder(token, provider);
   const path = '/users/' + encodeURIComponent(provider) + '/drive/root:/' + encodeURIComponent(FOLDER) + '/' + encodeURIComponent(name) + ':/content';
-  const res = await fetch('https://graph.microsoft.com/v1.0' + path, {
+  const res = await timedFetch('https://graph.microsoft.com/v1.0' + path, {
     method: 'PUT',
     headers: {
       Authorization: 'Bearer ' + token,

@@ -711,6 +711,17 @@
     return { configured: true, workspace: data.workspace };
   }
 
+  /** A brief hiccup when the page opens should not turn off saving to the server for the whole visit, so try a few times. */
+  async function loadCloudWithRetry() {
+    var waits = [0, 1500, 4000];
+    var lastError = null;
+    for (var i = 0; i < waits.length; i++) {
+      if (waits[i]) await new Promise(function (resolve) { setTimeout(resolve, waits[i]); });
+      try { return await loadCloud(); } catch (err) { lastError = err; }
+    }
+    throw lastError;
+  }
+
   async function saveCloud(workspace, base) {
     var res = await fetch('/api/schedule', {
       method: 'PUT',
@@ -2467,7 +2478,7 @@
     setSyncLabel('Connecting…', 'local');
     var local = loadLocal();
     try {
-      var cloud = await loadCloud();
+      var cloud = await loadCloudWithRetry();
       if (cloud.configured) {
         state.cloudConfigured = true;
         if (cloud.workspace && cloud.workspace.ownerEmail && cloud.workspace.ownerEmail !== currentEmail) {
