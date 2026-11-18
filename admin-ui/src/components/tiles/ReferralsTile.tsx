@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
+import { TileWithSetup } from '../setup/TileSetup';
 
-export function ReferralsTile() {
+function ReferralsOverview() {
   const [rows, setRows] = useState<Row[]>([]);
   const [error, setError] = useState('');
   const [referrerName, setReferrerName] = useState('');
@@ -59,5 +60,13 @@ export function ReferralsTile() {
         ]}
       />
     </section>
+  );
+}
+
+export function ReferralsTile() {
+  return (
+    <TileWithSetup hashId="referrals" tileId="referrals" label="Referrals">
+      <ReferralsOverview />
+    </TileWithSetup>
   );
 }

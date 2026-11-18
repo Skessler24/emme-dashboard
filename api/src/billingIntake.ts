@@ -30,7 +30,7 @@ export const MAX_FILES = 100;
 const MAX_SOURCES = 40;
 const MAX_TEXT = 6000;
 
-const FILE_TYPES: Record<string, string> = {
+export const FILE_TYPES: Record<string, string> = {
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   xlsm: 'application/vnd.ms-excel.sheet.macroEnabled.12',
   xls: 'application/vnd.ms-excel',
@@ -45,7 +45,7 @@ const FILE_TYPES: Record<string, string> = {
 };
 
 /** Billing setup holds sensitive notes, so only a signed-in human administrator may use it (the automation key is not enough). */
-async function requireHumanAdmin(context: FnContext, req: HttpRequest): Promise<{ email: string; name: string } | null> {
+export async function requireHumanAdmin(context: FnContext, req: HttpRequest): Promise<{ email: string; name: string } | null> {
   const principal = readPrincipal(req);
   if (!principal || !principal.email) {
     json(context, 401, { error: 'Sign in required' });
@@ -63,7 +63,7 @@ async function requireHumanAdmin(context: FnContext, req: HttpRequest): Promise<
   return { email: principal.email, name: principal.name };
 }
 
-function cleanAnswers(raw: unknown, questions: Question[]): Record<string, Answer> {
+export function cleanAnswers(raw: unknown, questions: Question[]): Record<string, Answer> {
   const out: Record<string, Answer> = {};
   const source = raw && typeof raw === 'object' ? raw as Record<string, any> : {};
   questions.forEach(function (question) {
@@ -108,7 +108,7 @@ export function safeFileName(name: string): string {
   return cleaned || 'file';
 }
 
-function extensionOf(name: string): string {
+export function extensionOf(name: string): string {
   const dot = name.lastIndexOf('.');
   return dot === -1 ? '' : name.slice(dot + 1).toLowerCase();
 }
@@ -202,7 +202,7 @@ async function upload(context: FnContext, req: HttpRequest, who: { email: string
   json(context, 200, { ok: true, file });
 }
 
-function contentDisposition(name: string): string {
+export function contentDisposition(name: string): string {
   return 'attachment; filename="' + name.replace(/"/g, '') + '"; filename*=UTF-8\'\'' + encodeURIComponent(name);
 }
 

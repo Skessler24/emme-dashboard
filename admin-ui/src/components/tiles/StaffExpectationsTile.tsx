@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
+import { TileWithSetup } from '../setup/TileSetup';
 
 type SummaryFile = {
   employee: string;
@@ -12,7 +13,7 @@ type SummaryFile = {
   };
 };
 
-export function StaffExpectationsTile() {
+function StaffExpectationsOverview() {
   const [openings, setOpenings] = useState<Row[]>([]);
   const [mileage, setMileage] = useState<Row[]>([]);
   const [cancellations, setCancellations] = useState<Row[]>([]);
@@ -127,5 +128,13 @@ export function StaffExpectationsTile() {
       <p className="muted">Weekly counts of open notes, evals, and reports. Note text stays in IntakeQ.</p>
       <DataTable rows={compliance} empty="No weekly documentation summary yet." columns={[{ key: 'StaffName', label: 'Staff' }, { key: 'WeekOf', label: 'Week' }, { key: 'OpenNotes', label: 'Open notes' }, { key: 'OpenEvals', label: 'Open evals' }, { key: 'OpenReports', label: 'Open reports' }]} />
     </section>
+  );
+}
+
+export function StaffExpectationsTile() {
+  return (
+    <TileWithSetup hashId="expectations" tileId="staff-expectations" label="Staff Expectations">
+      <StaffExpectationsOverview />
+    </TileWithSetup>
   );
 }

@@ -445,3 +445,12 @@ th { color: var(--color-green); font-size: 0.78rem; letter-spacing: 0.02em; back
   /* On a phone the message bubble sits in the bottom corner so it never covers the announcement. */
   .ask-float { right: 0.75rem; top: auto; bottom: 1rem; flex-direction: column-reverse; }
 }
+
+.btn:disabled { opacity: 0.6; cursor: default; }
+
+.setup-note {
+  background: #eaf4ea;
+  border: 1px solid var(--color-green);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.8rem;
+}
