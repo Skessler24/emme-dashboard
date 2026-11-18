@@ -845,6 +845,11 @@
           saveLocal(state.workspace);
           if (changedByOthers) renderKeepingFocus();
           setSyncLabel(savedPlace(result), 'live');
+          var spError = result.sharePoint && result.sharePoint.error && !result.sharePoint.skipped ? String(result.sharePoint.error) : '';
+          document.getElementById('js-sync-pill').title = spError
+            ? 'Your schedule is saved. The SharePoint copy could not be updated: ' + spError
+            : 'Sync status';
+          if (spError && window.console) console.warn('SharePoint copy not updated:', spError);
         } else {
           state.cloudConfigured = false;
           setSyncLabel('Saved on this device', 'local');
