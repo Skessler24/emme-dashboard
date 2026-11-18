@@ -1,0 +1,4862 @@
+{
+"source": "EI Colorado Established Conditions list",
+"conditions": [
+{
+"name": "10q22.3q23.2 microdeletion",
+"established": true,
+"reviewed": "2026-03-10"
+},
+{
+"name": "15q11.2 Deletion",
+"established": true,
+"details": "15q11.2 Deletion or Microdeletion",
+"reviewed": "2025-02-06"
+},
+{
+"name": "16p11.2 Deletion",
+"established": true,
+"details": "AKA Partial Deletion of Chromosome 16p",
+"reviewed": "2020-12-09"
+},
+{
+"name": "1p36 Deletion",
+"established": true,
+"details": "Chromosome 1p36 Deletion Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "1q21.1 microdeletion",
+"established": true,
+"reviewed": "2023-05-31"
+},
+{
+"name": "22q11 Deletion",
+"established": true,
+"details": "AKA DiGeorge, Velocardiofacial, Deletion 22Q Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "2q31-2q36 duplication",
+"established": true,
+"reviewed": "2023-06-30"
+},
+{
+"name": "2q31.1 microdeletion syndrome",
+"established": true,
+"reviewed": "2026-03-12"
+},
+{
+"name": "3-Methylcrotonyl-Coenzyme A (CoA) Carboxylase Deficiency",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "3rd Nerve Palsy",
+"established": false,
+"details": "(aka: Third Nerve Palsy; Third Cranial Nerve Palsy; 3rd Cranial NervePalsy; Oculomotor Palsy; Oculomotor Nerve Palsy; Cranial Nerve III Palsy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "4p- (Wolf Hirschhorn)",
+"established": true,
+"details": "AKA Wolf-Hirchhorn Synd",
+"reviewed": "2020-12-09"
+},
+{
+"name": "5p duplication syndrome",
+"established": true,
+"details": "Chromosome 5p duplication",
+"reviewed": "2022-08-17"
+},
+{
+"name": "5p- (Cri du Chat)",
+"established": true,
+"details": "Deletion 5p Syndrome (aka: Cri du chat Syndrome; Chromosome 5p-syndrome; Cat's Cry Syndrome; Chromosome 5, Monosomy 5p; Chromosome 5p-Syndrome; Le Jeune Syndrome; Partial Deletion of the Short Arm of Chromosome 5 Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "6q terminal deletion syndrome",
+"established": true,
+"reviewed": "2019-04-02"
+},
+{
+"name": "6th Nerve Palsy",
+"established": false,
+"details": "(aka: Abducens palsy; Lateral rectus palsy; Cranial mononeuropathy VI)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "8p23.1 deletion",
+"established": true,
+"reviewed": "2026-09-08"
+},
+{
+"name": "8p23.1 duplication",
+"established": true,
+"reviewed": "2026-07-21"
+},
+{
+"name": "Aarskog-Scott Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Abnormal Neurological Exam at Discharge from NICU",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Absent Septum Pellucidum",
+"established": false,
+"details": "(aka: Absence Septum Pellucidum, Absent Cavum Septum Pellucidum)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Achondroplasia",
+"established": false,
+"details": "Achondroplasia Dwarfism",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Acid Sphingomyelinase Deficiency",
+"established": true,
+"details": "(AKA Niemann-Pick Disease A & B)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Acute Lymphoid Leukemia",
+"established": false,
+"details": "Acute Lymphoid Leukemia (aka: ALL; Leukemia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Adams Oliver Syndrome",
+"established": false,
+"details": "(aka: AOS; Absence Defect of Limbs, Scalp, and Skull; Congenital Scalp Defects with Distal Limb Reduction Anomalies; Aplasia Cutis Congenita with Terminal Transverse Limb Defects)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Adjustment Disorder",
+"established": true,
+"details": "DSM-5, ICD-10 Adjustment Disorder, Unspecified",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Adrenal Hyperplasia, Congenital",
+"established": false,
+"details": "AKA: 21 Hydroxylase Deficiency",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Adrenal Hypoplasia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Adrenoleukodystrophy",
+"established": false,
+"details": "Adrenoleukodystrophy (aka: ALD; AMN; X-ALD; Addison disease and cerebral sclerosis; Adrenomyeloneuropathy; Siemerling-creutzfeldt disease; Bronze schilder disease; Schilder Disease; Melanodermic Leukodystrophy; sudanophilic leukodystrophy; Pelizaeus Merz...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Agenesis of Corpus Callosum",
+"established": false,
+"details": "Agenesis of corpus callosum only",
+"reviewed": "2022-09-22"
+},
+{
+"name": "Agenesis of Corpus Callosum with somatic/CNS changes",
+"established": true,
+"details": "Agenesis of corpus callosum plus somatic/CNS changes; ACC with somatic/CNS changes",
+"reviewed": "2022-09-22"
+},
+{
+"name": "Aicardi Syndrome",
+"established": true,
+"details": "Aicardi Syndrome (aka: Agenesis of Corpus Callosum and Chorioretinal Abnormality; Agenesis of Corpus Callosum With Chorioretinitis Abnormality; Agenesis of Corpus Callosum With Infantile Spasms And Ocular Anomalies; Chorioretinal Anomalies with Agenesis of the Corpus Callosum; Callosal Agenesis and Ocular Abnormalities)",
+"reviewed": "2022-09-22"
+},
+{
+"name": "Alagille Syndrome",
+"established": false,
+"reviewed": "2024-06-20"
+},
+{
+"name": "Alcohol-Related Neurodevelopmental Disorder",
+"established": false,
+"details": "(aka: ARND; Fetal Alcohol Spectrum Disorder; FASD)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Alexander Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Alper Disease",
+"established": true,
+"details": "Alper Disease (aka: Alper's Diffuse Degeneration of Cerebral Gray Matter with Hepatic Cirrhosis; Alpers Progressive Infantile Poliodystrophy; Christensen's disease; Christensen-Krabbe disease; Diffuse Cerebral Degeneration in Infancy; Poliodystrophia Cerebri Progressiva; Progressive Cerebral Poliodystrophy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Alport Syndrome",
+"established": false,
+"details": "(aka: Hematuria-Nephropathy Deafness; Hemorrhagic Familial Nephritis; Hereditary Deafness and Nephropathy; Hereditary Nephritis With Sensory Deafness; Hereditary Nephritis and Nerve Deafness)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Alstrom Syndrome",
+"established": false,
+"details": "(aka: ALMS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Amniotic Band Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Andersen-Tawil Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Anemia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Anencephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Angelman Syndrome",
+"established": true,
+"details": "Angelman Syndrome (aka: AS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Anophthalmia, bilateral",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Anophthalmia, unilateral",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Anoxic Insult to Brain",
+"established": false,
+"details": "(aka anoxic brain injury)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Anterior Jaw Displacement",
+"established": false,
+"details": "(aka: mandibular enlargement; prognathism)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Anterior Segment Dysgenesis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Apert Syndrome",
+"established": true,
+"details": "Apert Syndrome (aka: ACS 1; ACS I; Acrocephalosyndactyly, Type I; Syndactylic Oxycephaly)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "APGAR score of five or less at five minutes",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Apraxia",
+"established": true,
+"reviewed": "2022-12-15"
+},
+{
+"name": "Arachnoid Cyst",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Argininosuccinic aciduria",
+"established": true,
+"details": "Argininosuccinic aciduria (aka: Arginino Succinase Deficiency; ASA Deficiency; Argininosuccinate Lyase Deficiency; ASL Deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Arnold-Chiari Malformation",
+"established": false,
+"details": "AKA: Chiari 1 malformation",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Arthrogryposis",
+"established": true,
+"details": "Arthrogryposis (aka: arthrogryposis multiplex congenita; AMC; multiple congenital contractures, Freeman Sheldon Syndrome, Gordon Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Asphyxia w brain damage",
+"established": true,
+"details": "Asphyxia",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Asthma",
+"established": false,
+"reviewed": "2022-11-07"
+},
+{
+"name": "Ataxia Telangiectasia",
+"established": true,
+"details": "Ataxia Telangiectasia (aka: AT; Cerebello-Oculocutaneous Telangiectasia; Immunodeficiency with Ataxia Telangiectasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Auditory Neuropathy",
+"established": false,
+"details": "(aka: Auditory neuropathy/auditory dyssynchrony; Auditory neuropathy/auditory dys-synchrony; AN/AD)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Aural Atresia, Bilateral or Unilateral",
+"established": false,
+"details": "(aka: congenital aural atresia; CAA)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Autism Spectrum Disorder",
+"established": true,
+"details": "Autism Spectrum Disorder (aka: Infantile Autism; Kanner Syndrome; Autisitc Disorder; Asperger Syndrome; Asperger's Disorder; Pervasive Developmental Disorder; PDD; Pervasive Developmental Disorder-Not Otherwise Specified; PDD-NOS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Baller Gerold Syndrome",
+"established": true,
+"details": "Baller Gerold Syndrome (aka: Craniosynostosis with Radial Defects, Craniosynostosis-Radial Aplasia Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Bannayan Riley Ruvalcaba",
+"established": true,
+"details": "Bannayan Riley Ruvalcaba (aka: Bannayan Riley Ruvalcaba Syndrome; BRRS, Bannayan-Zonana syndrome (BZS); Macrocephaly, multiple lipomas, and hemangiomata; Macrocephaly, pseudopapilledema, and multiple hemangiomata; Riley-Smith syndrome; Ruvalcaba-Myhre-Smith syndrome; RMSS; Ruvalcaba Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Baraitser-Winter Syndrome",
+"established": true,
+"reviewed": "2025-02-14"
+},
+{
+"name": "Bardet-Biedl Syndrome",
+"established": true,
+"details": "Biedl-Bardet Syndrome; Laurence Moon-Biedl",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Bartter's Syndrome",
+"established": true,
+"details": "(aka: Hypokalemic Alkalosis with Hypercalciuria)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Beals Syndrome",
+"established": false,
+"details": "(aka: Beals-Hecht Syndrome; Arachnodactyly, Contractural Beals Type; Contractural Arachnodactyly, Congenital; CCA)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Beckwith Wiedemann Syndrome",
+"established": false,
+"details": "(aka: BWS; Beckwith-Syndrome;Exomphalos-Macroglossia-Gigantism Syndrome; EMG Syndrome; Hypoglycemia with Macroglossia; Macroglossia-Omphalocele-Visceromegaly Syndrome; Omphalocele-Visceromegaly-Macroglossia Syndrome; Visceromegaly-Umbilical Hernia-Macrog...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Benign Enlargement of the Subarachnoid Space in infancy (aka: BESS)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Benign Hereditary Chorea",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Biliary Atresia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Bjornstad Syndrome",
+"established": false,
+"details": "(aka: Deafness and Pili Torti, Bjornstad Type; Pili Torti and Nerve Deafness; Pili Torti-Sensorineural Hearing Loss)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Blue Diaper Syndrome",
+"established": false,
+"details": "(aka: Drummond's Syndrome: Hypercalcemia, Familial, with Nephrocalcinosis and Indicanuria)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Borjeson Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Bowen Hutterite Syndrome",
+"established": false,
+"details": "(aka:Bowen-Conradi Hutterite Syndrome, Bowen-Conradi Syndrome, Hutterite Syndrome, Bowen-Conradi Type)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Brachial Plexus Palsy",
+"established": false,
+"details": "(aka: Duchenne's Paralysis, Duchenne-Erb Paralysis, Duchenne-Erb Syndrome, Erb's Paralysis, Erb-Duchenne Palsy, Erb-Duchenne Paralysis, Upper Brachial Plexus Palsy, Erb-Duchenne Type, or Upper Brachial Plexus Paralysis, Erb-Duchenne Type; Brachial Plexus...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Brain Tumor",
+"established": true,
+"details": "Brain Tumor (aka: brain cancer; brain teratoma; glioma; astrocytoma; glioblastoma multiforme; ependymoma; oligodendroglioma; medulloblastoma; meningioma; Schwannoma; acoustic neuroma; craniopharyngioma; germ cell tumor of the brain; germinoma; pineal region tumor; frontal lobe tumor)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Branchio-oculo-facial Syndrome",
+"established": false,
+"details": "(aka:BOFS, Branchiooculofacial Syndrome, Hemangiomatous Branchial Clefts-Lip Pseudocleft Syndrome, Imperforate Nasolacrimal Duct, and Premature Aging Syndrome, Lip Pseudocleft-hemangiomatous Branchial Cyst Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Bronchopulmonary Dysplasia (BPD)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "C Syndrome",
+"established": true,
+"details": "C Syndrome (aka: Opitz Trigonocephaly Syndrome, Trigonocephaly \"C\" Syndrome, Trigonocephaly Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Carboxylase Deficiency, Multiple",
+"established": false,
+"details": "(aka: Biotinidase Deficiency, Carboxylase Deficiency, Multiple, Holocarboxylase Synthetase Deficiency, MCD)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cardiofaciocutaneous Syndrome",
+"established": true,
+"details": "Cardiofaciocutaneous syndrome (aka: CFC syndrome, Cardio-facial-cutaneous syndrome, Facio-cardio-cutaneous syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Carpenter Syndrome",
+"established": false,
+"details": "(aka: ACPS II, Acrocephalopolysyndactyly Type II)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cataracts, Congenital",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Catel-Manzke Syndrome",
+"established": false,
+"details": "(aka: Catel-Manzke Type Palatodigital Syndrome, Hyperphalangy-Clinodactyly of Index Finger with Pierre Robin Syndrome, Index Finger Anomaly with Pierre Robin Syndrome, Pierre Robin Syndrome with Hyperphalangy and Clinodactyly)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Caudal Regression Syndrome",
+"established": false,
+"details": "(aka: Caudal Dysplasia; Caudal Dysplasia Sequence; Sacral Agenesis, Congenital; Sacral Regression)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "CDK13-related disorder",
+"established": true,
+"details": "also known by the acronym CHDFIDD (Congenital Heart Defects, Dysmorphic Facial Features, and Intellectual Developmental Disorder)",
+"reviewed": "2026-06-16"
+},
+{
+"name": "CDKL5 deficiency disorder (CDD)",
+"established": true,
+"reviewed": "2026-09-23"
+},
+{
+"name": "Cerebellar agenesis",
+"established": true,
+"details": "Cerebellar Agenesis (aka: Cerebellar Aplasia; Cerebellar Hemiagenesis; Cerebellar Hypoplasia; Cerebellar Atrophy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebral Abscess",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebral atrophy",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebral Bleed",
+"established": true,
+"details": "(aka: intracerebral bleed, cerebral hemorrhage, intracerebral hemorrhage; parenchymal brain hemorrhage; periventricular hemorrhage) see Cerebral Bleed, Grade III & IV below (line 85), Intraventricular Hemorrhage (IVH) Grade I (line 357), or Intraventricular Hemorrhage, Grade II (line 358) for reference if needed",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebral Bleed, Grade III & IV",
+"established": true,
+"details": "(aka: intracerebral bleed, cerebral hemorrhage, intracerebral hemorrhage; parenchymal brain hemorrhage; periventricular hemorrhage), IVH Grade III, IVH Grade IV. See Cerebral Bleed above (line 84), Intraventricular Hemorrhage (IVH) Grade I (line 357), or Intraventricular Hemorrhage, Grade II (line 358) for reference if needed for reference if needed",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebral Dysgenesis",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebral Palsy",
+"established": true,
+"details": "Cerebral Palsy (aka: Ataxia Cerebral Palsy, Athetoid Cerebral Palsy, Congenital Cerebral Palsy, Diplegia of Cerebral Palsy, Hemiparesis of Cerebral Palsy, Hemiplegia of Cerebral Palsy, Hemiplegia, Hemiparesis, Postnatal Cerebral Palsy, Quadriparesis, Quadr...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebrocostomandibular Syndrome",
+"established": false,
+"details": "(aka: CCM Syndrome, CCMS, Rib Gap Defects with Micrognathia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cerebromalacia",
+"established": true,
+"details": "Cerebromalacia (aka: Encephalomalacia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "CHAMP 1",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chandler's Syndrome",
+"established": false,
+"details": "(aka: Dystrophia Endothelialis Cornea, Iris Atrophy with Corneal Edema and Glaucoma)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "CHD7",
+"established": true,
+"details": "aka: CHARGE syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Choanal Atresia (unilateral or bilateral)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Choroid Plexus Cyst",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 10, Monosomy 10p",
+"established": true,
+"details": "Chromosome 10, Monosomy 10p (aka: 10p Deletion Syndrome (Partial); Chromosome 10, 10p- Partial; Chromosome 10, Partial Deletion (short arm))",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 11, Partial Monosomy 11q",
+"established": true,
+"details": "Chromosome 11, Partial Monosomy 11q (aka: 11q- Syndrome; Partial, Deletion 11q Syndrome, Partial; Distal 11q Monosomy; Distal 11q- Syndrome; JBS; Jacobsen Syndrome; Monosomy 11q, Partial; Partial Monosomy of Long Arm of Chromosome 11)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 11, Partial Trisomy 11q",
+"established": true,
+"details": "Chromosome 11, Partial Trisomy 11q (aka: 11q Partial Trisomy, Chromosome 11; Partial Trisomy 11q13-qter, Chromosome 11; Partial Trisomy 11q21-qter;, Chromosome 11; Partial Trisomy 11q23-qter; Distal Trisomy 11q; Partial Trisomy 11q; Trisomy 11q, Partial)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 12 Deletion",
+"established": true,
+"details": "Chromosome 12 deletion",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 12 Partial Trisomy",
+"established": true,
+"details": "Partial Trisomy 12",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 13, Partl Monosomy 13q",
+"established": true,
+"details": "Chromosome 13, Partial Monosomy 13q (aka: 13q- Syndrome, Partial; Deletion 13q Syndrome, Partial; Monosomy 13q, Partial; Partial Monosomy of the Long Arm of Chromosome 13)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 14 Deletion",
+"established": true,
+"details": "Chromosome 14 deletion",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 14 Ring",
+"established": true,
+"details": "Chromosome 14 Ring (aka: Ring 14; Ring Chromosome 14; r14)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 14, Trisomy Mosaic",
+"established": true,
+"details": "Chromosome 14, Trisomy Mosaic (aka: Trisomy 14 Mosaic; Trisomy 14 Mosaicism Syndrome; Trisomy 14 Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 15 Ring",
+"established": true,
+"details": "Chromosome 15 Ring (aka: Ring 15; Ring 15 Chromosome; Ring 15 Chromosome (mosaic pattern); r15)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 15, Distal Trisomy 15q",
+"established": true,
+"details": "Chromosome 15, Distal Trisomy 15q (aka: Chromosome 15, Trisomy 15q2; Distal Duplication 15q; Partial Duplication 15q Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 15q11-q13 Dup",
+"established": true,
+"details": "Chromosome 15q11-q13 duplication (aka: Isodicentric 15; Inverted duplication 15)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 16 Duplication",
+"established": true,
+"details": "Chromosome 16 Duplication",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 17q12duplication",
+"established": true,
+"details": "Chromosome 17q12 Duplication",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 18 Ring",
+"established": true,
+"details": "Chromosome 18 Ring (aka: Ring 18; Ring Chromosome 18; r18)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 18, Tetrasomy 18p",
+"established": true,
+"details": "Chromosome 18, Tetrasomy 18p (aka: Tetrasomy, Short Arm of Chromosome 18)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 19p duplicaton",
+"established": true,
+"details": "Chromosome 19p duplicaton",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 19p13.11 deletion syndrome",
+"established": true,
+"details": "19p13.11 deletion syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 20q Trisomy",
+"established": true,
+"details": "Chromosome 20q Trisomy (aka: Chromosome 20q Duplication; Partial Trisomy 20q; Trisomy 20q11.2; Chromsome 20q11.2 Duplication; Trisomy 20)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 22 Ring",
+"established": true,
+"details": "Chromosome 22 Ring (aka: Ring 22; Ring 22, Chromosome; r22)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 22, Trisomy Mosaic",
+"established": true,
+"details": "Chromosome 22, Trisomy Mosaic (aka: Trisomy 22 Mosaic; Trisomy 22 Mosaicism Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 22q11.2 duplication",
+"established": true,
+"details": "Chromosome 22q11.2 duplication",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 2q32 Deletion",
+"established": true,
+"details": "Chromosome 2q32 deletion",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 3, Monsomy 3p2",
+"established": true,
+"details": "Chromosome 3, Monosomy 3p2 (aka: Chromosome 3, Deletion of Distal 3p; Chromosome 3, Distal 3p Monosomy; Monosomy 3p2; Partial Deletion of Chromosome 3)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 3, Trisomy 3q2",
+"established": true,
+"details": "Chromosome 3, Trisomy 3q2 (aka: Chromosome 3, Distal 3q2 Duplication; Chromosome 3, Distal 3q2 Trisomy; Partial Duplication 3q Syndrome; Partial Trisomy 3q Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 4 Ring",
+"established": true,
+"details": "Chromosome 4 Ring (aka: Ring 4; Ring 4, Chromosome; r4)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 4, Monosomy 4q",
+"established": true,
+"details": "Chromosome 4, Monosomy 4q (aka: Interstitial Deletion of 4q; Proximal Deletion of 4q;Terminal Deletion of 4q; Chromosome 4Q minus micro deletion)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 4, Monosomy Distal 4q",
+"established": true,
+"details": "Chromosome 4, Monosomy Distal 4q (aka: 4q Deletion Syndrome, Partial; Chromosome 4, 4q Terminal Deletion Syndrome; Chromosome 4, Partial Monosomy 4q; Del(4q) Syndrome, Partial; Distal 4q Monosomy; Distal 4q- Syndrome; Chromosome 4Q minus micro deletion)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 4, Partl Trsmy Distal 4q",
+"established": true,
+"details": "Chromosome 4, Partial Trisomy Distal 4q (aka: Chromosome 4, Partial Trisomy 4q (4q2 and 4q3); Chromosome 4, Partial Trisomy 4q (4q21-qter to 4q32-qter), Distal 4q Trisomy, Dup(4q) Syndrome; Partial Duplication 4q Syndrome; Partial Partial Trisomy 4q Syndrome; Duplication of 4q21.21 to 31.22 and 2q34)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 4, Trisomy 4p",
+"established": true,
+"details": "Chromosome 4, Trisomy 4p (aka: Chromosome 4 (Partial Trisomy 4p); Dup(4p) Syndrome; Duplication 4p Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 5, Trisomy 5p",
+"established": true,
+"details": "Chromosome 5, Trisomy 5p (aka: Chromosome 5, Trisomy 5p, (Complete (5p11-ter), Included); Chromosome 5, (Trisomy 5p, Partial, Included); Dup(5p) Syndrome; Duplication 5p Syndrome)",
+"reviewed": "2022-08-17"
+},
+{
+"name": "Chrom 6 Ring",
+"established": true,
+"details": "Chromosome 6 Ring (aka: Ring 6; Ring 6, Chromosome; r6)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 6, Partial Trisomy 6q",
+"established": true,
+"details": "Chromosome 6, Partial Trisomy 6q (aka: 6q+ Syndrome, Partial; Chromosome 6, Trisomy 6q2; Distal Duplication 6q; Distal Trisomy 6q; Duplication 6q, Partial; Trisomy 6q Syndrome, Partial; Trisomy 6q, Partial)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 6p Partl Monosomy",
+"established": true,
+"details": "Chromosome 6p, Partial Monosomy (aka Partial Deletion of Chromosome 6p)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 7, Partial Monosomy 7p",
+"established": true,
+"details": "Chromosome 7, Partial Monosomy 7p (aka: Chromosome 7, 7p Deletion Syndrome, Partial; Chromosome 7, Partial Deletion of Short Arm; Del(7p) Syndrome, Partial; Interstitial 7p Monosomy; Partial 7p Monosomy; Terminal 7p Monosomy; Terminal 7p Monosomy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 7p Partl Dup Syndrome",
+"established": true,
+"details": "Chromosome 7p Partial Duplication Syndrome (aka: 7p Duplication Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 7q Partl Monosomy",
+"established": true,
+"details": "Chromosome 7q Partial Monosomy (aka: Chromosome 7q Deletion; Chromosome 7q Partial Deletion; Chromosome 7q11.22 deletion; Chromosome 7q34-36.1 deletion; Monosomy Chromosome 7q; Partial Monosomy Chromosome 7q; Monosomy Chromosome 7q34-36.1)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 8, Monosomy 8p2",
+"established": true,
+"details": "Chromosome 8, Monosomy 8p2 (aka: 8p- Syndrome, Partial; Chromosome 8, 8p Deletion Syndrome, Partial Chromosome 8, Partial Deletion of Short Arm; Chromosome 8, Partial Monosomy 8p2; Del(8p) Syndrome, Partial; Distal 8p Monosomy; Partial 8p Monosomy; Terminal 8p- Syndrome (8p21 to 8p23-pter))",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 9 Ring",
+"established": true,
+"details": "Chromosome 9 Ring (aka: r9; Ring 9; Ring 9, Chromosome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 9, Complete Trisomy 9P",
+"established": true,
+"details": "Chromosome 9 Trisomy (aka: Complete Trisomy 9P; Partial Trisomy 9; Chromosome 9, Partial Trisomy 9P; Trisomy 9P Syndrome (Partial); Rethore Syndrome (obsolete); Duplication 9p Syndrome; Dup(9p) Syndrome; Chromosome 9, Trisomy 9pter-q11-13; Chromosome 9, Trisomy 9pter-q22-32)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 9, Tetrasomy 9p",
+"established": true,
+"details": "Chromosome 9, Tetrasomy 9p (aka: Chromosome 9, Tetrasomy 9p Mosaicism; Mosaic Tetrasomy 9p; Tetrasomy 9p; Tetrasomy, Short Arm of Chromosome 9)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 9, Trisomy Mosaic",
+"established": true,
+"details": "Chromosome 9, Trisomy Mosaic (aka: Trisomy 9 Mosaic; Trisomy 9 Mosaicism; Trisomy 9 Mosaicism Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom 9q Partl Monosomy",
+"established": true,
+"details": "Chromosome 9q Partial Monosomy",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chrom Xq26.2 duplication",
+"established": true,
+"details": "Chromosome Xq26.2 duplication (aka: duplication of the distal portion of the long arm of the X chromosome; chromosome X duplication; chromosome Xq duplication)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 10q25 deletion syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 10q26 deletion syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 12p duplication",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 17p13.1 and/or 17p13.2 microdeletion",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 17q11.2 deletion syndrome associated with 1.4 megabase deletion, NF1.",
+"established": true
+},
+{
+"name": "Chromosome 17q12 Deletion",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "chromosome 17q12 duplication",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 2q37 Deletion",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 5q minus syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 7q duplication",
+"established": true,
+"details": "aka 7q22.3-7q36.1 duplication",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome 8p inverted duplication/deletion syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome Xp deletion",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chromosome Xp22 duplication",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Chronic Ear Infections",
+"established": true,
+"details": "3 ear infections within 6 months, or more than 4 per year",
+"reviewed": "2022-09-01"
+},
+{
+"name": "Citrullinemia",
+"established": false,
+"details": "(aka: Citrullinuria)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cleft Lip",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cleft Palate",
+"established": true,
+"details": "Repaired or unrepaired cleft palate",
+"reviewed": "2020-12-09"
+},
+{
+"name": "CLIFAHDD",
+"established": true,
+"details": "congenital contractural arachnodactyly, intellectual disability, facial dysmorphism, and hypotonia describes a rare genetic syndrome, most specifically CLIFAHDD syndrome (Congenital Contractures of the Limbs and Face, Hypotonia, and Developmental Delay), which is caused by de novo mutations in the NALCN gene",
+"reviewed": "2025-10-23"
+},
+{
+"name": "Clinodactyly",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Clonus",
+"established": false,
+"details": "(aka Clonospasm)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Closed Head Injury",
+"established": true,
+"details": "Closed Head Injury with neuroradiological evidence of intracranial injury (e.g., subarachnoid hemorrhage, or intracranial hemorrhage, or swelling) (aka: Traumatic Brain Injury; TBI)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Club Foot (includes bilateral)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cockayne Syndrome",
+"established": true,
+"details": "(aka: CS; Deafness-Dwarfism-Retinal Atrophy; Dwarfism with Renal Atrophy and Deafness; Neill-Dingwall Syndrome; Progeroid Nanism). Cerebro Oculo Facio Skeletal Syndrome (aka: COFS Syndrome, Cerebrooculofacioskeletal Syndrome, Cockayne Syndrome type II, Pena Shokeir II Syndrome, Pena Shokeir Syndrome Type II)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Coffin Siris Syndrome (ARID1B, others)",
+"established": true,
+"details": "Coffin-Siris Synd",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Coffin-Lowry Syndrome (RPS6KA3)",
+"established": true,
+"details": "Coffin-Lowry Synd",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cogan Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cogan-Reese Syndrome",
+"established": false,
+"details": "(aka: ICE Syndrome, Cogan-Reese Type; Iridocorneal Endothelial (ICE) Syndrome, Cogan-Resse Type; Iris Naevus Syndrome; Iris Nevus Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cohen Syndrome",
+"established": true,
+"details": "Cohen Syndrome (aka: Pepper Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Coloboma",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Colpocephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Complex Congenital Heart Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Complicated Grief Disorder of Infancy/Early Childhood",
+"established": true,
+"details": "DSM-5 Other Specified Trauma- and Stressor- Related Disorder (Persistent Complex Bereavement Disorder) ICD -10Other Reactions to Severe Stress, Prolonged Bereavement/Grief Reaction",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cone Dystrophy",
+"established": false,
+"details": "(aka: Combined Cone-Rod Degeneration; Cone-Rod Degeneration; Cone-Rod Degeneration, Progressive; Cone-Rod Dystrophy; Retinal Cone Degeneration; Retinal Cone Dystrophy; Retinal Cone-Rod Dystrophy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cong/acquired absence of limb",
+"established": true,
+"details": "Congenital or acquired absence of limb (aka: severe limb deficiency; severe deficiency of extremity; severe form of Fibular Hemimelia; bilateral foot amputations at the ankle)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Congenital Glaucoma",
+"established": true,
+"details": "risk of blindess",
+"reviewed": "2022-11-07"
+},
+{
+"name": "Congenital Hypopituitarism and Congenital Disc Pigmentation syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Congenital Nystagmus",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Congenital Syphilis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Congenital Toxoplasmosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Congenital Vertical Talus",
+"established": false,
+"reviewed": "2023-12-21"
+},
+{
+"name": "Congestive Heart Failure",
+"established": false,
+"details": "(aka: CHF; Heart Failure)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Connexin 30 Gene Mutation",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Conradi-Hunermann Syndrome",
+"established": false,
+"details": "(aka: Chondrodysplasia Punctata, X-linked Dominant Type; Chondrodystrophia Calcificans Congenita; Conradi Disease; Dysplasia Epiphysialis Punctata)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Corneal Dystrophy",
+"established": true,
+"details": "Risk of blindness",
+"reviewed": "2022-11-07"
+},
+{
+"name": "Cornelia de Lange Syndrome",
+"established": true,
+"details": "Cornelia de Lange Syndrome (aka: BDLS; Brachmann-de Lange Syndrome; CdLS; de Lange Syndrome; NIPBL)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cortical Visual Impairment",
+"established": true,
+"details": "AKA Cortical Dysplasia; focal cortical dysplasia",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Costello Syndrome",
+"established": true,
+"details": "Costello Syndrome (aka: FCS Syndrome; Faciocutaneoskeletal Syndrome )",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Craniosynostosis without Radial Defects",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Crigler-Najjar Syndrome",
+"established": false,
+"details": "(aka: Bilirubin Glucuronosyltransferase Deficiency Type I; Congenital Familial Nonhemolytic Jaundice Type I; Uridine Diphosphate Glucuronosyltransferase, Severe Def. Type I)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Crouzon Syndrome",
+"established": false,
+"details": "aka: Craniofacial Dysotosis; Craniostenosis (Crouzon Type); Crouzon Craniofacial Dysostosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cystic Fibrosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Cytomegalovirus",
+"established": true,
+"details": "Cytomegalovirus (aka: CMV; Cytomegalic Inclusion Disease; Giant Cell Inclusion Disease (CID); Human Cytomegalovirus Infection; Salivary Gland Disease, CMV Type)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Dandy Walker Syndrome",
+"established": true,
+"details": "Dandy Walker Syndrome (aka: Dandy-Walker Cyst; Dandy-Walker Deformity; Hydrocephalus, Internal, Dandy-Walker Type; Hydrocephalus, Noncommunicating, Dandy-Walker Type; DWM; Luschka-Magendie Foramina Atresia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "DDX3X Gene Mutation",
+"established": true,
+"reviewed": "2023-04-05"
+},
+{
+"name": "De Barsy Syndrome",
+"established": true,
+"details": "De Barsy Syndrome (aka: Corneal Clouding-Cutis Laxa-Mental Retardation, Cutis Laxa-Growth Deficiency Syndrome; De Barsy-Moens-Diercks Syndrome; Progeroid Syndrome of De Barsy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "de novo heterozygous pathogenic variant in the HDAC4",
+"established": true,
+"details": "A de novo heterozygous pathogenic variant in the HDAC4 - Neurodevelopmental disorder with central hypotonia and dysmorphic facies"
+},
+{
+"name": "De Sanctis Cacchione Syndrome",
+"established": true,
+"details": "De Sanctis Cacchione Syndrome (aka: Xerodermic Idiocy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Dejerine Sottas Disease",
+"established": true,
+"details": "Dejerine Sottas Disease (aka: Hereditary Motor Sensory Neuropathy Type III; HSMN Type III; Hypertrophic Interstitial Neuritis; Hypertrophic Interstitial Neuropathy; Hypertrophic Interstitial Radiculoneuropathy, Onion-Bulb Neuropathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Deletion 18p Syndrome",
+"established": true,
+"details": "Deletion 18p Syndrome (aka: Chromosome 18, Monosomy 18p; 18p Deletion Syndrome; 18p- Syndrome; Del(18p) Syndrome; Monosomy 18p Syndrome; Short Arm 18 Deletion Syndrome; Partial Deletion of Chromosome 18)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Deletion 18q Syndrome",
+"established": true,
+"details": "Deletion 18q syndrome (aka: Chromosome 18q- Syndrome; 18q Deletion Syndrome; 18q- Syndrome; Chromosome 18 Long Arm Deletion Syndrome; Chromosome 18, Monosomy 18Q; Del(18q) Syndrome; Monosomy 18q Syndrome; Partial Deletion of Chromosome 18)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Deletion 9p Syndrome",
+"established": true,
+"details": "Deletion 9p Syndrome (aka: Chromosome 9, Partial Monosomy 9p; 9p Partial Monosomy; 9p- Syndrome, Partial; Chromosome 9, Partial Monosomy 9p22; Chromosome 9, Partial; Monosomy 9p22-pter; Del(9p) Syndrome, Partial; Deletion 9p Syndrome, Partial; Distal 9p- Syndrome; Distal Monosomy 9p; Monosomy 9p, Partial; Partial Deletion of Short Arm of Chromosome 9; 9p Deletion; 9p Minus Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Deletion of 21q22.3",
+"established": true,
+"details": "genetic condition resulting in developmental delay",
+"reviewed": "2022-08-02"
+},
+{
+"name": "Depressive Disorder of Early Childhood.",
+"established": true,
+"details": "DSM-5 Major Depressive Disorder ICD-10 Depressive Episode, Depression: Type I-Major Dep",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Developmental Coordination Disorder",
+"established": false,
+"details": "DSM-5 Developmental Coordination Disorder ICD-10 Specific Developmental Disorder of Motor Function (Developmental Coordination Disorder)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Developmental Language Disorder",
+"established": false,
+"details": "DSM -5 Language Disorder ICD- 10 Developmental Disorder of Speech and Language, Unspecified, AKA Disorders of Relating and Communicating",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Diaphragmatic Hernia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Diaphragmatic Paralysis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Diastematomyelia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Diastrophic Dysplasia",
+"established": true,
+"details": "Diastrophic Dysplasia (aka: DD; DTD; Diastrophic Dwarfism; Diastrophic Nanism Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Diencephalic Syndrome",
+"established": true,
+"details": "Diencephalic Syndrome (aka: Diencephalic Syndrome of Childhood; Diencephalic Syndrome of Emaciation; Paramedian Diencephalic Syndrome; Russell's Diencephalic Cachexia; Russell's Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Disinhibited Social Engagement Disorder",
+"established": true,
+"details": "DSM-5 Disinhibited Social Engagement Disorder ICD-10 Disinhibited Attachment Disorder of Childhood",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Disorder of Dysregulated Anger and Aggression of Early Childhood",
+"established": true,
+"details": "DSM-5 Disruptive Mood Dysregulation Disorder ICD-10 Other Persistent Mood Disorders",
+"reviewed": "2020-12-09"
+},
+{
+"name": "DNMT3A",
+"established": true,
+"details": "AKA Tatton-Brown-Rahman",
+"reviewed": "2020-12-09"
+},
+{
+"name": "DOOR Syndrome",
+"established": true,
+"details": "DOOR Syndrome (aka: DOOR(S) Syndrome; Deafness, Onychodystrophy, Osteodystrophy,and Mental Retardation)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Down Syndrome",
+"established": true,
+"details": "Down Syndrome (aka: Trisomy 21 Syndrome; Chromosome 21, Mosaic 21 Syndrome; Chromosome 21, Translocation 21 Syndrome; Trisomy G Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Dravet Syndrome",
+"established": true,
+"details": "Dravet Syndrome (aka: severe myoclonic epilepsy of infancy; SMEI)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Drug Exposure, Prenatal",
+"established": false,
+"details": "(aka neonatal abstinence syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Duane Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Dubowitz Syndrome",
+"established": true,
+"details": "Dubowitz Syndrome (aka: Intrauterine Dwarfism)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Duchenne Muscular Dystrophy",
+"established": true,
+"details": "Duchenne Muscular Dystrophy (aka: Childhood Muscular Dystrophy; DMD; Muscular Dystrophy (Classic X-linked Recessive); Progressive Muscular Dystrophy of Childhood; Pseudohypertrophic Muscular Dystrophy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Duplication 10q Syndrome",
+"established": true,
+"details": "Duplication 10q Syndrome (aka: Chromosome 10, distal trisomy 10q; Chromosome 10, Partial Trisomy 10q24-qter; Chromosome 10, Trisomy 10q2; Distal Duplication 10q; Distal Trisomy 10q Syndrome; Dup(10q) Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Duplication of Xq28",
+"established": true,
+"details": "genetic condition resulting in developmental delay",
+"reviewed": "2022-08-02"
+},
+{
+"name": "Dyggve Melchior Clausen Syndrome",
+"established": true,
+"details": "Dyggve Melchior Clausen Syndrome (aka: DMC Disease; DMC Syndrome; Smith-McCort Dysplasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "DYRK1A-related Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Dysphagia",
+"established": true,
+"details": "Dysphagia; Pharyngeal Dysphagia; all types of dysphagia",
+"reviewed": "2024-05-02"
+},
+{
+"name": "Dystonia Musculorum Deformans",
+"established": true,
+"details": "Dystonia Musculorum Deformans (aka: Torsion Dystonia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Eagle-Barrett Syndrome",
+"established": false,
+"details": "(aka: Prune Belly Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Eales Disease",
+"established": false,
+"details": "(aka: Eales Retinopathy, Idiopathic Peripheral Periphlebitis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ear, Patella, Short Stature Syndrome",
+"established": false,
+"details": "(aka: EPS; Meier-Gorlin Syndrome; Microtia, Absent Patellae, Micrognathia Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Early Atypical Autism Spectrum Disorder",
+"established": true,
+"details": "DSM-5 Parent-Child Relational Problem ICD-10 Other childhood emotional disorders, Pervasive Dev Disord",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ectrodactyly Ectodermal Dysplasia Cleft Lip/Palate",
+"established": false,
+"details": "(aka: EEC Syndrome; Ectrodactyly-Ectodermal Dysplasia-Clefting Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ehlers Danlos Syndrome",
+"established": false,
+"details": "(aka: E-D Syndrome; ED Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ellis Van Creveld Syndrome",
+"established": false,
+"details": "(aka: Chondroectodermal Dysplasia; Mesoectodermal Dysplasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Emanuel Syndrome",
+"established": true,
+"details": "Emanuel Syndrome (aka: Emanual Syndrome; Derivative 22; der(22) chromosome; Supernumerary der(22) Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Empty Sella Syndrome",
+"established": false,
+"details": "(aka: Empty Sella Turcica)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Encephalitis, Herpes Simplex",
+"established": true,
+"details": "Encephalitis, Herpes Simplex (aka: HSE; Herpes Encephalitis; Herpetic Brainstem Encephalitis; Herpetic Meningoencephalitis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Encephalitis, Japanese",
+"established": false,
+"details": "(aka: JE, Japanese B Encephalitis, Russian Autumnal Encephalitis, Summer Encephalitis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Encephalitis, Rasmussen's",
+"established": true,
+"details": "Encephalitis, Rasmussen's (aka: Chronic Encephalitis and Epilepsy; Chronic Localized (Focal) Encephalitis; Epilepsy, Hemiplegia and Mental Retardation; Rasmussen's Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Encephalocele",
+"established": true,
+"details": "Encephalocele (aka: Bifid Cranium, Cephalocele, Cranial Meningoencephalocele, Craniocele, Cranium Bifidum)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Encephalopathy Congenital",
+"established": true,
+"details": "Encephalopathy Congenital (aka: neonatal encephalopathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Encephalopathy, Hypoxic Ischemic",
+"established": true,
+"details": "Encephalopathy, Hypoxic Ischemic (aka: HIE; subaccute hypoxic injury)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Encephalopathy, Static",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Epidermal Nevus Syndrome",
+"established": true,
+"details": "Epidermal Nevus Syndrome (aka: Ichthyosis Hystrix Gravior; Inflammatory Linear Nevus Sebaceous Syndrome; Lambert Type Ichthyosis; Linear Nevus Sebacous Syndrome; Linear Sebaceous Nevus Sequence; Linear Sebaceous Nevus Syndrome; Nevus Sebaceous of Jadassohn; Sebaceous Nevus Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Epidermolysis Bullosa",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Epidermolytic Hyperkeratosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Epilepsy",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Esophogeal Atresia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Excessive Crying Disorder",
+"established": true,
+"details": "DSM-5 None listed ICD-10 Other childhood emotional disorders",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Exostoses, Multiple",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Extraocular Fibrosis Syndrome",
+"established": false,
+"details": "(aka: Congenital Fibrosis of the Extraocular Muscles; CFEOM)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fabry Disease",
+"established": false,
+"details": "(aka:Alpha-Galactosidase A Deficiency; Anderson-Fabry Disease; Angiokeratoma Corporis Diffusum; Angiokeratoma Diffuse; Ceramide Trihexosidase Deficiency; GLA Deficiency; Hereditary Dystopic Lipidosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Facial Palsy",
+"established": false,
+"details": "(aka: Bell's Palsy; Facial Nerve Palsy; 7th Nerve Palsy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Facioscapulohumeral Muscular Dystrophy",
+"established": false,
+"details": "(aka: FMD; FSH; FSHD;Facio-Scapulo-Humeral Dystrophy; Muscular Dystrophy, Facioscapulohumeral;Muscular Dystrophy, Landouzy Dejerine)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fahr's Disease",
+"established": true,
+"details": "Fahr's Disease (aka: Cerebrovascular Ferrocalcinosis; Fahr Disease; Idiopathic Basal Ganglia Calcificationl; IBGC; Nonarteriosclerotic Cerebral Calcifications; SPD Calcinosis; Striopallidodentate Calcinosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Failure to Thrive",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Familial Dysautonomia",
+"established": false,
+"details": "(aka: Riley-Day Syndrome; FD; Hereditary Sensory and Autonomic Neuropathy, Type III (HSAN, Type III); Hereditary Sensory Neuropathy Type III; HSAN III; HSN III)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Familial exudative vitreoretinopathy",
+"established": false,
+"details": "(aka: FEVR)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Familial MR Synd",
+"established": true,
+"details": "Familial Mental Retardation Syndromes (incl: Familial Mental Retardation Syndrome ATR-16)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fanconi Syndrome",
+"established": false,
+"details": "(aka: de Toni-Fanconi syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Farber Disease",
+"established": true,
+"details": "Farber Disease (aka: Farber's lipogranulomatosis; ceramidase deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "FBX011",
+"established": true,
+"details": "Genetic condition associated with developmental delay. May cause/can cause hearing loss",
+"reviewed": "2021-10-20"
+},
+{
+"name": "Feeding Disorder of State Regulation, AKA Feeding Disord w/ GI Tract, Feeding Disord w/ Med Cond, Feeding Disorder, Sensory Food Aversions, G Tube (currently placed or surgery scheduled)",
+"established": true,
+"details": "Feeding Disorder of State Regulation, AKA Feeding Disord w/ GI Tract, Feeding Disord w/ Med Cond, Feeding Disorder, Sensory Food Aversions, G Tube, GJ Tube, J Tube, Avoidant Restrictive Food Intake Disorder (ARFID), Total Parenteral Nutrition (TPN)",
+"reviewed": "2023-02-01"
+},
+{
+"name": "Feeding Disorder with a Medical Condition",
+"established": true,
+"reviewed": "2022-07-26"
+},
+{
+"name": "Femoral Facial Syndrome",
+"established": false,
+"details": "(aka: Femoral Dysgenesis, Bilateral; Femoral Dysgenesis, Bilateral-Robin Anomaly; Femoral Hypoplasia-Unusual Facies Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fetal Alcohol Spectrum Disorder",
+"established": false,
+"details": "(aka: Alcohol-related neurodevelopmental disorder; alcohol-related neurobehavioral disorder; fetal alcohol effects)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fetal Alcohol Syndrome",
+"established": true,
+"details": "Fetal Alcohol Syndrome (aka: FAS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fetal Hydantoin Syndrome",
+"established": true,
+"details": "Fetal Hydantoin Syndrome (aka: Dilantin Embryopathy, Phenytoin Embryopathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fetal Valproate Syndrome",
+"established": false,
+"details": "(aka: Dalpro, (Fetal Effects From); Depakene, (Fetal Effects From); Depakote Sprinkle (Fetal Effects From); Depakote, (Fetal Effects From); Divalproex, (Fetal Effects From); Epival (Fetal Effects From); Fetal Anti-Convulsive Syndrome; Myproic Acid (Fetal...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "FG Syndrome",
+"established": true,
+"details": "FG Syndrome (aka: Opitz-Kaveggia Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fiber Type Disproportion, Congenital",
+"established": true,
+"details": "Fiber Type Disproportion, Congenital (aka: Atrophy of Type I Fibers; CFTD; CFTDM; Myopathy of Congenital Fiber Type Disproportion; Myopathy, Congenital, With Fiber-Type Disproportion)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fibrodysplasia Ossificans Progressiva",
+"established": true,
+"details": "Fibrodysplasia Ossificans Progressiva (aka: FOP; Myositis Ossificans Progressiva)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fibromatosis, Congenital Generalized",
+"established": false,
+"details": "(aka: CGF; Infantile Myofibromatosis; IM)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Filippi Syndrome",
+"established": true,
+"details": "Filippi Syndrome (aka: Syndactyly Type I with Microcephaly and Mental Retardation )",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Floating Harbor Syndrome",
+"established": true,
+"details": "Floating Harbor Syndrome (aka: FHS; Pelletier-Leisti syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Focal Cortical Dysplasia",
+"established": true,
+"reviewed": "2025-02-03"
+},
+{
+"name": "Forbes Disease",
+"established": true,
+"details": "(aka: Amylo-1,6-Glucosidase Deficiency; Cori Disease; Debrancher Deficiency; Glycogen Storage Disease III; Glycogenosis Type III; Limit Dextrinosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fountain Synd",
+"established": true,
+"details": "Fountain Syndrome (aka: Mental Retardation-Deafness-Skeletal Abnormalities-Coarse Face with Full Lips)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "FPIES",
+"established": false,
+"details": "FPIES: Food Protein-Induced Enterocolitis Syndrome",
+"reviewed": "2026-09-30"
+},
+{
+"name": "Fracture of Vertebral Column with Spinal Cord Injury",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fragile X Syndrome",
+"established": true,
+"details": "Fragile X Syndrome (aka: Fragile Site, Folic Acid Type, Rare; Fra(X)(Q27.3); Fragile X Mental Retardation Protein; FMRP; Fragile X Mental Retardation Syndrome; Marker X Syndrome; Martin-Bell Syndrome; Mental Retardation, X-Linked, Associated With Mar Xq2...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fraser Syndrome",
+"established": false,
+"details": "(aka: Cryptophthalmos Syndrome; Cryptophthalmos-Syndactyly Syndrome; Cyclopism Fraser-Francois Syndrome; Meyer-Schwickerath's Syndrome; Ulrich-Feichtiger Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Freeman Sheldon Syndrome",
+"established": false,
+"details": "(aka: Craniocarpotarsal dystrophy (dysplasia); DA2A; Distal arthrogryposis type 2A; FSS; Whistling face syndrome; Whistling face-windmill vane hand syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Friedreich's ataxia",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Frontofacionasal Dysplasia",
+"established": false,
+"details": "(aka: Cleft Lip-Palate, Blepharophimosis, Lagophthalmos, and Hypertelorism; Facio-Fronto-Nasal Dysplasia; Frontofacionasal Dysostosis; Nasal-fronto-faciodysplasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Frontonasal Dysplasia",
+"established": false,
+"details": "(aka: FND; Median Cleft Face Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fryns Syndrome",
+"established": true,
+"details": "Fryns Syndrome (aka: FRNS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fucosidosis",
+"established": true,
+"details": "Fucosidosis (aka: Alpha-L-Fucosidase Deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Fukuyama Type Congenital Muscular Dystrophy",
+"established": true,
+"details": "Fukuyama Type Congenital Muscular Dystrophy (aka: Cerebromuscular Dystrophy, Fukuyama Type; Congenital Muscular Dystrophy, Fukuyama Type; FCMD; Micropolygyria With Muscular Dystrophy; Muscular Dystrophy, Congenital Progressive with Mental Retardation; Muscular Dystrophy, Congenital With Central Nervous System Involvement; Muscular Dystrophy, Congenital, Fukuyama Type; Muscular Dystrophy, Fukuyama Type)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Galactosemia",
+"established": true,
+"details": "Galactosemia (aka: Classic Galactosemia; GALT Deficiency; Galactose-1-Phosphate Uridyl Transferase Deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Galloway-Mowat Syndrome",
+"established": false,
+"details": "(aka: Galloway Syndrome; Hiatal Hernia-Microcephaly-Nephrosis, Galloway Type; Microcephaly-Hiatal Hernia-Nephrosis, Galloway Type; Microcephaly-Hiatal Hernia-Nephrotic Syndrome; Nephrosis-Microcephaly Syndrome; Nephrosis-Neuronal Dysmigration Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gastroschisis",
+"established": false,
+"details": "(aka: Abdominal Wall Defect; Aparoschisis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gaucher Disease Type III",
+"established": true,
+"details": "Gaucher Disease Type III (Subacute/Chronic form, or \"Atypical, due to Saposin C Deficiency\") (aka: Gaucher Disease, Cardiovascular Form; Gaucher Disease, Type 3)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gaucher Disease, Type I",
+"established": false,
+"details": "(aka: Sphingolipidosis 1)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gaucher Disease, Type II",
+"established": true,
+"details": "Gaucher Disease, Type II (\"Perinatal Lethal\" or Colloidal Type) (aka: Gaucher Disease, Type 2; Glucocerebrosidase Deficiency; Glucosylceramidase Deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Glass syndrome",
+"established": true,
+"details": "also known as SATB2-associated syndrome (SAS), is a recently described syndrome characterized by developmental delay/intellectual disability with absent or limited speech development, craniofacial abnormalities including palatal and dental abnormalities, behavioral problems, and dysmorphic features.",
+"reviewed": "2023-07-25"
+},
+{
+"name": "Glut One Deficiency Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Glutaricaciduria I",
+"established": false,
+"details": "(aka: Dicarboxylic Aminoaciduria; GA I; Glutaric Acidemia I; Glutaric Aciduria I; Glutaricacidemia I; Glutaryl-CoA Dehydrogenase Deficiency; Glutaurate-Aspartate Transport Defect)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Glutaricaciduria II",
+"established": false,
+"details": "(aka: Electron Transfer Flavoprotein, Deficiency of; Electron Transfer Flavoprotein: Ubiquinone Oxidoreductase, Deficiency of; GA II; Glutaric Acidemia II; Glutaric Aciduria II; Glutaricacidemia II; MADD; Multiple Acyl-Co-A Dehydrogenation Deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Glycinemia",
+"established": true,
+"details": "Glycinemia (aka: glycine encephalopathy; nonketotic hyperglycinemia; transient neonatal hyperglycinemia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gm1Gangliosidosis",
+"established": true,
+"details": "Gm1 Gangliosidosis (aka: Beta-Galactocidase-1 Deficiency; GLB1 Deficiency; Galactocidase, Beta-1; GLB1; Morquio Disease, Type B; Elastin-Binding Protein)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Goldenhar Syndrome",
+"established": false,
+"details": "(aka: Oculo-Auriculo-Vertebral/OAV syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Goltz Syndrome",
+"established": false,
+"details": "(aka: Gorlin Syndrome; nevoid basal cell carcinoma syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Goodman Syndrome",
+"established": false,
+"details": "(aka: ACPS IV; Acrocephalopolysyndactyly Type IV)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gordon Syndrome",
+"established": false,
+"details": "(not the other \"Gordon Syndrome with hypertension, hyperkalaemia, and normal glomerular filtration rate\") (aka: Arthrogryposis Multiplex Congenita, Distal, Type IIA; Camptodactyly-Cleft Palate-Clubfoot; Distal Arthrogryposis, Type IIA)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gorlin-Chaudhry-Moss Syndrome",
+"established": false,
+"details": "(aka: Craniofacial Dysostosis-PD Arteriosus-Hypertrichosis-Hypoplasia of Labia; Craniosynostosis-Hypertrichosis-Facial and Other Anomalies; GCM Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Gottron Syndrome",
+"established": false,
+"details": "(aka: H. Gottron's syndrome; acrogeria, Gottron type; familial acrogeria; familial acromicria)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Greig Cephalopolysyndactyly Syndrome",
+"established": false,
+"details": "(aka: Frontodigital Syndrome (obsolete); GCPS; Hootnick-Holmes Syndrome (obsolete); Polysyndactyly with Peculiar Skull Shape; Polysyndactyly-Dysmorphic Craniofacies, Greig Type)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Griscelli Syndrome, type 1",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Griscelli Syndrome, type 2",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Griscelli Syndrome, type 3",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Guillain Barre Syndrome",
+"established": false,
+"details": "(aka: Acute Autoimmune Peripheral Neuropathy; Acute Immune-Mediated Polyneuropathy ; Acute Inflammatory Demyelinating Polyneuropathy; Acute Inflammatory Demyelinating Polyradiculoneuropathy; Acute Inflammatory Neuropathy; Acute Inflammatory Polyneuropath...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hajdu Cheney Syndrome",
+"established": false,
+"details": "(aka: HCS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hallermann Streiff Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hallervorden-Spatz Disease",
+"established": true,
+"details": "Hallervorden-Spatz Disease (aka: Pantothenate kinase-associated neurodegeneration; PKAN)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hand-Schuller-Christian",
+"established": false,
+"details": "(aka: Histiocytosis X; Hemophagocytic Lymphohistiocytosis, Familial, 1)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hanhart Syndrome",
+"established": false,
+"details": "(aka: aglossia-adactylia; hypoglossia-hypodactylia syndrome; peromelia with micrognathia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Harel-Yoon Syndrome",
+"established": true,
+"reviewed": "2022-02-01"
+},
+{
+"name": "Hartnup Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hay-Wells Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hearing Loss (bilateral)",
+"established": true,
+"details": "Hearing Loss (diagnosis with bilateral hearing loss)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hearing Loss (diagnosis with unilateral permanent hearing loss)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hemihyperplasia",
+"established": false,
+"details": "(aka: hemihypertrophy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hemimegalencephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hemophilia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hepatoblastoma",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hereditary Hyperphosphatasia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hermansky Pudlak Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Herpes-Zoster",
+"established": false,
+"details": "(aka: Hunt Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Heterotopia",
+"established": false,
+"details": "(aka Subependymal Nodular Heterotopia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hip Dysplasia",
+"established": false,
+"details": "aka developmental dysplasia of the hip (DDH)",
+"reviewed": "2023-12-19"
+},
+{
+"name": "Hirschsprung Disease",
+"established": false,
+"details": "AKA: Hirschsprung's Disease; intestinal failure; near total agangliosis",
+"reviewed": "2020-12-09"
+},
+{
+"name": "HIV",
+"established": true,
+"details": "HIV (where the child's status of the HIV infecton has been confirmed)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hoarding",
+"established": false,
+"details": "DSM-5 Other Specified Feeding and Eating Disorder ICD-10 Feeding Disorders of Infancy and Early Childhood",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Holoporencephaly",
+"established": true,
+"details": "Holoporencephaly (aka: Alobar Holoprosencephaly; Arhinencephaly; Familial Alobar Holoprosencephaly; HS; Holoprosencephaly Malformation Complex; Holoprosencephaly Sequence; Lobar Holoprosencephaly; Semilobar Holoprosencephaly)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Holt Oram Syndrome",
+"established": false,
+"details": "(aka: HOS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Homocystinuria",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Horner's Syndrome",
+"established": false,
+"details": "(aka: Horner Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Human HOXA1 Synds",
+"established": true,
+"details": "Human HOXA1 Syndromes (aka: Athabaskan Brainstem Dysgenesis Syndrome (ABDS); Navajo Brainstem Syndrome; Bosley-Salih-Alorainy Syndrome; BSAS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hunter syndrome",
+"established": true,
+"details": "(Mucopolysaccharidosis type 2)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Huntington's Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hurler syndrome",
+"established": true,
+"details": "(Mucopolysaccharidosis type 1)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hydranencephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hydrocephalus",
+"established": true,
+"details": "Hydrocephalus, Congenital, Hydrocephalus, Post-hemorrhagic",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hydrops",
+"established": false,
+"details": "(aka: hydrops fetalis; erythroblastosis fetalis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hyperbilirubinemia",
+"established": false,
+"details": "(aka: Jaundice of the newborn; Neonatal hyperbilirubinemia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hyperexplexia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hypertonia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hypogenesis of the corpus callosum with additional neurologic finding",
+"established": true,
+"reviewed": "2025-08-13"
+},
+{
+"name": "Hypomelanosis of Ito",
+"established": true,
+"details": "Hypomelanosis of Ito (aka: Incontinentia pigmentosa acromians)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hypophosphatasia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hypophosphatemia, Familial",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hypoplastic Left Heart Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hypothyroidism, Congenital",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Hypotonia, Congenital, Non-Benign Form",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "I Cell Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ichthyosis Congenita",
+"established": false,
+"details": "(aka: Ichthyosis Lamellar; Autosomal Recessive Congenital Ichthyosis, Ichthyosis, Harlequin Type)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ichthyosis, Chanarin Dorfman Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ichthyosis, Sjogren Larsn Syndrome",
+"established": true,
+"details": "Ichthyosis, Sjogren Larsson Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Infantile Botulism",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Infantile Neuroaxonal Dystrophy",
+"established": true,
+"details": "Infantile Neuroaxonal Dystrophy (aka: INAD or Seitelberger Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Infantile Spasms, Epilepsy",
+"established": true,
+"details": "Infantile Spasms, Epilepsy (aka: Infantile Myoclonic Seizures, Infantile Spasm; Hypsarrhythmia, aka West Synd)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Inhibition to Novelty Disorder",
+"established": true,
+"details": "DSM-5 Other Specified Anxiety Disorder ICD-10 Other Specified Anxiety Disorder, Specific Phobia",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Intestinal Malrotation",
+"established": false,
+"details": "(aka: malrotation of the intestine)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Intraventricular Cyst",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Intraventricular Hemorrhage (IVH) Grade I",
+"established": false,
+"details": "(aka: Germinal Matrix Hemorrhage; Grade I IVH; Grade I periventricular hemorrhage, Grade I PVH), see Intraventricular Hemorrhage, Grade II below (line 357), Cerebral Bleed (line 84), and Cerebral Bleed, Grade III & IV (line 85) for reference if needed",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Intraventricular Hemorrhage, Grade II",
+"established": false,
+"details": "(aka: IVH, periventricular hemorrhage, PVH) Grade 2, see Intraventricular Hemorrhage (IVH) Grade I (line 357), Cerebral Bleed (line 84), and Cerebral Bleed, Grade III & IV (line 85) for reference if needed",
+"reviewed": "2020-12-09"
+},
+{
+"name": "IPEX Syndrome",
+"established": false,
+"details": "(aka: immune dysregulation, polyendocrinopathy, enteropathy, X-linked syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "IRF6-Related Disorders",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Isovaleric Acidemia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "IUGR/SGA 33 wks & < 1,325g",
+"established": true,
+"details": "IUGR (evidence shows the child was born at 33 weeks gestational age and weighing 1,325 grams (2 pounds, 15 ounces) or less at birth or shortly after birth) (aka: for the purposes of determining EI Colorado eligibility IUGR can also be referred to as SGA or LBW)",
+"reviewed": "2026-07-01"
+},
+{
+"name": "IUGR/SGA 34 wks & < 1,500 g",
+"established": true,
+"details": "IUGR (evidence shows the child was born at 34 weeks gestational age and weighing 1,500 grams (3 pounds, 5 ounces) or less at birth or shortly after birth) (aka: for the purposes of determining EI Colorado eligibility IUGR can also be referred to as SGA or LBW)",
+"reviewed": "2026-07-01"
+},
+{
+"name": "IUGR/SGA 35 wks & < 1,700 g",
+"established": true,
+"details": "IUGR (evidence shows the child was born at 35 weeks gestational age and weighing 1,700 grams (3 pounds, 12 ounces) or less at birth or shortly after birth) (aka: for the purposes of determining EI Colorado eligibility, IUGR can also be referred to as SGA or LBW)",
+"reviewed": "2026-07-01"
+},
+{
+"name": "IUGR/SGA 36 wks & < 1,875 g",
+"established": true,
+"details": "IUGR (evidence shows the child was born at 36 weeks gestational age and weighing 1875 grams (4 pounds, 2 ounces) or less at birth or shortly after birth) (aka: for the purposes of determining EI Colorado eligibility, IUGR can also be referred to as SGA or LBW)",
+"reviewed": "2026-07-01"
+},
+{
+"name": "IUGR/SGA 37-40 weeks & < 2,000 g",
+"established": true,
+"details": "IUGR (evidence shows the child was born between 37 and 40 weeks gestational age and weighing less than 2,000 grams (4 pounds, 5 ounces) or less at birth or shortly after birth) (for the purposes of determining EI Colorado eligibility, IUGR can also be referred to as SGA or LBW)",
+"reviewed": "2026-07-01"
+},
+{
+"name": "Ivemark Syndrome",
+"established": false,
+"details": "(aka: Asplenia Syndrome, Bilateral Right-Sidedness Sequence, Splenic Agenesis Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Jackson-Weiss Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Jansen Type Metaphyseal Chondrodysplasia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Jarcho-Levin Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Jejunal Atresia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Jervell & Lange-Nielsen Syndrome",
+"established": true,
+"details": "Jervell and Lange-Nielsen Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Job Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Johanson-Blizzard Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Joubert syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Juberg-Marsidi Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Juvenile Myelomonocytic Leukemia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Juvenile Rheumatoid Arthritis",
+"established": false,
+"details": "(aka: JRA)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kabuki Syndrome",
+"established": true,
+"details": "KMT2D, KDM6A, Kabuki Make-up Synd",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kartagener Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kawasaki Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "KBG Syndrome",
+"established": true,
+"details": "ANKRD11",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kearns Sayre Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kenny-Caffey Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Keratosis Follicularis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kernicterus",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Klinefelter Syndrome",
+"established": true,
+"details": "Klinefelter Syndrome (aka: XXY Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Klippel-Feil Syndrome",
+"established": false,
+"details": "(aka: Klippel-Feil Sequence)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Klippel-Trenaunay Syndrome",
+"established": false,
+"details": "(aka: Klippel-Trenaunay-Weber Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kniest Dysplasia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kufs Disease",
+"established": true,
+"details": "Kufs Disease (aka: Jansk",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Kugelberg Welander Syndrome",
+"established": true,
+"details": "Kugelberg Welander Syndrome (aka: Wohlfart-Kugelberg-Welander syndrome or mild SMA)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Laband Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "LADD Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lambert-Eaton Myasthenic Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Landau Kleffner Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Langer-Giedion Syndrome",
+"established": true,
+"details": "Langer-Giedion Syndrome (aka: Tricho-Rhino-Phalangeal Syndrome Type II, TRP II)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Langerhans Cell Histiocytosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Laron Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Larsen Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Laryngomalacia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Laryngotracheoesophageal Cleft",
+"established": false,
+"details": "(aka: LTEC)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Laurence Moon Syndrome",
+"established": true,
+"details": "Laurence Moon Syndrome (aka: Adipogenital-Retinitis Pigmentosa Syndrome; Laurence Syndrome; LM Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lead encephalopathy",
+"established": true,
+"details": "Lead encephalopathy (aka: lead poisoning encephalopathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Leber Congenital Amaurosis",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Legg Calve Perthes Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Leigh's Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lennox Gastaut Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lenz Microphthalmia Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "LEOPARD Syndrome Leprechaunism",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Leri Pleonosteosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lesch-Nyhan Syndrome",
+"established": true,
+"details": "HGPRT",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Leukemia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Leukocytosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Leukodystrophy",
+"established": true,
+"details": "Leukodystrophy (aka: Metachromatic Leukodystrophy; Krabbe Disease; Krabbe Leukodystrophy; globoid cell leukodystrophy; galactosylceramide lipidosis; Canavan Disease; ACY2 Deficiency; ASP Deficiency; ASPA Deficiency; Aminoacylase-2 Deficiency; Aspartoacylase Deficiency; CD; Canavan's Leukodystrophy; Canavan-Van Bogaert-Bertrand Disease; Spongy Degeneration of the Central Nervous System; Spongy Degeneration of the Neuroaxis; Van Bogaert-Bertrand Syndrome; Vanishing White Matter Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Levy-Yeboa Synd",
+"established": true,
+"details": "Levy-Yeboa Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Linear Sebaceous Nevus Seq",
+"established": true,
+"details": "Linear Sebaceous Nevus Sequence (aka: Linear Sebaceous Nevus Syndrome; Sebaceous Nevus Syndrome; Linear Epidermal Nevus Syndrome; LEN Syndrome; Jadassohn nevus phakomatosis; JNP)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lip Tie",
+"established": false,
+"reviewed": "2023-01-25"
+},
+{
+"name": "Lipodystrophy, generalized",
+"established": true,
+"details": "Lipodystrophy, generalized (aka: Berardinelli Lipodystrophy; Berardinelli Lipodystrophy Syndrome; Congenital Generalized Lipodystrophy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lissencephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Locked In Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Loeys-Dietz Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Loken Senior Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Low Birth Weight<1,200 grams",
+"established": true,
+"details": "LBW is only for children who are <1,200 grams (2.6 lbs or 2 lbs 9.6 ozs) at birth or anytime during the first seven days of life.",
+"reviewed": "2026-07-01"
+},
+{
+"name": "Low TIMP score",
+"established": false,
+"details": "The Test of Infant Motor Performance (TIMP) is a motor outcome measure of 25-35 mins carried out usually to assess the posture and selective control of movement needed by infants under four months of age for functional performance in daily life",
+"reviewed": "2022-05-05"
+},
+{
+"name": "Lowe syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lumbosacral Agenesis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lyme Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Lymphadenopathy",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Macrocephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Macrocephaly Cutis Marmorata T",
+"established": true,
+"details": "Macrocephaly, Cutis Marmorata Telangiectatica Congenita Syndrome (aka: M-CMTC)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Macroglossia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Macular Lesion (of the eye)",
+"established": false,
+"details": "(aka: lesion of the macula)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Maffucci Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Maple Syrup Urine Disease, untreated",
+"established": true,
+"details": "Maple Syrup Urine Disease (where the diagnosis is late, or there is no or inadequate treatment) (aka: BCKD Deficiency, Branched Chain Alpha-Ketoacid Dehydrogenase Deficiency, Branched Chain Ketonuria I, Classical Maple Syrup Urine Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Marcus Gunn Phenomenon",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Marden Walker Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Marfan Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Marinesco Sjogren Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Maroteaux Lamy Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Marshall Smith Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Marshall Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mastoiditis",
+"established": false,
+"reviewed": "2023-01-25"
+},
+{
+"name": "Maxillofacial Dysostosis",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Maxillonasal Dysplasia, Binder Type",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "MCADD",
+"established": false,
+"details": "aka: MCAD Deficiency",
+"reviewed": "2020-12-09"
+},
+{
+"name": "McCune Albright Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "McKusick Type Metaphyseal Chondrodysplasia",
+"established": false,
+"details": "AKA cartilage hair hypoplasia syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Meckel-Gruber Syndrome",
+"established": true,
+"details": "Meckel-Gruber Syndrome (aka: Meckel Syndrome (w/ skull defect); Dysencephalia Spla",
+"reviewed": "2020-12-09"
+},
+{
+"name": "MED13L Syndrome",
+"established": true,
+"reviewed": "2023-08-07"
+},
+{
+"name": "Megacystis Microcolon Intestinal Hypoperistalsis Syndrome",
+"established": false,
+"details": "(aka: Berdon Syndrome; Megacystis Microcolon Intestinal Hydronephrosis Syndrome; Neonatal Hollow visceral myopathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Megalocornea MR Syndrome",
+"established": true,
+"details": "Megalocornea Mental Retardation Syndrome (aka: MMR Syndrome; Neuhauser Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Meige Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "MELAS Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Melkersson Rosenthal Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Melnick Needles Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Melorheostosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Meningitis",
+"established": true,
+"details": "Meningitis (including but not limited to the following types: Bacterial, Infantile, Neonatal, Meningococcal, Pneumococcal, Tuberculous, Epidemic Cerebrospinal, Pyogenic; Waterhouse-Friederichsen Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Menkes Syndrome",
+"established": true,
+"details": "Menkes Syndrome (aka: Menkes Disease; Kinky Hair Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "MERRF Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Metabolic Acidosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Metaphyseal Chondrodysplasia, Schmid Type",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Metatarsus Adductus",
+"established": false,
+"details": "(aka: Metatarsus varus; Forefoot varus)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Metatropic Dysplasia I",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Methylmalonic Aciduria without Glycinemia, Group 5",
+"established": false,
+"details": "(aka: Methylmalonic Acidemia; ketotic hyperglycinemia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "MHBD Deficiency",
+"established": true,
+"details": "MHBD Deficiency (a.k.a. 2-methyl-3-hydroxybutyryl-CoA Dehydrogenase Deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Microcephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Micrognathia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Micromelia",
+"established": false,
+"details": "(aka: nanomelia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Microphthalmia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Microtia and Atresia",
+"established": false,
+"details": "(aka: Microtia/Atresia; Microtia-Atresia; Microtia and Aural Atresia; Microtia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Microvillus Inclusion Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Miller Syndrome",
+"established": false,
+"details": "(aka: Postaxial Acrofacial Dysostosis Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Missing Fingers",
+"established": false,
+"details": "(aka: missing thumbs; absent fingers; absent thumbs)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Missing Hand",
+"established": true,
+"reviewed": "2025-06-12"
+},
+{
+"name": "Moebius Sequence",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Morquio Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mosaic Turner Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Motonia Congenita - Thomsen Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Motor Neuron Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mowat Wilson Syndrome",
+"established": true,
+"details": "ZEB2",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Moyamoya Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mucolipidosis IV",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mucopolysaccharidosis (not IVB)",
+"established": true,
+"details": "Mucopolysaccharidosis (except for type IVB)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mucopolysaccharidosis VII",
+"established": true,
+"details": "Mucopolysaccharidosis VII (aka: Sly disease; Sly Syndrome; beta-glucuronidase deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mulibrey Nanism Syndrome (Perheentupa Syndrome)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Multiple Sulfatase Deficiency",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Multisystem Developmental Disorder",
+"established": true,
+"details": "MSDD",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Mulvihill Smith Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "MURCS Association",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Murmur",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Muscular Dystrophies, Limb Girdle",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Muscular Dystrophy, Becker",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Muscular Dystrophy, Emery Dreifuss",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Muscular Dystrophy, Oculogastrointestinal",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myasthenia Gravis",
+"established": true,
+"details": "Myasthenia Gravis (familial infantile type)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myhre Synd",
+"established": true,
+"details": "Myhre Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myoclonic Enceph of Childhood",
+"established": true,
+"details": "Myoclonic Encephalopathy of Childhood (Kinsbourne Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myoclonus, General",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myopathy, Cong, Batten Turner",
+"established": true,
+"details": "Myopathy, Congenital, Batten Turner Type",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myopathy, Congenital",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myopathy, Desmin Storage",
+"established": true,
+"details": "Myopathy, Desmin Storage (aka: DSM)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myopathy, Scapuloperoneal",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myositis Ossificans Progressiva",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myotonia Congenita",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myotonic dystrophy type 1",
+"established": true,
+"details": "Myotonic dystrophy type 1 (aka: DM; DM1; Curschmann-Batten-Steinert syndrome; Steinert disease; dystrophia myotonia; myotonia atrophica)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Myotubular Myopathy",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "MYT1L-related Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nager Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nail Patella Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nasogastric Tube",
+"established": false,
+"details": "NG tube",
+"reviewed": "2022-11-22"
+},
+{
+"name": "Necrotizing Enterocolitis (NEC)",
+"established": false,
+"details": "(aka: short gut/bowel syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nemaline Myopathy",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neonatal Abstinence Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neonatal Cerebral Depression",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neonatal Hemochromatosis (NH)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neonatal Herpes Simplex (HSV)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neonatal Seizures",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nephrotic Syndrome",
+"established": false,
+"details": "(Aka: Membranous glomerulonephritis; Membranoproliferative glomerulonephritis; Mesangiocapillary glomerulonephritis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neu Laxova Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuroblastoma",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuroendocrine cell hyperplasia of infancy",
+"established": false,
+"reviewed": "2023-07-05"
+},
+{
+"name": "Neuromyotonia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuronal Ceroid Lipofuscinosis",
+"established": true,
+"details": "Batten Disease (aka: CLN3, JNCL, Neuronal Ceroid Lipofuscinosis, Juvenile, Spielmeyer-Sjogren Disease, Vogt-Spielmeyer Disease, or Vogt-Spielmeyer-Sjogren Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuropathy, Ataxia & Retinitis",
+"established": true,
+"details": "Neuropathy, Ataxia and Retinitis Pigmentosa",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuropathy, Cong Hypomyelinatn",
+"established": true,
+"details": "Neuropathy, Congenital Hypomyelination (aka: Charcot-Marie-Tooth Type 4E; CHN; CMT4E; Congenital Dysmyelinating Neuropathy; Congenital Hypomyelinating Polyneuropathy; Congenital Hypomyelination; Congenital Hypomyelination Neuropathy; Congenital Hypomyelination (Onion Bulb), Polyneuropathy; Congenital Neuropathy caused by Hypomyelination; Hypomyelination Neuropathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuropathy, Giant Axonal",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuropathy, Hered Sens Type I",
+"established": true,
+"details": "Neuropathy, Hereditary Sensory, Type I (aka: HSAN1; HSN1; Hereditary Sensory and Autonomic Neuropathy Type 1)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuropathy, Hered Sens Type II",
+"established": true,
+"details": "Neuropathy, Hereditary Sensory, Type II",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuropathy, Hered Sens Type IV",
+"established": true,
+"details": "Neuropathy, Hereditary Sensory, Type IV (aka: Familial Dysautonomia, Type II; Hereditary Sensory and Autonomic Neuropathy IV; HSAN IV; HSN IV; Insensitivity to Pain, Congenital, with Anhydrosis; CIPA; Neuropathy, Congenital Sensory, with Anhydrosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neuropathy, Peripheral",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Neutropenia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nezelof Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "NF1-Neurofibromatosis",
+"established": false,
+"details": "(aka: NF-1; NF1; Von Recklinghausen Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "NF2-Bilateral Acoustic Neurofibromatosis",
+"established": false,
+"details": "(aka Neurofibromatosis Type 2 (NF-2))",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Niemann-Pick C",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Night Waking Disorder",
+"established": false,
+"details": "DSM-5 Insomnia Disorder ICD-10 Nonorganic Insomnia",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nightmare Disorder of Early Childhood",
+"established": false,
+"details": "DSM-5 Nightmare Disorder ICD-10 Nightmares",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Nonketotic Hyperglycinemia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Noonan Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Norrie's Syndrome",
+"established": true,
+"details": "Norrie's Syndrome (aka: Anderson-Warburg Syndrome; Atrophia Bulborum Hereditaria; Episkopi Blindness; Fetal Iritis Syndrome; ND; NDP; Norrie Syndrome; Whitnall-Norman Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "ObssessiveCompulsive Disorder",
+"established": false,
+"details": "DSM-5 Obsessive-Compulsive Disorder ICD-10 Obsessive-Compulsive Disorder",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ochoa Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ocular Motor Apraxia, Cogan Type",
+"established": false,
+"details": "(aka: Congenital Oculomotor Apraxia; oculomotor apraxia, Cogan type; COMA; saccade initiation failure, congenital)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Oculo-Dento-Digital Dysplasia",
+"established": false,
+"details": "(aka: Dento-Oculo-Osseous Dysplasia ; ODD Syndrome ; ODDD ; ODOD ; Oculo Dento Digital Dysplasia ; Oculo-Dento-Osseous Dysplasia ; Oculodentodigital Dysplasia ; Osseous-Oculo-Dento Dysplasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Oculocerebral Synd w Hypopgmnt",
+"established": true,
+"details": "Oculocerebral Syndrome with Hypopigmentation (aka: Cross Syndrome; Kramer Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Oculocerebrocutaneous Syndrome",
+"established": true,
+"details": "Oculocerebrocutaneous Syndrome (aka: Delleman Syndrome; Delleman-Oorthuys Syndrome; OCC Syndrome; OCCS; Orbital Cyst with Cerebral and Focal Dermal Malformations)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ohtahara Syndrome",
+"established": true,
+"details": "Ohtahara syndrome (aka: early infantile epileptic encephalopathy 1)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Olivopontocerbellar Atrophy",
+"established": true,
+"details": "Olivopontocerebellar Atrophy, Hereditary (aka: Hereditary OPCA)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ollier Disease",
+"established": false,
+"details": "(aka: Dyschondroplasia; Enchondromatosis; Multiple Cartilaginous Enchondroses; Multiple Enchondromatosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Omphalocele",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Opitz G/BBB Syndrome",
+"established": true,
+"details": "Opitz G/BBB Syndrome (aka: BBBG Syndrome; Hypertelorism with Esophageal Abnormalities and Hypospadias; Hypertelorism-Hypospadias Syndrome; Hypospadias-Dysphagia Syndrome; Opitz BBB Syndrome; Opitz BBB/G Compound Syndrome; Opitz BBBG Syndrome; Opitz G Syndrome; Opitz Hypertelorism-Hypospadias Syndrome; Opitz Oculogenitolaryngeal Syndrome; Opitz Syndrome; Opitz Syndrome; Opitz-Frias Syndrome; Telecanthus-Hypospadias Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Opsoclonus-Myoclonus Syndrome",
+"established": true,
+"details": "Opsoclonus-Myoclonus Syndrome (aka: Dancing Eyes-Dancing Feet; Kinsbourne Syndrome; Myoclonic Encephalopathy, Kinsbourne Type; Opsoclonic Encephalopathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Optic Atrophy",
+"established": false,
+"details": "(aka: optic nerve atrophy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Optico-Cochleo-Dentate Degen",
+"established": true,
+"details": "Optico-Cochleo-Dentate Degeneration",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Oral-Facial-Digital Syndrome",
+"established": true,
+"details": "Oral-Facial-Digital Syndrome (aka: OFD Syndrome; Orofaciodigital Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Organ Failure (other than brain/CNS)",
+"established": false,
+"details": "(aka: end-organ failure; multiple organ failure; mulitple system organ failure; multiple organ system failure; multiple organ dysfunction syndrome (MODS))",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ornithine Transcarbamylase Def",
+"established": true,
+"details": "Ornithine Transcarbamylase Deficiency (aka: OTC)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Orocraniodigital Syndrome",
+"established": true,
+"details": "Orocraniodigital Syndrome (aka: Juberg Hayward Syndrome; Cleft Lip/Palate with Abnormal Thumbs and Microcephaly; Cranio-Oro-Digital Syndrome; Digital-Oro-Cranio Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Orotic Aciduria",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "OSMED, Heterozygous",
+"established": false,
+"details": "(aka: Arthro-Ophthalmopathy; Epiphyseal Changes and High Myopia; Ophthalmoarthropathy Weissenbacher-Zweymuller Syndrome; Hereditary Arthro-Ophthalmopathy; Stickler syndrome type I; Stickler syndrome type II)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "OSMED, Homozygous",
+"established": false,
+"details": "(aka: oto-spondylo-megaepiphyseal dysplasia, autosomal recessive; oto-spondylo-megaepiphyseal dysplasia, homozygous; Nance-Sweeney syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Osteodystrophy, Congenital",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Osteogenesis Imperfecta",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Other Anxiety Disorder of Infancy/Early Childhood",
+"established": false,
+"details": "DSM-5, ICD10 Other Specified Anxiety Disorder AKA Anxiety Disorder Not Otherwise Specified (NOS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Other Mood Disorder of Early Childhood",
+"established": false,
+"details": "Depression of Infant and Early Childhood: Type II - Depressive Disorder NOS",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Other Neurodevelopmental Disorders",
+"established": false,
+"details": "DSM-5 Unspecified Neurodevelopmental Disorder ICD-10 Unspecified Disorder of Psychological Development",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Other Obsessive/Compulsive and related disorders",
+"established": false,
+"details": "DSM-5 Unspecified Obsessive-Compulsive and Related Disorder ICD-10 Obsessive-Compulsive Disorder, Unspecified",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Other Sensory Processing Disorder",
+"established": true,
+"details": "DSM-5 Other Specified Neurodevelopmental Disorder ICD-10 Other childhood emotional disorders, AKA Reg Dis Sens Proc: Hypersens; Reg Dis Sens Proc: SSS/Imp",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Other Sleep, Eating, and Excessive Crying Disorder of Infancy/Early Childhood",
+"established": false,
+"details": "DSM-5 Other Specified Feeding or Eating Disorder,Other Specified Sleep-Wake Disorder ICD-10 Other Eating Disorders,Other Nonorganic Sleep Disorders, AKA Mixed Disorder of Emotional Expressiveness,",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Other Stress & Deprivation Disorders",
+"established": false,
+"details": "Deprivation/Maltreatment Dis",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Otopalatodgtl Synd Type I & II",
+"established": true,
+"details": "Otopalatodigital Syndrome Type I and II (aka: Taybi Syndrome; Cranioorodigital Syndrome; FPO; Faciopalatoosseous Syndrome; OPD Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Overactivity Disorder of Toddlerhood",
+"established": true,
+"details": "DSM -5 Attention Deficit/Hyperactivity Disorder ICD -10 Disturbance of Activity and Attention",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Overeating Disorder",
+"established": false,
+"details": "DSM-5 Unspecified Feeding or Eating Disorder ICD-10 Overeating Associated with Other Psychological Disturbances",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pachydermoperiostosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pachygyria",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Paget's Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "PAK-1 gene mutation",
+"established": true,
+"details": "can be related to autosomal dominant intellectual developmental disorder with macrocephaly, seizures, and speech delay",
+"reviewed": "2023-03-08"
+},
+{
+"name": "Pallister Hall Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pallister Killian Mosaic Syndrome",
+"established": true,
+"details": "Pallister Killian Mosaic Syndrome (aka: tetrasomy 12p; Killian/Teschler-Nicola Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pallister W Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Panhypopituitarism",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Papillitis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Papillon Lefevre Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Paramyotonia Congenita",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Paraneoplastic Neurologic Syndromes",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Paraplegia, Hered Spastic",
+"established": true,
+"details": "Paraplegia, Hereditary Spastic",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Parechovirus Encephalitis",
+"established": true,
+"reviewed": "2025-08-04"
+},
+{
+"name": "Parry Romberg Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pars Planitis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Parsonage Turner Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Partial Arousal Sleep Disorder",
+"established": false,
+"details": "DSM-5 Non-Rapid Eye Movement ICD-10 Sleep Arousal Disorders—Sleep terror type Sleep Terrors",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Partial-Cerebellar Ataxia-MR",
+"established": true,
+"details": "Partial-Cerebellar Ataxia-Mental Retardation",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pediatric Cardiomyopathy",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pentalogy of Cantrell",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "PEPCK Deficiency",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Peripheral Dys-Nasal Hypopl-MR",
+"established": true,
+"details": "Peripheral Dysostosis-Nasal Hypoplasia-Mental Retardation (aka: PNP; Acrodysostosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Perisylvian Synd, Cong Bilat",
+"established": true,
+"details": "Perisylvian Syndrome, Congenital Bilateral",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Periventricular Leukomalacia",
+"established": true,
+"details": "Periventricular Leukomalacia (PVL)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Peroxisomal Biogenesis Disorder",
+"established": true,
+"details": "AKA Zellweger spectrum",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Peters Anomoly",
+"established": false,
+"details": "(aka: bilateral anterior segment dysgenesis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Peutz Jeghers Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pfeiffer Syndrome Type I",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "PHACES Syndrome",
+"established": false,
+"details": "(aka: PHACE syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Phelan-McDermid Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Phenylketonuria (Untreated)",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Phocomelia Syndrome",
+"established": true,
+"details": "Phocomelia Syndrome (aka: Roberts SC-Phocomelia Syndrome; Roberts Tetraphocomelia Syndrome; SC Phocomelia Syndrome; Pseudo-thalidomide Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Phosphoglycerate Kinase Deficiency",
+"established": true,
+"details": "Phosphoglycerate Kinase Deficiency (aka: Anemia, Hemolytic with PGK Deficiency; Erythrocyte Phosphoglycerate Kinase Deficiency; PGK; Phosphoglycerokinase)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pica",
+"established": true,
+"details": "DSM-5 Pica ICD-10 Pica of Infancy and Childhood",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pick's Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pierre-Robin Sequence",
+"established": false,
+"details": "(aka Perre-Robin Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "PIGA",
+"established": false,
+"details": "PIGA (aka: phosphatidylinositol glycan anchor biosynthesis class A gene mutation)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pineal Cysts, Symptomatic",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Plagiocephaly",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pleuropulmonary Blastoma",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "PMM2-CDG",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "POEMS Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Poland Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "POLG-related Disease",
+"established": true,
+"details": "Alpers Disease (aka: Alpers Diffuse Degeneration of Cerebral Gray Matter with Hepatic Cirrhosis; Alpers Progressive Infantile Poliodystrophy; Christensen's disease; Christensen-Krabbe disease; Diffuse Cerebral Degeneration in Infancy; Poliodystrophia Cer...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Polychondritis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Polycystic Kidney Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Polydactyly (all types: postaxial, preaxial, and central)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Polymicrogyria, bilateral",
+"established": true,
+"details": "Polymicrogyria, bilateral (aka: Congenital Bilateral Perisylvian Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Polymicrogyria, Unilateral Focal",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Polymyalgia Rheumatica",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Polymyositis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pompe Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Porencephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Porphyria, Acute Intermittent",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Porphyria, Congenital Erythropoietic",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Porphyria, Hereditary Coproporphyria",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Porphyria, Variegate",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Positive Toxicology Screen",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Post-Traumatic Stress Disorder (PTSD)",
+"established": true,
+"details": "DSM-5 Posttraumatic Stress Disorder for Children ICD-10 Posttraumatic Stress Disorder",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Posterior Uveitis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Potocki-Lupski Syndrome",
+"established": true,
+"details": "Potocki-Lupski Syndrome (aka Chromosome 17p Duplication)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Potter Sequence",
+"established": false,
+"details": "Potter Sequence, Potter syndrome, and oligohydramnios sequence",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Prader-Willi Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Presumed septic thrombus",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Primary alveolar hypoventilation",
+"established": false,
+"details": "(aka Ondine's Curse)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Primary ciliary dyskinesia",
+"established": true,
+"reviewed": "2023-12-21"
+},
+{
+"name": "Progeria, Hutchinson Gilford",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Progressive Multifocal Leukoen",
+"established": true,
+"details": "Progressive Multifocal Leukoencephalopathy",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Progressive Myoclonus Epilepsy",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Progressive Osseous Heteroplasia (POH)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Proteus Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Proximal Femoral Focal Deficiency",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Prune Belly Syndrome",
+"established": false,
+"details": "(aka Eagle-Barrett syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pseudo Hurler Polydystrophy",
+"established": true,
+"details": "Pseudo Hurler Polydystrophy (aka: mucolipidosis type III)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pseudo-achondroplasia",
+"established": false,
+"details": "(aka: Pseudoachondroplastic Dysplasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pseudohypoparathyroidism",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pseudoxanthoma Elasticum (PXE)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "PTEN Hamartoma Tumor Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pterygium Syndrome, Multiple",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ptosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pulmonary Eventration",
+"established": false,
+"details": "aka: Eventration of the Diaphragm",
+"reviewed": "2020-12-09"
+},
+{
+"name": "PURA-related neurodevelopmental disorders",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pyknodysostosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pyloric stenosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pyridoxine-Dependent Seizures (PDS)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pyruvate Carboxylase Deficiency",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pyruvate Dehydrogenase Deficiency",
+"established": true,
+"details": "Pyruvate Dehydrogenase Deficiency (PDCD)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Pyruvate Kinase Deficiency",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Quadruple X Syndrome",
+"established": true,
+"details": "aka: 48; Tetrasomy X; XXXX Syndrome",
+"reviewed": "2025-04-02"
+},
+{
+"name": "Rabson-Mendenhall Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ramsay-Hunt Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rapp Hodgkin Syndrome",
+"established": false,
+"details": "(aka: Ectodermal dysplasia, Rapp-Hodgkin type; Ectodermal dysplasia, anhidrotic, with cleft lip and cleft palate; RHS; Rapp-Hodgkin (hypohidrotic) ectodermal dysplasia syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Reactive Attachment Disorder",
+"established": true,
+"details": "DSM-5 Reactive Attachment Disorder ICD-10 Reactive Attachment Disorder",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Recombinant Chrom 8 Syndrome",
+"established": true,
+"details": "Recombinant Chromosome 8 Syndrome (aka: Rec8 Syndrome; San Luis Valley Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Reflex Sympathetic Dystrophy Syndrome",
+"established": false,
+"details": "(aka: Algodystrophy ; Algoneurodystrophy ; Causalgia Syndrome (Major) ; Complex Regional Pain Syndrome; RSDS ; Reflex Neurovascular Dystrophy ; Sudeck's Atrophy )",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Refsum Syndrome",
+"established": true,
+"details": "Refsum Syndrome (aka: DOC 11 (Phytanic Acid Type); Disorder of Cornification 11 (Phytanic Acid Type) ; Heredopathia Atactica Polyneuritiformis; Hypertrophic Neuropathy of Refsum; Phytanic Acid Storage Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Relationship Specific Disorder of Infancy/Early Childhood",
+"established": true,
+"details": "AKA Feeding Disord of CG-Inf Reciprocity, ParentInfRel-GAS of 40 or less",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Respiratory Distress Syndrome, Infant",
+"established": false,
+"details": "(aka: Hyaline Membrane Disease; IRDS; Infantile Respiratory Distress Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinal Hemorrhage",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinitis Pigmentosa",
+"established": false,
+"details": "(aka: Progressive Pigmentary Retinopathy and RP)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinoblastoma",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinoic Acid Embryopathy",
+"established": true,
+"details": "Retinoic Acid Embryopathy (aka: Accutane Embryopathy; Accutane (Fetal Effects of); Isotretinoin Embryopathy; Isotretinoin Teratogen Syndrome; Isotretinoin (Fetal Effects of); Fetal Retinoid Syndrome )",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinopathy of Prematurity",
+"established": false,
+"details": "(aka: ROP and Retrolental Fibroplasia (obsolete))",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinopathy, Arteriosclerotic",
+"established": false,
+"details": "(aka: Arteriosclerosis, Retina)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinopathy, Diabetic",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinopathy, Hypertensive",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Retinoschisis",
+"established": false,
+"details": "(aka: Congenital Retinal Cyst ; Congenital Vascular Veils in the Retina ; Giant Cyst of the Retina; Vitreoretinal Dystrophy) ((Disorder Subdivisions: Blessig Cysts; Congenital Retinoschisis; Familial Foveal Retinoschisis; Iwanoff Cysts; Peripheral Cystoi...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rett Synd (MECP2)",
+"established": true,
+"details": "AKA MECP2, Rett Synd",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Reye Syndrome",
+"established": false,
+"details": "(aka: Fatty Liver with Encephalopathy; RS; Reye's Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rh Incompatibility",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rieger Syndrome",
+"established": false,
+"details": "(aka: Axenfeld-Rieger Syndrome; Goniodysgenesis-Hypodontia; Iridogoniodysgenesis With Somatic Anomalies; RGS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "RMND1",
+"established": true,
+"reviewed": "2024-10-14"
+},
+{
+"name": "Roberts Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Robinow Syndrome",
+"established": false,
+"details": "(aka: Acral Dysostosis with Facial and Genital Abnormalities; Costovertebral segmentation defect with mesomelia (formerly); Fetal Face Syndrome; Robinow Dwarfism)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Romano Ward Syndrome",
+"established": false,
+"details": "(aka: Autosomal Dominant Long QT Syndrome; LQTS1; Long QT Syndrome Type 1; Long QT Syndrome without Deafness; RWS; Romano-Ward Long QT Syndrome; Ward-Romano Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rosai-Dorfman Disease (RDD;SHML;Sinus Histiocytosis w/ Massive Lymphadenopathy)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rosenberg Chutorian Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Roseola Infantum",
+"established": false,
+"details": "(aka: Exanthem Subitum; Pseudorubella; Sixth Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rothmund Thomson Syndrome",
+"established": false,
+"details": "(aka: Poikiloderma Atrophicans and Cataract; Poikiloderma Congenitale; RTS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Roussy Levy Syndrome",
+"established": true,
+"details": "Roussy Levy Syndrome (aka: Charcot-Marie-Tooth Disease (Variant); Charcot-Marie-Tooth-Roussy-Levy Disease; Hereditary Areflexic Dystasia; Hereditary Motor Sensory Neuropathy; Hereditary Motor Sensory Neuropathy I; HMSN I)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rubella, Congenital",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rubinstein Taybi Syndrome",
+"established": true,
+"details": "Rubinstein Taybi Syndrome (aka: Broad Thumbs and Great Toes, Characteristic Facies, and Mental Retardation; Michail-Matsoukas-Theodorou-Rubinstein-Taybi Syndrome; RSTS; Rubinstein Taybi (RTS) Broad Thumb-Hallux syndrome; Rubinstein syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Rumination",
+"established": false,
+"details": "DSM-5 Rumination Disorder ICD-10 Feeding Disorders of Infancy and Early Childhood AKA Rumination Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Russell Silver Syndrome",
+"established": false,
+"details": "(aka: RSS; Russell Syndrome; Russell-Silver Dwarfism; SRS; Silver Syndrome; Silver-Russell Dwarfism; Silver-Russell Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Saethre Chotzen Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sakati Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sandhoff Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sandifer Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sanfillipo Syndrome (Mucopolysaccharidosis type 3)",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Santavuori Disease",
+"established": true,
+"details": "Santavuori Disease (aka: CLN1; INCL; Infantile Finnish Type Neuronal Ceroid Lipofuscinosis; Balkan Disease; Infantile Neuronal Ceroid Lipofuscinosis; Infantile Type Neuronal Ceroid Lipofuscinosis; Neuronal Ceroid Lipofuscinosis Type 1; Santavuori-Haltia Disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Schindler Disease",
+"established": true,
+"details": "Schindler Disease (aka: Alpha-N-Acetylgalactosaminidase Deficiency, Schindler Type; Alpha-NAGA Deficiency, Schindler Type; Lysosomal Alpha-N-Acetylgalactosaminidase Deficiency, Schindler Type; Alpha-Galactosidase B Deficiency; GALB Deficiency; Alpha-GalNAc Deficiency, Schindler Type; Neuroaxonal Dystrophy, Schindler Type; Neuronal Axonal Dystrophy, Schindler Type)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Schinzel Giedion Syndrome",
+"established": true,
+"details": "Schinzel Giedion Syndrome (aka: Schinzel-Giedion Midface-Retraction Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Schizencephaly",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Schwartz Jampel Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Scleroderma",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Scoliosis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Scott Craniodigital Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Seckel Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Seizures",
+"established": false,
+"details": "AKA: Focal Seizures",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Selective Mutism",
+"established": true,
+"details": "DSM-5 Selective Mutism ICD - 10 Selective Mutism",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sensory Over-Responsivity Disorder",
+"established": true,
+"details": "DSM-5 Other Specified Neurodevelopmental Disorder ICD-10 Other childhood emotional disorders; Regulation Disorders of Sensory Processing: Hypersensitive, Type B: Negative",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sensory Under-Responsivity Disorder",
+"established": true,
+"details": "DSM-5 Other Specified Neurodevelopmental Disorder ICD-10 Other childhood emotional disorders, AKA Reg Dis Sens Proc: Hypo/Under, Regulation Disorders of Sensory Processing: Hypersensitive, Type B: Negative",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Separation Anxiety Disorder",
+"established": true,
+"details": "DSM-5 Separation Anxiety Disorder ICD-10 Separation Anxiety Disorder of Childhood",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sepsis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Septo-optic Dysplasia",
+"established": false,
+"details": "(aka: Optic Nerve Hypoplasia (ONH); Pituitary Hypoplasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Setleis Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Severe Combined Immunodeficiency (SCID)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Shaken Baby Syndrome",
+"established": true,
+"details": "Shaken Baby Syndrome (aka: Shaken Impact Syndrome; Shaken Infant Syndrome) Abusive Head Trauma",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Short Chain Acyl CoA Dehydrogenase Deficiency (SCAD)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "SHORT Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Shwachman Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sickle Cell Anemia",
+"established": false,
+"reviewed": "2024-01-16"
+},
+{
+"name": "Simian B Virus Infection",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Simpson Dysmorphia Syndrome",
+"established": true,
+"details": "Simpson Dysmorphia Syndrome (aka: Bulldog Syndrome; DGSX Golabi-Rosen Syndrome; Dysplasia Gigantism Syndrome, X-Linked; SDYS; SGB Syndrome; Simpson-Golabi-Behmel Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Singleton Merten Syndrome",
+"established": true,
+"details": "Singleton Merten Syndrome (aka: Merten Singleton Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sirenomelia Sequence",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Situs inversus totalis",
+"established": false,
+"reviewed": "2023-12-21"
+},
+{
+"name": "Sjogren Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Skeletal Dysplasia",
+"established": false,
+"details": "Congenital skeletal dysplasia. (aka: Skeletal Dysplasia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Skin Picking Disorder of Infancy/Early Childhood",
+"established": false,
+"details": "DSM -5Excoriation (Skin-Picking) Disorder ICD-10 Other obsessive-compulsive disorders",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sleep Onset Disorder",
+"established": false,
+"details": "DSM-5 Insomnia Disorder ICD-10 Nonorganic Insomnia, AKA Sleep-Onset Disorder (Sleep-Onset Progodyssomnia)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Smith-Lemli-Opitz Syndrome",
+"established": true,
+"details": "Smith-Lemli-Opitz Syndrome (aka: SLO)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Smith-Magenis Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sneddon Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Social Anxiety Disorder",
+"established": true,
+"details": "DSM-5 Social Anxiety Disorder (Social Phobia) ICD-10 Social Anxiety Disorder of Childhood",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sotos Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Specific Phobia",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Spina Bifida (except occulta)",
+"established": true,
+"details": "Spina Bifida (except for spina bifida occulta, in which the spinal cord is not exposed, but the vertebral bones aren't completely closed) (aka: meningomyelocele; myelomeningocele; MMC)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Spinal Cord Injury",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Spinal Muscular Atrophy",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Spinal Stenosis",
+"established": false,
+"details": "(aka: Congenital spinal dislocation/kyphosis @T7-T8 with spinal cord compression)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Split Hand/Split Foot Malformation",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Spondyloepiphyseal Dysplasia Tarda",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Spondyloepiphyseal Dysplasia, Congenital",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sprengel Deformity",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Stevens Johnson Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Stickler Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Stroke",
+"established": true,
+"details": "Stroke (aka: acute neurologic syndrome; congenital stroke syndrome; neonatal stroke syndrome; brain attack; basal ganglia hemorrhage - changes in ischemia; Vein of Galen ischemia; perinatal stroke)",
+"reviewed": "2022-08-17"
+},
+{
+"name": "Sturge-Weber Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Stuve-Wiedemann Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Subacute Sclerosing Panenceph",
+"established": true,
+"details": "Subacute Sclerosing Panencephalitis",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Subdural Hematoma",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Subgaleal Hemorrhage",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Succinic Semialdehyde Dehydrogenase Deficiency",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Summitt Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Sydenham Chorea",
+"established": true,
+"details": "Sydenham Chorea (aka: Sydenham's Chorea)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Syndactyly",
+"established": false,
+"details": "(aka: polysyndactyly; webbing of the fingers and/or toes)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "SYNGAP-1 Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Syringobulbia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Systemic Herpes Simplex Virus (HSV) Infection",
+"established": false,
+"details": "(aka: disseminated herpes simplex infection)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "TANC2 - Gene Deletion or Disruption",
+"established": true,
+"details": "TANC2-Related Neurodevelopmental Syndrome",
+"reviewed": "2026-07-23"
+},
+{
+"name": "Tay Sachs Disease",
+"established": true,
+"details": "Tay Sachs Disease (aka: Cerebromacular Degeneration; GM2 Gangliosidosis, Type 1; Hexoaminidase Alpha-Subunit Deficiency (Variant B); Infantile Cerebral Ganglioside; Infantile Sipoidosis GM-2 Gangliosideosis (Type S); Lipidosis, ganglioside, infantile; Sp...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Telecanthus with Associated Abnormalities",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tethered Spinal Cord Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tetrahydrobiopterin Deficiency",
+"established": false,
+"details": "(including the following subdivisions: Tetrahydrobiopterin Synthesis, GTP Cyclohydrolase I (GTPCH) Deficiency, 6-Pyruvoyl Tetrahydropterin Synthase (PTPS) Deficiency [aka: Hyperphenylalanemia with Biopterin Defect, PTPS Deficiency], Tetrahydrobiopterin R...",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tetralogy of Fallot",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Thalamic Syndrome (Dejerine Roussy)",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Three M Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Thrombocytopenia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tietze Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Timothy Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tolosa Hunt Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tongue-tie",
+"established": false,
+"details": "ankyloglossia",
+"reviewed": "2023-01-25"
+},
+{
+"name": "TORCH Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Torticollis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tourettes Disorder",
+"established": false,
+"details": "Aka Tourettes Syndrome ICD-10 Tourette's Disorder",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Townes Brocks Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Toxic Epidermal Necrolysis",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Toxic Optic Neuropathy",
+"established": false,
+"details": "(aka: Toxic/Nutritional Optic Neuropathy)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tracheoesophageal Fistula",
+"established": false,
+"details": "(aka, Esophageal Atresia and Tracheoesophageal Fistula; Esophageal Fistula)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tracheomalacia",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tracheostomy",
+"established": true,
+"details": "(aka: trach; trach tube; tracheostomy tube)",
+"reviewed": "2023-01-09"
+},
+{
+"name": "Transverse Myelitis",
+"established": true,
+"details": "Transverse Myelitis (aka: Cervical Transverse Myelitis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Traumatic Brain Injury (TBI)",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Treacher Collins Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tricho Dento Osseous Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trichorhinophalangeal Syndrome Type I",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trichorhinophalangeal Syndrome Type III",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trichotillomania",
+"established": true,
+"details": "DSM-5 Trichotillomania ICD-10 Trichotillomania",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trigger Finger",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Triphosphate Isomerase Deficiency",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Triple X Syndrome",
+"established": true,
+"details": "Triple X syndrome (aka: Trisomy X; 47,XXX; Triplo X Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Triploidy Syndrome",
+"established": true,
+"details": "Triploidy Syndrome (aka: triploid syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trismus Pseudocamptodactyly Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trisomy 13",
+"established": true,
+"details": "aka: Patau Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trisomy 18",
+"established": true,
+"details": "aka: Edwards Syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Trisomy 8 Syndrome",
+"established": true,
+"details": "Trisomy 8 Syndrome (aka: Trisomy 8 mosaicism)",
+"reviewed": "2025-05-08"
+},
+{
+"name": "TRPM3",
+"established": true,
+"reviewed": "2026-08-03"
+},
+{
+"name": "Truncus Arteriosus",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "TTF-1 Deletion",
+"established": true,
+"reviewed": "2024-07-24"
+},
+{
+"name": "Tuberous Sclerosis",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Turcot Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Turner Syndrome",
+"established": true,
+"details": "Turner Syndrome (aka: 45X Syndrome; XO Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Twin-Twin Transfusion Syndrome",
+"established": false,
+"details": "(aka: TTTS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Tyrosinemia, Hereditary",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ulnar Dysplasia",
+"established": true,
+"details": "also known as ulnar longitudinal deficiency, ulnar club hand or ulnar aplasia/hypoplasia is a rare congenital malformation which consists of an underdeveloped or missing ulnae bone, causing an ulnar deviation of the entire wrist.",
+"reviewed": "2022-11-30"
+},
+{
+"name": "Undereating Disorder",
+"established": false,
+"details": "DSM-5 Unspecified Feeding or Eating Disorder ICD-10 Other Eating Disorders AKA Infantile Anorexia",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Unilateral Blindness",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Urea Cycle Defects (untreated)",
+"established": true,
+"details": "Urea Cycle Defects",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Usher Syndrome",
+"established": true,
+"details": "AKA Hallgren Synd",
+"reviewed": "2020-12-09"
+},
+{
+"name": "VACTERL Association",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "VACTERL w Hydrocephalus",
+"established": true,
+"details": "VACTERL with Hydrocephalus (aka: VACTERL Association with Hydrocephalus; VACTERL-H Association; VATER Association with Hydrocephalus; VACTERL-H Association; VATER Association with Hydrocephalus)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Valinemia",
+"established": false,
+"details": "(aka: Hypervalinemia; Valine Transaminase Deficiency)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Van der Knapp Syndrome",
+"established": true,
+"details": "Van der Knapp Syndrome (aka: Megalencephalic leukoencephalopathy with subcortical cysts)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Vascular Malformations of the Brain",
+"established": false,
+"details": "(aka: Cerebral Malformations, Vascular; Intracranial Vascular Malformations; Occult Intracranial Vascular Malformations)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Vasculitis",
+"established": false,
+"details": "(aka: angiitis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Vasculitis, Cutaneous Necrotizing",
+"established": false,
+"details": "(aka: CNV; Cutaneous Leukocytoclastic Angiitis; Dermal Necrotizing Angiitis; Hypersensitivity Vasculitis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ventricular Septal Defects",
+"established": false,
+"details": "(aka: Hole in the Heart, VSD, Congenital Ventricular Defects)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ventriculomegaly",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Vertebral anomalies",
+"established": false,
+"details": "Vertebral anomalies (aka: fusion of vertebrae; hemi-vertebra; hemivertebra)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Ververi-Brady syndrome",
+"established": true,
+"details": "(aka: VBS) due to mutations in the QRICH1 gene",
+"reviewed": "2026-01-15"
+},
+{
+"name": "Very Long Chain Acyl CoA Dehydrogenase Deficiency",
+"established": false,
+"details": "(aka: VLCAD; ACADL; LCAD)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Visual Impairment (bilateral, not correctable)",
+"established": true,
+"details": "Visual Impairment, Bilateral (not correctable with treatment, surgery, glasses, or contact lenses) (aka bilateral vision impairment bilateral vision loss, bilateral blindness) aka Aniridia, Lenz Microphthalmia Synd",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Vocal Cord Nodules",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Vocal Cord Paresis",
+"established": false,
+"details": "(aka: vocal cord paralysis), whether unilateral (left or right) or bilateral",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Vogt Koyanagi Harada Syndrome",
+"established": false,
+"details": "(aka: Alopecia-Poliosis-Uveitis-Vitiligo-Deafness-Cutaneous-Uveo-Oto Syndrome; Harada Syndrome; Uveomeningitis Syndrome; VKH Syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Von Hippel-Lindau Syndrome",
+"established": false,
+"details": "(aka: Angiomatosis Retinae ; Lindau Syndrome; Pheochromocytoma; Renal cell carcioma; Retinocerebellar Angiomatosis; VHL; VHL Syndrome; Von Hippel Lindau disease)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Waardenburg Syndrome",
+"established": false,
+"details": "(aka: Waardenburg Syndrome Type I (WS1); Waardenburg Syndrome Type II (WS2); Waardenburg Syndrome Type IIA (WS2A); Waardenburg Syndrome Type IIB (WS2B); Waardenburg Syndrome Type III (WS3) ; Waardenburg Syndrome Type IV (WS4))",
+"reviewed": "2020-12-09"
+},
+{
+"name": "WAGR Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Waldmann Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Walker Warburg Syndrome",
+"established": true,
+"details": "Walker Warburg Syndrome (aka: WWS)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Watson Syndrome",
+"established": true,
+"details": "Watson Syndrome (aka: Pulmonic Stenosis with Cafe-Au-Lait Spots; Cafe-Au-Lait Spots with Pulmonic Stenosis)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Weaver Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Weill Marchesani Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Weismann Netter Stuhl Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Weiss-Kruszka Syndrome",
+"established": true,
+"details": "Weiss-Kruszka Syndrome (WKS)",
+"reviewed": "2025-09-15"
+},
+{
+"name": "Werdnig Hoffman Disease",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wernicke-Korsakoff Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Whipple Disease",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wieacker Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wiedemann Rautenstrauch Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wiedemann-Steiner Syndrome",
+"established": true,
+"reviewed": "2024-08-19"
+},
+{
+"name": "Wildervanck Syndrome",
+"established": false,
+"details": "(aka cervicooculoacoustic syndrome)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Williams Syndrome",
+"established": true,
+"details": "aka: Williams-Beuren syndrome",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wilm's Tumor",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wilson Disease",
+"established": true,
+"details": "Wilson's Disease",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Winchester Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Witteveen-Kolk Syndrome",
+"established": true,
+"reviewed": "2024-05-29"
+},
+{
+"name": "Wolff-Parkinson-White Syndrome",
+"established": false,
+"details": "(aka: WPW)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wolfram Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "Wyburn Mason Syndrome",
+"established": false,
+"reviewed": "2020-12-09"
+},
+{
+"name": "X linked Lymphoproliferative Syndrome",
+"established": false,
+"details": "(aka: XLP)",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Xeroderma Pigmentosum",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "XXXXX Syndrome",
+"established": true,
+"details": "XXXXX Syndrome (aka: Penta X Syndrome )",
+"reviewed": "2020-12-09"
+},
+{
+"name": "XXYY Syndrome",
+"established": true,
+"reviewed": "2020-12-09"
+},
+{
+"name": "XYY Syndrome",
+"established": true,
+"details": "XYY Syndrome; Jacobs Syndrome; 47, XYY",
+"reviewed": "2020-12-09"
+},
+{
+"name": "Yunis Varon Syndrome",
+"established": false,
+"reviewed": "2020-12-06"
+},
+{
+"name": "Zellweger Syndrome",
+"established": true,
+"details": "Zellweger syndrome (aka: Bowen Syndrome; Cerebrohepatorenal Syndrome)",
+"reviewed": "2020-12-09"
+}
+]
+}

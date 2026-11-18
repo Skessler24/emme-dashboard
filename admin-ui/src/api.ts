@@ -1,3 +1,11 @@
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 export async function api<T>(path: string, options?: { method?: string; body?: unknown }): Promise<T> {
   const res = await fetch(path, {
     method: options?.method || 'GET',
@@ -14,7 +22,7 @@ export async function api<T>(path: string, options?: { method?: string; body?: u
       throw new Error(res.status === 401 || res.status === 302 ? 'Sign in required' : 'The server did not return data');
     }
   }
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) throw new ApiError(data.error || 'Request failed', res.status);
   return data as T;
 }
 

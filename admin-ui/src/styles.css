@@ -200,3 +200,59 @@ th { color: var(--green); font-size: 0.78rem; letter-spacing: 0.02em; }
 @media (max-width: 767px) {
   .ask-float { right: 0.75rem; }
 }
+
+/* Billing tabs and setup questions */
+.subtabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.subtab {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--green);
+  background: var(--surface);
+}
+.subtab--active { background: var(--green); color: #fff; border-color: var(--green); }
+.setup-block { margin-top: 1.5rem; }
+.setup-block h2 { margin-top: 0; }
+.setup-status { font-weight: 600; margin: 0 0 0.6rem; color: var(--green); }
+.setup-status--error, .setup-status--conflict { color: var(--danger); }
+.setup-warning {
+  background: #fff6d6;
+  border: 1px solid var(--yellow);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  margin: 0 0 1rem;
+}
+.setup-section, .setup-source {
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.6rem;
+  background: var(--surface);
+}
+.setup-section summary, .setup-source summary { cursor: pointer; padding: 0.2rem 0; }
+.setup-q { padding: 0.8rem 0; border-top: 1px dashed var(--line); }
+.setup-q:first-of-type { border-top: 0; }
+.setup-q__text { margin: 0 0 0.3rem; font-weight: 600; color: var(--green); }
+.setup-q__help { margin: 0 0 0.4rem; font-size: 0.88rem; }
+.setup-q__options { display: grid; gap: 0.3rem; margin: 0.3rem 0 0.5rem; }
+.setup-q textarea { width: 100%; min-height: 4.5rem; }
+.setup-check { display: flex; gap: 0.5rem; align-items: flex-start; font-weight: 400; color: var(--text); font-size: 0.92rem; }
+.setup-check input { margin-top: 0.2rem; }
+.setup-q__unsure { margin-top: 0.4rem; color: var(--muted); }
+.setup-files { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--line); }
+.setup-files h4 { margin: 0 0 0.3rem; color: var(--green); }
+.setup-files__list { list-style: none; padding: 0; margin: 0 0 0.8rem; display: grid; gap: 0.5rem; }
+.setup-files__list li { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; align-items: center; }
+.setup-add { margin-top: 1rem; }
+.setup-add h3 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--green); }
+.setup-list { margin: 0; padding-left: 1.1rem; }
+.setup-prompt { width: 100%; min-height: 28rem; font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
+.btn:disabled { opacity: 0.6; cursor: default; }
+
+.setup-note {
+  background: #eaf4ea;
+  border: 1px solid var(--green);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.8rem;
+}

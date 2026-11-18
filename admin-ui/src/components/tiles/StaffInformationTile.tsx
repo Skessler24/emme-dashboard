@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
+import { TileWithSetup } from '../setup/TileSetup';
 
-export function StaffInformationTile() {
+function StaffInformationOverview() {
   const [catalog, setCatalog] = useState<Row[]>([]);
   const [staffId, setStaffId] = useState('');
   const [trainings, setTrainings] = useState<Row[]>([]);
@@ -63,5 +64,13 @@ export function StaffInformationTile() {
       <h2>Open evals</h2>
       <DataTable rows={evals} empty="No open evals." columns={[{ key: 'noteName', label: 'Eval' }, { key: 'clientName', label: 'Client' }, { key: 'date', label: 'Date' }, { key: 'status', label: 'Status' }]} />
     </section>
+  );
+}
+
+export function StaffInformationTile() {
+  return (
+    <TileWithSetup hashId="staff" tileId="staff-information" label="Staff Information">
+      <StaffInformationOverview />
+    </TileWithSetup>
   );
 }
