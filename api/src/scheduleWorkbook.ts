@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { GraphError, candidateSiteIds, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend } from './graphClient';
+import { GraphError, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend, siteHoldingFolder } from './graphClient';
 import { findExistingProviderFile, SCHEDULE_ROOT } from './providerSetup';
 import { currentBoard } from './schedulingService';
 
@@ -341,25 +341,8 @@ function scoreName(candidate: string, staffName: string, email: string): number 
   return 0;
 }
 
-let scheduleSiteCache = '';
-
 export async function scheduleSiteId(): Promise<string> {
-  if (scheduleSiteCache) return scheduleSiteCache;
-  const tries = await candidateSiteIds();
-  if (!tries.length) throw new GraphError(503, 'SharePoint is not configured for schedules.');
-  const folder = SCHEDULE_ROOT.map(encodeURIComponent).join('/');
-  for (let i = 0; i < tries.length; i++) {
-    try {
-      await graphGet('/sites/' + tries[i] + '/drive/root:/' + folder + ':/children?$select=name&$top=1');
-      scheduleSiteCache = tries[i];
-      return scheduleSiteCache;
-    } catch (err) {
-      if (err instanceof GraphError && (err.status === 401 || err.status === 403 || err.status === 404)) continue;
-      throw err;
-    }
-  }
-  scheduleSiteCache = tries[0];
-  return scheduleSiteCache;
+  return siteHoldingFolder(SCHEDULE_ROOT, 'SharePoint is not configured for schedules.');
 }
 
 export function drivePath(segments: string[]): string {

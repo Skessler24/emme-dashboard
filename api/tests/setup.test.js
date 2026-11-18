@@ -119,3 +119,25 @@ test('schedules are read from the shared Emme site once folders exist there', as
   folders.shared1.add(SCHEDULES);
   assert.strictEqual(await scheduleSiteId(), 'shared1');
 });
+
+test('a folder that is not found is looked for again, and a moved folder is found within minutes', async () => {
+  const { forgetFolderSites } = require('../dist/graphClient');
+  forgetFolderSites();
+  folders.shared1.delete(SCHEDULES);
+  folders.personal1.delete(SCHEDULES);
+  // Missing everywhere: the first site is used, but that answer is not remembered.
+  assert.strictEqual(await scheduleSiteId(), 'shared1');
+  folders.personal1.add(SCHEDULES);
+  assert.strictEqual(await scheduleSiteId(), 'personal1');
+  // Remembered while fresh, so a busy minute does not repeat the lookups.
+  folders.shared1.add(SCHEDULES);
+  assert.strictEqual(await scheduleSiteId(), 'personal1');
+  // After the memory runs out, the moved folder is found on the shared site.
+  const realNow = Date.now;
+  Date.now = () => realNow() + 6 * 60 * 1000;
+  try {
+    assert.strictEqual(await scheduleSiteId(), 'shared1');
+  } finally {
+    Date.now = realNow;
+  }
+});
