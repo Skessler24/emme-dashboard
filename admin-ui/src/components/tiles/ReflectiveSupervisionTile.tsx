@@ -18,7 +18,7 @@ type FolderResponse = {
 
 const ROOT = '/reflective-supervision';
 const SHAREPOINT_FOLDER =
-  'https://emmeco031-my.sharepoint.com/personal/jenriat_emmeco_org/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjenriat%5Femmeco%5Forg%2FDocuments%2FEMME%2FLEADERSHIP%20TEAM%2FEMME%20Processes%2FRS%5FObservation%20Process';
+  'https://emmeco031.sharepoint.com/sites/Emmeteam/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FEmmeteam%2FShared%20Documents%2FLEADERSHIP%20TEAM%2FEMME%20Processes%2FRS_Observation%20Process';
 
 function relativeFromHash(hash: string): string[] {
   const path = (hash || '#/').replace(/^#/, '');

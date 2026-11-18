@@ -31,7 +31,7 @@ Module._load = function (request, ...rest) {
   return originalLoad.call(this, request, ...rest);
 };
 
-const ROOT = 'EMME/LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules';
+const ROOT = 'LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules';
 const FILE_PATH = ROOT + '/ndelgado/Natalie Delgado Schedule.xlsx';
 const drive = { bytes: null, version: 0, beforePut: null, putCount: 0, latencyMs: 0, failPuts: 0 };
 
