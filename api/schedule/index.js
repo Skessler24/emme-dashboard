@@ -390,6 +390,27 @@ module.exports = async function (context, req) {
       return { workspace: current, result: { ok: !!result.ok, skipped: result.skipped, path: result.path, error: result.error } };
     }
 
+    if (rest === 'download' && method === 'POST') {
+      // An Excel copy of the schedule on screen, for the Download button. Nothing in SharePoint changes.
+      let body = req.body;
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (_) { body = {}; }
+      }
+      const shown = normalizeWorkspace((body && body.workspace) || body || {});
+      const book = await require('../dist/scheduleWorkbook').downloadScheduleWorkbook(shown, ownerEmail);
+      context.res = {
+        status: 200,
+        isRaw: true,
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': 'attachment; filename="' + String(book.fileName).replace(/[^\w .()-]/g, '_') + '"',
+          'Cache-Control': 'no-store'
+        },
+        body: book.bytes
+      };
+      return;
+    }
+
     if (rest === 'share' && method === 'POST') {
       const workspace = await loadForProvider();
       const token = crypto.randomBytes(18).toString('hex');

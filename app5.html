@@ -1886,6 +1886,30 @@
       return row.map(csvCell).join(',');
     }).join('\r\n');
     var stamp = new Date().toISOString().slice(0, 10);
+    // The real Excel file, in the same layout as the SharePoint schedule, built from what is on screen.
+    try {
+      var res = await fetch('/api/schedule/download', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace: state.workspace })
+      });
+      if (!res.ok) throw new Error('The Excel file could not be made');
+      var xlsx = new Uint8Array(await res.arrayBuffer());
+      var xlsxName = 'Emme-schedule-' + stamp + '.xlsx';
+      var disposition = res.headers.get('Content-Disposition') || '';
+      var fromHeader = /filename="([^"]+)"/.exec(disposition);
+      if (fromHeader) xlsxName = fromHeader[1];
+      var sheetMime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      downloadToComputer(xlsxName, sheetMime, xlsx);
+      try {
+        var xlsxPath = await saveToOneDrive(xlsxName, sheetMime, xlsx);
+        toast('Downloaded ' + xlsxName + ' and saved a copy to your OneDrive ' + xlsxPath);
+      } catch (err) {
+        toast('Downloaded ' + xlsxName + ' to your computer.');
+      }
+      return;
+    } catch (_) { /* fall back to the plain spreadsheet below */ }
     var name = 'Emme-schedule-' + stamp + '.csv';
     downloadToComputer(name, 'text/csv;charset=utf-8', csv);
     try {

@@ -863,6 +863,28 @@ export async function listScheduleOpenings(): Promise<Array<{ staffName: string;
   return found;
 }
 
+/**
+ * The Excel file for the Download button. It is the provider's own SharePoint workbook (so the layout is the
+ * one they know) with the schedule shown on screen written into it. The SharePoint file itself is not changed.
+ */
+export async function downloadScheduleWorkbook(workspace: Workspace, email: string): Promise<{ bytes: Buffer; fileName: string; usedWorkbook: boolean }> {
+  const staffEmail = String(email || '').trim().toLowerCase();
+  const stamp = new Date().toISOString().slice(0, 10);
+  try {
+    if (graphIsConfigured() && staffEmail) {
+      const staffName = await getUserDisplayName(staffEmail);
+      const form = await locateSchedule(staffName, staffEmail);
+      if (form) {
+        const current = await readScheduleBytes(form.segments.concat([form.fileName]));
+        if (current) {
+          return { bytes: await applyScheduleWorkbook(current, workspace), fileName: form.fileName, usedWorkbook: true };
+        }
+      }
+    }
+  } catch (_) { /* fall back to the plain workbook below */ }
+  return { bytes: await buildScheduleWorkbook(workspace), fileName: 'Emme-schedule-' + stamp + '.xlsx', usedWorkbook: false };
+}
+
 export async function syncScheduleWorkbook(workspace: Workspace, email: string): Promise<{ ok: boolean; path?: string; skipped?: boolean; error?: string }> {
   try {
     const staffEmail = String(email || '').trim().toLowerCase();

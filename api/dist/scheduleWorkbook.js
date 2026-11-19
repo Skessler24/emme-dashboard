@@ -20,6 +20,7 @@ exports.alignRows = alignRows;
 exports.applyDaysToWorkspace = applyDaysToWorkspace;
 exports.applyScheduleWorkbook = applyScheduleWorkbook;
 exports.listScheduleOpenings = listScheduleOpenings;
+exports.downloadScheduleWorkbook = downloadScheduleWorkbook;
 exports.syncScheduleWorkbook = syncScheduleWorkbook;
 const exceljs_1 = __importDefault(require("exceljs"));
 const graphClient_1 = require("./graphClient");
@@ -852,6 +853,28 @@ async function listScheduleOpenings() {
         });
     }
     return found;
+}
+/**
+ * The Excel file for the Download button. It is the provider's own SharePoint workbook (so the layout is the
+ * one they know) with the schedule shown on screen written into it. The SharePoint file itself is not changed.
+ */
+async function downloadScheduleWorkbook(workspace, email) {
+    const staffEmail = String(email || '').trim().toLowerCase();
+    const stamp = new Date().toISOString().slice(0, 10);
+    try {
+        if ((0, graphClient_1.graphIsConfigured)() && staffEmail) {
+            const staffName = await (0, graphClient_1.getUserDisplayName)(staffEmail);
+            const form = await locateSchedule(staffName, staffEmail);
+            if (form) {
+                const current = await readScheduleBytes(form.segments.concat([form.fileName]));
+                if (current) {
+                    return { bytes: await applyScheduleWorkbook(current, workspace), fileName: form.fileName, usedWorkbook: true };
+                }
+            }
+        }
+    }
+    catch (_) { /* fall back to the plain workbook below */ }
+    return { bytes: await buildScheduleWorkbook(workspace), fileName: 'Emme-schedule-' + stamp + '.xlsx', usedWorkbook: false };
 }
 async function syncScheduleWorkbook(workspace, email) {
     try {
