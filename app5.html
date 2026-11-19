@@ -400,8 +400,9 @@
         <span class="sync-dot" aria-hidden="true"></span>
         <span id="js-sync-label">Loading…</span>
       </span>
-      <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Save the spreadsheet to your OneDrive">Spreadsheet</button>
-      <button type="button" class="btn btn--ghost" id="js-pdf" title="Save a PDF to your OneDrive">PDF</button>
+      <button type="button" class="btn btn--ghost" id="js-save-now" title="Save your schedule right now and update the SharePoint spreadsheet">Save now</button>
+      <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Download the spreadsheet to your computer and save a copy to your OneDrive">Spreadsheet</button>
+      <button type="button" class="btn btn--ghost" id="js-pdf" title="Download a PDF to your computer and save a copy to your OneDrive">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
       <button type="button" class="btn btn--ghost" id="js-import" title="Import clients from any spreadsheet, PDF, Word doc, web page, contact file, or text. It does not need rows and columns.">Import</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
@@ -806,6 +807,22 @@
     state.saveTimer = setTimeout(persist, SAVE_DEBOUNCE_MS);
   }
 
+  /** The Save now button: skips the short wait, saves, and says where the schedule went. */
+  async function saveNow() {
+    if (!state.workspace || !currentEmail) { toast('Sign in first.'); return; }
+    var button = document.getElementById('js-save-now');
+    button.disabled = true;
+    state.lastSaveReport = '';
+    try {
+      clearTimeout(state.saveTimer);
+      for (var wait = 0; state.saving && wait < 60; wait++) await new Promise(function (r) { setTimeout(r, 500); });
+      await persist();
+      toast(state.lastSaveReport || (state.cloudConfigured ? 'Saved.' : 'Saved on this device only. The online connection is not available.'));
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   async function persist() {
     if (!state.workspace || !currentEmail) return;
     if (state.saving) {
@@ -847,9 +864,8 @@
           if (changedByOthers) renderKeepingFocus();
           setSyncLabel(savedPlace(result), 'live');
           var spError = result.sharePoint && result.sharePoint.error && !result.sharePoint.skipped ? String(result.sharePoint.error) : '';
-          document.getElementById('js-sync-pill').title = spError
-            ? 'Your schedule is saved. The SharePoint copy could not be updated: ' + spError
-            : 'Sync status';
+          state.lastSaveReport = saveReport(result);
+          document.getElementById('js-sync-pill').title = state.lastSaveReport;
           if (spError && window.console) console.warn('SharePoint copy not updated:', spError);
         } else {
           state.cloudConfigured = false;
@@ -1767,7 +1783,21 @@
     if (drive && sheet) return 'Live · OneDrive and SharePoint';
     if (drive) return 'Live · saved to OneDrive';
     if (sheet) return 'Live · saved to SharePoint';
+    if (result.sharePoint) return 'Saved · SharePoint not updated';
     return 'Live sync on';
+  }
+
+  /** Plain-words report of where a save landed, shown when hovering the status and after Save now. */
+  function saveReport(result) {
+    var parts = [];
+    var sp = result.sharePoint;
+    if (sp && sp.ok) parts.push('SharePoint spreadsheet updated' + (sp.path ? ' (' + String(sp.path).split('/').pop() + ')' : '') + '.');
+    else if (sp && sp.error && !sp.skipped) parts.push('SharePoint spreadsheet NOT updated: ' + sp.error);
+    else parts.push('SharePoint spreadsheet NOT updated (it was not reached).');
+    var od = result.oneDrive;
+    if (od && od.ok) parts.push('OneDrive copy saved.');
+    else if (od && od.error) parts.push('OneDrive copy not saved: ' + od.error);
+    return 'Your schedule is saved. ' + parts.join(' ');
   }
 
   function toBase64(bytes) {
@@ -1856,11 +1886,13 @@
       return row.map(csvCell).join(',');
     }).join('\r\n');
     var stamp = new Date().toISOString().slice(0, 10);
+    var name = 'Emme-schedule-' + stamp + '.csv';
+    downloadToComputer(name, 'text/csv;charset=utf-8', csv);
     try {
-      var path = await saveToOneDrive('Emme-schedule-' + stamp + '.csv', 'text/csv', csv);
-      toast('Saved to your OneDrive ' + path);
+      var path = await saveToOneDrive(name, 'text/csv', csv);
+      toast('Downloaded to your computer and saved to your OneDrive ' + path);
     } catch (err) {
-      toast(err.message || 'Could not save the spreadsheet to OneDrive');
+      toast('Downloaded to your computer. OneDrive copy: ' + (err.message || 'could not save'));
     }
   }
 
@@ -1872,12 +1904,28 @@
       lines.push(row.join('  |  '));
     });
     var stamp = new Date().toISOString().slice(0, 10);
+    var name = 'Emme-schedule-' + stamp + '.pdf';
+    var pdfBytes = buildSchedulePdf(lines);
+    downloadToComputer(name, 'application/pdf', pdfBytes);
     try {
-      var path = await saveToOneDrive('Emme-schedule-' + stamp + '.pdf', 'application/pdf', buildSchedulePdf(lines));
-      toast('Saved to your OneDrive ' + path);
+      var path = await saveToOneDrive(name, 'application/pdf', pdfBytes);
+      toast('Downloaded to your computer and saved to your OneDrive ' + path);
     } catch (err) {
-      toast(err.message || 'Could not save the PDF to OneDrive');
+      toast('Downloaded to your computer. OneDrive copy: ' + (err.message || 'could not save'));
     }
+  }
+
+  /** Hands the file to the browser so it lands in the Downloads folder, ready to attach to an email. */
+  function downloadToComputer(filename, mime, contents) {
+    var blob = new Blob([contents], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
 
   function shareLink() {
@@ -1907,6 +1955,7 @@
       });
   }
 
+  document.getElementById('js-save-now').addEventListener('click', saveNow);
   document.getElementById('js-spreadsheet').addEventListener('click', exportSpreadsheet);
   document.getElementById('js-pdf').addEventListener('click', exportPdf);
   document.getElementById('js-share').addEventListener('click', shareLink);
