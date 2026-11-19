@@ -706,12 +706,30 @@ function lastUsedRow(sheet) {
     }
     return last;
 }
+/** Makes the schedule the first tab, and the one that is open when the file is opened. */
+function putScheduleFirst(workbook, sheet) {
+    const sheets = workbook.worksheets;
+    if (sheets.length < 2 || sheets[0] === sheet)
+        return;
+    let lowest = 0;
+    sheets.forEach(function (other) { lowest = Math.min(lowest, Number(other.orderNo) || 0); });
+    sheet.orderNo = lowest - 1;
+    sheets.forEach(function (other) {
+        const views = other.views;
+        if (views && views.length)
+            views.forEach(function (view) { view.tabSelected = other === sheet; });
+    });
+    const book = workbook;
+    if (book.views && book.views.length)
+        book.views.forEach(function (view) { view.activeTab = 0; });
+}
 async function applyScheduleWorkbook(bytes, workspace) {
     const workbook = new exceljs_1.default.Workbook();
     await workbook.xlsx.load(Buffer.from(bytes));
     const sheet = workbook.getWorksheet('Current Schedule') || workbook.worksheets[0];
     if (!sheet)
         throw new Error('The schedule workbook has no worksheet.');
+    putScheduleFirst(workbook, sheet);
     const blocks = dayBlocks(sheet);
     if (!blocks.length)
         throw new Error('The schedule form needs a weekday appointment table.');

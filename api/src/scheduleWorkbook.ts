@@ -718,11 +718,27 @@ function lastUsedRow(sheet: ExcelJS.Worksheet): number {
   return last;
 }
 
+/** Makes the schedule the first tab, and the one that is open when the file is opened. */
+function putScheduleFirst(workbook: ExcelJS.Workbook, sheet: ExcelJS.Worksheet): void {
+  const sheets = workbook.worksheets;
+  if (sheets.length < 2 || sheets[0] === sheet) return;
+  let lowest = 0;
+  sheets.forEach(function (other) { lowest = Math.min(lowest, Number((other as unknown as { orderNo?: number }).orderNo) || 0); });
+  (sheet as unknown as { orderNo: number }).orderNo = lowest - 1;
+  sheets.forEach(function (other) {
+    const views = (other as unknown as { views?: Array<{ tabSelected?: boolean }> }).views;
+    if (views && views.length) views.forEach(function (view) { view.tabSelected = other === sheet; });
+  });
+  const book = workbook as unknown as { views?: Array<{ activeTab?: number }> };
+  if (book.views && book.views.length) book.views.forEach(function (view) { view.activeTab = 0; });
+}
+
 export async function applyScheduleWorkbook(bytes: Uint8Array, workspace: Workspace): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(Buffer.from(bytes) as unknown as ExcelJS.Buffer);
   const sheet = workbook.getWorksheet('Current Schedule') || workbook.worksheets[0];
   if (!sheet) throw new Error('The schedule workbook has no worksheet.');
+  putScheduleFirst(workbook, sheet);
   const blocks = dayBlocks(sheet);
   if (!blocks.length) throw new Error('The schedule form needs a weekday appointment table.');
 
