@@ -67,7 +67,8 @@ export function looseFileScore(candidate: string, staffName: string): number {
   const first = parts[0];
   const last = parts.length > 1 ? parts[parts.length - 1] : '';
   if (label === first) return 85;
-  if (last && (label === first + last[0] || label === first[0] + last[0])) return 85;
+  // Initials fit less well than the first name, so "Sam Schedule" wins over "SB Schedule" for Sam B.
+  if (last && (label === first + last[0] || label === first[0] + last[0])) return 80;
   return 0;
 }
 
@@ -186,7 +187,7 @@ export async function findExistingProviderFile(root: string[], email: string, di
     }
   });
   // Files named only by first name ("Kelly Schedule.xlsx") count, but only when exactly one file fits.
-  if (!bestFile || fileScore < 85 || (fileScore < 90 && tied) || !/\.xlsx$/i.test(bestFile)) return null;
+  if (!bestFile || fileScore < 80 || (fileScore < 90 && tied) || !/\.xlsx$/i.test(bestFile)) return null;
   return {
     folder: '',
     fileName: bestFile,

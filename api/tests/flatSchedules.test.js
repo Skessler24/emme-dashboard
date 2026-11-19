@@ -31,9 +31,16 @@ test('initials in the file name also work', async () => {
   assert.equal(found.fileName, 'SB Schedule.xlsx');
 });
 
+test('a first-name file beats an initials file for the same person', async () => {
+  const { findExistingProviderFile, SCHEDULE_ROOT } = require('../dist/providerSetup');
+  listing(['SB Schedule.xlsx', 'Sam Schedule.xlsx', 'Toby Schedule.xlsx']);
+  const found = await findExistingProviderFile(SCHEDULE_ROOT, 'sam.b@emmeco.org', 'Sam Bishop', 'schedule');
+  assert.equal(found.fileName, 'Sam Schedule.xlsx');
+});
+
 test('two files that fit one person are not guessed between', async () => {
   const { findExistingProviderFile, SCHEDULE_ROOT } = require('../dist/providerSetup');
-  listing(['Kelly Schedule.xlsx', 'KE Schedule.xlsx']);
+  listing(['KE Schedule.xlsx', 'Kelly E Schedule.xlsx']);
   const found = await findExistingProviderFile(SCHEDULE_ROOT, 'kelly.example@emmeco.org', 'Kelly Example', 'schedule');
   assert.equal(found, null);
 });
