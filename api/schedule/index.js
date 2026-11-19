@@ -7,6 +7,7 @@
  *   GET  /api/schedule           load this provider's workspace
  *   PUT  /api/schedule           save this provider's workspace
  *   GET  /api/schedule/meta      lightweight updatedAt check for polling
+ *   POST /api/schedule/import    reads an uploaded schedule workbook onto the schedule sent with it (nothing saved)
  */
 const crypto = require('crypto');
 const { BlobServiceClient } = require('@azure/storage-blob');
@@ -460,6 +461,34 @@ module.exports = async function (context, req) {
         },
         body: book.bytes
       };
+      return;
+    }
+
+    if (rest === 'import' && method === 'POST') {
+      // The Import button with a schedule workbook (.xlsx). The rows are put on the schedule the page
+      // sent (the provider's own, or the one an admin opened) and sent back. The page saves it as usual.
+      let body = req.body;
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (_) { body = {}; }
+      }
+      body = body || {};
+      const encoded = String(body.data || '').replace(/^data:[^,]*,/, '');
+      if (!encoded) {
+        json(context, 400, { configured: true, error: 'No file was sent.' });
+        return;
+      }
+      try {
+        const bytes = new Uint8Array(Buffer.from(encoded, 'base64'));
+        const current = normalizeWorkspace(body.workspace || {});
+        const imported = await require('../dist/scheduleWorkbook').importScheduleWorkbook(
+          bytes,
+          current,
+          function () { return 'slot_' + crypto.randomBytes(5).toString('hex'); }
+        );
+        json(context, 200, { configured: true, workspace: imported.workspace, days: imported.days, rows: imported.rows, owner: ownerEmail });
+      } catch (err) {
+        json(context, 400, { configured: true, error: (err && err.message) || 'That file could not be read as a schedule.' });
+      }
       return;
     }
 
