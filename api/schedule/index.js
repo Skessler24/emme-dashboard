@@ -257,7 +257,8 @@ module.exports = async function (context, req) {
   }
 
   try {
-    const principal = readPrincipal(req);
+    const realPrincipal = readPrincipal(req);
+    let principal = realPrincipal;
     if (!principal) {
       json(context, 401, { configured: true, error: 'Sign in required' });
       return;
@@ -270,6 +271,30 @@ module.exports = async function (context, req) {
     if (!staffEmail) {
       json(context, 403, { configured: true, error: 'This dashboard is only for Emme staff. Sign in with your @emmeco.org account.' });
       return;
+    }
+
+    async function callerIsAdmin() {
+      try {
+        const auth = require('../dist/auth');
+        const result = await auth.resolveIsAdmin(realPrincipal.emails[0] || '');
+        return !!(result && result.isAdmin);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // An admin can open any provider's schedule: everything below then works on that provider's own file.
+    const viewing = String((req.query && req.query.provider) || '').trim().toLowerCase();
+    if (viewing && realPrincipal.emails.indexOf(viewing) === -1) {
+      if (!/^[a-z0-9._+-]+@emmeco\.org$/.test(viewing)) {
+        json(context, 400, { configured: true, error: 'That is not an Emme email.' });
+        return;
+      }
+      if (!(await callerIsAdmin())) {
+        json(context, 403, { configured: true, error: 'Emme Admin access is required to open another provider’s schedule.' });
+        return;
+      }
+      principal = { userId: viewing, userDetails: viewing, emails: [viewing] };
     }
 
     const container = service.getContainerClient(CONTAINER);
@@ -307,6 +332,9 @@ module.exports = async function (context, req) {
     }
 
     async function pullFromSharePoint(workspace, force) {
+      // The dashboard schedule is the real one. The SharePoint workbook is a copy that is rewritten
+      // after each save, so edits made in it are not read back (set SCHEDULE_TWO_WAY_SYNC=1 to bring that back).
+      if (process.env.SCHEDULE_TWO_WAY_SYNC !== '1') return { workspace: workspace, status: 'skipped' };
       const sync = loadSyncModule();
       if (!sync || !ownerEmail || !workspace || !(workspace.boards || []).length) {
         return { workspace: workspace, status: 'skipped' };
@@ -388,6 +416,30 @@ module.exports = async function (context, req) {
       }
       if (result.conflict) result = { ok: false, error: 'The SharePoint schedule keeps changing. It will sync on the next save.' };
       return { workspace: current, result: { ok: !!result.ok, skipped: result.skipped, path: result.path, error: result.error } };
+    }
+
+    if (rest === 'providers' && method === 'GET') {
+      // The admin's drop-down: every provider who has a schedule saved on the dashboard.
+      if (!(await callerIsAdmin())) {
+        json(context, 403, { configured: true, error: 'Emme Admin access is required.' });
+        return;
+      }
+      const found = [];
+      for await (const item of container.listBlobsFlat({ prefix: 'schedules/by-email/', includeMetadata: true })) {
+        const owner = String((item.metadata && item.metadata.owner) || '').toLowerCase();
+        if (/^[a-z0-9._+-]+@emmeco\.org$/.test(owner) && !found.some(function (p) { return p.email === owner; })) {
+          found.push({ email: owner, name: owner.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); }) });
+        }
+      }
+      await Promise.all(found.map(async function (provider) {
+        try {
+          const real = await require('../dist/graphClient').getUserDisplayName(provider.email);
+          if (real && real !== provider.email) provider.name = real;
+        } catch (_) { /* the name made from the email is used */ }
+      }));
+      found.sort(function (a, b) { return a.name.localeCompare(b.name); });
+      json(context, 200, { configured: true, providers: found });
+      return;
     }
 
     if (rest === 'download' && method === 'POST') {

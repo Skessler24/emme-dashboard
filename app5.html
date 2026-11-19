@@ -395,6 +395,7 @@
       Emme <span>/ Schedule &amp; Caseload</span>
     </a>
     <span id="js-signed-in" style="margin-right:auto;margin-left:0.35rem;font-size:0.85rem;opacity:0.9"></span>
+    <select id="js-provider-pick" class="is-hidden" title="Admins: open a provider's schedule" aria-label="Open a provider's schedule" style="max-width:15rem;padding:0.3rem 0.4rem;border-radius:6px"></select>
     <div class="topbar__actions">
       <span class="sync-pill" id="js-sync-pill" title="Sync status">
         <span class="sync-dot" aria-hidden="true"></span>
@@ -474,6 +475,13 @@
 
   var userScope = '';
   var currentEmail = '';
+  /** Set when an admin has opened another provider's schedule from the drop-down. */
+  var viewingProvider = '';
+
+  function scheduleApi(path) {
+    if (!viewingProvider) return path;
+    return path + (path.indexOf('?') === -1 ? '?' : '&') + 'provider=' + encodeURIComponent(viewingProvider);
+  }
   function storageKey() { return 'emme_schedule_workspace_v1:' + userScope; }
   function layoutKey() { return 'emme_schedule_layout:' + userScope; }
   function boardKey() { return 'emme_schedule_board:' + userScope; }
@@ -705,7 +713,7 @@
   }
 
   async function loadCloud() {
-    var res = await fetch('/api/schedule', { credentials: 'include' });
+    var res = await fetch(scheduleApi('/api/schedule'), { credentials: 'include' });
     var data = await res.json().catch(function () { return {}; });
     if (res.status === 503 || data.configured === false) {
       return { configured: false };
@@ -726,7 +734,7 @@
   }
 
   async function saveCloud(workspace, base) {
-    var res = await fetch('/api/schedule', {
+    var res = await fetch(scheduleApi('/api/schedule'), {
       method: 'PUT',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -785,7 +793,7 @@
     if (!state.cloudConfigured || state.suppressPoll || state.dirty || state.saving) return;
     var revAtStart = state.rev;
     try {
-      var res = await fetch('/api/schedule/meta', { credentials: 'include' });
+      var res = await fetch(scheduleApi('/api/schedule/meta'), { credentials: 'include' });
       var data = await res.json().catch(function () { return {}; });
       if (!res.ok || !data.configured) return;
       if (data.updatedAt && state.lastRemoteUpdatedAt && data.updatedAt !== state.lastRemoteUpdatedAt) {
@@ -1888,7 +1896,7 @@
     var stamp = new Date().toISOString().slice(0, 10);
     // The real Excel file, in the same layout as the SharePoint schedule, built from what is on screen.
     try {
-      var res = await fetch('/api/schedule/download', {
+      var res = await fetch(scheduleApi('/api/schedule/download'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -1961,7 +1969,7 @@
     status.textContent = 'Creating a link…';
     input.value = '';
     email.removeAttribute('href');
-    fetch('/api/schedule/share', {
+    fetch(scheduleApi('/api/schedule/share'), {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -2589,10 +2597,45 @@
     });
   });
 
+  /**
+   * Admins get a drop-down of every provider. Picking one reloads the page on that provider's own schedule
+   * (the same one the provider sees). Everyone else never sees the drop-down; the server also refuses them.
+   */
+  async function setUpAdminPicker(who) {
+    var pick = document.getElementById('js-provider-pick');
+    var wanted = '';
+    try { wanted = String(new URLSearchParams(location.search).get('provider') || '').trim().toLowerCase(); } catch (_) {}
+    var providers = null;
+    try {
+      var res = await fetch('/api/schedule/providers', { credentials: 'include' });
+      if (res.ok) providers = (await res.json()).providers || [];
+    } catch (_) {}
+    if (!providers || !pick) return;
+    var mine = currentEmail;
+    var html = '<option value="">My schedule</option>';
+    providers.forEach(function (p) {
+      if (p.email === mine) return;
+      html += '<option value="' + escapeHtml(p.email) + '"' + (p.email === wanted ? ' selected' : '') + '>' + escapeHtml(p.name) + '</option>';
+    });
+    pick.innerHTML = html;
+    pick.classList.remove('is-hidden');
+    pick.addEventListener('change', function () {
+      location.href = pick.value ? location.pathname + '?provider=' + encodeURIComponent(pick.value) : location.pathname;
+    });
+    if (wanted && wanted !== mine && providers.some(function (p) { return p.email === wanted; })) {
+      var match = providers.filter(function (p) { return p.email === wanted; })[0];
+      viewingProvider = wanted;
+      currentEmail = wanted;
+      userScope = 'view' + scopeFromEmail(wanted);
+      if (who) who.textContent = 'Viewing ' + match.name + '’s schedule (admin). Changes are saved to their schedule.';
+    }
+  }
+
   async function init() {
     userScope = await resolveUserScope();
     var who = document.getElementById('js-signed-in');
     if (who) who.textContent = currentEmail;
+    if (currentEmail && userScope) await setUpAdminPicker(who);
     if (!currentEmail || !userScope) {
       state.workspace = { version: 1, boards: [], clients: [], dxCodes: [] };
       setSyncLabel('Sign in required', 'local');

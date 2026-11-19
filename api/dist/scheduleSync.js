@@ -153,10 +153,12 @@ async function pushSchedule(workspace, email, meta) {
             return { ok: false, meta, error: 'The schedule file for ' + email + ' could not be found.' };
         }
         const nextMeta = Object.assign({}, meta, { location });
-        if (meta.eTag && info.eTag && info.eTag !== meta.eTag)
+        const twoWay = process.env.SCHEDULE_TWO_WAY_SYNC === '1';
+        // One-way (the default): the dashboard wins, so a changed workbook is simply rewritten, never a conflict.
+        if (twoWay && meta.eTag && info.eTag && info.eTag !== meta.eTag)
             return { ok: false, conflict: true, meta };
         const desired = (0, scheduleWorkbook_1.exportedDays)(workspace);
-        if (meta.baseDays && meta.eTag && (0, scheduleWorkbook_1.fingerprintDays)(desired) === (0, scheduleWorkbook_1.fingerprintDays)(meta.baseDays)) {
+        if (meta.baseDays && meta.eTag && (0, scheduleWorkbook_1.fingerprintDays)(desired) === (0, scheduleWorkbook_1.fingerprintDays)(meta.baseDays) && (twoWay || info.eTag === meta.eTag)) {
             return { ok: true, unchanged: true, path: location.path, meta: nextMeta };
         }
         const current = await (0, scheduleWorkbook_1.readScheduleBytes)(segments);

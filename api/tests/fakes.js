@@ -20,6 +20,12 @@ const fakeStorage = {
     fromConnectionString: () => ({
       getContainerClient: () => ({
         createIfNotExists: async () => {},
+        listBlobsFlat: async function* (options) {
+          const prefix = (options && options.prefix) || '';
+          for (const [name, value] of blobs) {
+            if (name.startsWith(prefix)) yield { name, metadata: value.meta || {} };
+          }
+        },
         getBlockBlobClient: (name) => new FakeBlob(name)
       })
     })

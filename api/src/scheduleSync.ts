@@ -189,10 +189,12 @@ export async function pushSchedule(workspace: Workspace, email: string, meta: Sy
       return { ok: false, meta, error: 'The schedule file for ' + email + ' could not be found.' };
     }
     const nextMeta: SyncMeta = Object.assign({}, meta, { location });
-    if (meta.eTag && info.eTag && info.eTag !== meta.eTag) return { ok: false, conflict: true, meta };
+    const twoWay = process.env.SCHEDULE_TWO_WAY_SYNC === '1';
+    // One-way (the default): the dashboard wins, so a changed workbook is simply rewritten, never a conflict.
+    if (twoWay && meta.eTag && info.eTag && info.eTag !== meta.eTag) return { ok: false, conflict: true, meta };
 
     const desired = exportedDays(workspace);
-    if (meta.baseDays && meta.eTag && fingerprintDays(desired) === fingerprintDays(meta.baseDays)) {
+    if (meta.baseDays && meta.eTag && fingerprintDays(desired) === fingerprintDays(meta.baseDays) && (twoWay || info.eTag === meta.eTag)) {
       return { ok: true, unchanged: true, path: location.path, meta: nextMeta };
     }
 
