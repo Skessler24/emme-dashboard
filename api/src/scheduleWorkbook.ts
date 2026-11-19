@@ -1,7 +1,8 @@
+import crypto from 'crypto';
 import ExcelJS from 'exceljs';
 import { GraphError, getUserDisplayName, graphGet, graphGetBytes, graphIsConfigured, graphSend, siteHoldingFolder } from './graphClient';
 import { findExistingProviderFile, SCHEDULE_ROOT } from './providerSetup';
-import { currentBoard } from './schedulingService';
+import { currentBoard, hasScheduleData, loadStaffWorkspaces, seedDashboardSchedule } from './schedulingService';
 
 /**
  * Updates each provider's existing schedule workbook in
@@ -256,7 +257,19 @@ function addDayTable(
   return statusEnd;
 }
 
-export async function buildScheduleWorkbook(workspace: Workspace): Promise<Buffer> {
+const READ_ONLY_NOTE = 'READ-ONLY COPY of the dashboard schedule. It is replaced every time the provider saves, so changes made here are lost. Edit the schedule in the Emme dashboard.';
+
+/** The file name of a provider's read-only copy in Provider Schedules, e.g. "Kelly Example - Dashboard Copy.xlsx". */
+export function dashboardCopyName(displayName: string, email: string): string {
+  const base = (String(displayName || '').trim() || String(email || '').split('@')[0] || 'Provider')
+    .replace(/[\\/:*?"<>|#%~&{}]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60) || 'Provider';
+  return base + ' - Dashboard Copy.xlsx';
+}
+
+export async function buildScheduleWorkbook(workspace: Workspace, options?: { readOnly?: boolean }): Promise<Buffer> {
   const board = currentBoard(workspace.boards);
   const days = ((board && board.days) || []).slice().sort(function (a, b) {
     const ia = DAY_ORDER.indexOf(dayKey(String(a.name || '')));
@@ -283,6 +296,22 @@ export async function buildScheduleWorkbook(workspace: Workspace): Promise<Buffe
     const slots = (day.slots || []).filter(isFilledSlot);
     row = addDayTable(sheet, key, row, slots, workspace.clients, usedNames, STATUSES.length) + 2;
   });
+
+  if (options && options.readOnly) {
+    const note = sheet.getCell('H1');
+    note.value = READ_ONLY_NOTE;
+    note.font = { bold: true, color: { argb: 'FFC00000' } };
+    note.alignment = { wrapText: true, vertical: 'top' };
+    sheet.getColumn(8).width = 60;
+    // Locked with a password nobody is given, so the copy can be read, filtered and copied but not edited.
+    await sheet.protect(crypto.randomBytes(16).toString('hex'), {
+      selectLockedCells: true,
+      selectUnlockedCells: true,
+      autoFilter: true,
+      sort: false,
+      formatColumns: true,
+    });
+  }
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
@@ -391,9 +420,10 @@ export async function scheduleItemInfo(segments: string[]): Promise<ScheduleItem
 }
 
 /** Writes the workbook. When ifMatch is given, SharePoint refuses the write if someone saved the file since. */
-export async function writeScheduleBytes(segments: string[], bytes: Uint8Array, ifMatch?: string): Promise<ScheduleItemInfo> {
+export async function writeScheduleBytes(segments: string[], bytes: Uint8Array, ifMatch?: string, createOnly?: boolean): Promise<ScheduleItemInfo> {
   const siteId = await scheduleSiteId();
-  const saved = await graphSend('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/content', {
+  // createOnly: SharePoint refuses the write if a file with that name is already there.
+  const saved = await graphSend('/sites/' + siteId + '/drive/root:/' + drivePath(segments) + ':/content' + (createOnly ? '?@microsoft.graph.conflictBehavior=fail' : ''), {
     method: 'PUT',
     rawBody: bytes,
     contentType: XLSX_TYPE,
@@ -901,6 +931,76 @@ export async function downloadScheduleWorkbook(workspace: Workspace, email: stri
   return { bytes: await buildScheduleWorkbook(workspace), fileName: 'Emme-schedule-' + stamp + '.xlsx', usedWorkbook: false };
 }
 
+const TEMPLATE_HOURS = ['7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+const TEMPLATE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+/** The standard blank schedule: Monday to Friday, 7 AM to 5 PM, every hour open 4x except lunch at noon. */
+export function templateWorkspace(): Workspace {
+  return {
+    version: 1,
+    boards: [{
+      id: 'board_template',
+      name: 'Current Schedule',
+      days: TEMPLATE_DAYS.map(function (name) {
+        return {
+          id: 'day_' + name.toLowerCase(),
+          name,
+          color: 'blue',
+          slots: TEMPLATE_HOURS.map(function (time) {
+            return { id: 'slot_' + name.toLowerCase() + '_' + time.replace(/\W/g, ''), time, status: time === '12:00 PM' ? 'Lunch/Paperwork' : 'Open 4x', notes: '', lastDay: '' };
+          }),
+        };
+      }),
+    }],
+    clients: [],
+    dxCodes: [],
+  } as unknown as Workspace;
+}
+
+export type TemplateResult = { ok: boolean; created: boolean; seeded?: boolean; fileName?: string; path?: string; message: string };
+
+/**
+ * The "Create schedule from template" button.
+ *  - A provider with no schedule on the dashboard gets the standard one (Monday to Friday, 7 AM to 5 PM).
+ *    A schedule that already has anything in it is never replaced.
+ *  - Their read-only "<Name> - Dashboard Copy.xlsx" is added to Provider Schedules if it is not there yet.
+ *    That file is rewritten by every save from then on. Existing SharePoint files are never touched.
+ */
+export async function createScheduleFromTemplate(email: string, displayName: string): Promise<TemplateResult> {
+  const staffEmail = String(email || '').trim().toLowerCase();
+  if (!/^[a-z0-9._+-]+@emmeco\.org$/.test(staffEmail)) return { ok: false, created: false, message: 'Enter the provider’s emmeco.org email.' };
+  let name = String(displayName || '').trim();
+  if (!name && graphIsConfigured()) name = await getUserDisplayName(staffEmail);
+
+  let workspace = templateWorkspace();
+  let seeded = false;
+  const saved = (await loadStaffWorkspaces()).workspaces.find(function (row) { return row.email === staffEmail; });
+  if (saved && hasScheduleData(saved.workspace)) {
+    workspace = saved.workspace as unknown as Workspace;
+  } else {
+    seeded = await seedDashboardSchedule(staffEmail, workspace as unknown as Record<string, unknown>);
+  }
+  const seedNote = seeded ? ' The provider now has the standard schedule on their dashboard.' : '';
+
+  if (!graphIsConfigured()) {
+    return { ok: true, created: false, seeded, message: 'SharePoint is not connected, so no copy file was made.' + seedNote };
+  }
+  const fileName = dashboardCopyName(name, staffEmail);
+  const segments = SCHEDULE_ROOT.concat([fileName]);
+  if (await scheduleItemInfo(segments)) {
+    return { ok: true, created: false, seeded, fileName, path: '/' + segments.join('/'), message: fileName + ' is already there. It refreshes every time the provider saves.' + seedNote };
+  }
+  const bytes = await buildScheduleWorkbook(workspace, { readOnly: true });
+  try {
+    await writeScheduleBytes(segments, new Uint8Array(bytes), undefined, true);
+  } catch (err) {
+    if (err instanceof GraphError && (err.status === 409 || /nameAlreadyExists/i.test(err.message))) {
+      return { ok: true, created: false, seeded, fileName, message: fileName + ' is already there. Nothing was changed.' + seedNote };
+    }
+    throw err;
+  }
+  return { ok: true, created: true, seeded, fileName, path: '/' + segments.join('/'), message: 'Created ' + fileName + ' in Provider Schedules (read-only, refreshed on every save).' + seedNote };
+}
 export async function syncScheduleWorkbook(workspace: Workspace, email: string): Promise<{ ok: boolean; path?: string; skipped?: boolean; error?: string }> {
   try {
     const staffEmail = String(email || '').trim().toLowerCase();

@@ -20,10 +20,11 @@ const fakeStorage = {
     fromConnectionString: () => ({
       getContainerClient: () => ({
         createIfNotExists: async () => {},
+        exists: async () => true,
         listBlobsFlat: async function* (options) {
           const prefix = (options && options.prefix) || '';
           for (const [name, value] of blobs) {
-            if (name.startsWith(prefix)) yield { name, metadata: value.meta || {} };
+            if (name.startsWith(prefix)) yield { name, metadata: value.meta || {}, properties: { contentLength: String(value.data).length } };
           }
         },
         getBlockBlobClient: (name) => new FakeBlob(name)
@@ -39,7 +40,7 @@ Module._load = function (request, ...rest) {
 
 const ROOT = 'LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules';
 const FILE_PATH = ROOT + '/ndelgado/Natalie Delgado Schedule.xlsx';
-const drive = { bytes: null, version: 0, beforePut: null, putCount: 0, latencyMs: 0, failPuts: 0 };
+const drive = { bytes: null, version: 0, beforePut: null, putCount: 0, latencyMs: 0, failPuts: 0, copies: {}, copyPuts: 0 };
 
 function etag() { return '"{' + drive.version + '},1"'; }
 function jsonResponse(status, body) {
@@ -60,6 +61,15 @@ global.fetch = async function (url, options) {
     if (pathOnly === ROOT) return jsonResponse(200, { value: [{ name: 'ndelgado', folder: {} }] });
     if (pathOnly === ROOT + '/ndelgado') return jsonResponse(200, { value: [{ name: 'Natalie Delgado Schedule.xlsx', file: {} }] });
     return jsonResponse(404, { error: { code: 'itemNotFound', message: 'no' } });
+  }
+  if (pathOnly.startsWith(ROOT + '/') && /Dashboard Copy\.xlsx$/.test(pathOnly)) {
+    if (method === 'PUT' && after.includes(':/content')) {
+      drive.copies[pathOnly] = Buffer.from(options.body);
+      drive.copyPuts += 1;
+      return jsonResponse(200, { eTag: '"{c},1"', lastModifiedDateTime: new Date().toISOString() });
+    }
+    if (!drive.copies[pathOnly]) return jsonResponse(404, { error: { code: 'itemNotFound', message: 'no' } });
+    return jsonResponse(200, { eTag: '"{c},1"', lastModifiedDateTime: new Date().toISOString() });
   }
   if (pathOnly === ROOT + '/ndelgado/emme-provider.json') return jsonResponse(404, { error: { code: 'itemNotFound', message: 'no' } });
   if (pathOnly !== FILE_PATH) return jsonResponse(404, { error: { code: 'itemNotFound', message: 'no' } });

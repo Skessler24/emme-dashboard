@@ -74,13 +74,13 @@ function StaffExpectationsOverview() {
     <section>
       <h1>Staff expectations</h1>
       <p className="lede">
-        Each provider has one schedule spreadsheet in SharePoint. It updates when they save their schedule in the app.
+        Openings come straight from each provider’s schedule in the app, so they are current the moment a provider saves.
       </p>
       {error ? <p className="error">{error}</p> : null}
       <h2>Openings</h2>
       <DataTable
         rows={openings}
-        empty="No provider spreadsheets yet. They appear after a provider saves a schedule."
+        empty="No provider schedules yet. They appear after a provider saves a schedule."
         columns={[
           { key: 'employee', label: 'Staff' },
           { key: 'date', label: 'Date' },

@@ -4,6 +4,9 @@ exports.currentBoard = currentBoard;
 exports.buildScheduleSummary = buildScheduleSummary;
 exports.sharePointSummaryPath = sharePointSummaryPath;
 exports.loadStaffWorkspaces = loadStaffWorkspaces;
+exports.hasScheduleData = hasScheduleData;
+exports.seedDashboardSchedule = seedDashboardSchedule;
+exports.openingsFromDashboard = openingsFromDashboard;
 exports.availabilityForWindow = availabilityForWindow;
 const storage_blob_1 = require("@azure/storage-blob");
 const config_1 = require("./config");
@@ -210,6 +213,83 @@ async function loadStaffWorkspaces() {
             return { email: row.email, updatedAt: row.updatedAt, workspace: row.workspace };
         }),
     };
+}
+/** True when the schedule has any appointment slot or any client in it. */
+function hasScheduleData(workspace) {
+    if (!workspace)
+        return false;
+    if ((workspace.clients || []).length)
+        return true;
+    return (workspace.boards || []).some(function (board) {
+        return (board.days || []).some(function (day) { return (day.slots || []).length > 0; });
+    });
+}
+/**
+ * Gives a provider the standard schedule on the dashboard, but only when theirs is empty or missing.
+ * Returns true when it was written, false when the provider already has a schedule (which is never replaced).
+ */
+async function seedDashboardSchedule(email, workspace) {
+    const cfg = (0, config_1.getConfig)();
+    if (!cfg.storageConnection)
+        return false;
+    const staffEmail = String(email || '').trim().toLowerCase();
+    const container = storage_blob_1.BlobServiceClient.fromConnectionString(cfg.storageConnection).getContainerClient(cfg.storageContainer);
+    await container.createIfNotExists();
+    const key = staffEmail.replace(/[^a-z0-9._-]/g, '_').slice(0, 120) || 'user';
+    const blob = container.getBlockBlobClient('schedules/by-email/' + key + '.json');
+    if (await blob.exists()) {
+        const current = await readBlobJson(blob);
+        if (current && hasScheduleData(current))
+            return false;
+    }
+    const now = new Date().toISOString();
+    const payload = JSON.stringify(Object.assign({}, workspace, { version: 1, updatedAt: now, ownerEmail: staffEmail }));
+    await blob.upload(payload, Buffer.byteLength(payload), {
+        blobHTTPHeaders: { blobContentType: 'application/json' },
+        metadata: { updatedat: now, owner: staffEmail.replace(/[^a-z0-9@._+-]/g, '').slice(0, 180) },
+    });
+    return true;
+}
+const DAY_NUMBER = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7 };
+/**
+ * Every provider's open slots, read straight from the schedules saved on the dashboard (not from SharePoint).
+ * Each row is a weekly slot, such as Tuesday 10:00 AM "Open 3x (1,2,3)". Notes and client names are never included.
+ */
+async function openingsFromDashboard() {
+    const loaded = await loadStaffWorkspaces();
+    if (!loaded.configured)
+        return { configured: false, staff: [] };
+    const staff = [];
+    for (let i = 0; i < loaded.workspaces.length; i++) {
+        const row = loaded.workspaces[i];
+        const board = currentBoard(row.workspace.boards);
+        const openings = [];
+        ((board && board.days) || []).forEach(function (day) {
+            const dayName = String(day.name || '').trim();
+            ((day && day.slots) || []).forEach(function (slot) {
+                const status = String(slot.status || '').trim();
+                if (classify(status) !== 'open')
+                    return;
+                openings.push({ day: dayName, time: String(slot.time || ''), status, order: DAY_NUMBER[dayName.toLowerCase()] || 9 });
+            });
+        });
+        if (!openings.length && !((board && board.days) || []).length)
+            continue;
+        openings.sort(function (a, b) { return a.order - b.order; });
+        const staffName = (0, graphClient_1.graphIsConfigured)() ? await (0, graphClient_1.getUserDisplayName)(row.email) : row.email;
+        staff.push({
+            employee: staffName,
+            email: row.email,
+            fileName: '',
+            path: row.email,
+            summary: {
+                openings: openings.map(function (o) { return { day: o.day, time: o.time, status: o.status }; }),
+                counts: { open: openings.length },
+            },
+        });
+    }
+    staff.sort(function (a, b) { return a.employee.localeCompare(b.employee); });
+    return { configured: true, staff };
 }
 async function availabilityForWindow(windowDays) {
     const loaded = await loadStaffWorkspaces();

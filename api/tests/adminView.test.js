@@ -61,13 +61,36 @@ test('a provider who is not an admin cannot list providers or open anyone else',
   assert.strictEqual(bad.status, 400);
 });
 
-test('the SharePoint workbook is a copy: dashboard saves rewrite it, and edits made in it are not read back', async () => {
+async function saveNote(note) {
+  const loaded = (await call('ndelgado@emmeco.org', 'GET', '')).body.workspace;
+  const edited = JSON.parse(JSON.stringify(loaded));
+  edited.boards.find((b) => b.name === 'Current Schedule').days[0].slots[0].notes = note;
+  return call('ndelgado@emmeco.org', 'PUT', '', { workspace: edited, base: loaded });
+}
+
+test('every save rewrites the read-only Dashboard Copy, and the provider\'s own workbook is left alone', async () => {
+  const copyPath = 'LEADERSHIP TEAM/EMME Processes/Referral Process/Provider Schedules/Natalie Delgado - Dashboard Copy.xlsx';
+  const before = Buffer.from(drive.bytes);
+  const put = await saveNote('Latest Made Up Note');
+  assert.strictEqual(put.body.sharePoint.ok, true, JSON.stringify(put.body.sharePoint));
+  assert.ok(put.body.sharePoint.path.endsWith('Natalie Delgado - Dashboard Copy.xlsx'), put.body.sharePoint.path);
+  const copy = await workbook.readScheduleDays(new Uint8Array(drive.copies[copyPath]));
+  assert.ok((copy.monday || []).some((row) => row.notes === 'Latest Made Up Note'), 'the copy holds the latest save');
+  assert.ok(Buffer.from(drive.bytes).equals(before), 'the provider\'s own workbook was not touched');
+  const puts = drive.copyPuts;
+  await saveNote('Latest Made Up Note');
+  assert.strictEqual(drive.copyPuts, puts, 'an unchanged schedule is not rewritten');
+  await saveNote('Newer Made Up Note');
+  assert.strictEqual(drive.copyPuts, puts + 1, 'a changed schedule replaces the copy');
+});
+
+test('edits typed into the original SharePoint workbook are not read back into the dashboard', async () => {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(drive.bytes);
   const sheet = wb.getWorksheet('Current Schedule');
   let edited = false;
   for (let r = 1; r <= sheet.rowCount && !edited; r++) {
-    if (String(sheet.getRow(r).getCell(3).text) === 'Made Up Two') { sheet.getRow(r).getCell(3).value = 'Typed In Excel'; edited = true; }
+    if (String(sheet.getRow(r).getCell(3).text) === 'Seed') { sheet.getRow(r).getCell(3).value = 'Typed In Excel'; edited = true; }
   }
   assert.ok(edited);
   drive.bytes = Buffer.from(await wb.xlsx.writeBuffer());
@@ -75,12 +98,7 @@ test('the SharePoint workbook is a copy: dashboard saves rewrite it, and edits m
 
   const loaded = await call('ndelgado@emmeco.org', 'GET', '');
   assert.ok(!notesOf(loaded).includes('Typed In Excel'), 'workbook edits are not pulled into the dashboard');
-
-  const current = loaded.body.workspace;
-  const put = await call('ndelgado@emmeco.org', 'PUT', '', { workspace: current, base: current });
+  const put = await saveNote('Another Made Up Note');
   assert.strictEqual(put.body.sharePoint.ok, true, JSON.stringify(put.body.sharePoint));
-  const days = await workbook.readScheduleDays(drive.bytes);
-  const notes = (days.monday || []).map((row) => row.notes);
-  assert.ok(!notes.includes('Typed In Excel'), 'the workbook was rewritten from the dashboard');
-  assert.ok(notes.includes('Made Up Two'));
+  assert.ok(!notesOf(await call('ndelgado@emmeco.org', 'GET', '')).includes('Typed In Excel'));
 });
