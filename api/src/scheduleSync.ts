@@ -6,6 +6,8 @@ import {
   alignRows,
   applyDaysToWorkspace,
   applyScheduleWorkbook,
+  buildScheduleWorkbook,
+  dashboardCopyName,
   exportedDays,
   fingerprintDays,
   locateSchedule,
@@ -14,6 +16,7 @@ import {
   scheduleItemInfo,
   writeScheduleBytes,
 } from './scheduleWorkbook';
+import { SCHEDULE_ROOT } from './providerSetup';
 
 /**
  * Two-way sync between a provider's dashboard schedule and their SharePoint workbook.
@@ -34,6 +37,9 @@ export type SyncMeta = {
   eTag?: string;
   baseDays?: SheetDays;
   syncedAt?: string;
+  /** What the read-only Dashboard Copy last held, so an unchanged schedule is not rewritten. */
+  copyFingerprint?: string;
+  copyPath?: string;
 };
 
 export type PullResult = {
@@ -171,11 +177,41 @@ export async function pullSchedule(workspace: Workspace, email: string, meta: Sy
 }
 
 /**
+ * Replaces the provider's read-only "<Name> - Dashboard Copy.xlsx" in Provider Schedules with the schedule
+ * as it is on the dashboard now. A dashboard with nothing in it writes nothing.
+ */
+async function pushDashboardCopy(workspace: Workspace, email: string, meta: SyncMeta): Promise<PushResult> {
+  try {
+    const desired = exportedDays(workspace);
+    if (!hasRows(desired)) return { ok: true, unchanged: true, meta };
+    const fileName = dashboardCopyName(await getUserDisplayName(email), email);
+    const segments = SCHEDULE_ROOT.concat([fileName]);
+    const path = '/' + segments.join('/');
+    const fingerprint = fingerprintDays(desired);
+    const info = await scheduleItemInfo(segments);
+    if (info && meta.copyFingerprint === fingerprint && meta.copyPath === path) {
+      return { ok: true, unchanged: true, path, meta };
+    }
+    const bytes = await buildScheduleWorkbook(workspace, { readOnly: true });
+    await writeScheduleBytes(segments, new Uint8Array(bytes));
+    return {
+      ok: true,
+      path,
+      meta: Object.assign({}, meta, { copyFingerprint: fingerprint, copyPath: path, syncedAt: new Date().toISOString() }),
+    };
+  } catch (err) {
+    return { ok: false, meta, error: errorText(err, 'Could not update the Dashboard Copy in SharePoint') };
+  }
+}
+
+/**
  * Writes the dashboard schedule into the provider's workbook. Returns conflict when the workbook changed
  * after the last pull, so the caller can pull again and retry.
  */
 export async function pushSchedule(workspace: Workspace, email: string, meta: SyncMeta): Promise<PushResult> {
   if (!graphIsConfigured() || !email) return { ok: false, skipped: true, meta };
+  // The default: a read-only "Dashboard Copy" file that every save replaces. No provider workbook is edited.
+  if (process.env.SCHEDULE_TWO_WAY_SYNC !== '1') return pushDashboardCopy(workspace, email, meta);
   try {
     const location = await findLocation(email, meta);
     if (!location) {

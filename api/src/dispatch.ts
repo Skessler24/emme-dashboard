@@ -5,7 +5,8 @@ import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, rest
 import { addAlert, addMessage, endAlert, listAlerts, listMessages, markSeen, replyToMessage, unreadCount } from './conversationStore';
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
 import { listObservationProcess, searchProviderLibraries } from './providerSetup';
-import { availabilityForWindow } from './schedulingService';
+import { availabilityForWindow, openingsFromDashboard } from './schedulingService';
+import { createScheduleFromTemplate } from './scheduleWorkbook';
 import { checkSetup, createMissingLists } from './siteSetup';
 import {
   LISTS,
@@ -14,7 +15,6 @@ import {
   listFolder,
   listItems,
   onboardingFolders,
-  readLatestScheduleSummaries,
   updateItem,
   uploadEmployeeFile,
 } from './sharepointService';
@@ -106,6 +106,18 @@ async function onboarding(context: FnContext, req: HttpRequest): Promise<void> {
       const message = err instanceof Error ? err.message : 'Could not search SharePoint folders';
       const status = err instanceof GraphError ? err.status : 502;
       json(context, status === 400 ? 400 : 502, { error: message.slice(0, 200) });
+    }
+    return;
+  }
+  if (verb === 'POST' && parts[1] === 'schedule-template') {
+    // The "Create schedule from template" button. It only ever adds a missing file; it never replaces one.
+    const body = readBody(req);
+    try {
+      const result = await createScheduleFromTemplate(employeeId, asText(body.employeeName, 80));
+      json(context, result.ok ? 200 : 409, result.ok ? result : Object.assign({ error: result.message }, result));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not create the schedule file';
+      json(context, 502, { ok: false, created: false, error: message.slice(0, 200), message: message.slice(0, 200) });
     }
     return;
   }
@@ -594,8 +606,13 @@ async function scheduling(context: FnContext, req: HttpRequest): Promise<void> {
   if (action === 'openings') {
     const admin = await requireAdmin(context, req);
     if (!admin) return;
-    const files = await readLatestScheduleSummaries();
-    json(context, 200, { source: 'sharepoint-schedule-summaries', staff: files });
+    // Read from the schedules saved on the dashboard, not from SharePoint spreadsheets.
+    const found = await openingsFromDashboard();
+    if (!found.configured) {
+      json(context, 503, { configured: false, error: 'Scheduling storage is not configured. Set AZURE_STORAGE_CONNECTION_STRING.' });
+      return;
+    }
+    json(context, 200, { source: 'emme-dashboard-schedules', staff: found.staff });
     return;
   }
   json(context, 404, { error: 'Not found' });

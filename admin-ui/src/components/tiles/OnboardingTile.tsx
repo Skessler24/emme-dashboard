@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../../api';
 import { DataTable } from '../DataTable';
+import { CreateScheduleButton } from '../CreateScheduleButton';
+
 import { TileWithSetup } from '../setup/TileSetup';
 
 type Docs = { name: string; lastModified: string };
@@ -82,12 +84,13 @@ function OnboardingOverview() {
   return (
     <section>
       <h1>Onboarding</h1>
-      <p className="lede">Checklist rows come from the OnboardingChecklist list. Mileage and schedule folders are matched to the provider’s emmeco.org email. Finding them does not create anything new.</p>
+      <p className="lede">Checklist rows come from the OnboardingChecklist list. Mileage and schedule folders are matched to the provider’s emmeco.org email. Finding them does not create anything new. “Create schedule from template” adds a schedule spreadsheet only when the provider does not have one, and never replaces a file.</p>
       <form className="row" onSubmit={load}>
         <label>Emme email<input value={employeeId} onChange={(event) => setEmployeeId(event.target.value)} placeholder="name@emmeco.org" required /></label>
         <label>Provider name<input value={employeeName} onChange={(event) => setEmployeeName(event.target.value)} placeholder="First Last" /></label>
         <button className="btn" type="submit">Load</button>
         <button className="btn btn--ghost" type="button" onClick={findFolders}>Find existing folders</button>
+        <CreateScheduleButton email={employeeId} name={employeeName} onDone={() => { if (employeeId.trim()) void findFolders(); }} />
       </form>
       {folders ? (
         <div>
