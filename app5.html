@@ -405,7 +405,7 @@
       <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Download the spreadsheet to your computer and save a copy to your OneDrive">Spreadsheet</button>
       <button type="button" class="btn btn--ghost" id="js-pdf" title="Download a PDF to your computer and save a copy to your OneDrive">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
-      <button type="button" class="btn btn--ghost" id="js-import" title="Import clients from any spreadsheet, PDF, Word doc, web page, contact file, or text. It does not need rows and columns.">Import</button>
+      <button type="button" class="btn btn--ghost" id="js-import" title="Import a schedule workbook (.xlsx), or clients from any spreadsheet, PDF, Word doc, web page, contact file, or text. It does not need rows and columns.">Import</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
       <a class="btn btn--yellow" href="index.html">← Dashboard</a>
     </div>
@@ -2464,7 +2464,7 @@
         book.SheetNames.forEach(function (sheetName) {
           rows = rows.concat(XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' }));
         });
-        return { kind: 'matrix', rows: rows };
+        return { kind: 'matrix', rows: rows, buffer: buffer };
       } catch (_) {
         return { kind: 'text', text: decodeBuffer(buffer) };
       }
@@ -2515,8 +2515,58 @@
     return { kind: 'text', text: decoded };
   }
 
+  /** A provider schedule workbook has a table per weekday, headed "Mon Appointment Time", "Tues Appointment Time", and so on. */
+  function looksLikeScheduleSheet(rows) {
+    return (rows || []).some(function (row) {
+      return /^\s*(mon|tue|wed|thu|fri|sat|sun)\w*\s+appointment\s+time\s*$/i.test(String((row && row[0]) == null ? '' : row[0]));
+    });
+  }
+
+  function bufferToBase64(buffer) {
+    var bytes = new Uint8Array(buffer);
+    var binary = '';
+    for (var i = 0; i < bytes.length; i += 0x8000) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(binary);
+  }
+
+  /** Puts the weekday tables of an uploaded schedule workbook onto the schedule on screen (an admin's open provider included). */
+  async function importScheduleFile(file, buffer) {
+    if (!/\.xlsx$/i.test(file.name || '')) {
+      throw new Error(file.name + ' looks like a schedule, but only .xlsx files can be imported. Open it in Excel and use Save As → Excel Workbook (.xlsx).');
+    }
+    if (!state.cloudConfigured) {
+      throw new Error('Schedule import needs the online connection. Reload the page and try again.');
+    }
+    var res = await fetch(scheduleApi('/api/schedule/import'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: bufferToBase64(buffer), workspace: state.workspace })
+    });
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok || !data.workspace) throw new Error(data.error || ('Could not import ' + file.name));
+    mutate(function () {
+      state.workspace.boards = data.workspace.boards;
+      shapeWorkspace(state.workspace);
+      var current = state.workspace.boards.filter(function (board) { return /current/i.test(board.name || ''); })[0] || state.workspace.boards[0];
+      state.activeBoardId = current ? current.id : '';
+      state.layout = 'schedule';
+      try {
+        localStorage.setItem(boardKey(), state.activeBoardId);
+        localStorage.setItem(layoutKey(), 'schedule');
+      } catch (_) {}
+    });
+    toast('Schedule imported — ' + data.rows + ' time slot' + (data.rows === 1 ? '' : 's') + ' on ' + data.days.length + ' day' + (data.days.length === 1 ? '' : 's') + (viewingProvider ? ' for ' + viewingProvider : ''));
+  }
+
   async function importFile(file) {
     var extracted = await textFromFile(file);
+    if (extracted.kind === 'matrix' && extracted.buffer && looksLikeScheduleSheet(extracted.rows)) {
+      await importScheduleFile(file, extracted.buffer);
+      return;
+    }
     if (extracted.kind === 'matrix') {
       var fromSheet = clientsFromMatrix(extracted.rows);
       if (!fromSheet.length) {
