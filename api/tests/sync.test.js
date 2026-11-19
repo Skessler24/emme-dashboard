@@ -2,6 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert');
 const ExcelJS = require('exceljs');
 
+// These tests cover the optional two-way mode, where edits made in the workbook are read back.
+process.env.SCHEDULE_TWO_WAY_SYNC = '1';
 const { drive } = require('./fakes');
 
 const handler = require('../schedule/index.js');
