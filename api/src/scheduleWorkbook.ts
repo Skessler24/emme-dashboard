@@ -931,38 +931,6 @@ export async function downloadScheduleWorkbook(workspace: Workspace, email: stri
   return { bytes: await buildScheduleWorkbook(workspace), fileName: 'Emme-schedule-' + stamp + '.xlsx', usedWorkbook: false };
 }
 
-/**
- * The Import button for an uploaded schedule workbook (the Provider Schedules layout: one table per weekday).
- * The rows are applied to a copy of `workspace`, replacing the filled rows of each weekday found in the file.
- * Weekdays that are not in the file, clients, and blank slots are left as they were. Nothing is saved here.
- */
-export async function importScheduleWorkbook(
-  bytes: Uint8Array,
-  workspace: Workspace,
-  makeId: () => string,
-): Promise<{ workspace: Workspace; days: string[]; rows: number }> {
-  const sheetDays = await readScheduleDays(bytes);
-  const found = Object.keys(sheetDays).filter(function (key) { return (sheetDays[key] || []).length > 0; });
-  if (!found.length) {
-    throw new Error('No weekday schedule tables were found in that workbook. A schedule file has a table per weekday headed "Mon Appointment Time", "Tues Appointment Time", and so on.');
-  }
-  const withIds: SheetDays = {};
-  found.forEach(function (key) {
-    withIds[key] = sheetDays[key].map(function (row) { return Object.assign({}, row, { id: makeId() }); });
-  });
-  const base: Workspace = JSON.parse(JSON.stringify(workspace || {}));
-  const boards = base.boards || [];
-  if (!boards.some(function (board) { return !/not in regular/i.test(String(board.name || '')); })) {
-    boards.unshift({ id: 'board_' + makeId(), name: 'Current Schedule', days: [] } as unknown as { name?: string; days?: Day[] });
-  }
-  base.boards = boards;
-  return {
-    workspace: applyDaysToWorkspace(base, withIds, makeId),
-    days: found,
-    rows: found.reduce(function (total, key) { return total + withIds[key].length; }, 0),
-  };
-}
-
 const TEMPLATE_HOURS = ['7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
 const TEMPLATE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 

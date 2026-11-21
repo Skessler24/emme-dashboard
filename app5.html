@@ -14,6 +14,7 @@
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script src="schedule-merge.js"></script>
   <script src="client-import.js"></script>
+  <script src="schedule-import.js"></script>
   <style>
     :root {
       --green: #084339;
@@ -405,7 +406,7 @@
       <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Download the spreadsheet to your computer and save a copy to your OneDrive">Spreadsheet</button>
       <button type="button" class="btn btn--ghost" id="js-pdf" title="Download a PDF to your computer and save a copy to your OneDrive">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
-      <button type="button" class="btn btn--ghost" id="js-import" title="Import a schedule workbook (.xlsx), or clients from any spreadsheet, PDF, Word doc, web page, contact file, or text. It does not need rows and columns.">Import</button>
+      <button type="button" class="btn btn--ghost" id="js-import" title="Import a schedule or a client list from any file: spreadsheet, PDF, Word doc, web page, picture, contact file, or text. It reads the days, times, statuses and names wherever they are; it does not need a set layout.">Import</button>
       <button type="button" class="btn btn--ghost" id="js-import-folder" title="Bring in the schedule workbook that is already in the Provider Schedules folder in SharePoint. The file is only read, never changed.">Import from folder</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
       <a class="btn btn--yellow" href="index.html">← Dashboard</a>
@@ -2452,6 +2453,60 @@
     return new TextDecoder('utf-8').decode(buffer);
   }
 
+  /** Tables and paragraphs of an HTML page (or a Word document turned into HTML) as rows of cells, in page order. */
+  function htmlToRows(html) {
+    var doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+    var rows = [];
+    function cellText(el) { return String(el.textContent || '').replace(/\s+/g, ' ').trim(); }
+    function walk(node) {
+      Array.prototype.forEach.call(node.children || [], function (el) {
+        var tag = el.tagName.toLowerCase();
+        if (tag === 'table') {
+          Array.prototype.forEach.call(el.querySelectorAll('tr'), function (tr) {
+            rows.push(Array.prototype.map.call(tr.children, cellText));
+          });
+        } else if (/^(p|h[1-6]|li|pre|div|section|article|ul|ol|body|main)$/.test(tag) && el.querySelector('table')) {
+          walk(el);
+        } else if (/^(script|style|head|nav)$/.test(tag)) {
+          return;
+        } else {
+          String(el.innerText || el.textContent || '').split(/\n+/).forEach(function (line) {
+            var text = line.replace(/\s+/g, ' ').trim();
+            if (text) rows.push([text]);
+          });
+        }
+      });
+    }
+    walk(doc.body);
+    return rows;
+  }
+
+  var ocrScript = null;
+  /** Pictures and screenshots: the words are read off the image (OCR) in the browser, then handled like any other text. */
+  async function ocrImage(file) {
+    toast('Reading the picture…');
+    try {
+      if (typeof Tesseract === 'undefined') {
+        if (!ocrScript) {
+          ocrScript = new Promise(function (resolve, reject) {
+            var tag = document.createElement('script');
+            tag.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+            tag.onload = resolve;
+            tag.onerror = function () { ocrScript = null; reject(new Error('load')); };
+            document.head.appendChild(tag);
+          });
+        }
+        await ocrScript;
+      }
+      var result = await Tesseract.recognize(file, 'eng');
+      var text = String((result && result.data && result.data.text) || '').trim();
+      if (!text) throw new Error('empty');
+      return text;
+    } catch (_) {
+      throw new Error(file.name + ' is a picture and its words could not be read. Try a clearer picture, or save the page as a PDF or Excel file.');
+    }
+  }
+
   async function textFromFile(file) {
     var name = String(file.name || '').toLowerCase();
     var buffer = await file.arrayBuffer();
@@ -2462,10 +2517,13 @@
       try {
         var book = XLSX.read(buffer, { type: 'array' });
         var rows = [];
+        var sheets = [];
         book.SheetNames.forEach(function (sheetName) {
-          rows = rows.concat(XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' }));
+          var sheetRows = XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' });
+          sheets.push({ name: sheetName, rows: sheetRows });
+          rows = rows.concat(sheetRows);
         });
-        return { kind: 'matrix', rows: rows, buffer: buffer };
+        return { kind: 'matrix', rows: rows, sheets: sheets };
       } catch (_) {
         return { kind: 'text', text: decodeBuffer(buffer) };
       }
@@ -2489,17 +2547,21 @@
     if (/\.docx$/.test(name) || /wordprocessingml/i.test(file.type || '')) {
       if (typeof mammoth === 'undefined') throw new Error('Word reader did not load. Save the document as PDF or CSV.');
       var result = await mammoth.extractRawText({ arrayBuffer: buffer });
-      return { kind: 'text', text: result.value || '' };
+      var rendered = await mammoth.convertToHtml({ arrayBuffer: buffer }).catch(function () { return null; });
+      return { kind: 'text', text: result.value || '', rows: rendered ? htmlToRows(rendered.value) : null };
     }
-    if (/\.(png|jpe?g|gif|bmp|webp|heic|tiff?)$/.test(name) || /^image\//i.test(file.type || '')) {
-      throw new Error(file.name + ' is a picture, and pictures cannot be read. Save the page as a PDF or copy the text into a .txt file.');
+    if (/\.(png|jpe?g|gif|bmp|webp|tiff?)$/.test(name) || /^image\/(png|jpe?g|gif|bmp|webp|tiff)/i.test(file.type || '')) {
+      return { kind: 'text', text: await ocrImage(file) };
+    }
+    if (/\.heic$/.test(name) || /heic/i.test(file.type || '')) {
+      throw new Error(file.name + ' is an iPhone HEIC picture, which cannot be read. Take a screenshot of it, or save it as a JPG, and try again.');
     }
     if (/\.vcf$/.test(name) || /vcard/i.test(file.type || '')) {
       return { kind: 'vcard', text: decodeBuffer(buffer) };
     }
     var decoded = decodeBuffer(buffer);
     if (/\.(html?|xhtml|mht|mhtml)$/.test(name) || /html/i.test(file.type || '') || /^\s*(<!doctype html|<html)/i.test(decoded)) {
-      return { kind: 'text', text: EmmeClientImport.htmlToText(decoded) };
+      return { kind: 'text', text: EmmeClientImport.htmlToText(decoded), rows: htmlToRows(decoded) };
     }
     if (/\.rtf$/.test(name) || /^\s*\{\\rtf/.test(decoded)) {
       return { kind: 'text', text: EmmeClientImport.rtfToText(decoded) };
@@ -2516,59 +2578,71 @@
     return { kind: 'text', text: decoded };
   }
 
-  /** A provider schedule workbook has a table per weekday, headed "Mon Appointment Time", "Tues Appointment Time", and so on. */
-  function looksLikeScheduleSheet(rows) {
-    return (rows || []).some(function (row) {
-      return /^\s*(mon|tue|wed|thu|fri|sat|sun)\w*\s+appointment\s+time\s*$/i.test(String((row && row[0]) == null ? '' : row[0]));
-    });
+  /** The schedule found in an extracted file, whatever its layout, or null. */
+  function scheduleFromExtracted(file, extracted) {
+    var lib = window.EmmeScheduleImport;
+    if (!lib) return null;
+    if (extracted.sheets && extracted.sheets.length) return lib.bestSheet(extracted.sheets);
+    var rows = extracted.rows;
+    if (extracted.kind === 'text') {
+      var text = String(extracted.text || '').replace(/^\uFEFF/, '');
+      if (/^\s*[\[{]/.test(text)) return null;
+      if (/\.(csv|tsv)$/i.test(file.name || '')) rows = parseDelimited(text);
+      else if (!rows || !rows.length) rows = lib.matrixFromText(text);
+    }
+    if (!rows || !rows.length) return null;
+    var found = lib.scheduleFromMatrix(rows);
+    return found.slots ? found : null;
   }
 
-  function bufferToBase64(buffer) {
-    var bytes = new Uint8Array(buffer);
-    var binary = '';
-    for (var i = 0; i < bytes.length; i += 0x8000) {
-      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-    }
-    return btoa(binary);
-  }
-
-  /** Puts the weekday tables of an uploaded schedule workbook onto the schedule on screen (an admin's open provider included). */
-  async function importScheduleFile(file, buffer) {
-    if (!/\.xlsx$/i.test(file.name || '')) {
-      throw new Error(file.name + ' looks like a schedule, but only .xlsx files can be imported. Open it in Excel and use Save As → Excel Workbook (.xlsx).');
-    }
-    if (!state.cloudConfigured) {
-      throw new Error('Schedule import needs the online connection. Reload the page and try again.');
-    }
-    var res = await fetch(scheduleApi('/api/schedule/import'), {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: bufferToBase64(buffer), workspace: state.workspace })
-    });
-    await applyScheduleResponse(res, file.name);
-  }
-
-  async function applyScheduleResponse(res, label) {
-    var data = await res.json().catch(function () { return {}; });
-    if (!res.ok || !data.workspace) throw new Error(data.error || ('Could not import ' + label));
+  /** Puts a schedule read from a file onto the schedule on screen (an admin's open provider included). */
+  function applySchedule(found, label) {
+    var rows = 0;
+    var dayNames = [];
     mutate(function () {
-      state.workspace.boards = data.workspace.boards;
+      var boards = state.workspace.boards;
+      var board = boards.filter(function (b) { return /current/i.test(b.name || ''); })[0] ||
+        boards.filter(function (b) { return !isIrregularBoard(b.name); })[0];
+      if (!board) {
+        board = { id: uid('board'), name: 'Current Schedule', days: [] };
+        boards.unshift(board);
+      }
+      board.days = board.days || [];
+      EmmeScheduleImport.DAY_KEYS.forEach(function (key) {
+        var incoming = found.days[key];
+        if (!incoming || !incoming.length) return;
+        var day = board.days.filter(function (d) { return String(d.name || '').toLowerCase().indexOf(key.slice(0, 3)) === 0; })[0];
+        if (!day) {
+          day = { id: uid('day'), name: EmmeScheduleImport.DAY_LABELS[key], color: board.days.length % 2 ? 'maroon' : 'blue', slots: [] };
+          board.days.push(day);
+        }
+        var blanks = (day.slots || []).filter(function (slot) { return !(slot.time || slot.status || slot.notes); });
+        day.slots = incoming.map(function (slot) {
+          return { id: uid('slot'), time: slot.time, status: slot.status, notes: slot.notes, lastDay: slot.lastDay || '' };
+        }).concat(blanks);
+        rows += incoming.length;
+        dayNames.push(EmmeScheduleImport.DAY_LABELS[key]);
+      });
       shapeWorkspace(state.workspace);
-      var current = state.workspace.boards.filter(function (board) { return /current/i.test(board.name || ''); })[0] || state.workspace.boards[0];
-      state.activeBoardId = current ? current.id : '';
+      state.activeBoardId = board.id;
       state.layout = 'schedule';
       try {
-        localStorage.setItem(boardKey(), state.activeBoardId);
+        localStorage.setItem(boardKey(), board.id);
         localStorage.setItem(layoutKey(), 'schedule');
       } catch (_) {}
     });
-    toast('Schedule imported' + (data.fileName ? ' from ' + data.fileName : '') + ' — ' + data.rows + ' time slot' + (data.rows === 1 ? '' : 's') + ' on ' + data.days.length + ' day' + (data.days.length === 1 ? '' : 's') + (viewingProvider ? ' for ' + viewingProvider : ''));
+    toast('Schedule imported' + (label ? ' from ' + label : '') + ' — ' + rows + ' time slot' + (rows === 1 ? '' : 's') + ' on ' + dayNames.join(', ') + (viewingProvider ? ' for ' + viewingProvider : ''));
   }
 
-  /** The old schedule that still lives in the provider's folder in SharePoint. */
+  function base64ToFile(base64, name) {
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new File([bytes], name, { type: /\.xlsx$/i.test(name) ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '' });
+  }
+
+  /** The old schedule that still lives in the provider's folder in SharePoint. The server sends the file as it is; this page reads it. */
   async function importFromFolder() {
-    if (!state.cloudConfigured) throw new Error('Importing from the folder needs the online connection. Reload the page and try again.');
     var hasRows = state.workspace.boards.some(function (board) {
       return !isIrregularBoard(board.name) && (board.days || []).some(function (day) {
         return (day.slots || []).some(function (slot) { return slot && (slot.time || slot.status || slot.notes); });
@@ -2579,13 +2653,13 @@
     button.disabled = true;
     toast('Reading the schedule from the folder…');
     try {
-      var res = await fetch(scheduleApi('/api/schedule/import-folder'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspace: state.workspace })
-      });
-      await applyScheduleResponse(res, 'the folder');
+      var res = await fetch(scheduleApi('/api/schedule/folder-file'), { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok || !data.data) throw new Error(data.error || 'Could not read the Provider Schedules folder.');
+      var file = base64ToFile(data.data, data.fileName || 'Schedule.xlsx');
+      var found = scheduleFromExtracted(file, await textFromFile(file));
+      if (!found) throw new Error(file.name + ' was found in the folder, but no days and times could be read from it.');
+      applySchedule(found, file.name);
     } finally {
       button.disabled = false;
     }
@@ -2593,10 +2667,20 @@
 
   async function importFile(file) {
     var extracted = await textFromFile(file);
-    if (extracted.kind === 'matrix' && extracted.buffer && looksLikeScheduleSheet(extracted.rows)) {
-      await importScheduleFile(file, extracted.buffer);
+    var schedule = scheduleFromExtracted(file, extracted);
+    if (schedule && window.EmmeScheduleImport.looksLikeSchedule(schedule)) {
+      applySchedule(schedule, file.name);
       return;
     }
+    try {
+      await importClientsFrom(file, extracted);
+    } catch (err) {
+      if (!schedule) throw err;
+      applySchedule(schedule, file.name);
+    }
+  }
+
+  async function importClientsFrom(file, extracted) {
     if (extracted.kind === 'matrix') {
       var fromSheet = clientsFromMatrix(extracted.rows);
       if (!fromSheet.length) {

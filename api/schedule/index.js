@@ -7,7 +7,7 @@
  *   GET  /api/schedule           load this provider's workspace
  *   PUT  /api/schedule           save this provider's workspace
  *   GET  /api/schedule/meta      lightweight updatedAt check for polling
- *   POST /api/schedule/import    reads an uploaded schedule workbook onto the schedule sent with it (nothing saved)
+ *   POST /api/schedule/folder-file  the provider's existing workbook from Provider Schedules, base64 (read only)
  */
 const crypto = require('crypto');
 const { BlobServiceClient } = require('@azure/storage-blob');
@@ -464,13 +464,9 @@ module.exports = async function (context, req) {
       return;
     }
 
-    if (rest === 'import-folder' && method === 'POST') {
-      // The old schedule that still lives in the provider's folder in Provider Schedules. It is read, never changed.
-      let body = req.body;
-      if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (_) { body = {}; }
-      }
-      body = body || {};
+    if (rest === 'folder-file' && method === 'POST') {
+      // The old schedule that still lives in the provider's folder in Provider Schedules. The file is handed to the
+      // page as it is (read only, never changed); the page reads whatever layout it has.
       const sync = loadSyncModule();
       if (!sync || !ownerEmail) {
         json(context, 503, { configured: true, error: 'SharePoint is not available for schedules.' });
@@ -479,49 +475,12 @@ module.exports = async function (context, req) {
       const found = await sync.readProviderWorkbook(ownerEmail);
       if (found.status !== 'found') {
         const reason = found.status === 'no-file'
-          ? 'No schedule workbook was found for ' + ownerEmail + ' in the Provider Schedules folder.'
+          ? 'No schedule file was found for ' + ownerEmail + ' in the Provider Schedules folder.'
           : (found.error || 'The Provider Schedules folder could not be read.');
         json(context, found.status === 'no-file' ? 404 : 502, { configured: true, error: reason });
         return;
       }
-      try {
-        const imported = await require('../dist/scheduleWorkbook').importScheduleWorkbook(
-          found.bytes,
-          normalizeWorkspace(body.workspace || {}),
-          function () { return 'slot_' + crypto.randomBytes(5).toString('hex'); }
-        );
-        json(context, 200, { configured: true, workspace: imported.workspace, days: imported.days, rows: imported.rows, owner: ownerEmail, fileName: found.fileName });
-      } catch (err) {
-        json(context, 400, { configured: true, error: found.fileName + ': ' + ((err && err.message) || 'could not be read as a schedule.') });
-      }
-      return;
-    }
-
-    if (rest === 'import' && method === 'POST') {
-      // The Import button with a schedule workbook (.xlsx). The rows are put on the schedule the page
-      // sent (the provider's own, or the one an admin opened) and sent back. The page saves it as usual.
-      let body = req.body;
-      if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (_) { body = {}; }
-      }
-      body = body || {};
-      const encoded = String(body.data || '').replace(/^data:[^,]*,/, '');
-      if (!encoded) {
-        json(context, 400, { configured: true, error: 'No file was sent.' });
-        return;
-      }
-      try {
-        const bytes = new Uint8Array(Buffer.from(encoded, 'base64'));
-        const current = normalizeWorkspace(body.workspace || {});
-        const imported = await require('../dist/scheduleWorkbook').importScheduleWorkbook(
-          bytes,
-          current,
-          function () { return 'slot_' + crypto.randomBytes(5).toString('hex'); }
-        );
-        json(context, 200, { configured: true, workspace: imported.workspace, days: imported.days, rows: imported.rows, owner: ownerEmail });
-      } catch (err) {
-        json(context, 400, { configured: true, error: (err && err.message) || 'That file could not be read as a schedule.' });
-      }
+      json(context, 200, { configured: true, fileName: found.fileName, path: found.path, data: Buffer.from(found.bytes).toString('base64') });
       return;
     }
 
