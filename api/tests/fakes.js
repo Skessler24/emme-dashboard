@@ -52,6 +52,7 @@ global.fetch = async function (url, options) {
   const method = (options && options.method) || 'GET';
   const text = decodeURIComponent(String(url));
   if (text.includes('/oauth2/v2.0/token')) return jsonResponse(200, { access_token: 't', expires_in: 3600 });
+  if (text.includes('/users/ghost@emmeco.org')) return jsonResponse(404, { error: { code: 'Request_ResourceNotFound', message: 'no such user' } });
   if (text.includes('/users/')) return jsonResponse(200, { displayName: 'Natalie Delgado' });
   if (text.includes('/personal/jenriat_emmeco_org')) return jsonResponse(200, { id: 'site1' });
   if (!text.includes('/sites/site1/drive/root:/')) return jsonResponse(404, { error: { code: 'itemNotFound', message: 'no' } });

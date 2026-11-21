@@ -14,6 +14,7 @@
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script src="schedule-merge.js"></script>
   <script src="client-import.js"></script>
+  <script src="schedule-import.js"></script>
   <style>
     :root {
       --green: #084339;
@@ -405,7 +406,8 @@
       <button type="button" class="btn btn--ghost" id="js-spreadsheet" title="Download the spreadsheet to your computer and save a copy to your OneDrive">Spreadsheet</button>
       <button type="button" class="btn btn--ghost" id="js-pdf" title="Download a PDF to your computer and save a copy to your OneDrive">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
-      <button type="button" class="btn btn--ghost" id="js-import" title="Import clients from any spreadsheet, PDF, Word doc, web page, contact file, or text. It does not need rows and columns.">Import</button>
+      <button type="button" class="btn btn--ghost" id="js-import" title="Import a schedule or a client list from any file: spreadsheet, PDF, Word doc, web page, picture, contact file, or text. It reads the days, times, statuses and names wherever they are; it does not need a set layout.">Import</button>
+      <button type="button" class="btn btn--ghost" id="js-import-folder" title="Bring in the schedule workbook that is already in the Provider Schedules folder in SharePoint. The file is only read, never changed.">Import from folder</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
       <a class="btn btn--yellow" href="index.html">← Dashboard</a>
     </div>
@@ -639,6 +641,24 @@
     };
   }
 
+  /** Current Schedule is always the first tab, "Clients not in regular spot" the second, and any other boards follow in their own order. */
+  function orderBoards(boards) {
+    function rank(board) {
+      if (isIrregularBoard(board.name)) return 1;
+      return /current/i.test(String(board.name || '')) ? 0 : 2;
+    }
+    return boards.map(function (board, index) { return { board: board, index: index }; }).sort(function (a, b) {
+      return rank(a.board) - rank(b.board) || a.index - b.index;
+    }).map(function (entry) { return entry.board; });
+  }
+
+  function currentBoardId(workspace) {
+    var boards = (workspace && workspace.boards) || [];
+    var found = boards.filter(function (board) { return /current/i.test(String(board.name || '')) && !isIrregularBoard(board.name); })[0] ||
+      boards.filter(function (board) { return !isIrregularBoard(board.name); })[0] || boards[0];
+    return found ? found.id : '';
+  }
+
   function shapeWorkspace(workspace) {
     if (!workspace) return false;
     var boards = (workspace.boards || []).filter(function (board) { return !isSummerBoard(board.name); });
@@ -651,6 +671,9 @@
       irregular.days = [{ id: uid('day'), name: 'Clients', color: 'blue', slots: [] }];
       changed = true;
     }
+    var ordered = orderBoards(boards);
+    if (ordered.some(function (board, index) { return board !== boards[index]; })) changed = true;
+    boards = ordered;
     workspace.boards = boards;
     if (state.activeBoardId && !boards.some(function (board) { return board.id === state.activeBoardId; })) {
       state.activeBoardId = boards[0] ? boards[0].id : '';
@@ -2451,6 +2474,60 @@
     return new TextDecoder('utf-8').decode(buffer);
   }
 
+  /** Tables and paragraphs of an HTML page (or a Word document turned into HTML) as rows of cells, in page order. */
+  function htmlToRows(html) {
+    var doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+    var rows = [];
+    function cellText(el) { return String(el.textContent || '').replace(/\s+/g, ' ').trim(); }
+    function walk(node) {
+      Array.prototype.forEach.call(node.children || [], function (el) {
+        var tag = el.tagName.toLowerCase();
+        if (tag === 'table') {
+          Array.prototype.forEach.call(el.querySelectorAll('tr'), function (tr) {
+            rows.push(Array.prototype.map.call(tr.children, cellText));
+          });
+        } else if (/^(p|h[1-6]|li|pre|div|section|article|ul|ol|body|main)$/.test(tag) && el.querySelector('table')) {
+          walk(el);
+        } else if (/^(script|style|head|nav)$/.test(tag)) {
+          return;
+        } else {
+          String(el.innerText || el.textContent || '').split(/\n+/).forEach(function (line) {
+            var text = line.replace(/\s+/g, ' ').trim();
+            if (text) rows.push([text]);
+          });
+        }
+      });
+    }
+    walk(doc.body);
+    return rows;
+  }
+
+  var ocrScript = null;
+  /** Pictures and screenshots: the words are read off the image (OCR) in the browser, then handled like any other text. */
+  async function ocrImage(file) {
+    toast('Reading the picture…');
+    try {
+      if (typeof Tesseract === 'undefined') {
+        if (!ocrScript) {
+          ocrScript = new Promise(function (resolve, reject) {
+            var tag = document.createElement('script');
+            tag.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+            tag.onload = resolve;
+            tag.onerror = function () { ocrScript = null; reject(new Error('load')); };
+            document.head.appendChild(tag);
+          });
+        }
+        await ocrScript;
+      }
+      var result = await Tesseract.recognize(file, 'eng');
+      var text = String((result && result.data && result.data.text) || '').trim();
+      if (!text) throw new Error('empty');
+      return text;
+    } catch (_) {
+      throw new Error(file.name + ' is a picture and its words could not be read. Try a clearer picture, or save the page as a PDF or Excel file.');
+    }
+  }
+
   async function textFromFile(file) {
     var name = String(file.name || '').toLowerCase();
     var buffer = await file.arrayBuffer();
@@ -2461,10 +2538,13 @@
       try {
         var book = XLSX.read(buffer, { type: 'array' });
         var rows = [];
+        var sheets = [];
         book.SheetNames.forEach(function (sheetName) {
-          rows = rows.concat(XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' }));
+          var sheetRows = XLSX.utils.sheet_to_json(book.Sheets[sheetName], { header: 1, raw: false, defval: '' });
+          sheets.push({ name: sheetName, rows: sheetRows });
+          rows = rows.concat(sheetRows);
         });
-        return { kind: 'matrix', rows: rows };
+        return { kind: 'matrix', rows: rows, sheets: sheets };
       } catch (_) {
         return { kind: 'text', text: decodeBuffer(buffer) };
       }
@@ -2488,17 +2568,21 @@
     if (/\.docx$/.test(name) || /wordprocessingml/i.test(file.type || '')) {
       if (typeof mammoth === 'undefined') throw new Error('Word reader did not load. Save the document as PDF or CSV.');
       var result = await mammoth.extractRawText({ arrayBuffer: buffer });
-      return { kind: 'text', text: result.value || '' };
+      var rendered = await mammoth.convertToHtml({ arrayBuffer: buffer }).catch(function () { return null; });
+      return { kind: 'text', text: result.value || '', rows: rendered ? htmlToRows(rendered.value) : null };
     }
-    if (/\.(png|jpe?g|gif|bmp|webp|heic|tiff?)$/.test(name) || /^image\//i.test(file.type || '')) {
-      throw new Error(file.name + ' is a picture, and pictures cannot be read. Save the page as a PDF or copy the text into a .txt file.');
+    if (/\.(png|jpe?g|gif|bmp|webp|tiff?)$/.test(name) || /^image\/(png|jpe?g|gif|bmp|webp|tiff)/i.test(file.type || '')) {
+      return { kind: 'text', text: await ocrImage(file) };
+    }
+    if (/\.heic$/.test(name) || /heic/i.test(file.type || '')) {
+      throw new Error(file.name + ' is an iPhone HEIC picture, which cannot be read. Take a screenshot of it, or save it as a JPG, and try again.');
     }
     if (/\.vcf$/.test(name) || /vcard/i.test(file.type || '')) {
       return { kind: 'vcard', text: decodeBuffer(buffer) };
     }
     var decoded = decodeBuffer(buffer);
     if (/\.(html?|xhtml|mht|mhtml)$/.test(name) || /html/i.test(file.type || '') || /^\s*(<!doctype html|<html)/i.test(decoded)) {
-      return { kind: 'text', text: EmmeClientImport.htmlToText(decoded) };
+      return { kind: 'text', text: EmmeClientImport.htmlToText(decoded), rows: htmlToRows(decoded) };
     }
     if (/\.rtf$/.test(name) || /^\s*\{\\rtf/.test(decoded)) {
       return { kind: 'text', text: EmmeClientImport.rtfToText(decoded) };
@@ -2515,8 +2599,109 @@
     return { kind: 'text', text: decoded };
   }
 
+  /** The schedule found in an extracted file, whatever its layout, or null. */
+  function scheduleFromExtracted(file, extracted) {
+    var lib = window.EmmeScheduleImport;
+    if (!lib) return null;
+    if (extracted.sheets && extracted.sheets.length) return lib.bestSheet(extracted.sheets);
+    var rows = extracted.rows;
+    if (extracted.kind === 'text') {
+      var text = String(extracted.text || '').replace(/^\uFEFF/, '');
+      if (/^\s*[\[{]/.test(text)) return null;
+      if (/\.(csv|tsv)$/i.test(file.name || '')) rows = parseDelimited(text);
+      else if (!rows || !rows.length) rows = lib.matrixFromText(text);
+    }
+    if (!rows || !rows.length) return null;
+    var found = lib.scheduleFromMatrix(rows);
+    return found.slots ? found : null;
+  }
+
+  /** Puts a schedule read from a file onto the schedule on screen (an admin's open provider included). */
+  function applySchedule(found, label) {
+    var rows = 0;
+    var dayNames = [];
+    mutate(function () {
+      var boards = state.workspace.boards;
+      var board = boards.filter(function (b) { return /current/i.test(b.name || ''); })[0] ||
+        boards.filter(function (b) { return !isIrregularBoard(b.name); })[0];
+      if (!board) {
+        board = { id: uid('board'), name: 'Current Schedule', days: [] };
+        boards.unshift(board);
+      }
+      board.days = board.days || [];
+      EmmeScheduleImport.DAY_KEYS.forEach(function (key) {
+        var incoming = found.days[key];
+        if (!incoming || !incoming.length) return;
+        var day = board.days.filter(function (d) { return String(d.name || '').toLowerCase().indexOf(key.slice(0, 3)) === 0; })[0];
+        if (!day) {
+          day = { id: uid('day'), name: EmmeScheduleImport.DAY_LABELS[key], color: board.days.length % 2 ? 'maroon' : 'blue', slots: [] };
+          board.days.push(day);
+        }
+        var blanks = (day.slots || []).filter(function (slot) { return !(slot.time || slot.status || slot.notes); });
+        day.slots = incoming.map(function (slot) {
+          return { id: uid('slot'), time: slot.time, status: slot.status, notes: slot.notes, lastDay: slot.lastDay || '' };
+        }).concat(blanks);
+        rows += incoming.length;
+        dayNames.push(EmmeScheduleImport.DAY_LABELS[key]);
+      });
+      shapeWorkspace(state.workspace);
+      state.activeBoardId = board.id;
+      state.layout = 'schedule';
+      try {
+        localStorage.setItem(boardKey(), board.id);
+        localStorage.setItem(layoutKey(), 'schedule');
+      } catch (_) {}
+    });
+    toast('Schedule imported' + (label ? ' from ' + label : '') + ' — ' + rows + ' time slot' + (rows === 1 ? '' : 's') + ' on ' + dayNames.join(', ') + (viewingProvider ? ' for ' + viewingProvider : ''));
+  }
+
+  function base64ToFile(base64, name) {
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new File([bytes], name, { type: /\.xlsx$/i.test(name) ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '' });
+  }
+
+  /** The old schedule that still lives in the provider's folder in SharePoint. The server sends the file as it is; this page reads it. */
+  async function importFromFolder() {
+    var hasRows = state.workspace.boards.some(function (board) {
+      return !isIrregularBoard(board.name) && (board.days || []).some(function (day) {
+        return (day.slots || []).some(function (slot) { return slot && (slot.time || slot.status || slot.notes); });
+      });
+    });
+    if (hasRows && !window.confirm('Bring in the schedule from the Provider Schedules folder? Its rows replace the rows on the same weekdays here.')) return;
+    var button = document.getElementById('js-import-folder');
+    button.disabled = true;
+    toast('Reading the schedule from the folder…');
+    try {
+      var res = await fetch(scheduleApi('/api/schedule/folder-file'), { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok || !data.data) throw new Error(data.error || 'Could not read the Provider Schedules folder.');
+      var file = base64ToFile(data.data, data.fileName || 'Schedule.xlsx');
+      var found = scheduleFromExtracted(file, await textFromFile(file));
+      if (!found) throw new Error(file.name + ' was found in the folder, but no days and times could be read from it.');
+      applySchedule(found, file.name);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   async function importFile(file) {
     var extracted = await textFromFile(file);
+    var schedule = scheduleFromExtracted(file, extracted);
+    if (schedule && window.EmmeScheduleImport.looksLikeSchedule(schedule)) {
+      applySchedule(schedule, file.name);
+      return;
+    }
+    try {
+      await importClientsFrom(file, extracted);
+    } catch (err) {
+      if (!schedule) throw err;
+      applySchedule(schedule, file.name);
+    }
+  }
+
+  async function importClientsFrom(file, extracted) {
     if (extracted.kind === 'matrix') {
       var fromSheet = clientsFromMatrix(extracted.rows);
       if (!fromSheet.length) {
@@ -2586,6 +2771,9 @@
     input.value = '';
     input.click();
   });
+  document.getElementById('js-import-folder').addEventListener('click', function () {
+    importFromFolder().catch(function (err) { toast(err.message || 'Import failed'); });
+  });
   document.getElementById('js-import-file').addEventListener('change', function (e) {
     var files = Array.prototype.slice.call(e.target.files || []);
     e.target.value = '';
@@ -2601,6 +2789,29 @@
    * Admins get a drop-down of every provider. Picking one reloads the page on that provider's own schedule
    * (the same one the provider sees). Everyone else never sees the drop-down; the server also refuses them.
    */
+  /** Admins: a provider who is not in the list yet gets the standard schedule, then their schedule opens. */
+  async function addProvider(pick, wasShowing) {
+    function back() { pick.value = wasShowing && Array.prototype.some.call(pick.options, function (o) { return o.value === wasShowing; }) ? wasShowing : ''; }
+    var email = (window.prompt('Email of the provider to add (name@emmeco.org). They get the standard schedule, Monday to Friday, 7 AM to 5 PM, which you can then change or import over.') || '').trim().toLowerCase();
+    if (!email) { back(); return; }
+    pick.disabled = true;
+    try {
+      var res = await fetch('/api/schedule/providers', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.error || 'Could not add that provider.');
+      location.href = location.pathname + '?provider=' + encodeURIComponent(data.provider.email);
+    } catch (err) {
+      pick.disabled = false;
+      back();
+      toast(err.message || 'Could not add that provider.');
+    }
+  }
+
   async function setUpAdminPicker(who) {
     var pick = document.getElementById('js-provider-pick');
     var wanted = '';
@@ -2617,9 +2828,14 @@
       if (p.email === mine) return;
       html += '<option value="' + escapeHtml(p.email) + '"' + (p.email === wanted ? ' selected' : '') + '>' + escapeHtml(p.name) + '</option>';
     });
+    html += '<option value="__add__">+ Add a provider…</option>';
     pick.innerHTML = html;
     pick.classList.remove('is-hidden');
     pick.addEventListener('change', function () {
+      if (pick.value === '__add__') {
+        addProvider(pick, wanted);
+        return;
+      }
       location.href = pick.value ? location.pathname + '?provider=' + encodeURIComponent(pick.value) : location.pathname;
     });
     if (wanted && wanted !== mine && providers.some(function (p) { return p.email === wanted; })) {
@@ -2642,8 +2858,8 @@
       document.getElementById('js-view-schedule').innerHTML = '<div class="empty"><h3>Sign in to see your schedule</h3><p>Each Emme email has its own schedule and client list.</p></div>';
       return;
     }
-    state.layout = localStorage.getItem(layoutKey()) || 'schedule';
-    state.activeBoardId = localStorage.getItem(boardKey()) || '';
+    state.layout = 'schedule';
+    state.activeBoardId = '';
     try { bc = new BroadcastChannel('emme_schedule_sync_' + userScope); } catch (_) {}
     if (bc) {
       bc.onmessage = function (ev) {
@@ -2698,10 +2914,9 @@
     }
 
     if (state.workspace && shapeWorkspace(state.workspace) && currentEmail) scheduleSave();
-    if (!state.activeBoardId || !state.workspace.boards.some(function (b) { return b.id === state.activeBoardId; })) {
-      state.activeBoardId = state.workspace.boards[0].id;
-      localStorage.setItem(boardKey(), state.activeBoardId);
-    }
+    // The page always opens on Current Schedule. Other tabs are one click away.
+    state.activeBoardId = currentBoardId(state.workspace);
+    localStorage.setItem(boardKey(), state.activeBoardId);
     renderAll();
   }
 

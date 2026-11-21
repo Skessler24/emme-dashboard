@@ -7,6 +7,8 @@
  *   GET  /api/schedule           load this provider's workspace
  *   PUT  /api/schedule           save this provider's workspace
  *   GET  /api/schedule/meta      lightweight updatedAt check for polling
+ *   POST /api/schedule/providers    admin adds a provider who has no schedule yet (standard schedule)
+ *   POST /api/schedule/folder-file  the provider's existing workbook from Provider Schedules, base64 (read only)
  */
 const crypto = require('crypto');
 const { BlobServiceClient } = require('@azure/storage-blob');
@@ -152,7 +154,14 @@ function shapedBoards(boards) {
   } else if (!Array.isArray(irregular.days) || !irregular.days.length) {
     irregular.days = [{ id: 'day_' + crypto.randomBytes(4).toString('hex'), name: 'Clients', color: 'blue', slots: [] }];
   }
-  return next;
+  // Current Schedule first, Clients not in regular spot second, then any other boards in their own order.
+  function rank(board) {
+    if (isIrregularBoard(board.name)) return 1;
+    return /current/i.test(String(board.name || '')) ? 0 : 2;
+  }
+  return next.map(function (board, index) { return { board: board, index: index }; }).sort(function (a, b) {
+    return rank(a.board) - rank(b.board) || a.index - b.index;
+  }).map(function (entry) { return entry.board; });
 }
 
 function normalizeWorkspace(raw) {
@@ -442,6 +451,44 @@ module.exports = async function (context, req) {
       return;
     }
 
+    if (rest === 'providers' && method === 'POST') {
+      // An admin adds a provider who has no schedule on the dashboard yet. They get the standard schedule
+      // (Monday to Friday, 7 AM to 5 PM), and from then on they are in the drop-down. A schedule that already
+      // has anything in it is never replaced.
+      if (!(await callerIsAdmin())) {
+        json(context, 403, { configured: true, error: 'Emme Admin access is required.' });
+        return;
+      }
+      let body = req.body;
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (_) { body = {}; }
+      }
+      const email = String((body && body.email) || '').trim().toLowerCase();
+      if (!/^[a-z0-9._+-]+@emmeco\.org$/.test(email)) {
+        json(context, 400, { configured: true, error: 'Enter the provider’s full Emme email, such as name@emmeco.org.' });
+        return;
+      }
+      const graph = require('../dist/graphClient');
+      if (!(await graph.userExists(email))) {
+        json(context, 404, { configured: true, error: 'No Emme account was found for ' + email + '. Check the spelling.' });
+        return;
+      }
+      const target = container.getBlockBlobClient(emailBlobName({ userId: email, emails: [email] }));
+      let created = false;
+      const existing = await readWorkspace(target);
+      if (!existing || !hasProviderData(existing)) {
+        const fresh = normalizeWorkspace(require('../dist/scheduleWorkbook').templateWorkspace());
+        fresh.ownerEmail = email;
+        fresh.updatedAt = new Date().toISOString();
+        fresh.version = existing ? (Number(existing.version) || 0) + 1 : 1;
+        await writeWorkspace(target, fresh, email);
+        created = true;
+      }
+      const name = await graph.getUserDisplayName(email);
+      json(context, created ? 201 : 200, { configured: true, created: created, provider: { email: email, name: name || email } });
+      return;
+    }
+
     if (rest === 'download' && method === 'POST') {
       // An Excel copy of the schedule on screen, for the Download button. Nothing in SharePoint changes.
       let body = req.body;
@@ -460,6 +507,26 @@ module.exports = async function (context, req) {
         },
         body: book.bytes
       };
+      return;
+    }
+
+    if (rest === 'folder-file' && method === 'POST') {
+      // The old schedule that still lives in the provider's folder in Provider Schedules. The file is handed to the
+      // page as it is (read only, never changed); the page reads whatever layout it has.
+      const sync = loadSyncModule();
+      if (!sync || !ownerEmail) {
+        json(context, 503, { configured: true, error: 'SharePoint is not available for schedules.' });
+        return;
+      }
+      const found = await sync.readProviderWorkbook(ownerEmail);
+      if (found.status !== 'found') {
+        const reason = found.status === 'no-file'
+          ? 'No schedule file was found for ' + ownerEmail + ' in the Provider Schedules folder.'
+          : (found.error || 'The Provider Schedules folder could not be read.');
+        json(context, found.status === 'no-file' ? 404 : 502, { configured: true, error: reason });
+        return;
+      }
+      json(context, 200, { configured: true, fileName: found.fileName, path: found.path, data: Buffer.from(found.bytes).toString('base64') });
       return;
     }
 

@@ -295,6 +295,26 @@ export async function importInitialSchedule(email: string, meta: SyncMeta): Prom
   }
 }
 
+/**
+ * The Import from folder button: the provider's existing workbook in Provider Schedules, as it is now.
+ * Nothing is written to SharePoint and no sync state is kept.
+ */
+export async function readProviderWorkbook(email: string): Promise<
+  { status: 'found'; bytes: Uint8Array; fileName: string; path: string } | { status: 'no-file' | 'skipped' | 'error'; error?: string }
+> {
+  if (!graphIsConfigured() || !email) return { status: 'skipped', error: 'SharePoint is not connected.' };
+  try {
+    dropLocation(email);
+    const location = await findLocation(email, {});
+    if (!location) return { status: 'no-file' };
+    const bytes = await readScheduleBytes(fileSegments(location));
+    if (!bytes) return { status: 'no-file' };
+    return { status: 'found', bytes, fileName: location.fileName, path: location.path };
+  } catch (err) {
+    return { status: 'error', error: errorText(err, 'Could not read the SharePoint schedule') };
+  }
+}
+
 /** True when the dashboard has changes the workbook does not have yet (for example after a failed save). */
 export function needsPush(workspace: Workspace, meta: SyncMeta): boolean {
   if (!meta || !meta.baseDays) return false;
