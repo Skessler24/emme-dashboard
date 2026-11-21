@@ -464,6 +464,39 @@ module.exports = async function (context, req) {
       return;
     }
 
+    if (rest === 'import-folder' && method === 'POST') {
+      // The old schedule that still lives in the provider's folder in Provider Schedules. It is read, never changed.
+      let body = req.body;
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (_) { body = {}; }
+      }
+      body = body || {};
+      const sync = loadSyncModule();
+      if (!sync || !ownerEmail) {
+        json(context, 503, { configured: true, error: 'SharePoint is not available for schedules.' });
+        return;
+      }
+      const found = await sync.readProviderWorkbook(ownerEmail);
+      if (found.status !== 'found') {
+        const reason = found.status === 'no-file'
+          ? 'No schedule workbook was found for ' + ownerEmail + ' in the Provider Schedules folder.'
+          : (found.error || 'The Provider Schedules folder could not be read.');
+        json(context, found.status === 'no-file' ? 404 : 502, { configured: true, error: reason });
+        return;
+      }
+      try {
+        const imported = await require('../dist/scheduleWorkbook').importScheduleWorkbook(
+          found.bytes,
+          normalizeWorkspace(body.workspace || {}),
+          function () { return 'slot_' + crypto.randomBytes(5).toString('hex'); }
+        );
+        json(context, 200, { configured: true, workspace: imported.workspace, days: imported.days, rows: imported.rows, owner: ownerEmail, fileName: found.fileName });
+      } catch (err) {
+        json(context, 400, { configured: true, error: found.fileName + ': ' + ((err && err.message) || 'could not be read as a schedule.') });
+      }
+      return;
+    }
+
     if (rest === 'import' && method === 'POST') {
       // The Import button with a schedule workbook (.xlsx). The rows are put on the schedule the page
       // sent (the provider's own, or the one an admin opened) and sent back. The page saves it as usual.

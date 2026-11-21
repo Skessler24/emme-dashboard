@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 process.env.EMME_ADMIN_EMAILS = 'boss@emmeco.org';
-require('./fakes');
+const { drive } = require('./fakes');
 const handler = require('../schedule/index.js');
 const workbook = require('../dist/scheduleWorkbook.js');
 
@@ -67,5 +67,38 @@ test('a file that is not a schedule workbook, or no file, is refused with a plai
 test('only an admin can import onto another provider\'s schedule', async () => {
   const file = await workbook.buildScheduleWorkbook(schedule(['Nope']));
   const res = await call('someone@emmeco.org', 'POST', 'import', { data: file.toString('base64'), workspace: {} }, { provider: 'ndelgado@emmeco.org' });
+  assert.strictEqual(res.status, 403);
+});
+
+test('an admin brings in the old schedule from the provider\'s SharePoint folder, and the file is not changed', async () => {
+  drive.bytes = await workbook.buildScheduleWorkbook(schedule(['Old Folder One', 'Old Folder Two']));
+  drive.version = 1;
+  const before = Buffer.from(drive.bytes);
+  const putsBefore = drive.putCount;
+  const shown = { version: 1, boards: [], clients: [{ id: 'c1', name: 'Kept Client' }], dxCodes: [] };
+
+  const res = await call('boss@emmeco.org', 'POST', 'import-folder', { workspace: shown }, { provider: 'ndelgado@emmeco.org' });
+  assert.strictEqual(res.status, 200, JSON.stringify(res.body));
+  assert.deepStrictEqual(mondayNotes(res.body.workspace), ['Old Folder One', 'Old Folder Two']);
+  assert.ok(/Schedule\.xlsx$/.test(res.body.fileName), res.body.fileName);
+  assert.deepStrictEqual(res.body.workspace.clients.map((c) => c.name), ['Kept Client']);
+  assert.ok(Buffer.from(drive.bytes).equals(before));
+  assert.strictEqual(drive.putCount, putsBefore, 'nothing was written to SharePoint');
+});
+
+test('a folder workbook with no weekday tables gets a plain message naming the file', async () => {
+  const saved = drive.bytes;
+  const ExcelJS = require('exceljs');
+  const book = new ExcelJS.Workbook();
+  book.addWorksheet('Notes').getCell('A1').value = 'nothing useful';
+  drive.bytes = Buffer.from(await book.xlsx.writeBuffer());
+  const res = await call('boss@emmeco.org', 'POST', 'import-folder', { workspace: {} }, { provider: 'ndelgado@emmeco.org' });
+  drive.bytes = saved;
+  assert.strictEqual(res.status, 400, JSON.stringify(res.body));
+  assert.ok(/Natalie Delgado Schedule\.xlsx: No weekday schedule tables/.test(res.body.error), res.body.error);
+});
+
+test('only an admin can import another provider\'s folder schedule', async () => {
+  const res = await call('someone@emmeco.org', 'POST', 'import-folder', { workspace: {} }, { provider: 'ndelgado@emmeco.org' });
   assert.strictEqual(res.status, 403);
 });

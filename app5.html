@@ -406,6 +406,7 @@
       <button type="button" class="btn btn--ghost" id="js-pdf" title="Download a PDF to your computer and save a copy to your OneDrive">PDF</button>
       <button type="button" class="btn btn--ghost" id="js-share" title="Share a link with your bosses">Share</button>
       <button type="button" class="btn btn--ghost" id="js-import" title="Import a schedule workbook (.xlsx), or clients from any spreadsheet, PDF, Word doc, web page, contact file, or text. It does not need rows and columns.">Import</button>
+      <button type="button" class="btn btn--ghost" id="js-import-folder" title="Bring in the schedule workbook that is already in the Provider Schedules folder in SharePoint. The file is only read, never changed.">Import from folder</button>
       <input type="file" id="js-import-file" class="sr-only" multiple />
       <a class="btn btn--yellow" href="index.html">← Dashboard</a>
     </div>
@@ -2545,8 +2546,12 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: bufferToBase64(buffer), workspace: state.workspace })
     });
+    await applyScheduleResponse(res, file.name);
+  }
+
+  async function applyScheduleResponse(res, label) {
     var data = await res.json().catch(function () { return {}; });
-    if (!res.ok || !data.workspace) throw new Error(data.error || ('Could not import ' + file.name));
+    if (!res.ok || !data.workspace) throw new Error(data.error || ('Could not import ' + label));
     mutate(function () {
       state.workspace.boards = data.workspace.boards;
       shapeWorkspace(state.workspace);
@@ -2558,7 +2563,32 @@
         localStorage.setItem(layoutKey(), 'schedule');
       } catch (_) {}
     });
-    toast('Schedule imported — ' + data.rows + ' time slot' + (data.rows === 1 ? '' : 's') + ' on ' + data.days.length + ' day' + (data.days.length === 1 ? '' : 's') + (viewingProvider ? ' for ' + viewingProvider : ''));
+    toast('Schedule imported' + (data.fileName ? ' from ' + data.fileName : '') + ' — ' + data.rows + ' time slot' + (data.rows === 1 ? '' : 's') + ' on ' + data.days.length + ' day' + (data.days.length === 1 ? '' : 's') + (viewingProvider ? ' for ' + viewingProvider : ''));
+  }
+
+  /** The old schedule that still lives in the provider's folder in SharePoint. */
+  async function importFromFolder() {
+    if (!state.cloudConfigured) throw new Error('Importing from the folder needs the online connection. Reload the page and try again.');
+    var hasRows = state.workspace.boards.some(function (board) {
+      return !isIrregularBoard(board.name) && (board.days || []).some(function (day) {
+        return (day.slots || []).some(function (slot) { return slot && (slot.time || slot.status || slot.notes); });
+      });
+    });
+    if (hasRows && !window.confirm('Bring in the schedule from the Provider Schedules folder? Its rows replace the rows on the same weekdays here.')) return;
+    var button = document.getElementById('js-import-folder');
+    button.disabled = true;
+    toast('Reading the schedule from the folder…');
+    try {
+      var res = await fetch(scheduleApi('/api/schedule/import-folder'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace: state.workspace })
+      });
+      await applyScheduleResponse(res, 'the folder');
+    } finally {
+      button.disabled = false;
+    }
   }
 
   async function importFile(file) {
@@ -2635,6 +2665,9 @@
     input.removeAttribute('accept');
     input.value = '';
     input.click();
+  });
+  document.getElementById('js-import-folder').addEventListener('click', function () {
+    importFromFolder().catch(function (err) { toast(err.message || 'Import failed'); });
   });
   document.getElementById('js-import-file').addEventListener('change', function (e) {
     var files = Array.prototype.slice.call(e.target.files || []);

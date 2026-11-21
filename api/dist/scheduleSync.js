@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.pullSchedule = pullSchedule;
 exports.pushSchedule = pushSchedule;
 exports.importInitialSchedule = importInitialSchedule;
+exports.readProviderWorkbook = readProviderWorkbook;
 exports.needsPush = needsPush;
 const crypto_1 = __importDefault(require("crypto"));
 const graphClient_1 = require("./graphClient");
@@ -260,6 +261,27 @@ async function importInitialSchedule(email, meta) {
     }
     catch (err) {
         return { status: 'error', meta, error: errorText(err, 'Could not read the SharePoint schedule') };
+    }
+}
+/**
+ * The Import from folder button: the provider's existing workbook in Provider Schedules, as it is now.
+ * Nothing is written to SharePoint and no sync state is kept.
+ */
+async function readProviderWorkbook(email) {
+    if (!(0, graphClient_1.graphIsConfigured)() || !email)
+        return { status: 'skipped', error: 'SharePoint is not connected.' };
+    try {
+        dropLocation(email);
+        const location = await findLocation(email, {});
+        if (!location)
+            return { status: 'no-file' };
+        const bytes = await (0, scheduleWorkbook_1.readScheduleBytes)(fileSegments(location));
+        if (!bytes)
+            return { status: 'no-file' };
+        return { status: 'found', bytes, fileName: location.fileName, path: location.path };
+    }
+    catch (err) {
+        return { status: 'error', error: errorText(err, 'Could not read the SharePoint schedule') };
     }
 }
 /** True when the dashboard has changes the workbook does not have yet (for example after a failed save). */
