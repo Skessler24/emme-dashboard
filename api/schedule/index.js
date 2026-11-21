@@ -153,7 +153,14 @@ function shapedBoards(boards) {
   } else if (!Array.isArray(irregular.days) || !irregular.days.length) {
     irregular.days = [{ id: 'day_' + crypto.randomBytes(4).toString('hex'), name: 'Clients', color: 'blue', slots: [] }];
   }
-  return next;
+  // Current Schedule first, Clients not in regular spot second, then any other boards in their own order.
+  function rank(board) {
+    if (isIrregularBoard(board.name)) return 1;
+    return /current/i.test(String(board.name || '')) ? 0 : 2;
+  }
+  return next.map(function (board, index) { return { board: board, index: index }; }).sort(function (a, b) {
+    return rank(a.board) - rank(b.board) || a.index - b.index;
+  }).map(function (entry) { return entry.board; });
 }
 
 function normalizeWorkspace(raw) {

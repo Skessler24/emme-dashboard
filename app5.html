@@ -641,6 +641,24 @@
     };
   }
 
+  /** Current Schedule is always the first tab, "Clients not in regular spot" the second, and any other boards follow in their own order. */
+  function orderBoards(boards) {
+    function rank(board) {
+      if (isIrregularBoard(board.name)) return 1;
+      return /current/i.test(String(board.name || '')) ? 0 : 2;
+    }
+    return boards.map(function (board, index) { return { board: board, index: index }; }).sort(function (a, b) {
+      return rank(a.board) - rank(b.board) || a.index - b.index;
+    }).map(function (entry) { return entry.board; });
+  }
+
+  function currentBoardId(workspace) {
+    var boards = (workspace && workspace.boards) || [];
+    var found = boards.filter(function (board) { return /current/i.test(String(board.name || '')) && !isIrregularBoard(board.name); })[0] ||
+      boards.filter(function (board) { return !isIrregularBoard(board.name); })[0] || boards[0];
+    return found ? found.id : '';
+  }
+
   function shapeWorkspace(workspace) {
     if (!workspace) return false;
     var boards = (workspace.boards || []).filter(function (board) { return !isSummerBoard(board.name); });
@@ -653,6 +671,9 @@
       irregular.days = [{ id: uid('day'), name: 'Clients', color: 'blue', slots: [] }];
       changed = true;
     }
+    var ordered = orderBoards(boards);
+    if (ordered.some(function (board, index) { return board !== boards[index]; })) changed = true;
+    boards = ordered;
     workspace.boards = boards;
     if (state.activeBoardId && !boards.some(function (board) { return board.id === state.activeBoardId; })) {
       state.activeBoardId = boards[0] ? boards[0].id : '';
@@ -2809,8 +2830,8 @@
       document.getElementById('js-view-schedule').innerHTML = '<div class="empty"><h3>Sign in to see your schedule</h3><p>Each Emme email has its own schedule and client list.</p></div>';
       return;
     }
-    state.layout = localStorage.getItem(layoutKey()) || 'schedule';
-    state.activeBoardId = localStorage.getItem(boardKey()) || '';
+    state.layout = 'schedule';
+    state.activeBoardId = '';
     try { bc = new BroadcastChannel('emme_schedule_sync_' + userScope); } catch (_) {}
     if (bc) {
       bc.onmessage = function (ev) {
@@ -2865,10 +2886,9 @@
     }
 
     if (state.workspace && shapeWorkspace(state.workspace) && currentEmail) scheduleSave();
-    if (!state.activeBoardId || !state.workspace.boards.some(function (b) { return b.id === state.activeBoardId; })) {
-      state.activeBoardId = state.workspace.boards[0].id;
-      localStorage.setItem(boardKey(), state.activeBoardId);
-    }
+    // The page always opens on Current Schedule. Other tabs are one click away.
+    state.activeBoardId = currentBoardId(state.workspace);
+    localStorage.setItem(boardKey(), state.activeBoardId);
     renderAll();
   }
 
