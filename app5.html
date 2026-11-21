@@ -2789,6 +2789,29 @@
    * Admins get a drop-down of every provider. Picking one reloads the page on that provider's own schedule
    * (the same one the provider sees). Everyone else never sees the drop-down; the server also refuses them.
    */
+  /** Admins: a provider who is not in the list yet gets the standard schedule, then their schedule opens. */
+  async function addProvider(pick, wasShowing) {
+    function back() { pick.value = wasShowing && Array.prototype.some.call(pick.options, function (o) { return o.value === wasShowing; }) ? wasShowing : ''; }
+    var email = (window.prompt('Email of the provider to add (name@emmeco.org). They get the standard schedule, Monday to Friday, 7 AM to 5 PM, which you can then change or import over.') || '').trim().toLowerCase();
+    if (!email) { back(); return; }
+    pick.disabled = true;
+    try {
+      var res = await fetch('/api/schedule/providers', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.error || 'Could not add that provider.');
+      location.href = location.pathname + '?provider=' + encodeURIComponent(data.provider.email);
+    } catch (err) {
+      pick.disabled = false;
+      back();
+      toast(err.message || 'Could not add that provider.');
+    }
+  }
+
   async function setUpAdminPicker(who) {
     var pick = document.getElementById('js-provider-pick');
     var wanted = '';
@@ -2805,9 +2828,14 @@
       if (p.email === mine) return;
       html += '<option value="' + escapeHtml(p.email) + '"' + (p.email === wanted ? ' selected' : '') + '>' + escapeHtml(p.name) + '</option>';
     });
+    html += '<option value="__add__">+ Add a provider…</option>';
     pick.innerHTML = html;
     pick.classList.remove('is-hidden');
     pick.addEventListener('change', function () {
+      if (pick.value === '__add__') {
+        addProvider(pick, wanted);
+        return;
+      }
       location.href = pick.value ? location.pathname + '?provider=' + encodeURIComponent(pick.value) : location.pathname;
     });
     if (wanted && wanted !== mine && providers.some(function (p) { return p.email === wanted; })) {

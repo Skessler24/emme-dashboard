@@ -13,6 +13,7 @@ exports.candidateSiteIds = candidateSiteIds;
 exports.forgetFolderSites = forgetFolderSites;
 exports.siteHoldingFolder = siteHoldingFolder;
 exports.getUserDisplayName = getUserDisplayName;
+exports.userExists = userExists;
 exports.userIsAdmin = userIsAdmin;
 const config_1 = require("./config");
 const GRAPH_ROOT = 'https://graph.microsoft.com/v1.0';
@@ -251,6 +252,24 @@ async function getUserDisplayName(email) {
     }
     catch (_) {
         return key;
+    }
+}
+/**
+ * False only when Microsoft says there is no such account. If Microsoft cannot be asked (not set up, or a
+ * temporary failure), the answer is true so a provider can still be added.
+ */
+async function userExists(email) {
+    const key = email.trim().toLowerCase();
+    if (!key)
+        return false;
+    if (!(0, config_1.graphConfigured)())
+        return true;
+    try {
+        await graphGet('/users/' + encodeURIComponent(key) + '?$select=id');
+        return true;
+    }
+    catch (err) {
+        return !(err instanceof GraphError && err.status === 404);
     }
 }
 /**

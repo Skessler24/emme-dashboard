@@ -7,6 +7,7 @@
  *   GET  /api/schedule           load this provider's workspace
  *   PUT  /api/schedule           save this provider's workspace
  *   GET  /api/schedule/meta      lightweight updatedAt check for polling
+ *   POST /api/schedule/providers    admin adds a provider who has no schedule yet (standard schedule)
  *   POST /api/schedule/folder-file  the provider's existing workbook from Provider Schedules, base64 (read only)
  */
 const crypto = require('crypto');
@@ -447,6 +448,44 @@ module.exports = async function (context, req) {
       }));
       found.sort(function (a, b) { return a.name.localeCompare(b.name); });
       json(context, 200, { configured: true, providers: found });
+      return;
+    }
+
+    if (rest === 'providers' && method === 'POST') {
+      // An admin adds a provider who has no schedule on the dashboard yet. They get the standard schedule
+      // (Monday to Friday, 7 AM to 5 PM), and from then on they are in the drop-down. A schedule that already
+      // has anything in it is never replaced.
+      if (!(await callerIsAdmin())) {
+        json(context, 403, { configured: true, error: 'Emme Admin access is required.' });
+        return;
+      }
+      let body = req.body;
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (_) { body = {}; }
+      }
+      const email = String((body && body.email) || '').trim().toLowerCase();
+      if (!/^[a-z0-9._+-]+@emmeco\.org$/.test(email)) {
+        json(context, 400, { configured: true, error: 'Enter the provider’s full Emme email, such as name@emmeco.org.' });
+        return;
+      }
+      const graph = require('../dist/graphClient');
+      if (!(await graph.userExists(email))) {
+        json(context, 404, { configured: true, error: 'No Emme account was found for ' + email + '. Check the spelling.' });
+        return;
+      }
+      const target = container.getBlockBlobClient(emailBlobName({ userId: email, emails: [email] }));
+      let created = false;
+      const existing = await readWorkspace(target);
+      if (!existing || !hasProviderData(existing)) {
+        const fresh = normalizeWorkspace(require('../dist/scheduleWorkbook').templateWorkspace());
+        fresh.ownerEmail = email;
+        fresh.updatedAt = new Date().toISOString();
+        fresh.version = existing ? (Number(existing.version) || 0) + 1 : 1;
+        await writeWorkspace(target, fresh, email);
+        created = true;
+      }
+      const name = await graph.getUserDisplayName(email);
+      json(context, created ? 201 : 200, { configured: true, created: created, provider: { email: email, name: name || email } });
       return;
     }
 

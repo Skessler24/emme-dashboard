@@ -243,6 +243,22 @@ export async function getUserDisplayName(email: string): Promise<string> {
 }
 
 /**
+ * False only when Microsoft says there is no such account. If Microsoft cannot be asked (not set up, or a
+ * temporary failure), the answer is true so a provider can still be added.
+ */
+export async function userExists(email: string): Promise<boolean> {
+  const key = email.trim().toLowerCase();
+  if (!key) return false;
+  if (!graphConfigured()) return true;
+  try {
+    await graphGet('/users/' + encodeURIComponent(key) + '?$select=id');
+    return true;
+  } catch (err) {
+    return !(err instanceof GraphError && err.status === 404);
+  }
+}
+
+/**
  * Returns true when the signed-in user is a member of the Emme Admin group.
  * Uses application permissions so the check does not depend on a delegated token.
  */
