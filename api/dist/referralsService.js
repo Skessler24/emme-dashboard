@@ -40,14 +40,24 @@ exports.EI_FIRST_EMAIL = 'Hi Sam! SB & Jenny here from EMME. I received your inf
 exports.EI_LAST_MESSAGE = 'Hi hi Jenny, out of respect for you and your family today will be the last day I reach out to you. I will need to hear from you by end of today or I can let your service coordinator know there has been no response. For the record, we would love to support you and your family!';
 exports.SC_NO_RESPONSE_MESSAGE = 'Hey, haven\'t heard a response, here is the phone number, can you verify and check in if they want services?';
 exports.PRIVATE_FIRST_MESSAGE = 'Hi Jenny! Sara Beth & Jenny from EMME Therapy Services here. It looks like you reached out to us on our website for Speech and OT services. Do you have time to connect with us this week to talk about needs and next steps?';
-const THERAPY_IDS = ['slp', 'ot', 'pt', 'psych', 'other'];
+const THERAPY_IDS = ['slp', 'ot', 'pt', 'di', 'psych', 'other'];
 const THERAPY_LABELS = {
     slp: 'Speech',
     ot: 'Occupational therapy',
     pt: 'Physical therapy',
+    di: 'DI (Developmental Intervention)',
     psych: 'Psychology',
     other: 'Other',
 };
+/** The shared referrals mailbox is where families write in. It is not a provider. */
+function isReferralsMailbox(email, name) {
+    const mail = email.trim().toLowerCase();
+    const who = name.trim().toLowerCase().replace(/\s+/g, ' ');
+    const local = mail.split('@')[0] || '';
+    if (local === 'referrals' && mail.endsWith('@emmeco.org'))
+        return true;
+    return who === 'emmeco referrals' || who === 'emme referrals' || who === 'emmeco referral';
+}
 const EI_STEPS = [
     { id: 'call', label: 'Call' },
     { id: 'mid', label: 'MID (Most Important Document), and put Medicaid and insurance on the PAR/HIA form' },
@@ -787,6 +797,9 @@ function summarizeOpenings(options) {
     const slots = [];
     (options.staff || []).forEach(function (person) {
         const email = (0, http_1.asText)(person.staffEmail, 200).toLowerCase();
+        const staffName = person.staffName || email;
+        if (isReferralsMailbox(email, staffName))
+            return;
         const therapyIds = kindByEmail.get(email) || [];
         const therapyLabels = therapyIds.length ? therapyIds.map(function (id) { return THERAPY_LABELS[id] || id; }) : ['Not set'];
         let spots = 0;
@@ -802,7 +815,7 @@ function summarizeOpenings(options) {
                 therapyCounts.set(label, (therapyCounts.get(label) || 0) + 1);
             });
             slots.push({
-                staffName: person.staffName,
+                staffName: staffName,
                 staffEmail: email,
                 therapies: therapyLabels,
                 therapyIds: therapyIds,
@@ -813,7 +826,7 @@ function summarizeOpenings(options) {
             });
         });
         providers.push({
-            staffName: person.staffName || email,
+            staffName: staffName,
             staffEmail: email,
             therapyIds: therapyIds,
             therapies: therapyLabels,
