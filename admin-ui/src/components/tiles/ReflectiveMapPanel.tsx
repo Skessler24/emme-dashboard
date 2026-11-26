@@ -5,6 +5,7 @@ type Topic = { id: string; title: string; foundation: boolean; prompt: string; e
 type Meeting = {
   id: string;
   date: string;
+  foundationId: string;
   update: string;
   background: string;
   clip: string;
@@ -34,17 +35,20 @@ type Appointment = {
 };
 type MapResponse = { role: string; me: string; map: GrowthMap };
 
-const MEETING_FIELDS: Array<{ key: keyof Meeting; label: string; kind: 'date' | 'text' }> = [
-  { key: 'date', label: 'Meeting date', kind: 'date' },
-  { key: 'update', label: 'Brief update: what I tried since last time, and what got in the way', kind: 'text' },
-  { key: 'background', label: 'Background that helps the meeting (family priorities, who lives in the family, what you already tried)', kind: 'text' },
-  { key: 'clip', label: 'Clip timestamp (the video stays where you keep it today)', kind: 'text' },
-  { key: 'questions', label: 'My questions and reflections', kind: 'text' },
-  { key: 'noticed', label: 'Something I noticed or better understood', kind: 'text' },
-  { key: 'action', label: 'One action I will try, and why', kind: 'text' },
-  { key: 'observe', label: 'What I will observe or ask the family', kind: 'text' },
-  { key: 'revisit', label: 'When will we revisit this?', kind: 'text' },
-  { key: 'growthDates', label: 'Growth map dates to add', kind: 'text' },
+const PREP_FIELDS: Array<{ key: keyof Meeting; label: string }> = [
+  { key: 'update', label: 'A brief update: what I tried since last time, and what got in the way' },
+  { key: 'background', label: 'Background: family priorities, who lives in the family, what you already tried' },
+];
+const READY_FIELDS: Array<{ key: keyof Meeting; label: string }> = [
+  { key: 'clip', label: 'Clip timestamp' },
+  { key: 'questions', label: 'My questions and reflections' },
+];
+const CLOSE_FIELDS: Array<{ key: keyof Meeting; label: string }> = [
+  { key: 'noticed', label: 'Something I noticed or better understood' },
+  { key: 'action', label: 'One action I will try, and why' },
+  { key: 'observe', label: 'What I will observe or ask the family' },
+  { key: 'revisit', label: 'When will we revisit this?' },
+  { key: 'growthDates', label: 'Growth map dates to add' },
 ];
 
 function whenLabel(value: string): string {
@@ -83,6 +87,7 @@ export function ReflectiveMapPanel() {
   const [suggesting, setSuggesting] = useState('');
   const [suggestStart, setSuggestStart] = useState('');
   const [suggestEnd, setSuggestEnd] = useState('');
+  const [sessionId, setSessionId] = useState('');
   const dirty = useRef(false);
   const timer = useRef<number | null>(null);
   const baseRef = useRef('');
@@ -153,6 +158,7 @@ export function ReflectiveMapPanel() {
     if (timer.current) window.clearTimeout(timer.current);
     dirty.current = false;
     loadMap(email, false);
+    setSessionId('');
     const poll = window.setInterval(function () { if (!dirty.current) loadMap(email, true); }, 8000);
     return function () { window.clearInterval(poll); };
   }, [email]);
@@ -226,12 +232,14 @@ export function ReflectiveMapPanel() {
 
   function addMeeting() {
     if (!map) return;
+    const id = 'm-' + Math.random().toString(16).slice(2, 10);
     updateMap(Object.assign({}, map, {
       meetings: map.meetings.concat([{
-        id: 'm-' + Math.random().toString(16).slice(2, 10),
-        date: '', update: '', background: '', clip: '', questions: '', noticed: '', action: '', observe: '', revisit: '', growthDates: '',
+        id: id,
+        date: '', foundationId: '', update: '', background: '', clip: '', questions: '', noticed: '', action: '', observe: '', revisit: '', growthDates: '',
       }]),
     }));
+    setSessionId(id);
   }
 
   async function downloadPdf() {
@@ -302,49 +310,20 @@ export function ReflectiveMapPanel() {
       {loading ? <p className="muted">Loading the growth map…</p> : null}
       {map ? (
         <>
-          <p className="rs-note">E is what was explored. P is what was practiced. R is what was revisited. An F marks a shared foundation.</p>
-          {map.topics.map(function (topic) {
-            return (
-              <article className="rs-topic" key={topic.id}>
-                <h3>{topic.foundation ? '[F] ' : ''}{topic.title}</h3>
-                <p>{topic.prompt}</p>
-                <div className="rs-epr">
-                  <label>E
-                    <textarea value={topic.e} onChange={function (event) { setTopic(topic.id, 'e', event.target.value); }} />
-                  </label>
-                  <label>P
-                    <textarea value={topic.p} onChange={function (event) { setTopic(topic.id, 'p', event.target.value); }} />
-                  </label>
-                  <label>R
-                    <textarea value={topic.r} onChange={function (event) { setTopic(topic.id, 'r', event.target.value); }} />
-                  </label>
-                </div>
-              </article>
-            );
-          })}
-          <h3>Preparation and closing notes</h3>
-          {map.meetings.map(function (meeting, index) {
-            return (
-              <article className="rs-topic" key={meeting.id}>
-                <h3>Meeting {index + 1}</h3>
-                {MEETING_FIELDS.map(function (field) {
-                  return (
-                    <label key={field.key}>{field.label}
-                      {field.kind === 'date'
-                        ? <input type="date" value={meeting.date} onChange={function (event) { setMeeting(meeting.id, 'date', event.target.value); }} />
-                        : <textarea value={String(meeting[field.key] || '')} onChange={function (event) { setMeeting(meeting.id, field.key, event.target.value); }} />}
-                    </label>
-                  );
-                })}
-              </article>
-            );
-          })}
+          <GrowthSheet
+            map={map}
+            sessionId={sessionId}
+            onSession={setSessionId}
+            onTopic={setTopic}
+            onMeeting={setMeeting}
+            onAddMeeting={addMeeting}
+          />
           <p className="row">
-            <button type="button" className="btn btn--ghost" onClick={addMeeting}>Add another meeting</button>
             <button type="button" className="btn btn--pink" onClick={downloadPdf}>Download PDF</button>
             <button type="button" className="btn btn--green" onClick={saveCopy}>Save read-only copy in SharePoint</button>
           </p>
 
+          <section className="rs-band rs-band--blue">
           <h3>When this provider is with clients</h3>
           <p className="rs-note">The next 14 days, from the schedule they save in Schedule &amp; Caseload, and from Outlook. Use an open time for reflective supervision.</p>
           {visits.length === 0 ? <p className="muted">No booked client visits were found on the saved schedule.</p> : (
@@ -362,7 +341,9 @@ export function ReflectiveMapPanel() {
               })}
             </ul>
           ) : null}
+          </section>
 
+          <section className="rs-band rs-band--green">
           <h3>Set a reflective supervision time</h3>
           <p className="rs-note">Mountain Time. Kelly Fitzpatrick proposes the time. The provider gets an email and can accept, decline, or suggest another time. After it is confirmed, it is added to Kelly’s calendar and the provider’s calendar. The calendar event and the email do not include the map.</p>
           <div className="row">
@@ -402,8 +383,124 @@ export function ReflectiveMapPanel() {
               })}
             </ul>
           )}
+          </section>
         </>
       ) : null}
     </section>
+  );
+}
+
+function GrowthSheet(props: {
+  map: GrowthMap;
+  sessionId: string;
+  onSession: (id: string) => void;
+  onTopic: (id: string, key: 'e' | 'p' | 'r', value: string) => void;
+  onMeeting: (id: string, key: keyof Meeting, value: string) => void;
+  onAddMeeting: () => void;
+}) {
+  const [sheet, setSheet] = useState<'foundations' | 'topics' | 'session'>('foundations');
+  const session = props.map.meetings.find(function (meeting) { return meeting.id === props.sessionId; }) || props.map.meetings[0];
+  if (!session) return null;
+  const chosen = props.map.topics.find(function (topic) { return topic.id === session.foundationId; }) || null;
+  const foundations = props.map.topics.filter(function (topic) { return topic.foundation; });
+  const others = props.map.topics.filter(function (topic) { return !topic.foundation; });
+  return (
+    <div className="rs-sheet">
+      <h2>Our Reflective Practice Growth Map</h2>
+      <p className="rs-note">Choose one (F) for this session. That title is the foundation, and the question under it is the one you work on. The other boxes can stay blank. E is explored, P is practiced, R is revisited.</p>
+      {chosen ? <p className="rs-note"><strong>(F) {chosen.title}.</strong> {chosen.prompt}</p> : null}
+      <div className="rs-tabs" role="tablist">
+        <button type="button" className={'rs-tab rs-tab--yellow' + (sheet === 'foundations' ? ' is-on' : '')} onClick={function () { setSheet('foundations'); }}>Foundations</button>
+        <button type="button" className={'rs-tab rs-tab--pink' + (sheet === 'topics' ? ' is-on' : '')} onClick={function () { setSheet('topics'); }}>Other topics</button>
+        <button type="button" className={'rs-tab rs-tab--green' + (sheet === 'session' ? ' is-on' : '')} onClick={function () { setSheet('session'); }}>This session</button>
+      </div>
+      {sheet === 'foundations' ? (
+        <section className="rs-band rs-band--yellow">
+          <h3>Foundations — choose one (F)</h3>
+          <div className="rs-cards">
+            {foundations.map(function (topic) { return topicCard(topic, 'yellow', session.foundationId === topic.id, props, session.id); })}
+          </div>
+        </section>
+      ) : null}
+      {sheet === 'topics' ? (
+        <section className="rs-band rs-band--pink">
+          <h3>Topics that follow this provider</h3>
+          <div className="rs-cards">
+            {others.map(function (topic) { return topicCard(topic, 'pink', false, props, session.id); })}
+          </div>
+        </section>
+      ) : null}
+      {sheet === 'session' ? (
+        <>
+          <div className="rs-sessions">
+            {props.map.meetings.map(function (meeting, index) {
+              return (
+                <button type="button" key={meeting.id} className={meeting.id === session.id ? 'is-on' : ''} onClick={function () { props.onSession(meeting.id); }}>
+                  Session {index + 1}{meeting.date ? ' · ' + meeting.date : ''}
+                </button>
+              );
+            })}
+            <button type="button" onClick={props.onAddMeeting}>Add a session</button>
+          </div>
+          <section className="rs-band rs-band--yellow">
+            <h3>Discuss together at the start</h3>
+            <p className="rs-note">Written responses are optional here.</p>
+            <label>Meeting date
+              <input type="date" value={session.date} onChange={function (event) { props.onMeeting(session.id, 'date', event.target.value); }} />
+            </label>
+            {PREP_FIELDS.map(function (field) { return noteField(session, field.key, field.label, props.onMeeting); })}
+          </section>
+          <section className="rs-band rs-band--pink">
+            <h3>Prepare for our RS</h3>
+            <p className="rs-note">Jot a few notes before the meeting.</p>
+            {READY_FIELDS.map(function (field) { return noteField(session, field.key, field.label, props.onMeeting); })}
+          </section>
+          <section className="rs-band rs-band--green">
+            <h3>Closing notes</h3>
+            {CLOSE_FIELDS.map(function (field) {
+              return (
+                <label key={field.key}>{field.label}
+                  <input value={String(session[field.key] || '')} onChange={function (event) { props.onMeeting(session.id, field.key, event.target.value); }} />
+                </label>
+              );
+            })}
+          </section>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function topicCard(
+  topic: Topic,
+  tone: 'yellow' | 'pink',
+  picked: boolean,
+  props: { onTopic: (id: string, key: 'e' | 'p' | 'r', value: string) => void; onMeeting: (id: string, key: keyof Meeting, value: string) => void },
+  sessionId: string,
+) {
+  return (
+    <article className={'rs-card rs-card--' + tone + (picked ? ' rs-chosen' : '')} key={topic.id}>
+      {topic.foundation
+        ? <button type="button" className="rs-pick" onClick={function () { props.onMeeting(sessionId, 'foundationId', topic.id); }}>(F) {topic.title}</button>
+        : <h3>{topic.title}</h3>}
+      <p>{topic.prompt}</p>
+      <div className="rs-line">
+        {(['e', 'p', 'r'] as const).map(function (key) {
+          return (
+            <label key={key}>{key.toUpperCase()}
+              <input value={topic[key]} onChange={function (event) { props.onTopic(topic.id, key, event.target.value); }} />
+            </label>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
+
+function noteField(session: Meeting, key: keyof Meeting, label: string, onMeeting: (id: string, key: keyof Meeting, value: string) => void) {
+  return (
+    <label key={key}>{label}
+      <textarea rows={2} value={String(session[key] || '')} onChange={function (event) { onMeeting(session.id, key, event.target.value); }} />
+    </label>
   );
 }

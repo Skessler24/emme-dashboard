@@ -6,26 +6,52 @@
   <title>Staff Expectations — Emme</title>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    :root { --green: #084339; --pink: #dd9fa3; --yellow: #ffca34; --muted: rgba(8, 67, 57, 0.62); --line: rgba(8, 67, 57, 0.12); }
+    :root { --green: #084339; --pink: #f8cacb; --pink-dark: #dd9fa3; --yellow: #ffca34; --blue: #38b4fe; --muted: rgba(8, 67, 57, 0.62); --line: rgba(8, 67, 57, 0.12); }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Inter, "Segoe UI", sans-serif; color: var(--green); background: #fef7fc; }
     header { background: var(--green); color: #fff; padding: 0.9rem 1.2rem; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
     header a { color: #fff; }
-    h1, h2, h3 { font-family: Comfortaa, cursive; }
-    main { max-width: 52rem; margin: 0 auto; padding: 1.2rem; }
+    h1, h2, h3 { font-family: Comfortaa, cursive; color: var(--green); }
+    main { max-width: 72rem; margin: 0 auto; padding: 1.2rem; }
     .lede, .note { color: var(--muted); }
     .error { color: #8a3040; font-weight: 600; }
-    article { background: #fff; border: 1px solid var(--line); border-radius: 0.8rem; padding: 0.9rem 1rem; margin: 0.7rem 0; }
+    .rs-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.7rem 0 0.9rem; }
+    .rs-tab { font-family: Comfortaa, cursive; font-weight: 700; border: 0; border-radius: 999px; padding: 0.45rem 0.95rem; background: rgba(8, 67, 57, 0.07); color: var(--green); }
+    .rs-tab--yellow.is-on { background: var(--yellow); }
+    .rs-tab--pink.is-on { background: var(--pink); }
+    .rs-tab--green.is-on { background: var(--green); color: #fff; }
+    .rs-band { border-radius: 1rem; padding: 0.9rem 1rem 1rem; margin: 0.7rem 0; }
+    .rs-band--yellow { background: rgba(255, 202, 52, 0.18); }
+    .rs-band--pink { background: rgba(248, 202, 203, 0.35); }
+    .rs-band--green { background: rgba(8, 67, 57, 0.07); }
+    .rs-band--blue { background: rgba(56, 180, 254, 0.16); }
+    .rs-band > h2, .rs-band > h3 { display: inline-block; margin: 0 0 0.7rem; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.95rem; }
+    .rs-band--yellow > h2, .rs-band--yellow > h3 { background: var(--yellow); }
+    .rs-band--pink > h2, .rs-band--pink > h3 { background: var(--pink); }
+    .rs-band--green > h2, .rs-band--green > h3 { background: var(--green); color: #fff; }
+    .rs-band--blue > h2, .rs-band--blue > h3 { background: var(--blue); color: #fff; }
+    .rs-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+    .rs-card { background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px rgba(8, 67, 57, 0.07); border-left: 4px solid var(--green); padding: 0.75rem 0.85rem; min-width: 0; }
+    .rs-card--yellow { border-left-color: var(--yellow); }
+    .rs-card--pink { border-left-color: var(--pink-dark); }
+    .rs-card h3, .rs-pick { font-size: 0.95rem; line-height: 1.25; margin: 0; }
+    .rs-pick { display: block; width: 100%; background: transparent; color: var(--green); border: 0; border-radius: 0; padding: 0; font-family: Comfortaa, cursive; font-weight: 700; text-align: left; }
+    .rs-card p { margin: 0.3rem 0 0.45rem; color: var(--muted); font-size: 0.9rem; }
+    .rs-chosen { outline: 2px solid var(--yellow); box-shadow: 0 2px 12px rgba(8, 67, 57, 0.12); }
+    .rs-line { display: flex; gap: 0.4rem; }
+    .rs-line label { font-size: 0.72rem; }
+    .rs-line input { min-height: 0; margin-top: 0.15rem; padding: 0.3rem 0.4rem; }
+    .rs-sessions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.6rem; }
+    .rs-sessions button { background: #fff; color: var(--green); border: 1px solid var(--line); }
+    .rs-sessions .is-on { background: var(--green); color: #fff; }
+    .rs-band textarea { min-height: 2.6rem; background: #fff; }
     label { display: grid; gap: 0.25rem; font-size: 0.85rem; font-weight: 600; margin: 0.45rem 0; }
     textarea, input, select { font: inherit; border: 1px solid #e8d5e6; border-radius: 0.5rem; padding: 0.45rem 0.6rem; width: 100%; }
-    textarea { min-height: 4.2rem; }
-    .epr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
     .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin: 0.6rem 0; }
-    button, .btn { border: 0; border-radius: 999px; padding: 0.45rem 0.9rem; font-weight: 600; cursor: pointer; background: var(--green); color: #fff; }
-    button.ghost { background: transparent; color: var(--green); border: 1px solid var(--line); }
-    button.pink { background: var(--pink); color: var(--green); }
+    button.solid, .btn { border: 0; border-radius: 999px; padding: 0.45rem 0.9rem; font-weight: 600; cursor: pointer; background: var(--green); color: #fff; }
+    button.pink { background: var(--pink-dark); color: var(--green); }
     ul { padding-left: 1.1rem; }
-    @media (max-width: 700px) { .epr { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) { .rs-cards { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -41,28 +67,19 @@
     <p id="error" class="error"></p>
     <p id="loading" class="note">Loading your growth map…</p>
     <div id="map"></div>
-    <h2>Your client visits</h2>
-    <p class="note">The next 14 days from your saved schedule and Outlook, so a reflective supervision time is not put on top of a visit.</p>
-    <div id="sessions"></div>
-    <h2>Reflective supervision times</h2>
-    <div id="appointments"></div>
+    <section class="rs-band rs-band--blue">
+      <h2>Your client visits</h2>
+      <p class="note">The next 14 days from your saved schedule and Outlook, so a reflective supervision time is not put on top of a visit.</p>
+      <div id="sessions"></div>
+    </section>
+    <section class="rs-band rs-band--green">
+      <h2>Reflective supervision times</h2>
+      <div id="appointments"></div>
+    </section>
   </main>
   <script>
 (function () {
-  var state = { map: null, base: '', dirty: false, me: '', timer: 0, saving: false, latest: null };
-  var fields = [
-    ['date', 'Meeting date', 'date'],
-    ['update', 'Brief update: what I tried since last time, and what got in the way', 'text'],
-    ['background', 'Background that helps the meeting', 'text'],
-    ['clip', 'Clip timestamp (the video stays where you keep it today)', 'text'],
-    ['questions', 'My questions and reflections', 'text'],
-    ['noticed', 'Something I noticed or better understood', 'text'],
-    ['action', 'One action I will try, and why', 'text'],
-    ['observe', 'What I will observe or ask the family', 'text'],
-    ['revisit', 'When will we revisit this?', 'text'],
-    ['growthDates', 'Growth map dates to add', 'text']
-  ];
-
+  var state = { map: null, base: '', dirty: false, me: '', timer: 0, saving: false, latest: null, sessionId: '', sheet: 'foundations' };
   function notice(text) { document.getElementById('notice').textContent = text || ''; }
   function error(text) { document.getElementById('error').textContent = text || ''; }
 
@@ -82,39 +99,96 @@
     });
   }
 
+  function topicCard(topic, tone, session) {
+    var picked = topic.foundation && session.foundationId === topic.id;
+    var html = '<article class="rs-card rs-card--' + tone + (picked ? ' rs-chosen' : '') + '">';
+    if (topic.foundation) html += '<button type="button" class="rs-pick" data-foundation="' + topic.id + '">(F) ' + escapeHtml(topic.title) + '</button>';
+    else html += '<h3>' + escapeHtml(topic.title) + '</h3>';
+    html += '<p>' + escapeHtml(topic.prompt) + '</p><div class="rs-line">';
+    ['e', 'p', 'r'].forEach(function (key) {
+      html += '<label>' + key.toUpperCase() + '<input data-topic="' + topic.id + '" data-key="' + key + '" value="' + escapeHtml(topic[key]) + '" /></label>';
+    });
+    return html + '</div></article>';
+  }
+
   function draw() {
     var map = state.map;
     var root = document.getElementById('map');
     if (!map) { root.innerHTML = ''; return; }
-    var html = '<p class="note">E is what was explored. P is what was practiced. R is what was revisited.</p>';
-    map.topics.forEach(function (topic) {
-      html += '<article><h3>' + (topic.foundation ? '[F] ' : '') + escapeHtml(topic.title) + '</h3><p>' + escapeHtml(topic.prompt) + '</p><div class="epr">';
-      ['e', 'p', 'r'].forEach(function (key) {
-        html += '<label>' + key.toUpperCase() + '<textarea data-topic="' + topic.id + '" data-key="' + key + '">' + escapeHtml(topic[key]) + '</textarea></label>';
+    var html = '<div class="rs-sheet"><h2>Our Reflective Practice Growth Map</h2>';
+    html += '<p class="note">Choose one (F) for this session. That title is the foundation, and the question under it is the one you work on. The other boxes can stay blank. E is explored, P is practiced, R is revisited.</p>';
+    var session = map.meetings.filter(function (meeting) { return meeting.id === state.sessionId; })[0] || map.meetings[0];
+    if (!session) { root.innerHTML = ''; return; }
+    var chosen = map.topics.filter(function (topic) { return topic.id === session.foundationId; })[0];
+    if (chosen) html += '<p class="note"><strong>(F) ' + escapeHtml(chosen.title) + '.</strong> ' + escapeHtml(chosen.prompt) + '</p>';
+    html += '<div class="rs-tabs">';
+    html += '<button type="button" class="rs-tab rs-tab--yellow' + (state.sheet === 'foundations' ? ' is-on' : '') + '" data-sheet="foundations">Foundations</button>';
+    html += '<button type="button" class="rs-tab rs-tab--pink' + (state.sheet === 'topics' ? ' is-on' : '') + '" data-sheet="topics">Other topics</button>';
+    html += '<button type="button" class="rs-tab rs-tab--green' + (state.sheet === 'session' ? ' is-on' : '') + '" data-sheet="session">This session</button>';
+    html += '</div>';
+    if (state.sheet === 'foundations') {
+      html += '<section class="rs-band rs-band--yellow"><h3>Foundations — choose one (F)</h3><div class="rs-cards">';
+      map.topics.filter(function (topic) { return topic.foundation; }).forEach(function (topic) { html += topicCard(topic, 'yellow', session); });
+      html += '</div></section>';
+    } else if (state.sheet === 'topics') {
+      html += '<section class="rs-band rs-band--pink"><h3>Topics that follow you</h3><div class="rs-cards">';
+      map.topics.filter(function (topic) { return !topic.foundation; }).forEach(function (topic) { html += topicCard(topic, 'pink', session); });
+      html += '</div></section>';
+    } else {
+      html += '<div class="rs-sessions">';
+      map.meetings.forEach(function (meeting, index) {
+        html += '<button type="button" class="' + (meeting.id === session.id ? 'is-on' : '') + '" data-session="' + meeting.id + '">Session ' + (index + 1) + (meeting.date ? ' · ' + escapeHtml(meeting.date) : '') + '</button>';
       });
-      html += '</div></article>';
-    });
-    html += '<h2>Preparation and closing notes</h2>';
-    map.meetings.forEach(function (meeting, index) {
-      html += '<article><h3>Meeting ' + (index + 1) + '</h3>';
-      fields.forEach(function (field) {
-        var value = meeting[field[0]] || '';
-        html += '<label>' + escapeHtml(field[1]);
-        if (field[2] === 'date') html += '<input type="date" data-meeting="' + meeting.id + '" data-key="date" value="' + escapeHtml(value) + '" />';
-        else html += '<textarea data-meeting="' + meeting.id + '" data-key="' + field[0] + '">' + escapeHtml(value) + '</textarea>';
-        html += '</label>';
+      html += '<button type="button" id="add-meeting">Add a session</button></div>';
+      html += '<section class="rs-band rs-band--yellow"><h3>Discuss together at the start</h3><p class="note">Written responses are optional here.</p>';
+      html += '<label>Meeting date<input type="date" data-meeting="' + session.id + '" data-key="date" value="' + escapeHtml(session.date || '') + '" /></label>';
+      [['update', 'A brief update: what I tried since last time, and what got in the way'], ['background', 'Background: family priorities, who lives in the family, what you already tried']].forEach(function (field) {
+        html += '<label>' + escapeHtml(field[1]) + '<textarea rows="2" data-meeting="' + session.id + '" data-key="' + field[0] + '">' + escapeHtml(session[field[0]] || '') + '</textarea></label>';
       });
-      html += '</article>';
-    });
-    html += '<p class="row"><button type="button" class="ghost" id="add-meeting">Add another meeting</button>';
-    html += '<button type="button" class="pink" id="pdf">Download PDF</button>';
-    html += '<button type="button" id="copy">Save read-only copy in SharePoint</button></p>';
+      html += '</section><section class="rs-band rs-band--pink"><h3>Prepare for our RS</h3><p class="note">Jot a few notes before the meeting.</p>';
+      [['clip', 'Clip timestamp'], ['questions', 'My questions and reflections']].forEach(function (field) {
+        html += '<label>' + escapeHtml(field[1]) + '<textarea rows="2" data-meeting="' + session.id + '" data-key="' + field[0] + '">' + escapeHtml(session[field[0]] || '') + '</textarea></label>';
+      });
+      html += '</section><section class="rs-band rs-band--green"><h3>Closing notes</h3>';
+      [['noticed', 'Something I noticed or better understood'], ['action', 'One action I will try, and why'], ['observe', 'What I will observe or ask the family'], ['revisit', 'When will we revisit this?'], ['growthDates', 'Growth map dates to add']].forEach(function (field) {
+        html += '<label>' + escapeHtml(field[1]) + '<input data-meeting="' + session.id + '" data-key="' + field[0] + '" value="' + escapeHtml(session[field[0]] || '') + '" /></label>';
+      });
+      html += '</section>';
+    }
+    html += '</div>';
+    html += '<p class="row"><button type="button" class="solid pink" id="pdf">Download PDF</button>';
+    html += '<button type="button" class="solid" id="copy">Save read-only copy in SharePoint</button></p>';
     root.innerHTML = html;
     root.querySelectorAll('textarea, input').forEach(function (el) {
       el.addEventListener('input', onEdit);
     });
-    document.getElementById('add-meeting').addEventListener('click', function () {
-      state.map.meetings.push({ id: 'm-' + Math.random().toString(16).slice(2, 10), date: '', update: '', background: '', clip: '', questions: '', noticed: '', action: '', observe: '', revisit: '', growthDates: '' });
+    root.querySelectorAll('[data-foundation]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        session.foundationId = el.getAttribute('data-foundation');
+        state.latest = state.map;
+        state.dirty = true;
+        draw();
+        scheduleSave();
+      });
+    });
+    root.querySelectorAll('[data-session]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        state.sessionId = el.getAttribute('data-session');
+        draw();
+      });
+    });
+    root.querySelectorAll('[data-sheet]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        state.sheet = el.getAttribute('data-sheet');
+        draw();
+      });
+    });
+    var addMeeting = document.getElementById('add-meeting');
+    if (addMeeting) addMeeting.addEventListener('click', function () {
+      var id = 'm-' + Math.random().toString(16).slice(2, 10);
+      state.map.meetings.push({ id: id, date: '', foundationId: '', update: '', background: '', clip: '', questions: '', noticed: '', action: '', observe: '', revisit: '', growthDates: '' });
+      state.sessionId = id;
+      state.sheet = 'session';
       state.latest = state.map;
       state.dirty = true;
       draw();

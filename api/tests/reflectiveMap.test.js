@@ -6,7 +6,7 @@ process.env.EMME_ADMIN_EMAILS = 'boss@emmeco.org';
 process.env.AUTOMATION_API_KEY = 'test-automation-key';
 
 const handler = require('../reflective-supervision/index.js');
-const { blankMap, buildGrowthMapPdf, clientVisitTimes, matchingFolder, monthStanding, plusHour } = require('../dist/reflectiveMap');
+const { blankMap, buildGrowthMapPdf, cleanMap, clientVisitTimes, matchingFolder, monthStanding, plusHour } = require('../dist/reflectiveMap');
 const { resetReflectiveOfficeCache } = require('../dist/reflectiveOffice');
 
 const ADMIN = 'boss@emmeco.org';
@@ -69,6 +69,12 @@ test('a new growth map is the blank form, with none of the notes from a filled c
   assert.ok(pdf.includes('Observation before interpretation'));
   assert.ok(!pdf.includes('being okay'));
   assert.strictEqual(plusHour('2026-11-25T09:30'), '2026-11-25T10:30');
+  const cleaned = cleanMap(PROVIDER, 'Pat', {
+    meetings: [{ foundationId: 'not-a-topic', update: 'skip' }, { foundationId: 'observe' }],
+  }, PROVIDER, '2026-11-25T00:00:00.000Z');
+  assert.strictEqual(cleaned.meetings[0].foundationId, '');
+  assert.strictEqual(cleaned.meetings[1].foundationId, 'observe');
+  assert.ok(!buildGrowthMapPdf(cleaned).toString('binary').includes('not-a-topic'));
 });
 
 test('client visit times come from booked slots and leave out the notes', () => {
