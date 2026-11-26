@@ -167,10 +167,19 @@ function ListTabs(props: {
 }
 
 function ListBand(props: { tone: Tone; title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(true);
   return (
-    <section className={'ref-band ref-band--' + props.tone}>
-      <h2>{props.title}</h2>
-      {props.children}
+    <section className={'ref-band ref-band--' + props.tone + (open ? '' : ' is-min')}>
+      <div className="ref-band__bar">
+        <h2>{props.title}</h2>
+        <button
+          type="button"
+          className="ref-band__toggle"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+        >{open ? 'Minimize' : 'Show'}</button>
+      </div>
+      {open ? props.children : null}
     </section>
   );
 }
