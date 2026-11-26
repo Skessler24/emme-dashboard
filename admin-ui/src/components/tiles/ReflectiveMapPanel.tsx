@@ -17,6 +17,7 @@ type Meeting = {
 };
 type GrowthMap = { email: string; name: string; updatedAt: string; updatedBy: string; topics: Topic[]; meetings: Meeting[] };
 type Provider = { email: string; name: string; standing?: { short: string; label: string } };
+type Supervisor = { name: string; email: string; error: string };
 type Visit = { date: string; day: string; time: string; label: string };
 type Standing = { short: string; label: string };
 type OutlookEvent = { start: string; end: string; subject: string };
@@ -64,6 +65,7 @@ function statusLabel(status: string): string {
 
 export function ReflectiveMapPanel() {
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [supervisor, setSupervisor] = useState<Supervisor | null>(null);
   const [provider, setProvider] = useState('');
   const [typed, setTyped] = useState('');
   const [map, setMap] = useState<GrowthMap | null>(null);
@@ -139,8 +141,11 @@ export function ReflectiveMapPanel() {
   }
 
   useEffect(function () {
-    api<{ providers: Provider[] }>('/api/reflective-supervision?part=providers')
-      .then(function (data) { setProviders(data.providers || []); })
+    api<{ providers: Provider[]; supervisor?: Supervisor }>('/api/reflective-supervision?part=providers')
+      .then(function (data) {
+        setProviders(data.providers || []);
+        setSupervisor(data.supervisor || null);
+      })
       .catch(function (err: Error) { setError(err.message); setLoading(false); });
   }, []);
 
@@ -276,7 +281,8 @@ export function ReflectiveMapPanel() {
   return (
     <section className="rs-map">
       <h2>Growth map</h2>
-      <p className="lede">The same map the provider sees. It saves itself as you type. Download a PDF, or save a read-only copy into the RS Providers folder on SharePoint. What is written here is not put on the calendar.</p>
+      <p className="lede">Kelly Fitzpatrick gives reflective supervision. Every other provider receives it. The map saves itself as you type, and a read-only copy updates in that provider’s RS Providers folder on SharePoint, next to the original map. Reminders go by email. People outside Emme do not see this. What is written here is not put on the calendar or in the email.</p>
+      {supervisor && supervisor.error ? <p className="rs-note">{supervisor.error} Jenny is granting that Microsoft permission.</p> : null}
       <div className="row">
         <label>Provider
           <select value={provider} onChange={function (event) { setTyped(''); setProvider(event.target.value); }}>
@@ -358,7 +364,7 @@ export function ReflectiveMapPanel() {
           ) : null}
 
           <h3>Set a reflective supervision time</h3>
-          <p className="rs-note">Mountain Time. The provider can accept, decline, or suggest another time. After it is confirmed, it is added to both Outlook calendars. The calendar event does not include the map.</p>
+          <p className="rs-note">Mountain Time. Kelly Fitzpatrick proposes the time. The provider gets an email and can accept, decline, or suggest another time. After it is confirmed, it is added to Kelly’s calendar and the provider’s calendar. The calendar event and the email do not include the map.</p>
           <div className="row">
             <label>Start
               <input type="datetime-local" value={start} onChange={function (event) { setStart(event.target.value); }} />

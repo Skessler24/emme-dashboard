@@ -104,7 +104,7 @@ function ReflectiveSupervisionFiles() {
   return (
     <section>
       <h1>Reflective Supervision</h1>
-      <p className="lede">Observation process files from SharePoint. Folders open here. Files open in SharePoint.</p>
+      <p className="lede">These files are the original reflective supervision map. Folders open here. Files open in SharePoint. A filled map is also kept as a read-only copy in the provider’s RS Providers folder, and that copy updates when the map is saved.</p>
       <p className="row">
         <a href={'#' + ROOT}>Reflective Supervision</a>
         {relative.map(function (part, index) {

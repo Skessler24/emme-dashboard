@@ -8,12 +8,19 @@ import { copyFileName, matchingFolder } from './reflectiveMap';
 
 const SHARE_URL = 'https://emmeco031.sharepoint.com/:f:/s/Emmeteam/IgC76zwHwa13Rp6tgPf4ysldAf8v9GKA9LPp1ML4qvUVUl8?e=4J5wWy';
 
+/** Kelly gives reflective supervision. Every other provider receives it. */
+export const SUPERVISOR_NAME = 'Kelly Fitzpatrick';
+
+const SUPERVISOR_WAITING = 'Kelly Fitzpatrick’s mailbox could not be opened yet. Email and her calendar will start after Microsoft permission is granted.';
+
 type ShareFolder = { driveId: string; folderId: string; name: string };
 
 let shareCache: { folder: ShareFolder; expires: number } | null = null;
+let supervisorCache: { email: string; error: string; expires: number } | null = null;
 
 export function resetReflectiveOfficeCache(): void {
   shareCache = null;
+  supervisorCache = null;
 }
 
 function shareId(url: string): string {
@@ -84,8 +91,32 @@ export async function addCalendarEvent(email: string, start: string, end: string
   return String(data && data.id || '');
 }
 
-export async function notifyPerson(fromEmail: string, toEmail: string, subject: string, text: string): Promise<string> {
-  if (!fromEmail || !toEmail || fromEmail === toEmail) return '';
+export async function reflectiveSupervisor(): Promise<{ email: string; name: string; error: string }> {
+  if (supervisorCache && supervisorCache.expires > Date.now()) {
+    return { email: supervisorCache.email, name: SUPERVISOR_NAME, error: supervisorCache.error };
+  }
+  try {
+    const filter = encodeURIComponent("displayName eq 'Kelly Fitzpatrick'");
+    const data = await graphGet('/users?$filter=' + filter + '&$select=displayName,mail,userPrincipalName&$top=5');
+    const rows = (data && data.value) || [];
+    const match = rows.find(function (row: { displayName?: string }) {
+      return String(row && row.displayName || '').trim().toLowerCase() === SUPERVISOR_NAME.toLowerCase();
+    }) as { mail?: string; userPrincipalName?: string } | undefined;
+    const email = String(match && (match.mail || match.userPrincipalName) || '').trim().toLowerCase();
+    if (!match || !/^[a-z0-9._+-]+@emmeco\.org$/.test(email)) {
+      supervisorCache = { email: '', error: SUPERVISOR_WAITING, expires: Date.now() + 60 * 1000 };
+      return { email: '', name: SUPERVISOR_NAME, error: SUPERVISOR_WAITING };
+    }
+    supervisorCache = { email, error: '', expires: Date.now() + 10 * 60 * 1000 };
+    return { email, name: SUPERVISOR_NAME, error: '' };
+  } catch (_) {
+    supervisorCache = { email: '', error: SUPERVISOR_WAITING, expires: Date.now() + 60 * 1000 };
+    return { email: '', name: SUPERVISOR_NAME, error: SUPERVISOR_WAITING };
+  }
+}
+
+export async function notifyPerson(fromEmail: string, toEmail: string, subject: string, text: string, allowSelf?: boolean): Promise<string> {
+  if (!fromEmail || !toEmail || (fromEmail === toEmail && !allowSelf)) return '';
   try {
     await graphSend('/users/' + encodeURIComponent(fromEmail) + '/sendMail', {
       method: 'POST',
