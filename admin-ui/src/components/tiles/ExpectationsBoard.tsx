@@ -19,12 +19,16 @@ type ClientRow = {
   rows: Array<{ date: string; status: string; kind: string; service: string }>;
 };
 type FollowUp = { noteId: string; followUp: string };
+type ProviderChoice = { email: string; name: string; address: string; mapLink: string };
+type ZoneResult = { miles: number | null; outside: boolean; measure?: string; detail?: string };
+export type ExpectationsPart = 'mileage' | 'notes' | 'evals' | 'cancellations' | 'schedules';
 type Board = {
   role: string;
   me: string;
   day: string;
   month: string;
   home: { address: string; mapLink: string } | null;
+  providers?: ProviderChoice[];
   trips: Trip[];
   monthMiles: number;
   monthHours: number;
@@ -40,7 +44,7 @@ type Board = {
 };
 
 const EMPTY: Board = {
-  role: '', me: '', day: '', month: '', home: null, trips: [], monthMiles: 0, monthHours: 0,
+  role: '', me: '', day: '', month: '', home: null, providers: [], trips: [], monthMiles: 0, monthHours: 0,
   ratio: null, ratioHigh: false, requests: [], emailChecked: false,
   notes: { late: [], evals: [], reports: [] }, notesError: '', clients: [], cancellationsError: '', followUps: [],
 };
@@ -50,7 +54,21 @@ function followOf(board: Board, id: string): string {
   return found ? found.followUp : '';
 }
 
-export function ExpectationsBoard() {
+function mapEmbed(link: string): string {
+  const match = String(link || '').match(/[?&]mid=([^&#]+)/i);
+  if (!match) return '';
+  try {
+    return 'https://www.google.com/maps/d/embed?mid=' + encodeURIComponent(decodeURIComponent(match[1]));
+  } catch {
+    return '';
+  }
+}
+
+function Heading(props: { tone: 'green' | 'yellow' | 'pink' | 'blue'; children: string }) {
+  return <h2 className={'exp-heading exp-heading--' + props.tone}><i aria-hidden="true" />{props.children}</h2>;
+}
+
+export function ExpectationsBoard(props: { part: ExpectationsPart }) {
   const [board, setBoard] = useState<Board>(EMPTY);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -58,7 +76,8 @@ export function ExpectationsBoard() {
   const [homeAddress, setHomeAddress] = useState('');
   const [mapLink, setMapLink] = useState('');
   const [clientAddress, setClientAddress] = useState('');
-  const [zone, setZone] = useState<{ miles: number; outside: boolean } | null>(null);
+  const [staffEmail, setStaffEmail] = useState('');
+  const [zone, setZone] = useState<ZoneResult | null>(null);
   const [trip, setTrip] = useState({ date: '', startPlace: '', endPlace: '', miles: '' });
   const [hours, setHours] = useState('');
   const [filter, setFilter] = useState('');
@@ -69,8 +88,12 @@ export function ExpectationsBoard() {
     api<Board>('/api/mileage?part=expectations')
       .then((data) => {
         setBoard(data);
-        setHomeAddress((data.home && data.home.address) || '');
-        setMapLink((data.home && data.home.mapLink) || '');
+        const list = data.providers || [];
+        const keep = staffEmail && list.some((item) => item.email === staffEmail) ? staffEmail : data.me;
+        const chosen = list.find((item) => item.email === keep) || list[0];
+        setStaffEmail(chosen ? chosen.email : data.me || '');
+        setHomeAddress(chosen ? chosen.address : (data.home && data.home.address) || '');
+        setMapLink(chosen ? chosen.mapLink : (data.home && data.home.mapLink) || '');
         setHours(data.monthHours ? String(data.monthHours) : '');
         setError('');
       })
@@ -97,9 +120,10 @@ export function ExpectationsBoard() {
     setError('');
     setZone(null);
     try {
-      const result = await api<{ miles: number; outside: boolean }>('/api/mileage', {
+      const chosen = (board.providers || []).find((item) => item.email === staffEmail);
+      const result = await api<ZoneResult>('/api/mileage', {
         method: 'POST',
-        body: { action: 'expectations-zone', clientAddress },
+        body: { action: 'expectations-zone', clientAddress, staffEmail, staffName: chosen ? chosen.name : '' },
       });
       setZone(result);
     } catch (err) {
@@ -125,6 +149,18 @@ export function ExpectationsBoard() {
   }, [board.clients, filter]);
 
   const admin = board.role === 'admin';
+  const providers = board.providers || [];
+  const selected = providers.find((item) => item.email === staffEmail);
+  const embed = mapEmbed(mapLink);
+  const shownTrips = staffEmail ? (board.trips || []).filter((row) => row.staffEmail === staffEmail) : (board.trips || []);
+
+  function chooseProvider(email: string) {
+    const found = providers.find((item) => item.email === email);
+    setStaffEmail(email);
+    setHomeAddress(found ? found.address : '');
+    setMapLink(found ? found.mapLink : '');
+    setZone(null);
+  }
 
   return (
     <div className="exp-board">
@@ -139,34 +175,44 @@ export function ExpectationsBoard() {
       {notice ? <p className="muted">{notice}</p> : null}
       {loading ? <p className="muted">Loading mileage, notes, and cancellations…</p> : null}
 
-      <h2>Can this visit be in person?</h2>
-      <p className="muted">Enter the client’s address. The distance is a straight line from the home address saved here to that address. More than 5 miles needs an administrator to approve the travel. Driving miles for the month are the miles you type in the trip table, the same columns as the mileage spreadsheet.</p>
-      <form className="row" onSubmit={(event) => { event.preventDefault(); void post({ action: 'expectations-home', homeAddress, mapLink }, 'Home address saved.'); }}>
-        <label>Home address
-          <input value={homeAddress} onChange={(event) => setHomeAddress(event.target.value)} required />
+      {props.part === 'mileage' ? (
+      <section className="exp-panel">
+      <Heading tone="green">Can this visit be in person?</Heading>
+      <p className="muted">Choose the provider. The check uses the area drawn on that provider’s map and the client’s address. A home address is optional. If the map has no drawn area, a pin on the map or the home address is used, and more than 5 straight-line miles needs approval.</p>
+      <form className="row" onSubmit={(event) => { event.preventDefault(); void post({ action: 'expectations-home', homeAddress, mapLink, staffEmail, staffName: selected ? selected.name : '' }, 'Map saved.'); }}>
+        {providers.length ? (
+          <label>Provider
+            <select value={staffEmail} onChange={(event) => chooseProvider(event.target.value)}>
+              {providers.map((item) => <option key={item.email} value={item.email}>{item.name}</option>)}
+            </select>
+          </label>
+        ) : null}
+        <label>Home address, optional
+          <input value={homeAddress} onChange={(event) => setHomeAddress(event.target.value)} placeholder="Only if the map has no drawn area" />
         </label>
         <label>Map link
           <input value={mapLink} onChange={(event) => setMapLink(event.target.value)} placeholder="https://" />
         </label>
-        <button className="btn" type="submit">Save home</button>
-        {board.home && board.home.mapLink ? <a className="btn btn--ghost" href={board.home.mapLink} target="_blank" rel="noreferrer">Open map</a> : null}
+        <button className="btn" type="submit">Save map</button>
+        {mapLink ? <a className="btn btn--ghost" href={mapLink} target="_blank" rel="noreferrer">Open map</a> : null}
       </form>
+      {embed ? <iframe className="exp-map" title="Provider map" src={embed} /> : null}
       <form className="row" onSubmit={(event) => { void checkZone(event); }}>
         <label>Client address
           <input value={clientAddress} onChange={(event) => setClientAddress(event.target.value)} required />
         </label>
-        <button className="btn btn--ghost" type="submit">Check 5 miles</button>
+        <button className="btn btn--ghost" type="submit">Check this provider</button>
       </form>
       {zone ? (
         <div className="panel" role="status">
-          <p>{zone.miles} straight-line miles. {zone.outside ? 'This address is outside the 5-mile range.' : 'This address is inside the 5-mile range.'}</p>
+          <p>{zone.detail || (zone.outside ? 'This address is outside the provider’s range.' : 'This address is inside the provider’s range.')}</p>
           {zone.outside ? (
-            <button className="btn" type="button" onClick={() => { void post({ action: 'expectations-approval', clientAddress, miles: zone.miles }, 'Sent for administrator approval.'); }}>Send for admin approval</button>
+            <button className="btn" type="button" onClick={() => { void post({ action: 'expectations-approval', clientAddress, miles: zone.miles, staffEmail, staffName: selected ? selected.name : '', measure: zone.measure, outside: true }, 'Sent for administrator approval.'); }}>Send for admin approval</button>
           ) : null}
         </div>
       ) : null}
 
-      <h3>Travel waiting for a decision</h3>
+      <Heading tone="yellow">Travel waiting for a decision</Heading>
       {(board.requests || []).filter((row) => row.status === 'pending').length === 0 ? <p className="empty">No travel is waiting.</p> : (
         <div className="table-wrap">
           <table>
@@ -191,9 +237,9 @@ export function ExpectationsBoard() {
         </div>
       )}
 
-      <h2>Mileage table</h2>
+      <Heading tone="green">Mileage table</Heading>
       <p className="muted">Date, starting location, ending location, and miles. The total and the monthly ratio update when you save. A ratio above 1.8 is highlighted. Save as PDF uses the print window. The read-only SharePoint copy is named Dashboard Mileage Copy and does not replace the original form.</p>
-      <form className="row" onSubmit={(event) => { event.preventDefault(); void post({ action: 'expectations-trip', date: trip.date, startPlace: trip.startPlace, endPlace: trip.endPlace, miles: Number(trip.miles) }, 'Trip saved.'); setTrip({ date: '', startPlace: '', endPlace: '', miles: '' }); }}>
+      <form className="row" onSubmit={(event) => { event.preventDefault(); void post({ action: 'expectations-trip', date: trip.date, startPlace: trip.startPlace, endPlace: trip.endPlace, miles: Number(trip.miles), staffEmail, staffName: selected ? selected.name : '' }, 'Trip saved.'); setTrip({ date: '', startPlace: '', endPlace: '', miles: '' }); }}>
         <label>Date<input type="date" value={trip.date} onChange={(event) => setTrip({ ...trip, date: event.target.value })} required /></label>
         <label>Starting location<input value={trip.startPlace} onChange={(event) => setTrip({ ...trip, startPlace: event.target.value })} required /></label>
         <label>Ending location<input value={trip.endPlace} onChange={(event) => setTrip({ ...trip, endPlace: event.target.value })} required /></label>
@@ -208,15 +254,16 @@ export function ExpectationsBoard() {
         <button className="btn btn--ghost" type="button" onClick={() => window.print()}>Save as PDF</button>
         <button className="btn btn--ghost" type="button" onClick={() => { void post({ action: 'expectations-copy' }, 'Read-only copy saved in Payroll & Mileage.'); }}>Save read-only copy</button>
       </form>
-      <p className={board.ratioHigh ? 'exp-ratio exp-ratio--high' : 'exp-ratio'}>
-        This month: {board.monthMiles} miles, {board.monthHours} hours, ratio {board.ratio == null ? '—' : board.ratio}.
-        {board.ratioHigh ? ' Above 1.8.' : ''}
+      <p className={board.ratioHigh && (!selected || selected.email === board.me) ? 'exp-ratio exp-ratio--high' : 'exp-ratio'}>
+        {selected && selected.email !== board.me
+          ? selected.name + ': ' + shownTrips.reduce((sum, row) => sum + Number(row.miles || 0), 0) + ' miles in this table.'
+          : 'This month: ' + board.monthMiles + ' miles, ' + board.monthHours + ' hours, ratio ' + (board.ratio == null ? '—' : board.ratio) + (board.ratioHigh ? '. Above 1.8.' : '.')}
       </p>
       <div className="table-wrap exp-print">
         <table>
           <thead><tr><th>Staff</th><th>Date</th><th>Starting location</th><th>Ending location</th><th>Miles</th><th></th></tr></thead>
           <tbody>
-            {(board.trips || []).map((row) => (
+            {shownTrips.map((row) => (
               <tr key={row.id}>
                 <td>{row.staffName}</td>
                 <td>{row.date}</td>
@@ -228,23 +275,35 @@ export function ExpectationsBoard() {
             ))}
           </tbody>
         </table>
-        {(board.trips || []).length === 0 ? <p className="empty">No trips saved in the dashboard yet.</p> : null}
+        {shownTrips.length === 0 ? <p className="empty">No trips saved for this provider yet.</p> : null}
       </div>
+      </section>
+      ) : null}
 
-      <h2>Open notes</h2>
+      {props.part === 'notes' ? (
+      <section className="exp-panel">
+      <Heading tone="yellow">Open notes</Heading>
       <p className="muted">A note stays here when IntakeQ still has it open more than 48 hours after the note date. Administrators see every staff member. A provider sees only their own. Refresh checks IntakeQ now. The 6:00 AM check is a Power Automate flow.</p>
       <button className="btn btn--ghost" type="button" onClick={() => load()}>Refresh from IntakeQ</button>
       {board.notesError ? <p className="error">{board.notesError}</p> : null}
       <NoteTable rows={board.notes.late || []} empty="No notes are open past 48 hours." />
+      </section>
+      ) : null}
 
-      <h2>Evaluations and reports</h2>
+      {props.part === 'evals' ? (
+      <section className="exp-panel">
+      <Heading tone="pink">Evaluations and reports</Heading>
       <p className="muted">These follow the end of the week. Saturday means the Friday of that note’s week has passed. Everyone can see the ones that apply to them. When an evaluation or report is finished, an administrator records that it needs the UNICORN portal for early intervention, or a PAR fax to the doctor for Medicaid.</p>
-      <h3>Open evaluations</h3>
+      <h3 className="exp-heading exp-heading--pink"><i aria-hidden="true" />Open evaluations</h3>
       <DocTable rows={board.notes.evals || []} admin={admin} followOf={(id) => followOf(board, id)} onFollow={(row, followUp) => { void post({ action: 'expectations-followup', noteId: row.id, followUp, kind: 'eval', staffEmail: row.staffEmail, noteName: row.noteName, date: row.date }, 'Follow-up saved.'); }} />
-      <h3>Open reports</h3>
+      <h3 className="exp-heading exp-heading--blue"><i aria-hidden="true" />Open reports</h3>
       <DocTable rows={board.notes.reports || []} admin={admin} followOf={(id) => followOf(board, id)} onFollow={(row, followUp) => { void post({ action: 'expectations-followup', noteId: row.id, followUp, kind: 'report', staffEmail: row.staffEmail, noteName: row.noteName, date: row.date }, 'Follow-up saved.'); }} />
+      </section>
+      ) : null}
 
-      <h2>Cancellations and productivity</h2>
+      {props.part === 'cancellations' ? (
+      <section className="exp-panel">
+      <Heading tone="blue">Cancellations and productivity</Heading>
       <p className="muted">A cancellation counts for productivity when it was not rescheduled, whatever the reason. A no-show or a late cancellation (less than 24 hours) is an attendance incident. In a rolling six months the limit is 4 for weekly visits, 2 for twice a month, and 1 for monthly. Advance notice of 48 hours or more is not an incident. When the limit is reached, the family message is ready and an administrator can send it or call.</p>
       {board.cancellationsError ? <p className="error">{board.cancellationsError}</p> : null}
       <label>Filter by client or staff
@@ -285,6 +344,8 @@ export function ExpectationsBoard() {
           </div>
         </article>
       ))}
+      </section>
+      ) : null}
     </div>
   );
 }

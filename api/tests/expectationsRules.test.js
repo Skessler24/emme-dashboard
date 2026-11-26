@@ -32,6 +32,21 @@ test('cancellations without a reschedule count, and only no-shows and late cance
   assert.match(rules.OUTREACH_MESSAGE, /another family/);
 });
 
+test('a client inside the drawn map area is in range, and one outside it is not', () => {
+  const ring = [
+    { lat: 39.6, lon: -105.1 },
+    { lat: 39.6, lon: -104.8 },
+    { lat: 39.9, lon: -104.8 },
+    { lat: 39.9, lon: -105.1 },
+  ];
+  assert.equal(rules.pointInRing(39.75, -104.99, ring), true);
+  assert.equal(rules.pointInRing(40.2, -104.99, ring), false);
+  const parsed = rules.parseMapKml('<Placemark><Polygon><outerBoundaryIs><LinearRing><coordinates>-105.1,39.6,0 -104.8,39.6,0 -104.8,39.9,0 -105.1,39.9,0</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark><Placemark><Point><coordinates>-104.99,39.74,0</coordinates></Point></Placemark>');
+  assert.equal(parsed.polygons.length, 1);
+  assert.equal(parsed.points.length, 1);
+  assert.equal(rules.mapIdFromLink('https://www.google.com/maps/d/viewer?mid=abc123'), 'abc123');
+});
+
 test('the monthly mileage ratio is high only above 1.8', () => {
   assert.equal(rules.mileageRatio(180, 100), 1.8);
   assert.equal(rules.ratioIsHigh(1.8), false);

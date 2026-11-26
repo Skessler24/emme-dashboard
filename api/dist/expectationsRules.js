@@ -9,6 +9,9 @@ exports.denverDate = denverDate;
 exports.denverMonth = denverMonth;
 exports.haversineMiles = haversineMiles;
 exports.outsideZone = outsideZone;
+exports.mapIdFromLink = mapIdFromLink;
+exports.pointInRing = pointInRing;
+exports.parseMapKml = parseMapKml;
 exports.mileageRatio = mileageRatio;
 exports.ratioIsHigh = ratioIsHigh;
 exports.hoursSince = hoursSince;
@@ -47,6 +50,59 @@ function haversineMiles(lat1, lon1, lat2, lon2) {
 }
 function outsideZone(miles) {
     return Number.isFinite(miles) && miles > exports.ZONE_MILES;
+}
+function mapIdFromLink(link) {
+    const match = String(link || '').match(/[?&]mid=([^&#]+)/i);
+    if (!match)
+        return '';
+    try {
+        return decodeURIComponent(match[1]);
+    }
+    catch (_) {
+        return match[1];
+    }
+}
+function pointInRing(lat, lon, ring) {
+    if (!ring || ring.length < 3)
+        return false;
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const yi = ring[i].lat;
+        const xi = ring[i].lon;
+        const yj = ring[j].lat;
+        const xj = ring[j].lon;
+        const crosses = (yi > lat) !== (yj > lat);
+        if (crosses && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi)
+            inside = !inside;
+    }
+    return inside;
+}
+function coordinatePair(token) {
+    const parts = token.split(',');
+    const lon = Number(parts[0]);
+    const lat = Number(parts[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon))
+        return null;
+    return { lat, lon };
+}
+/** Reads the drawn area and the pins from a Google My Map export. */
+function parseMapKml(kml) {
+    const polygons = [];
+    const points = [];
+    String(kml || '').split(/<Placemark\b/i).slice(1).forEach(function (chunk) {
+        const body = chunk.split(/<\/Placemark>/i)[0] || '';
+        const found = body.match(/<coordinates>([\s\S]*?)<\/coordinates>/i);
+        if (!found)
+            return;
+        const pairs = found[1].trim().split(/\s+/).map(coordinatePair).filter(function (pair) {
+            return !!pair;
+        });
+        if (/<Polygon\b/i.test(body) && pairs.length >= 3)
+            polygons.push(pairs);
+        else if (/<Point\b/i.test(body) && pairs.length)
+            points.push(pairs[0]);
+    });
+    return { polygons, points };
 }
 function mileageRatio(miles, hours) {
     if (!Number.isFinite(miles) || !Number.isFinite(hours) || hours <= 0)

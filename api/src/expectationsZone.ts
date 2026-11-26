@@ -1,7 +1,28 @@
+import { mapIdFromLink, parseMapKml } from './expectationsRules';
+
 /**
  * Turns a street address into a point so the five-mile check can use a straight line.
+ * A Google My Map link is read for the drawn area and the pins.
  * The address is not written to the application log.
  */
+
+export async function readMapGeometry(mapLink: string): Promise<{ polygons: Array<{ lat: number; lon: number }[]>; points: Array<{ lat: number; lon: number }> } | null> {
+  const mid = mapIdFromLink(mapLink);
+  if (!mid) return null;
+  const url = 'https://www.google.com/maps/d/kml?mid=' + encodeURIComponent(mid) + '&forcekml=1';
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: 'application/vnd.google-earth.kml+xml, application/xml, text/xml, */*' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (!/<kml|<Placemark/i.test(text)) return null;
+    return parseMapKml(text);
+  } catch (_) {
+    return null;
+  }
+}
 
 export async function geocodeAddress(address: string): Promise<{ lat: number; lon: number } | null> {
   const query = String(address || '').replace(/\s+/g, ' ').trim();
