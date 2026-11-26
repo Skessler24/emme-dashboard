@@ -10,6 +10,7 @@ const expectationsApi_1 = require("./expectationsApi");
 const mileageWorkbook_1 = require("./mileageWorkbook");
 const providerSetup_1 = require("./providerSetup");
 const reflectiveRequest_1 = require("./reflectiveRequest");
+const referralsService_1 = require("./referralsService");
 const schedulingService_1 = require("./schedulingService");
 const scheduleWorkbook_1 = require("./scheduleWorkbook");
 const siteSetup_1 = require("./siteSetup");
@@ -160,31 +161,7 @@ async function referrals(context, req) {
     const admin = await (0, auth_1.requireAdmin)(context, req);
     if (!admin)
         return;
-    const verb = (0, http_1.methodOf)(req);
-    if (verb === 'GET') {
-        const items = await (0, sharepointService_1.listItems)(sharepointService_1.LISTS.referrals);
-        (0, http_1.json)(context, 200, { referrals: items.map(publicItem) });
-        return;
-    }
-    if (verb === 'POST') {
-        const body = (0, http_1.readBody)(req);
-        const referrerName = (0, http_1.asText)(body.referrerName, 200);
-        if (!referrerName) {
-            (0, http_1.json)(context, 400, { error: 'referrerName is required' });
-            return;
-        }
-        const created = await (0, sharepointService_1.createItem)(sharepointService_1.LISTS.referrals, {
-            Title: referrerName.slice(0, 250),
-            ReferrerName: referrerName,
-            ReceivedOn: (0, http_1.asText)(body.receivedOn, 40) || new Date().toISOString(),
-            Status: (0, http_1.asText)(body.status, 40) || 'New',
-            AssignedTo: (0, http_1.asText)(body.assignedTo, 200),
-            Notes: (0, http_1.asText)(body.notes, 4000),
-        });
-        (0, http_1.json)(context, 201, { referral: publicItem(created) });
-        return;
-    }
-    (0, http_1.json)(context, 405, { error: 'Method not allowed' });
+    await (0, referralsService_1.handleReferrals)(context, req, { email: admin.email, name: admin.name });
 }
 async function trainings(context, req) {
     const admin = await (0, auth_1.requireAdmin)(context, req);
