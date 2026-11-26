@@ -8,6 +8,7 @@ const http_1 = require("./http");
 const conversationStore_1 = require("./conversationStore");
 const mileageWorkbook_1 = require("./mileageWorkbook");
 const providerSetup_1 = require("./providerSetup");
+const reflectiveRequest_1 = require("./reflectiveRequest");
 const schedulingService_1 = require("./schedulingService");
 const scheduleWorkbook_1 = require("./scheduleWorkbook");
 const siteSetup_1 = require("./siteSetup");
@@ -631,6 +632,10 @@ async function scheduling(context, req) {
     (0, http_1.json)(context, 404, { error: 'Not found' });
 }
 async function reflectiveSupervision(context, req) {
+    if ((0, http_1.queryOf)(req, 'part')) {
+        await (0, reflectiveRequest_1.handleReflectiveRequest)(context, req);
+        return;
+    }
     const admin = await (0, auth_1.requireAdmin)(context, req);
     if (!admin)
         return;
