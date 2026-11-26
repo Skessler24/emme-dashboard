@@ -7,6 +7,7 @@ import { expectationsAction, expectationsError, expectationsView } from './expec
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
 import { listObservationProcess, searchProviderLibraries } from './providerSetup';
 import { handleReflectiveRequest } from './reflectiveRequest';
+import { handleReferrals } from './referralsService';
 import { availabilityForWindow, openingsFromDashboard } from './schedulingService';
 import { createScheduleFromTemplate } from './scheduleWorkbook';
 import { checkSetup, createMissingLists } from './siteSetup';
@@ -171,31 +172,7 @@ async function onboarding(context: FnContext, req: HttpRequest): Promise<void> {
 async function referrals(context: FnContext, req: HttpRequest): Promise<void> {
   const admin = await requireAdmin(context, req);
   if (!admin) return;
-  const verb = methodOf(req);
-  if (verb === 'GET') {
-    const items = await listItems(LISTS.referrals);
-    json(context, 200, { referrals: items.map(publicItem) });
-    return;
-  }
-  if (verb === 'POST') {
-    const body = readBody(req);
-    const referrerName = asText(body.referrerName, 200);
-    if (!referrerName) {
-      json(context, 400, { error: 'referrerName is required' });
-      return;
-    }
-    const created = await createItem(LISTS.referrals, {
-      Title: referrerName.slice(0, 250),
-      ReferrerName: referrerName,
-      ReceivedOn: asText(body.receivedOn, 40) || new Date().toISOString(),
-      Status: asText(body.status, 40) || 'New',
-      AssignedTo: asText(body.assignedTo, 200),
-      Notes: asText(body.notes, 4000),
-    });
-    json(context, 201, { referral: publicItem(created) });
-    return;
-  }
-  json(context, 405, { error: 'Method not allowed' });
+  await handleReferrals(context, req, { email: admin.email, name: admin.name });
 }
 
 async function trainings(context: FnContext, req: HttpRequest): Promise<void> {
