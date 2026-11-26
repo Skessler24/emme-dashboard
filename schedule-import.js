@@ -254,11 +254,11 @@
     days[key].push(slot);
   }
 
-  function finishSlot(facet, time, restParts) {
+  function finishSlot(facet, time, restParts, scheduleNotes) {
     var notes = restParts.filter(Boolean).join(' ').replace(/\s{2,}/g, ' ').trim();
     var status = facet.status;
     if (!status && notes) status = 'Full';
-    return { time: time || '', status: status || '', notes: notes, lastDay: facet.date || '' };
+    return { time: time || '', status: status || '', notes: notes, lastDay: facet.date || '', scheduleNotes: scheduleNotes || '' };
   }
 
   /**
@@ -269,6 +269,7 @@
     var currentDay = '';
     var grid = null;
     var slots = 0;
+    var scheduleNoteCol = -1;
 
     (rows || []).forEach(function (row) {
       var cells = [];
@@ -296,7 +297,12 @@
 
       var allRests = cells.map(function (c) { return c.f.rest; }).filter(Boolean);
       var headerLike = !anyTime && !anyStatus && allRests.length && allRests.every(isHeaderRest);
-      if (headerLike) return;
+      if (headerLike) {
+        cells.forEach(function (c) {
+          if (/schedule\s+notes/i.test(c.text)) scheduleNoteCol = c.col;
+        });
+        return;
+      }
 
       var rowDay = '';
       cells.forEach(function (c) { if (!rowDay && c.f.day) rowDay = c.f.day; });
@@ -332,14 +338,20 @@
       var time = '';
       var status = '';
       var date = '';
+      var scheduleNotes = '';
       var rest = [];
       cells.forEach(function (c) {
+        if (c.col === scheduleNoteCol) {
+          scheduleNotes = c.text;
+          return;
+        }
         if (!time) time = c.whole || c.f.time || '';
         if (!status && c.f.status) status = c.f.status;
         if (!date && c.f.date) date = c.f.date;
       });
       var timeTaken = false;
       cells.forEach(function (c) {
+        if (c.col === scheduleNoteCol) return;
         var isTime = !timeTaken && time && (c.whole === time || c.f.time === time);
         if (isTime) timeTaken = true;
         if (c.whole && c.whole === time && isTime) return;
@@ -349,7 +361,7 @@
       if (rest.length && rest.every(isHeaderRest)) rest = [];
       // Without a time, a line must be short ("Full - Jamie P"). A sentence that mentions "closed" is not a slot.
       if (!time && rest.join(' ').split(/\s+/).filter(Boolean).length > 3) return;
-      addSlot(days, day, finishSlot({ status: status, date: date }, time, rest));
+      addSlot(days, day, finishSlot({ status: status, date: date }, time, rest, scheduleNotes));
       slots++;
     });
 

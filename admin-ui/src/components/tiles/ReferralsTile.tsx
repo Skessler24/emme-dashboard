@@ -22,6 +22,7 @@ type Referral = {
   assignedTo: string;
   assignedEmail: string;
   notes: string;
+  frequency?: string;
   receivedOn: string;
   lastContactOn: string;
   serviceGridOn: string;
@@ -53,24 +54,19 @@ type Referral = {
 
 type SourceInfo = { id: string; label: string; how: string; note: string; paperwork: boolean };
 
-type Provider = { staffName: string; staffEmail: string; therapyIds: string[]; therapies: string[]; week: number; next30: number };
-type Slot = { staffName: string; staffEmail: string; therapies: string[]; therapyIds: string[]; date: string; day: string; time: string };
+type Provider = { staffName: string; staffEmail: string; therapyIds: string[]; therapies: string[]; spots: number };
+type Slot = { staffName: string; staffEmail: string; therapies: string[]; therapyIds: string[]; day: string; time: string; status: string; spot: string };
 type Openings = {
   today: string;
-  weekStart: string;
-  weekEnd: string;
-  through: string;
   total: number;
-  weekTotal: number;
   disciplineCount: number;
   unlabeled: number;
-  goalMax: number;
-  overGoal: boolean;
-  byMonth: Array<{ month: string; label: string; count: number }>;
   byTherapy: Array<{ label: string; count: number }>;
   providers: Provider[];
   slots: Slot[];
 };
+
+const FREQUENCIES = ['Once a week', 'Twice a month', 'Once a month', 'Three times a month'];
 
 const THERAPIES = [
   { id: 'slp', label: 'Speech' },
@@ -112,6 +108,7 @@ function snapshot(row: Referral): string {
     kind: row.kind,
     serviceCoordinator: row.serviceCoordinator,
     notes: row.notes,
+    frequency: row.frequency || '',
     receivedOn: row.receivedOn,
     lastContactOn: row.lastContactOn,
     serviceGridOn: row.serviceGridOn,
@@ -275,10 +272,11 @@ function ReferralsOverview() {
   const [receivedOn, setReceivedOn] = useState('');
   const [serviceGridOn, setServiceGridOn] = useState('');
   const [notes, setNotes] = useState('');
+  const [frequency, setFrequency] = useState('');
   const [openings, setOpenings] = useState<Openings | null>(null);
   const [openingsError, setOpeningsError] = useState('');
   const [kindEdits, setKindEdits] = useState<Record<string, string[]>>({});
-  const [slotWindow, setSlotWindow] = useState('30');
+  const [statusFilter, setStatusFilter] = useState('');
   const [therapyFilter, setTherapyFilter] = useState('');
   const [assignEmail, setAssignEmail] = useState('');
   const [todoTitle, setTodoTitle] = useState('');
@@ -348,6 +346,7 @@ function ReferralsOverview() {
         kind: current.kind,
         serviceCoordinator: current.serviceCoordinator,
         notes: current.notes,
+        frequency: current.frequency || '',
         receivedOn: current.receivedOn,
         lastContactOn: current.lastContactOn,
         serviceGridOn: current.serviceGridOn,
@@ -388,7 +387,7 @@ function ReferralsOverview() {
     try {
       const saved = await api<{ referral: Referral }>('/api/referrals', {
         method: 'POST',
-        body: { familyName, kind, serviceCoordinator, therapies, source, notes, receivedOn, serviceGridOn },
+        body: { familyName, kind, serviceCoordinator, therapies, source, notes, frequency, receivedOn, serviceGridOn },
       });
       setFamilyName('');
       setKind('');
@@ -397,6 +396,7 @@ function ReferralsOverview() {
       setSource('');
       setServiceGridOn('');
       setNotes('');
+      setFrequency('');
       adopt(saved.referral);
     } catch (err) {
       setError(messageOf(err));
@@ -436,10 +436,11 @@ function ReferralsOverview() {
   const activeRows = rows.filter((row) => row.status !== 'Bottom' && row.status !== 'Removed');
   const bottomRows = rows.filter((row) => row.status === 'Bottom');
   const removedRows = rows.filter((row) => row.status === 'Removed');
+  const statusChoices = Array.from(new Set((openings ? openings.slots : []).map((slot) => slot.status).filter(Boolean))).sort();
   const slots = (openings ? openings.slots : []).filter((slot) => {
+    if (statusFilter && slot.status !== statusFilter) return false;
     if (therapyFilter === 'unset') return slot.therapyIds.length === 0;
     if (therapyFilter && slot.therapyIds.indexOf(therapyFilter) === -1) return false;
-    if (slotWindow === 'week' && openings) return slot.date >= openings.weekStart && slot.date <= openings.weekEnd;
     return true;
   });
   const openTodos = editor ? editor.todos.filter((todo) => !todo.doneOn) : [];
@@ -486,6 +487,12 @@ function ReferralsOverview() {
             </select>
           </label>
           <label>Service coordinator<input value={serviceCoordinator} onChange={(event) => setServiceCoordinator(event.target.value)} /></label>
+          <label>Frequency of service
+            <select value={frequency} onChange={(event) => setFrequency(event.target.value)}>
+              <option value="">Choose</option>
+              {FREQUENCIES.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
         </div>
         <p className="muted">Kind of therapy</p>
         <TherapyChoices selected={therapies} onChange={setTherapies} />
@@ -555,6 +562,13 @@ function ReferralsOverview() {
               </select>
             </label>
             <label>Service coordinator<input value={editor.serviceCoordinator} onChange={(event) => patch({ serviceCoordinator: event.target.value })} /></label>
+            <label>Frequency of service
+              <select value={editor.frequency || ''} onChange={(event) => patch({ frequency: event.target.value })}>
+                <option value="">Choose</option>
+                {editor.frequency && FREQUENCIES.indexOf(editor.frequency) === -1 ? <option value={editor.frequency}>{editor.frequency}</option> : null}
+                {FREQUENCIES.map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
+            </label>
           </div>
           <p className="muted">Kind of therapy</p>
           <TherapyChoices selected={editor.therapies} onChange={(next) => patch({ therapies: next })} />
@@ -706,22 +720,17 @@ function ReferralsOverview() {
       <>
       <h2 className="section-heading">Therapist openings</h2>
       <p className="lede">
-        Openings are read from each provider’s schedule for this week and the next 30 days.
-        They are not copied into another list. This week means openings still ahead, Monday through Sunday.
+        Each row is one time on a provider’s weekly schedule. It is counted once.
+        The status is copied from that schedule and shows how a family can use the time.
       </p>
       {openingsError ? <p className="error">{openingsError}</p> : null}
       {!openings && !openingsError ? <p className="muted">Loading openings…</p> : null}
       {openings ? (
         <>
-          <div className={openings.overGoal ? 'ref-warn' : 'ref-note'}>
-            <strong>{openings.total} openings in the next 30 days.</strong>
-            <p>The draft goal is no more than {openings.goalMax}. This week: {openings.weekTotal}. Kinds of therapy with an opening: {openings.disciplineCount}.</p>
-            {openings.unlabeled ? <p>{openings.unlabeled} openings have no kind of therapy set. Choose the kind next to the provider.</p> : null}
-            {openings.overGoal ? <p>There are more than {openings.goalMax} openings.</p> : null}
-          </div>
-          <div className="ref-kpis">
-            <p>This week<br />{showDate(openings.weekStart)} – {showDate(openings.weekEnd)}<br /><strong>{openings.weekTotal}</strong></p>
-            <p>Next 30 days<br />through {showDate(openings.through)}<br /><strong>{openings.total}</strong></p>
+          <div className="ref-note">
+            <strong>{openings.total} open spots.</strong>
+            <p>This is the number of open times, not the number of families who can be placed. Open 4x can hold one client every week, two clients twice a month, or four clients once a month. Open 2x (1&amp;3) is the 1st and 3rd week. Open 2x (2&amp;4) is the 2nd and 4th week.</p>
+            {openings.unlabeled ? <p>{openings.unlabeled} spots have no kind of therapy set. Choose the kind next to the provider.</p> : null}
           </div>
           <ListBand tone="green" title="By kind of therapy">
           {openings.byTherapy.length ? (
@@ -735,25 +744,13 @@ function ReferralsOverview() {
             </div>
           ) : <p className="empty">No openings have a kind of therapy yet.</p>}
           </ListBand>
-          <ListBand tone="pink" title="By month">
-          {openings.byMonth.length ? (
-            <div className="table-wrap">
-              <table>
-                <thead><tr><th>Month</th><th>Openings</th></tr></thead>
-                <tbody>
-                  {openings.byMonth.map((row) => <tr key={row.month}><td>{row.label}</td><td>{row.count}</td></tr>)}
-                </tbody>
-              </table>
-            </div>
-          ) : <p className="empty">No openings in the next 30 days.</p>}
-          </ListBand>
           <ListBand tone="yellow" title="By provider">
           {openings.providers.length === 0 ? <p className="empty">No provider schedules yet. They appear after a provider saves a schedule.</p> : (
             <>
               <div className="table-wrap">
                 <table>
                   <thead>
-                    <tr><th>Provider</th><th>Kind of therapy</th><th>This week</th><th>Next 30 days</th><th></th></tr>
+                    <tr><th>Provider</th><th>Kind of therapy</th><th>Open spots</th><th></th></tr>
                   </thead>
                   <tbody>
                     {openings.providers.map((provider) => (
@@ -780,8 +777,7 @@ function ReferralsOverview() {
                             })}
                           </div>
                         </td>
-                        <td>{provider.week}</td>
-                        <td>{provider.next30}</td>
+                        <td>{provider.spots}</td>
                         <td>
                           <button
                             type="button"
@@ -804,10 +800,10 @@ function ReferralsOverview() {
           </ListBand>
           <ListBand tone="blue" title="Open times">
           <div className="row">
-            <label>Show
-              <select value={slotWindow} onChange={(event) => setSlotWindow(event.target.value)}>
-                <option value="week">This week</option>
-                <option value="30">The next 30 days</option>
+            <label>Status
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                <option value="">All</option>
+                {statusChoices.map((status) => <option key={status} value={status}>{status}</option>)}
               </select>
             </label>
             <label>Kind of therapy
@@ -818,18 +814,17 @@ function ReferralsOverview() {
               </select>
             </label>
           </div>
-          {slots.length === 0 ? <p className="empty">No openings in this view.</p> : (
+          {slots.length === 0 ? <p className="empty">No open spots in this view.</p> : (
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Provider</th><th>Kind of therapy</th><th>Date</th><th>Day</th><th>Time</th></tr></thead>
+                <thead><tr><th>Provider</th><th>Kind of therapy</th><th>Spot</th><th>Status</th></tr></thead>
                 <tbody>
                   {slots.map((slot, index) => (
-                    <tr key={slot.staffEmail + slot.date + slot.time + index}>
+                    <tr key={slot.staffEmail + slot.day + slot.time + slot.status + index}>
                       <td>{slot.staffName}</td>
                       <td>{slot.therapies.join(', ')}</td>
-                      <td>{showDate(slot.date)}</td>
-                      <td>{slot.day}</td>
-                      <td>{slot.time}</td>
+                      <td>{slot.spot}</td>
+                      <td>{slot.status}</td>
                     </tr>
                   ))}
                 </tbody>

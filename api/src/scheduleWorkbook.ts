@@ -41,7 +41,7 @@ const DAY_HEADER: Record<string, string> = {
   friday: 'Fri Appointment Time ',
 };
 
-type Slot = { time?: string; status?: string; notes?: string; lastDay?: string };
+type Slot = { time?: string; status?: string; notes?: string; lastDay?: string; scheduleNotes?: string };
 type Day = { name?: string; slots?: Slot[] };
 type Client = { name?: string; dob?: string; parExpires?: string };
 type Workspace = { boards?: Array<{ name?: string; days?: Day[] }>; clients?: Client[] };
@@ -194,7 +194,7 @@ function weekdayFromHeader(text: string): string {
 }
 
 function isFilledSlot(slot: Slot): boolean {
-  return !!(String(slot.time || '').trim() || String(slot.status || '').trim() || String(slot.notes || '').trim());
+  return !!(String(slot.time || '').trim() || String(slot.status || '').trim() || String(slot.notes || '').trim() || String(slot.scheduleNotes || '').trim());
 }
 
 /**
@@ -210,7 +210,7 @@ function addDayTable(
   usedNames: Set<string>,
   listCount: number,
 ): number {
-  const data = (slots.length ? slots : [{ time: '', status: '', notes: '', lastDay: '' }]).map(function (slot) {
+  const data = (slots.length ? slots : [{ time: '', status: '', notes: '', lastDay: '', scheduleNotes: '' }]).map(function (slot) {
     const fraction = timeFraction(String(slot.time || ''));
     const visitText = visitForSlot(slot, clients);
     const visit = parseLooseDate(visitText);
@@ -219,6 +219,7 @@ function addDayTable(
       spreadsheetStatus(String(slot.status || '')),
       String(slot.notes || ''),
       visit ? excelDateSerial(visit) : visitText,
+      String(slot.scheduleNotes || ''),
     ];
   });
   sheet.getCell(headerRow, 6).value = 'Notes, Upcoming Changes';
@@ -231,6 +232,7 @@ function addDayTable(
       { name: 'Status ', filterButton: true },
       { name: 'Notes (i.e. client names)', filterButton: true },
       { name: 'Date of Last Visit', filterButton: true },
+      { name: 'Schedule notes', filterButton: true },
     ],
     rows: data,
   });
@@ -287,6 +289,7 @@ export async function buildScheduleWorkbook(workspace: Workspace, options?: { re
   sheet.getColumn(2).width = 26;
   sheet.getColumn(3).width = 36;
   sheet.getColumn(4).width = 22;
+  sheet.getColumn(5).width = 36;
   sheet.getColumn(6).width = 32;
 
   const usedNames = new Set<string>();
@@ -559,7 +562,7 @@ function cellDateText(cell: ExcelJS.Cell): string {
   return cellPlain(cell);
 }
 
-export type SheetRow = { id?: string; time: string; status: string; notes: string; lastDay: string };
+export type SheetRow = { id?: string; time: string; status: string; notes: string; lastDay: string; scheduleNotes?: string };
 export type SheetDays = Record<string, SheetRow[]>;
 
 /** Reads every weekday table in the provider's workbook. Blank rows are skipped. */
@@ -579,8 +582,9 @@ export async function readScheduleDays(bytes: Uint8Array): Promise<SheetDays> {
         status: cellPlain(row.getCell(2)),
         notes: cellPlain(row.getCell(3)),
         lastDay: cellDateText(row.getCell(4)),
+        scheduleNotes: cellPlain(row.getCell(5)),
       };
-      if (entry.time || entry.status || entry.notes) rows.push(entry);
+      if (entry.time || entry.status || entry.notes || entry.scheduleNotes) rows.push(entry);
     });
     days[key] = rows;
   });
@@ -606,7 +610,7 @@ function rowKey(row: SheetRow): string {
 }
 
 function rowFingerprint(row: SheetRow): string {
-  return rowKey(row) + '|' + normDate(row.lastDay);
+  return rowKey(row) + '|' + normDate(row.lastDay) + '|' + String(row.scheduleNotes || '').trim().toLowerCase();
 }
 
 export function fingerprintDays(days: SheetDays): string {
@@ -631,6 +635,7 @@ export function exportedDays(workspace: Workspace): SheetDays {
         status: String(slot.status || ''),
         notes: String(slot.notes || ''),
         lastDay: visitForSlot(slot, workspace.clients),
+        scheduleNotes: String(slot.scheduleNotes || ''),
       };
     });
   });
@@ -719,6 +724,7 @@ export function applyDaysToWorkspace<T extends Workspace>(workspace: T, days: Sh
         ? prev.status
         : (DASHBOARD_STATUS[canonicalStatus(row.status)] || String(row.status || '').trim());
       next.notes = row.notes;
+      next.scheduleNotes = row.scheduleNotes || '';
       const computed = prev ? visitForSlot(prev, (workspace as Workspace).clients) : '';
       if (normDate(row.lastDay) === normDate(computed)) next.lastDay = prev ? prev.lastDay : '';
       else next.lastDay = row.lastDay;
@@ -729,13 +735,13 @@ export function applyDaysToWorkspace<T extends Workspace>(workspace: T, days: Sh
   return copy;
 }
 
-/** True when a row holds anything outside the four table columns (a side note, for example). */
+/** True when a row holds anything outside the schedule table (a side note, for example). */
 function rowHasOtherContent(row: ExcelJS.Row): boolean {
   let found = false;
   row.eachCell({ includeEmpty: false }, function (cell, col) {
-    if (col > 4 && cellPlain(cell) !== '') found = true;
+    if (col > 5 && cellPlain(cell) !== '') found = true;
   });
-  return found || [1, 2, 3, 4].some(function (col) { return cellPlain(row.getCell(col)) !== ''; });
+  return found || [1, 2, 3, 4, 5].some(function (col) { return cellPlain(row.getCell(col)) !== ''; });
 }
 
 function lastUsedRow(sheet: ExcelJS.Worksheet): number {
@@ -800,6 +806,7 @@ export async function applyScheduleWorkbook(bytes: Uint8Array, workspace: Worksp
       row.getCell(2).value = spreadsheetStatus(String(slot.status || ''));
       row.getCell(3).value = String(slot.notes || '');
       writeVisitCell(row.getCell(4), visitForSlot(slot, workspace.clients));
+      row.getCell(5).value = String(slot.scheduleNotes || '');
     });
     for (let index = slots.length; index < block.rows.length; index++) {
       const row = sheet.getRow(block.rows[index]);
@@ -807,6 +814,7 @@ export async function applyScheduleWorkbook(bytes: Uint8Array, workspace: Worksp
       row.getCell(2).value = null;
       row.getCell(3).value = null;
       row.getCell(4).value = null;
+      row.getCell(5).value = null;
     }
     // Rows the dashboard no longer has are removed from the sheet, as long as nothing else sits on that row.
     while (block.rows.length > want) {
