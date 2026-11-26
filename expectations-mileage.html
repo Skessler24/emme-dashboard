@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mileage — Emme</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --green: #084339; --muted: rgba(8, 67, 57, 0.62); --line: rgba(8, 67, 57, 0.12); }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, "Segoe UI", sans-serif; color: var(--green); background: #fef7fc; }
+    header { background: var(--green); color: #fff; padding: 0.9rem 1.2rem; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+    header a { color: #fff; }
+    h1, h2 { font-family: Comfortaa, cursive; }
+    main { max-width: 52rem; margin: 0 auto; padding: 1.2rem; }
+    .muted { color: var(--muted); }
+    .error { color: #8a3040; font-weight: 600; }
+    label { display: grid; gap: 0.25rem; font-size: 0.85rem; font-weight: 600; margin: 0.45rem 0; }
+    input, select { font: inherit; border: 1px solid #e8d5e6; border-radius: 0.5rem; padding: 0.45rem 0.6rem; width: 100%; }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin: 0.6rem 0; }
+    .row label { flex: 1 1 12rem; }
+    button, .btn { border: 0; border-radius: 999px; padding: 0.45rem 0.9rem; font-weight: 600; cursor: pointer; background: var(--green); color: #fff; text-decoration: none; }
+    button.ghost { background: transparent; color: var(--green); border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 0.45rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .panel { background: #fff; border: 1px solid var(--line); border-radius: 0.8rem; padding: 0.8rem 1rem; margin: 0.6rem 0; }
+    .exp-email { background: #fff; border: 1px solid var(--line); border-radius: 0.8rem; padding: 0.8rem 1rem; }
+    .exp-check { display: flex; gap: 0.5rem; align-items: flex-start; font-weight: 700; }
+    .exp-celebrate { animation: exp-pop 0.7s ease; background: #eaf4ea; }
+    .high { color: #8a3040; font-weight: 700; }
+    @keyframes exp-pop { 0% { transform: scale(1); } 40% { transform: scale(1.02); } 100% { transform: scale(1); } }
+    @media (max-width: 700px) { .row { display: block; } }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Emme</strong>
+    <a href="index.html">Back to the dashboard</a>
+  </header>
+  <main>
+    <h1>Mileage</h1>
+    <p class="muted">Save your home address, check whether a client is inside 5 straight-line miles, and keep the trip table. An administrator sees the same information and approves travel outside the range.</p>
+    <p id="error" class="error"></p>
+    <p id="notice" class="muted"></p>
+    <section class="exp-email" id="exp-email">
+      <label class="exp-check"><input type="checkbox" id="exp-email-box" /> <span>Did you check and reply to your emails today?</span></label>
+      <p class="muted" id="exp-email-note">This resets each morning. It does not open your inbox.</p>
+    </section>
+    <h2>Can this visit be in person?</h2>
+    <form id="home-form" class="row">
+      <label>Home address<input id="home-address" required /></label>
+      <label>Map link<input id="map-link" placeholder="https://" /></label>
+      <button type="submit">Save home</button>
+    </form>
+    <p id="map-open"></p>
+    <form id="zone-form" class="row">
+      <label>Client address<input id="client-address" required /></label>
+      <button class="ghost" type="submit">Check 5 miles</button>
+    </form>
+    <div id="zone" class="panel" hidden></div>
+    <h2>Mileage table</h2>
+    <p class="muted">Enter the driving miles between the starting location and the ending location. The monthly ratio turns red above 1.8.</p>
+    <form id="trip-form" class="row">
+      <label>Date<input id="trip-date" type="date" required /></label>
+      <label>Starting location<input id="trip-start" required /></label>
+      <label>Ending location<input id="trip-end" required /></label>
+      <label>Miles<input id="trip-miles" inputmode="decimal" required /></label>
+      <button type="submit">Add trip</button>
+    </form>
+    <form id="hours-form" class="row">
+      <label>Monthly hours<input id="hours" inputmode="decimal" /></label>
+      <button class="ghost" type="submit">Save hours</button>
+      <button class="ghost" type="button" id="print-btn">Save as PDF</button>
+      <button class="ghost" type="button" id="copy-btn">Save read-only copy</button>
+    </form>
+    <p id="ratio"></p>
+    <div class="panel"><table id="trips"><thead><tr><th>Date</th><th>Starting location</th><th>Ending location</th><th>Miles</th></tr></thead><tbody></tbody></table></div>
+    <h2>Open notes</h2>
+    <p class="muted">Notes still open more than 48 hours after the note date. You see only your own. Note text stays in IntakeQ.</p>
+    <button class="ghost" type="button" id="refresh-btn">Refresh from IntakeQ</button>
+    <div id="notes"></div>
+    <h2>Evaluations and reports</h2>
+    <p class="muted">These follow the end of the week. Saturday means Friday of that week has passed. An administrator records the UNICORN portal or the Medicaid PAR fax when one is finished.</p>
+    <h3>Open evaluations</h3>
+    <div id="evals"></div>
+    <h3>Open reports</h3>
+    <div id="reports"></div>
+    <h2>Cancellations</h2>
+    <p class="muted">A cancellation counts when it was not rescheduled. A no-show or a late cancellation is an attendance incident. You see only your own. An administrator sends the family email or calls.</p>
+    <label>Filter by client<input id="filter" /></label>
+    <div id="clients"></div>
+  </main>
+  <script>
+    (function () {
+      var state = { month: '' };
+      function error(text) { document.getElementById('error').textContent = text || ''; }
+      function notice(text) { document.getElementById('notice').textContent = text || ''; }
+      function api(method, body, query) {
+        return fetch('/api/mileage' + (query || ''), {
+          method: method,
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: body ? JSON.stringify(body) : undefined
+        }).then(function (res) {
+          return res.text().then(function (text) {
+            var data = {};
+            try { data = text ? JSON.parse(text) : {}; } catch (_) { data = {}; }
+            if (!res.ok) throw new Error(data.error || 'Request failed');
+            return data;
+          });
+        });
+      }
+      function paintEmail(checked, celebrate) {
+        document.getElementById('exp-email-box').checked = !!checked;
+        document.getElementById('exp-email-note').textContent = checked ? 'Checked for today.' : 'This resets each morning. It does not open your inbox.';
+        document.getElementById('exp-email').classList.toggle('exp-celebrate', !!celebrate);
+      }
+      function render(data) {
+        state.data = data;
+        state.month = data.month || '';
+        document.getElementById('home-address').value = data.home ? data.home.address : document.getElementById('home-address').value;
+        document.getElementById('map-link').value = data.home ? data.home.mapLink : document.getElementById('map-link').value;
+        var mapOpen = document.getElementById('map-open');
+        mapOpen.innerHTML = '';
+        if (data.home && data.home.mapLink && /^https:\/\//i.test(data.home.mapLink)) {
+          var mapAnchor = document.createElement('a');
+          mapAnchor.href = data.home.mapLink;
+          mapAnchor.target = '_blank';
+          mapAnchor.rel = 'noreferrer';
+          mapAnchor.textContent = 'Open map';
+          mapOpen.appendChild(mapAnchor);
+        }
+        document.getElementById('hours').value = data.monthHours || '';
+        var ratio = document.getElementById('ratio');
+        ratio.textContent = 'This month: ' + (data.monthMiles || 0) + ' miles, ' + (data.monthHours || 0) + ' hours, ratio ' + (data.ratio == null ? '—' : data.ratio) + (data.ratioHigh ? '. Above 1.8.' : '.');
+        ratio.className = data.ratioHigh ? 'high' : '';
+        paintEmail(data.emailChecked, false);
+        var body = document.querySelector('#trips tbody');
+        body.innerHTML = '';
+        (data.trips || []).forEach(function (trip) {
+          var row = document.createElement('tr');
+          [trip.date, trip.startPlace, trip.endPlace, String(trip.miles)].forEach(function (value) {
+            var cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+          body.appendChild(row);
+        });
+        fillTable(document.getElementById('notes'), (data.notes && data.notes.late) || [], ['Note', 'Client', 'Date', 'Hours open'], function (note) {
+          return [note.noteName, note.clientName, note.date, note.hoursOpen == null ? '' : String(note.hoursOpen)];
+        }, data.notesError || 'No notes are open past 48 hours.');
+        fillTable(document.getElementById('evals'), (data.notes && data.notes.evals) || [], ['Name', 'Client', 'Date', 'End of week'], function (note) {
+          return [note.noteName, note.clientName, note.date, note.pastEndOfWeek ? 'Past Friday' : 'This week'];
+        }, 'None open.');
+        fillTable(document.getElementById('reports'), (data.notes && data.notes.reports) || [], ['Name', 'Client', 'Date', 'End of week'], function (note) {
+          return [note.noteName, note.clientName, note.date, note.pastEndOfWeek ? 'Past Friday' : 'This week'];
+        }, 'None open.');
+        paintClients(data);
+      }
+      function paintClients(data) {
+        var clients = document.getElementById('clients');
+        clients.innerHTML = '';
+        var needle = document.getElementById('filter').value.trim().toLowerCase();
+        var shown = (data.clients || []).filter(function (row) { return !needle || String(row.client || '').toLowerCase().indexOf(needle) !== -1; });
+        if (!shown.length) {
+          var none = document.createElement('p');
+          none.className = 'muted';
+          none.textContent = data.cancellationsError || 'No matching cancellations in the last six months.';
+          clients.appendChild(none);
+          return;
+        }
+        shown.forEach(function (row) {
+          var card = document.createElement('div');
+          card.className = 'panel';
+          var title = document.createElement('strong');
+          title.textContent = row.client || 'Unknown client';
+          var summary = document.createElement('p');
+          summary.textContent = row.productivity + ' cancellations without a reschedule, ' + row.incidents + ' of ' + row.limit + ' attendance incidents.';
+          card.appendChild(title);
+          card.appendChild(summary);
+          if (row.needsOutreach) {
+            var warn = document.createElement('p');
+            warn.className = 'high';
+            warn.textContent = row.message;
+            card.appendChild(warn);
+          }
+          var table = document.createElement('table');
+          table.innerHTML = '<thead><tr><th>Date</th><th>Status</th><th>Kind</th><th>Service</th></tr></thead>';
+          var body = document.createElement('tbody');
+          (row.rows || []).forEach(function (visit) {
+            var line = document.createElement('tr');
+            [visit.date, visit.status, visit.kind, visit.service].forEach(function (value) {
+              var cell = document.createElement('td');
+              cell.textContent = value || '';
+              line.appendChild(cell);
+            });
+            body.appendChild(line);
+          });
+          table.appendChild(body);
+          card.appendChild(table);
+          clients.appendChild(card);
+        });
+      }
+      function fillTable(host, rows, headings, values, empty) {
+        host.innerHTML = '';
+        if (!rows.length) {
+          var line = document.createElement('p');
+          line.className = 'muted';
+          line.textContent = empty;
+          host.appendChild(line);
+          return;
+        }
+        var table = document.createElement('table');
+        var head = document.createElement('thead');
+        var headRow = document.createElement('tr');
+        headings.forEach(function (heading) {
+          var cell = document.createElement('th');
+          cell.textContent = heading;
+          headRow.appendChild(cell);
+        });
+        head.appendChild(headRow);
+        table.appendChild(head);
+        var body = document.createElement('tbody');
+        rows.forEach(function (row) {
+          var line = document.createElement('tr');
+          values(row).forEach(function (value) {
+            var cell = document.createElement('td');
+            cell.textContent = value || '';
+            line.appendChild(cell);
+          });
+          body.appendChild(line);
+        });
+        table.appendChild(body);
+        host.appendChild(table);
+      }
+      function load() {
+        return api('GET', null, '?part=expectations').then(render).catch(function (err) { error(err.message); });
+      }
+      document.getElementById('home-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        error('');
+        api('POST', { action: 'expectations-home', homeAddress: document.getElementById('home-address').value, mapLink: document.getElementById('map-link').value })
+          .then(function () { notice('Home address saved.'); return load(); })
+          .catch(function (err) { error(err.message); });
+      });
+      document.getElementById('zone-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        var address = document.getElementById('client-address').value;
+        api('POST', { action: 'expectations-zone', clientAddress: address }).then(function (result) {
+          var box = document.getElementById('zone');
+          box.hidden = false;
+          box.innerHTML = '';
+          var line = document.createElement('p');
+          line.textContent = result.miles + ' straight-line miles. ' + (result.outside ? 'This address is outside the 5-mile range.' : 'This address is inside the 5-mile range.');
+          box.appendChild(line);
+          if (result.outside) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = 'Send for admin approval';
+            button.addEventListener('click', function () {
+              api('POST', { action: 'expectations-approval', clientAddress: address, miles: result.miles })
+                .then(function () { notice('Sent for administrator approval.'); })
+                .catch(function (err) { error(err.message); });
+            });
+            box.appendChild(button);
+          }
+        }).catch(function (err) { error(err.message); });
+      });
+      document.getElementById('trip-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        api('POST', {
+          action: 'expectations-trip',
+          date: document.getElementById('trip-date').value,
+          startPlace: document.getElementById('trip-start').value,
+          endPlace: document.getElementById('trip-end').value,
+          miles: Number(document.getElementById('trip-miles').value)
+        }).then(function () { notice('Trip saved.'); return load(); }).catch(function (err) { error(err.message); });
+      });
+      document.getElementById('hours-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        api('POST', { action: 'expectations-hours', hours: Number(document.getElementById('hours').value), month: state.month })
+          .then(function () { notice('Hours saved.'); return load(); }).catch(function (err) { error(err.message); });
+      });
+      document.getElementById('print-btn').addEventListener('click', function () { window.print(); });
+      document.getElementById('copy-btn').addEventListener('click', function () {
+        api('POST', { action: 'expectations-copy' }).then(function () { notice('Read-only copy saved in Payroll & Mileage.'); }).catch(function (err) { error(err.message); });
+      });
+      document.getElementById('refresh-btn').addEventListener('click', function () { load(); });
+      document.getElementById('filter').addEventListener('input', function () { if (state.data) paintClients(state.data); });
+      document.getElementById('exp-email-box').addEventListener('change', function (event) {
+        var checked = event.target.checked;
+        paintEmail(checked, checked);
+        api('POST', { action: 'expectations-email', checked: checked }).catch(function (err) { error(err.message); paintEmail(false, false); });
+      });
+      load();
+    })();
+  </script>
+</body>
+</html>

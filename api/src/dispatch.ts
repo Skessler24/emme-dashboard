@@ -3,6 +3,7 @@ import { GraphError } from './graphClient';
 import { IntakeQError, complianceByStaff, getCancellations, getInvoices, getNoteSummaries } from './intakeQService';
 import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, restParts } from './http';
 import { addAlert, addMessage, endAlert, listAlerts, listMessages, markSeen, replyToMessage, unreadCount } from './conversationStore';
+import { expectationsAction, expectationsError, expectationsView } from './expectationsApi';
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
 import { listObservationProcess, searchProviderLibraries } from './providerSetup';
 import { handleReflectiveRequest } from './reflectiveRequest';
@@ -380,6 +381,19 @@ async function staffMessages(context: FnContext, req: HttpRequest): Promise<void
 async function mileage(context: FnContext, req: HttpRequest): Promise<void> {
   const verb = methodOf(req);
   if (verb === 'GET') {
+    const part = queryOf(req, 'part');
+    if (part === 'expectations' || part === 'email') {
+      const user = await requireUser(context, req);
+      if (!user) return;
+      const admin = await resolveIsAdmin(user.email);
+      try {
+        json(context, 200, await expectationsView(user, admin.isAdmin, part));
+      } catch (err) {
+        const parsed = expectationsError(err);
+        json(context, parsed.status, { error: parsed.message });
+      }
+      return;
+    }
     const admin = await requireAdmin(context, req);
     if (!admin) return;
     const result = await syncAllMileageLogs();
@@ -388,6 +402,19 @@ async function mileage(context: FnContext, req: HttpRequest): Promise<void> {
   }
   if (verb === 'POST') {
     const body = readBody(req);
+    if (typeof body.action === 'string' && body.action.indexOf('expectations-') === 0) {
+      const automated = body.action === 'expectations-sync' && automationAuthorized(req);
+      const user = automated ? { email: 'automation@emmeco.org', name: 'Power Automate', userId: 'automation' } : await requireUser(context, req);
+      if (!user) return;
+      const admin = automated ? { isAdmin: true } : await resolveIsAdmin(user.email);
+      try {
+        json(context, 200, await expectationsAction(user, admin.isAdmin, body));
+      } catch (err) {
+        const parsed = expectationsError(err);
+        json(context, parsed.status, { error: parsed.message });
+      }
+      return;
+    }
     if (body.sync === true) {
       if (!automationAuthorized(req)) {
         const admin = await requireAdmin(context, req);

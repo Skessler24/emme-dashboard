@@ -8,8 +8,10 @@ exports.mergeMileageRows = mergeMileageRows;
 exports.syncMileageWorkbook = syncMileageWorkbook;
 exports.syncAllMileageLogs = syncAllMileageLogs;
 exports.confirmMileageRow = confirmMileageRow;
+exports.writeMileageDashboardCopy = writeMileageDashboardCopy;
 const storage_blob_1 = require("@azure/storage-blob");
 const exceljs_1 = __importDefault(require("exceljs"));
+const expectationsRules_1 = require("./expectationsRules");
 const graphClient_1 = require("./graphClient");
 const intakeQService_1 = require("./intakeQService");
 const providerSetup_1 = require("./providerSetup");
@@ -249,7 +251,7 @@ async function openWorkbook(bytes) {
 function chooseWorkbook(files, staffName, email) {
     const year = String(new Date().getFullYear());
     const books = files.filter(function (file) {
-        return !file.isFolder && /\.xlsx$/i.test(file.name) && file.name.indexOf('~$') !== 0;
+        return !file.isFolder && /\.xlsx$/i.test(file.name) && file.name.indexOf('~$') !== 0 && !(0, expectationsRules_1.isDashboardCopyName)(file.name);
     });
     if (!books.length)
         return '';
@@ -616,6 +618,33 @@ async function confirmMileageRow(staffEmail, appointmentId) {
     }
     catch (err) {
         const message = err instanceof Error ? err.message : 'Could not confirm mileage';
+        return { ok: false, error: message.slice(0, 200) };
+    }
+}
+async function writeMileageDashboardCopy(staffName, staffEmail, trips, hours) {
+    try {
+        const form = await locateForm(staffName, staffEmail);
+        if (!form)
+            return { ok: false, error: 'No mileage folder for this provider yet' };
+        const workbook = new exceljs_1.default.Workbook();
+        const sheet = workbook.addWorksheet('Mileage');
+        sheet.addRow(['Date', 'Starting location', 'Ending location', 'Miles']);
+        trips.forEach(function (trip) {
+            sheet.addRow([trip.date, trip.startPlace, trip.endPlace, trip.miles]);
+        });
+        const totalRow = trips.length + 2;
+        const totalFormula = trips.length ? 'SUM(D2:D' + (trips.length + 1) + ')' : '0';
+        sheet.addRow(['', '', 'Total', { formula: totalFormula }]);
+        sheet.addRow(['', '', 'Monthly hours', hours]);
+        sheet.addRow(['', '', 'Monthly mileage ratio', { formula: 'IF(D' + (totalRow + 1) + '=0,"",D' + totalRow + '/D' + (totalRow + 1) + ')' }]);
+        sheet.getRow(1).font = { bold: true };
+        const bytes = new Uint8Array(await workbook.xlsx.writeBuffer());
+        const fileName = 'Dashboard Mileage Copy.xlsx';
+        await writeWorkbook(form.segments.concat([fileName]), bytes);
+        return { ok: true, path: form.segments.concat([fileName]).join('/') };
+    }
+    catch (err) {
+        const message = err instanceof Error ? err.message : 'Could not save the read-only mileage copy';
         return { ok: false, error: message.slice(0, 200) };
     }
 }
