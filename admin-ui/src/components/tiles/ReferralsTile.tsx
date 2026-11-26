@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { ApiError, api } from '../../api';
 import { TileWithSetup } from '../setup/TileSetup';
 
@@ -143,6 +143,71 @@ function SourceField(props: { value: string; sources: SourceInfo[]; onChange: (v
   );
 }
 
+type Tone = 'green' | 'pink' | 'yellow' | 'blue';
+
+function ListTabs(props: {
+  label: string;
+  value: string;
+  onChange: (id: string) => void;
+  tabs: Array<{ id: string; label: string; tone: Tone; disabled?: boolean }>;
+}) {
+  return (
+    <div className="ref-tabs" role="tablist" aria-label={props.label}>
+      {props.tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={props.value === tab.id}
+          disabled={tab.disabled}
+          className={'ref-tab ref-tab--' + tab.tone + (props.value === tab.id ? ' is-on' : '')}
+          onClick={() => props.onChange(tab.id)}
+        >{tab.label}</button>
+      ))}
+    </div>
+  );
+}
+
+function ListBand(props: { tone: Tone; title: string; children: ReactNode }) {
+  return (
+    <section className={'ref-band ref-band--' + props.tone}>
+      <h2>{props.title}</h2>
+      {props.children}
+    </section>
+  );
+}
+
+function FamilyTable(props: { rows: Referral[]; empty: string; onOpen: (row: Referral) => void }) {
+  if (!props.rows.length) return <p className="empty">{props.empty}</p>;
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Family</th><th>Type</th><th>Status</th><th>Outreaches</th><th>Assigned</th><th>Received</th><th>Last contact</th><th>Days to place</th><th>Open to-dos</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {props.rows.map((row) => (
+            <tr key={row.id}>
+              <td>{row.familyName}</td>
+              <td>{kindLabel(row.kind)}</td>
+              <td>{row.status === 'Bottom' ? 'Bottom of the list' : row.status}</td>
+              <td>{row.kind === 'ei' ? (row.outreachCount || 0) + ' of 2' : '—'}</td>
+              <td>{row.assignedTo || '—'}</td>
+              <td>{showDate(row.receivedOn)}</td>
+              <td>{showDate(row.lastContactOn)}</td>
+              <td>{daysText(row)}</td>
+              <td>{row.todos.filter((todo) => !todo.doneOn).length}</td>
+              <td><button type="button" className="btn btn--ghost" onClick={() => props.onOpen(row)}>Open</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function TherapyChoices(props: { selected: string[]; onChange: (next: string[]) => void }) {
   function toggle(id: string) {
     const has = props.selected.includes(id);
@@ -197,6 +262,8 @@ function ReferralsOverview() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [showRemoved, setShowRemoved] = useState(false);
+  const [section, setSection] = useState<'families' | 'add' | 'family' | 'openings'>('families');
+  const [familyPart, setFamilyPart] = useState<'details' | 'steps' | 'messages' | 'todos'>('details');
   const [editor, setEditor] = useState<Referral | null>(null);
   const [baseline, setBaseline] = useState('');
   const [draftText, setDraftText] = useState<Record<string, string>>({});
@@ -220,6 +287,8 @@ function ReferralsOverview() {
   const [sources, setSources] = useState<SourceInfo[]>([]);
 
   function adopt(referral: Referral) {
+    setSection('family');
+    setFamilyPart('details');
     setEditor(referral);
     setBaseline(snapshot(referral));
     const texts: Record<string, string> = {};
@@ -364,7 +433,9 @@ function ReferralsOverview() {
     }
   }
 
-  const visible = rows.filter((row) => showRemoved || row.status !== 'Removed');
+  const activeRows = rows.filter((row) => row.status !== 'Bottom' && row.status !== 'Removed');
+  const bottomRows = rows.filter((row) => row.status === 'Bottom');
+  const removedRows = rows.filter((row) => row.status === 'Removed');
   const slots = (openings ? openings.slots : []).filter((slot) => {
     if (therapyFilter === 'unset') return slot.therapyIds.length === 0;
     if (therapyFilter && slot.therapyIds.indexOf(therapyFilter) === -1) return false;
@@ -390,7 +461,20 @@ function ReferralsOverview() {
       </div>
       {error ? <p className="error" role="alert">{error}</p> : null}
 
-      <h2>Add a referral</h2>
+      <ListTabs
+        label="Referral lists"
+        value={section}
+        onChange={(id) => setSection(id as 'families' | 'add' | 'family' | 'openings')}
+        tabs={[
+          { id: 'families', label: 'Families', tone: 'green' },
+          { id: 'add', label: 'Add a referral', tone: 'pink' },
+          { id: 'family', label: editor ? editor.familyName : 'This family', tone: 'yellow', disabled: !editor },
+          { id: 'openings', label: 'Openings', tone: 'blue' },
+        ]}
+      />
+
+      {section === 'add' ? (
+      <ListBand tone="pink" title="Add a referral">
       <form className="panel" onSubmit={addReferral}>
         <div className="row">
           <label>Family name<input value={familyName} onChange={(event) => setFamilyName(event.target.value)} required /></label>
@@ -414,43 +498,44 @@ function ReferralsOverview() {
         <label>Notes<textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
         <div className="row"><button className="btn" type="submit" disabled={busy}>Add referral</button></div>
       </form>
+      </ListBand>
+      ) : null}
 
-      <h2>Referral list</h2>
-      <label className="ref-check">
-        <input type="checkbox" checked={showRemoved} onChange={(event) => setShowRemoved(event.target.checked)} />
-        Show families who were removed
-      </label>
-      {visible.length === 0 ? <p className="empty">No referrals yet.</p> : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Family</th><th>Type</th><th>Status</th><th>Outreaches</th><th>Assigned</th><th>Received</th><th>Last contact</th><th>Days to place</th><th>Open to-dos</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.familyName}</td>
-                  <td>{kindLabel(row.kind)}</td>
-                  <td>{row.status === 'Bottom' ? 'Bottom of the list' : row.status}</td>
-                  <td>{row.kind === 'ei' ? (row.outreachCount || 0) + ' of 2' : '—'}</td>
-                  <td>{row.assignedTo || '—'}</td>
-                  <td>{showDate(row.receivedOn)}</td>
-                  <td>{showDate(row.lastContactOn)}</td>
-                  <td>{daysText(row)}</td>
-                  <td>{row.todos.filter((todo) => !todo.doneOn).length}</td>
-                  <td><button type="button" className="btn btn--ghost" onClick={() => adopt(row)}>Open</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {section === 'families' ? (
+        <>
+          <label className="ref-check">
+            <input type="checkbox" checked={showRemoved} onChange={(event) => setShowRemoved(event.target.checked)} />
+            Show families who were removed
+          </label>
+          <ListBand tone="green" title={'Active families (' + activeRows.length + ')'}>
+            <FamilyTable rows={activeRows} empty="No active families." onOpen={adopt} />
+          </ListBand>
+          <ListBand tone="yellow" title={'Bottom of the list (' + bottomRows.length + ')'}>
+            <FamilyTable rows={bottomRows} empty="No families are waiting at the bottom." onOpen={adopt} />
+          </ListBand>
+          {showRemoved ? (
+            <ListBand tone="pink" title={'Removed (' + removedRows.length + ')'}>
+              <FamilyTable rows={removedRows} empty="No removed families." onOpen={adopt} />
+            </ListBand>
+          ) : null}
+        </>
+      ) : null}
 
-      {editor ? (
+      {section === 'family' && editor ? (
         <div className="panel">
-          <h2>{editor.familyName}</h2>
+          <ListTabs
+            label="This family"
+            value={familyPart}
+            onChange={(id) => setFamilyPart(id as 'details' | 'steps' | 'messages' | 'todos')}
+            tabs={[
+              { id: 'details', label: 'Details', tone: 'yellow' },
+              { id: 'steps', label: 'Steps', tone: 'green' },
+              { id: 'messages', label: 'Messages', tone: 'pink' },
+              { id: 'todos', label: 'To-dos', tone: 'blue' },
+            ]}
+          />
+          {familyPart === 'details' ? (
+          <ListBand tone="yellow" title={editor.familyName}>
           <p className="muted">{kindLabel(editor.kind)} · {editor.status === 'Bottom' ? 'Bottom of the list' : editor.status}{editor.updatedBy ? ' · Last saved by ' + editor.updatedBy : ''}</p>
           {editor.stepsUnconfirmed ? <p className="ref-note">These private steps are a draft: first contact, needs discussion, placement, follow up, removal. They are not confirmed yet.</p> : null}
           {editor.kind === 'ei' ? <p className="muted">Who does each Early Intervention step was not named, so the owner starts as Administrator. You can change it. Days are working days after the service grid date, through the placed date. The draft goal is 28. Weekends are skipped. Holidays are not skipped yet.</p> : null}
@@ -486,7 +571,7 @@ function ReferralsOverview() {
             <button type="button" className="btn btn--ghost" disabled={busy || !clock} onClick={() => commit('save', {}, Object.assign({}, editor, { lastContactOn: clock }))}>Record contact today</button>
             <button type="button" className="btn btn--ghost" disabled={busy || !clock} onClick={() => commit('outreach')}>Record an outreach</button>
             <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => commit('answered')}>Family confirmed</button>
-            <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setEditor(null)}>Close</button>
+            <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => { setEditor(null); setSection('families'); }}>Close</button>
           </div>
           <p className="muted">
             Outreaches recorded: {editor.outreachCount || 0} of 2.
@@ -500,8 +585,11 @@ function ReferralsOverview() {
           {editor.dpExpiresOn ? <p className="ref-warn">Developmental Pathways: reply by {showDate(editor.dpExpiresOn)}. These referrals expire about 48 hours after the received date.</p> : null}
           {editor.paperworkLine ? <p className="muted">Include this when you reply: {editor.paperworkLine}</p> : null}
           <p className="muted">Family confirmed sends the referral to Sara Beth for onboarding as a to-do and takes them off the bottom of the list. If the family was removed, they come back onto this list. Nothing is emailed.</p>
+          </ListBand>
+          ) : null}
 
-          <h3>Steps</h3>
+          {familyPart === 'steps' ? (
+          <ListBand tone="green" title="Steps">
           {editor.steps.length === 0 ? <p className="empty">Choose Early Intervention or private, then save, and the checklist will start.</p> : (
             <ul className="ref-steps">
               {editor.steps.map((step) => (
@@ -518,7 +606,11 @@ function ReferralsOverview() {
             </ul>
           )}
 
-          <h3>Assign a staff member</h3>
+          </ListBand>
+          ) : null}
+
+          {familyPart === 'details' ? (
+          <ListBand tone="blue" title="Assign a staff member">
           <p className="muted">Assigned to {editor.assignedTo || 'nobody yet'}{editor.assignedEmail ? ' · ' + editor.assignedEmail : ''}</p>
           {openings && openings.providers.length ? (
             <div className="row">
@@ -541,8 +633,11 @@ function ReferralsOverview() {
               >Assign</button>
             </div>
           ) : <p className="muted">Staff names appear here after a provider saves a schedule. You can still assign from the openings list below once it loads.</p>}
+          </ListBand>
+          ) : null}
 
-          <h3>Messages</h3>
+          {familyPart === 'messages' ? (
+          <ListBand tone="pink" title="Messages">
           <p className="muted">These are drafts. Approving one puts a to-do on this referral so a person can send it. This screen does not send it.</p>
           {editor.drafts.length === 0 ? <p className="empty">Messages appear after you choose Early Intervention or private.</p> : editor.drafts.map((draft) => (
             <div key={draft.id} className="panel">
@@ -557,7 +652,11 @@ function ReferralsOverview() {
             </div>
           ))}
 
-          <h3>To-dos</h3>
+          </ListBand>
+          ) : null}
+
+          {familyPart === 'todos' ? (
+          <ListBand tone="blue" title="To-dos">
           <p className="muted">Anything this screen cannot do is a to-do with an owner, a due date, and a reminder on that date.</p>
           {openTodos.length === 0 ? <p className="empty">No open to-dos.</p> : (
             <div className="table-wrap">
@@ -598,10 +697,14 @@ function ReferralsOverview() {
               </ul>
             </details>
           ) : null}
+          </ListBand>
+          ) : null}
         </div>
       ) : null}
 
-      <h2>Therapist openings</h2>
+      {section === 'openings' ? (
+      <>
+      <h2 className="section-heading">Therapist openings</h2>
       <p className="lede">
         Openings are read from each provider’s schedule for this week and the next 30 days.
         They are not copied into another list. This week means openings still ahead, Monday through Sunday.
@@ -620,6 +723,7 @@ function ReferralsOverview() {
             <p>This week<br />{showDate(openings.weekStart)} – {showDate(openings.weekEnd)}<br /><strong>{openings.weekTotal}</strong></p>
             <p>Next 30 days<br />through {showDate(openings.through)}<br /><strong>{openings.total}</strong></p>
           </div>
+          <ListBand tone="green" title="By kind of therapy">
           {openings.byTherapy.length ? (
             <div className="table-wrap">
               <table>
@@ -629,7 +733,9 @@ function ReferralsOverview() {
                 </tbody>
               </table>
             </div>
-          ) : null}
+          ) : <p className="empty">No openings have a kind of therapy yet.</p>}
+          </ListBand>
+          <ListBand tone="pink" title="By month">
           {openings.byMonth.length ? (
             <div className="table-wrap">
               <table>
@@ -639,7 +745,9 @@ function ReferralsOverview() {
                 </tbody>
               </table>
             </div>
-          ) : null}
+          ) : <p className="empty">No openings in the next 30 days.</p>}
+          </ListBand>
+          <ListBand tone="yellow" title="By provider">
           {openings.providers.length === 0 ? <p className="empty">No provider schedules yet. They appear after a provider saves a schedule.</p> : (
             <>
               <div className="table-wrap">
@@ -689,10 +797,12 @@ function ReferralsOverview() {
               </div>
               <div className="row">
                 <button type="button" className="btn" disabled={busy} onClick={saveKinds}>Save kinds of therapy</button>
-                {!editor ? <p className="muted">Open a referral before assigning a provider.</p> : <p className="muted">Assign adds {editor.familyName} to that staff member and makes to-dos. It does not send a message or hold the opening.</p>}
+                {!editor ? <p className="muted">Open a family on the Families tab before assigning a provider.</p> : <p className="muted">Assign adds {editor.familyName} to that staff member and makes to-dos. It does not send a message or hold the opening.</p>}
               </div>
             </>
           )}
+          </ListBand>
+          <ListBand tone="blue" title="Open times">
           <div className="row">
             <label>Show
               <select value={slotWindow} onChange={(event) => setSlotWindow(event.target.value)}>
@@ -726,7 +836,10 @@ function ReferralsOverview() {
               </table>
             </div>
           )}
+          </ListBand>
         </>
+      ) : null}
+      </>
       ) : null}
     </section>
   );
