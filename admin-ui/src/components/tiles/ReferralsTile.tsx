@@ -72,6 +72,7 @@ const THERAPIES = [
   { id: 'slp', label: 'Speech' },
   { id: 'ot', label: 'Occupational therapy' },
   { id: 'pt', label: 'Physical therapy' },
+  { id: 'di', label: 'DI (Developmental Intervention)' },
   { id: 'psych', label: 'Psychology' },
   { id: 'other', label: 'Other' },
 ];

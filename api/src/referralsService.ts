@@ -28,14 +28,24 @@ export const EI_LAST_MESSAGE = 'Hi hi Jenny, out of respect for you and your fam
 export const SC_NO_RESPONSE_MESSAGE = 'Hey, haven\'t heard a response, here is the phone number, can you verify and check in if they want services?';
 export const PRIVATE_FIRST_MESSAGE = 'Hi Jenny! Sara Beth & Jenny from EMME Therapy Services here. It looks like you reached out to us on our website for Speech and OT services. Do you have time to connect with us this week to talk about needs and next steps?';
 
-const THERAPY_IDS = ['slp', 'ot', 'pt', 'psych', 'other'] as const;
+const THERAPY_IDS = ['slp', 'ot', 'pt', 'di', 'psych', 'other'] as const;
 const THERAPY_LABELS: Record<string, string> = {
   slp: 'Speech',
   ot: 'Occupational therapy',
   pt: 'Physical therapy',
+  di: 'DI (Developmental Intervention)',
   psych: 'Psychology',
   other: 'Other',
 };
+
+/** The shared referrals mailbox is where families write in. It is not a provider. */
+function isReferralsMailbox(email: string, name: string): boolean {
+  const mail = email.trim().toLowerCase();
+  const who = name.trim().toLowerCase().replace(/\s+/g, ' ');
+  const local = mail.split('@')[0] || '';
+  if (local === 'referrals' && mail.endsWith('@emmeco.org')) return true;
+  return who === 'emmeco referrals' || who === 'emme referrals' || who === 'emmeco referral';
+}
 
 const EI_STEPS: Array<{ id: string; label: string }> = [
   { id: 'call', label: 'Call' },
@@ -840,6 +850,8 @@ export function summarizeOpenings(options: { today: string; staff: OpeningStaff[
 
   (options.staff || []).forEach(function (person) {
     const email = asText(person.staffEmail, 200).toLowerCase();
+    const staffName = person.staffName || email;
+    if (isReferralsMailbox(email, staffName)) return;
     const therapyIds = kindByEmail.get(email) || [];
     const therapyLabels = therapyIds.length ? therapyIds.map(function (id) { return THERAPY_LABELS[id] || id; }) : ['Not set'];
     let spots = 0;
@@ -854,7 +866,7 @@ export function summarizeOpenings(options: { today: string; staff: OpeningStaff[
         therapyCounts.set(label, (therapyCounts.get(label) || 0) + 1);
       });
       slots.push({
-        staffName: person.staffName,
+        staffName: staffName,
         staffEmail: email,
         therapies: therapyLabels,
         therapyIds: therapyIds,
@@ -865,7 +877,7 @@ export function summarizeOpenings(options: { today: string; staff: OpeningStaff[
       });
     });
     providers.push({
-      staffName: person.staffName || email,
+      staffName: staffName,
       staffEmail: email,
       therapyIds: therapyIds,
       therapies: therapyLabels,

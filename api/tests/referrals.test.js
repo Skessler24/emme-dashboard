@@ -325,6 +325,18 @@ test('referral tracking, drafts, and openings', async (t) => {
     assert.strictEqual(summary.slots[0].spot, 'Wednesday at 4:30 PM');
     assert.strictEqual(summary.slots[0].status, 'Open 4x');
     assert.strictEqual(summary.slots.find((row) => row.time === '5:30 PM').status, 'Open 2x (1&3)');
+    const hidden = summarizeOpenings({
+      today: TODAY,
+      kinds: [{ email: 'di@emmeco.org', name: 'Dee Provider', therapies: ['di'] }],
+      staff: [
+        { staffEmail: 'referrals@emmeco.org', staffName: 'EmmeCo Referrals', openings: [{ day: 'Monday', time: '9:00 AM', status: 'Open 4x' }] },
+        { staffEmail: 'di@emmeco.org', staffName: 'Dee Provider', openings: [{ day: 'Tuesday', time: '10:00 AM', status: 'Open 4x' }] },
+      ],
+    });
+    assert.strictEqual(hidden.total, 1);
+    assert.strictEqual(hidden.providers.length, 1);
+    assert.strictEqual(hidden.providers[0].staffEmail, 'di@emmeco.org');
+    assert.strictEqual(hidden.slots[0].therapies[0], 'DI (Developmental Intervention)');
   });
 
   await t.test('frequency of service is saved with the referral', async () => {
