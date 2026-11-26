@@ -39,10 +39,12 @@ const TEXT_MAX = 4000;
 function clip(value) {
     return String(value == null ? '' : value).replace(/\u0000/g, '').trim().slice(0, TEXT_MAX);
 }
+const FOUNDATION_IDS = new Set(TOPICS.filter(function (topic) { return topic.foundation; }).map(function (topic) { return topic.id; }));
 function blankMeeting() {
     return {
         id: 'm-' + Math.random().toString(16).slice(2, 10),
         date: '',
+        foundationId: '',
         update: '',
         background: '',
         clip: '',
@@ -72,6 +74,8 @@ function cleanMeeting(value) {
     const meeting = blankMeeting();
     meeting.id = id || meeting.id;
     meeting.date = /^\d{4}-\d{2}-\d{2}$/.test(clip(row.date)) ? clip(row.date) : '';
+    const foundationId = clip(row.foundationId);
+    meeting.foundationId = FOUNDATION_IDS.has(foundationId) ? foundationId : '';
     meeting.update = clip(row.update);
     meeting.background = clip(row.background);
     meeting.clip = clip(row.clip);
@@ -296,16 +300,17 @@ function buildGrowthMapPdf(map) {
     push('The six F spaces are shared foundations. Other spaces follow the provider\'s needs, interests, and scope.');
     push('');
     map.topics.forEach(function (topic) {
-        push((topic.foundation ? '[F] ' : '') + topic.title);
+        push((topic.foundation ? '(F) ' : '') + topic.title);
         push(topic.prompt);
-        push('E: ' + (topic.e || '______'));
-        push('P: ' + (topic.p || '______'));
-        push('R: ' + (topic.r || '______'));
+        push('E: ' + (topic.e || '______') + '   P: ' + (topic.p || '______') + '   R: ' + (topic.r || '______'));
         push('');
     });
     map.meetings.forEach(function (meeting, index) {
         push('Reflective Supervision Preparation ' + (index + 1));
         push('Meeting date: ' + (meeting.date || ''));
+        const chosen = map.topics.find(function (topic) { return topic.id === meeting.foundationId; });
+        if (chosen)
+            push('Foundation for this session: (F) ' + chosen.title + ' — ' + chosen.prompt);
         push('Brief update: ' + meeting.update);
         push('Background: ' + meeting.background);
         push('Clip timestamp: ' + meeting.clip);

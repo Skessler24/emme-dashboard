@@ -468,17 +468,89 @@ th { color: var(--color-green); font-size: 0.78rem; letter-spacing: 0.02em; back
 .ref-choices { display: flex; flex-wrap: wrap; gap: 0.45rem 0.9rem; margin: 0.3rem 0 0.8rem; }
 
 .rs-map { margin-bottom: 2rem; }
-.rs-map h2, .rs-map h3 { margin: 1rem 0 0.4rem; }
-.rs-topic { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 0.85rem 1rem; margin: 0.7rem 0; }
-.rs-topic h3 { margin-top: 0; }
-.rs-topic p { margin: 0.2rem 0 0.6rem; }
-.rs-epr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
-.rs-epr textarea, .rs-topic textarea { width: 100%; min-height: 4.5rem; }
-.rs-note { color: var(--color-text-muted); }
-.rs-list { margin: 0.3rem 0 1rem; padding-left: 1.1rem; }
+.rs-note { color: var(--color-text-muted); margin: 0.2rem 0 0.6rem; }
+.rs-sheet { margin-top: 0.4rem; }
+.rs-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.7rem 0 0.9rem; }
+.rs-tab {
+  font-family: var(--font-display);
+  font-weight: 700;
+  border: 0;
+  border-radius: var(--radius-full);
+  padding: 0.45rem 0.95rem;
+  background: var(--color-green-subtle);
+  color: var(--color-green);
+}
+.rs-tab--yellow.is-on { background: var(--color-yellow); }
+.rs-tab--pink.is-on { background: var(--color-pink); }
+.rs-tab--green.is-on { background: var(--color-green); color: #fff; }
+.rs-band { border-radius: var(--radius-lg); padding: 0.9rem 1rem 1rem; margin: 0.7rem 0; }
+.rs-band--yellow { background: var(--color-yellow-subtle); }
+.rs-band--pink { background: var(--color-pink-subtle); }
+.rs-band--green { background: var(--color-green-subtle); }
+.rs-band--blue { background: var(--color-blue-subtle); }
+.rs-band > h3 {
+  display: inline-block;
+  margin: 0 0 0.7rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+}
+.rs-band--yellow > h3 { background: var(--color-yellow); }
+.rs-band--pink > h3 { background: var(--color-pink); }
+.rs-band--green > h3 { background: var(--color-green); color: #fff; }
+.rs-band--blue > h3 { background: var(--color-blue); color: #fff; }
+.rs-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.rs-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--color-green);
+  padding: 0.75rem 0.85rem 0.7rem;
+  min-width: 0;
+}
+.rs-card--yellow { border-left-color: var(--color-yellow); }
+.rs-card--pink { border-left-color: var(--color-pink-dark); }
+.rs-card h3, .rs-pick { font-size: 0.95rem; line-height: 1.25; margin: 0; }
+.rs-pick {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: var(--color-green);
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: left;
+}
+.rs-card p { margin: 0.3rem 0 0.45rem; color: var(--color-text-muted); font-size: var(--text-sm); }
+.rs-chosen { outline: 2px solid var(--color-yellow); box-shadow: var(--shadow-md); }
+.rs-line { display: flex; gap: 0.4rem; }
+.rs-line label { flex: 1; min-width: 0; font-size: 0.72rem; font-weight: 700; color: var(--color-green); }
+.rs-line input {
+  width: 100%;
+  min-height: 0;
+  margin-top: 0.15rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+.rs-sessions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.6rem; }
+.rs-sessions button {
+  background: #fff;
+  color: var(--color-green);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.7rem;
+}
+.rs-sessions .is-on { background: var(--color-green); color: #fff; border-color: var(--color-green); }
+.rs-prep-grid { display: grid; grid-template-columns: 1fr; gap: 0.35rem; }
+.rs-band textarea { width: 100%; min-height: 2.6rem; background: #fff; }
+.rs-list { margin: 0.3rem 0 0.4rem; padding-left: 1.1rem; }
 .rs-list li { margin: 0.35rem 0; }
-@media (max-width: 767px) {
-  .rs-epr { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+  .rs-cards { grid-template-columns: 1fr; }
 }
 
 .exp-board h2 { margin-top: 1.4rem; }
