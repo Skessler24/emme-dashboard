@@ -2,7 +2,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { randomBytes } from 'crypto';
 import { getConfig } from './config';
 import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, restParts } from './http';
-import { availabilityForWindow } from './schedulingService';
+import { openingsFromDashboard } from './schedulingService';
 import { LISTS, createItem, listItems, updateItem } from './sharepointService';
 
 /**
@@ -16,7 +16,6 @@ import { LISTS, createItem, listItems, updateItem } from './sharepointService';
 
 const BLOB_NAME = 'referrals/records.json';
 const TIME_ZONE = 'America/Denver';
-const OPENING_GOAL_MAX = 20;
 const DAY_GOAL = 28;
 const RESPONSE_DAYS = 15;
 const OUTREACHES_BEFORE_BOTTOM = 2;
@@ -120,6 +119,7 @@ export type ReferralDetail = {
   assignedTo: string;
   assignedEmail: string;
   notes: string;
+  frequency: string;
   receivedOn: string;
   lastContactOn: string;
   serviceGridOn: string;
@@ -142,7 +142,7 @@ export type ListPort = {
   update(id: string, fields: Record<string, unknown>): Promise<void>;
 };
 
-export type OpeningSlot = { date: string; day: string; time: string; status: string };
+export type OpeningSlot = { date?: string; day: string; time: string; status: string };
 export type OpeningStaff = { staffEmail: string; staffName: string; openings: OpeningSlot[] };
 export type ProviderKind = { email: string; name: string; therapies: string[] };
 
@@ -315,6 +315,7 @@ function blankDetail(id: string, familyName: string, today: string): ReferralDet
     assignedTo: '',
     assignedEmail: '',
     notes: '',
+    frequency: '',
     receivedOn: today,
     lastContactOn: '',
     serviceGridOn: '',
@@ -370,6 +371,7 @@ function coerceStored(raw: unknown, id: string, today: string): ReferralDetail |
   detail.assignedTo = asText(row.assignedTo, 200);
   detail.assignedEmail = asText(row.assignedEmail, 200);
   detail.notes = asText(row.notes, 4000);
+  detail.frequency = asText(row.frequency, 80);
   detail.receivedOn = parseIsoDate(asText(row.receivedOn, 40)) || asText(row.receivedOn, 40) || today;
   detail.lastContactOn = parseIsoDate(asText(row.lastContactOn, 40));
   detail.serviceGridOn = parseIsoDate(asText(row.serviceGridOn, 40));
@@ -585,6 +587,7 @@ export function buildNewReferral(body: Record<string, unknown>, today: string): 
   detail.serviceCoordinator = asText(body.serviceCoordinator, 200);
   detail.assignedTo = asText(body.assignedTo, 200);
   detail.notes = asText(body.notes, 4000);
+  detail.frequency = asText(body.frequency, 80);
   detail.source = normalizeSource(asText(body.source, 200));
   detail.therapies = cleanTherapies(body.therapies);
   detail.receivedOn = parseIsoDate(asText(body.receivedOn, 40)) || today;
@@ -618,6 +621,7 @@ export function applyReferralAction(detailIn: ReferralDetail, body: Record<strin
     detail.familyName = familyName;
     detail.serviceCoordinator = asText(body.serviceCoordinator, 200);
     detail.notes = asText(body.notes, 4000);
+    detail.frequency = asText(body.frequency, 80);
     detail.source = normalizeSource(asText(body.source, 200));
     detail.therapies = cleanTherapies(body.therapies);
     const received = parseIsoDate(asText(body.receivedOn, 40));
@@ -821,20 +825,15 @@ export function projectReferral(detail: ReferralDetail, today: string, createdAt
   });
 }
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAY_SORT = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export function summarizeOpenings(options: { today: string; staff: OpeningStaff[]; kinds: ProviderKind[] }): Record<string, unknown> {
   const today = parseIsoDate(options.today) || options.today;
-  const weekStart = mondayOf(today);
-  const weekEnd = addDays(weekStart, 6);
-  const through = addDays(today, 29);
   const kindByEmail = new Map<string, string[]>();
   (options.kinds || []).forEach(function (kind) {
     kindByEmail.set(kind.email.trim().toLowerCase(), cleanTherapies(kind.therapies));
   });
   let total = 0;
-  let weekTotal = 0;
-  const monthCounts = new Map<string, number>();
   const therapyCounts = new Map<string, number>();
   const providers: Array<Record<string, unknown>> = [];
   const slots: Array<Record<string, unknown>> = [];
@@ -843,21 +842,14 @@ export function summarizeOpenings(options: { today: string; staff: OpeningStaff[
     const email = asText(person.staffEmail, 200).toLowerCase();
     const therapyIds = kindByEmail.get(email) || [];
     const therapyLabels = therapyIds.length ? therapyIds.map(function (id) { return THERAPY_LABELS[id] || id; }) : ['Not set'];
-    let next30 = 0;
-    let week = 0;
-    const months = new Map<string, number>();
+    let spots = 0;
     (person.openings || []).forEach(function (opening) {
-      const date = parseIsoDate(opening.date);
-      if (!date || date < today || date > through) return;
+      const day = asText(opening.day, 20);
+      const time = asText(opening.time, 40);
+      const status = asText(opening.status, 80);
+      if (!day && !time) return;
       total += 1;
-      next30 += 1;
-      const month = date.slice(0, 7);
-      monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
-      months.set(month, (months.get(month) || 0) + 1);
-      if (date >= weekStart && date <= weekEnd) {
-        weekTotal += 1;
-        week += 1;
-      }
+      spots += 1;
       therapyLabels.forEach(function (label) {
         therapyCounts.set(label, (therapyCounts.get(label) || 0) + 1);
       });
@@ -866,10 +858,10 @@ export function summarizeOpenings(options: { today: string; staff: OpeningStaff[
         staffEmail: email,
         therapies: therapyLabels,
         therapyIds: therapyIds,
-        date: date,
-        day: asText(opening.day, 20),
-        time: asText(opening.time, 40),
-        status: asText(opening.status, 80),
+        day: day,
+        time: time,
+        status: status,
+        spot: day && time ? day + ' at ' + time : (day || time),
       });
     });
     providers.push({
@@ -877,18 +869,17 @@ export function summarizeOpenings(options: { today: string; staff: OpeningStaff[
       staffEmail: email,
       therapyIds: therapyIds,
       therapies: therapyLabels,
-      week: week,
-      next30: next30,
+      spots: spots,
     });
   });
 
   providers.sort(function (a, b) { return String(a.staffName).localeCompare(String(b.staffName)); });
   slots.sort(function (a, b) {
-    return String(a.date).localeCompare(String(b.date)) || String(a.time).localeCompare(String(b.time)) || String(a.staffName).localeCompare(String(b.staffName));
-  });
-  const byMonth = Array.from(monthCounts.keys()).sort().map(function (month) {
-    const index = Number(month.slice(5, 7)) - 1;
-    return { month: month, label: (MONTHS[index] || month) + ' ' + month.slice(0, 4), count: monthCounts.get(month) || 0 };
+    const dayA = DAY_SORT.indexOf(String(a.day).toLowerCase());
+    const dayB = DAY_SORT.indexOf(String(b.day).toLowerCase());
+    return (dayA < 0 ? 9 : dayA) - (dayB < 0 ? 9 : dayB)
+      || String(a.time).localeCompare(String(b.time))
+      || String(a.staffName).localeCompare(String(b.staffName));
   });
   const byTherapy = Array.from(therapyCounts.keys()).sort().map(function (label) {
     return { label: label, count: therapyCounts.get(label) || 0 };
@@ -898,17 +889,9 @@ export function summarizeOpenings(options: { today: string; staff: OpeningStaff[
     source: 'emme-scheduling-db',
     timeZone: TIME_ZONE,
     today: today,
-    weekStart: weekStart,
-    weekEnd: weekEnd,
-    through: through,
-    windowDays: 30,
     total: total,
-    weekTotal: weekTotal,
     disciplineCount: disciplineCount,
     unlabeled: therapyCounts.get('Not set') || 0,
-    goalMax: OPENING_GOAL_MAX,
-    overGoal: total > OPENING_GOAL_MAX,
-    byMonth: byMonth,
     byTherapy: byTherapy,
     providers: providers,
     slots: slots,
@@ -976,14 +959,13 @@ function validId(id: string): boolean {
 }
 
 async function defaultAvailability(): Promise<{ configured: boolean; asOf?: string; staff: OpeningStaff[] }> {
-  const result = await availabilityForWindow(30);
+  const result = await openingsFromDashboard();
   return {
     configured: result.configured,
-    asOf: result.asOf,
     staff: result.staff.map(function (person) {
       return {
-        staffEmail: person.staffEmail,
-        staffName: person.staffName,
+        staffEmail: person.email,
+        staffName: person.employee,
         openings: (person.summary && person.summary.openings) || [],
       };
     }),

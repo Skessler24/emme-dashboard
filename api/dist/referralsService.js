@@ -30,7 +30,6 @@ const sharepointService_1 = require("./sharepointService");
  */
 const BLOB_NAME = 'referrals/records.json';
 const TIME_ZONE = 'America/Denver';
-const OPENING_GOAL_MAX = 20;
 const DAY_GOAL = 28;
 const RESPONSE_DAYS = 15;
 const OUTREACHES_BEFORE_BOTTOM = 2;
@@ -250,6 +249,7 @@ function blankDetail(id, familyName, today) {
         assignedTo: '',
         assignedEmail: '',
         notes: '',
+        frequency: '',
         receivedOn: today,
         lastContactOn: '',
         serviceGridOn: '',
@@ -303,6 +303,7 @@ function coerceStored(raw, id, today) {
     detail.assignedTo = (0, http_1.asText)(row.assignedTo, 200);
     detail.assignedEmail = (0, http_1.asText)(row.assignedEmail, 200);
     detail.notes = (0, http_1.asText)(row.notes, 4000);
+    detail.frequency = (0, http_1.asText)(row.frequency, 80);
     detail.receivedOn = parseIsoDate((0, http_1.asText)(row.receivedOn, 40)) || (0, http_1.asText)(row.receivedOn, 40) || today;
     detail.lastContactOn = parseIsoDate((0, http_1.asText)(row.lastContactOn, 40));
     detail.serviceGridOn = parseIsoDate((0, http_1.asText)(row.serviceGridOn, 40));
@@ -524,6 +525,7 @@ function buildNewReferral(body, today) {
     detail.serviceCoordinator = (0, http_1.asText)(body.serviceCoordinator, 200);
     detail.assignedTo = (0, http_1.asText)(body.assignedTo, 200);
     detail.notes = (0, http_1.asText)(body.notes, 4000);
+    detail.frequency = (0, http_1.asText)(body.frequency, 80);
     detail.source = normalizeSource((0, http_1.asText)(body.source, 200));
     detail.therapies = cleanTherapies(body.therapies);
     detail.receivedOn = parseIsoDate((0, http_1.asText)(body.receivedOn, 40)) || today;
@@ -561,6 +563,7 @@ function applyReferralAction(detailIn, body, actor, today) {
         detail.familyName = familyName;
         detail.serviceCoordinator = (0, http_1.asText)(body.serviceCoordinator, 200);
         detail.notes = (0, http_1.asText)(body.notes, 4000);
+        detail.frequency = (0, http_1.asText)(body.frequency, 80);
         detail.source = normalizeSource((0, http_1.asText)(body.source, 200));
         detail.therapies = cleanTherapies(body.therapies);
         const received = parseIsoDate((0, http_1.asText)(body.receivedOn, 40));
@@ -771,19 +774,14 @@ function projectReferral(detail, today, createdAt = '') {
         Title: detail.familyName,
     });
 }
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAY_SORT = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 function summarizeOpenings(options) {
     const today = parseIsoDate(options.today) || options.today;
-    const weekStart = mondayOf(today);
-    const weekEnd = addDays(weekStart, 6);
-    const through = addDays(today, 29);
     const kindByEmail = new Map();
     (options.kinds || []).forEach(function (kind) {
         kindByEmail.set(kind.email.trim().toLowerCase(), cleanTherapies(kind.therapies));
     });
     let total = 0;
-    let weekTotal = 0;
-    const monthCounts = new Map();
     const therapyCounts = new Map();
     const providers = [];
     const slots = [];
@@ -791,22 +789,15 @@ function summarizeOpenings(options) {
         const email = (0, http_1.asText)(person.staffEmail, 200).toLowerCase();
         const therapyIds = kindByEmail.get(email) || [];
         const therapyLabels = therapyIds.length ? therapyIds.map(function (id) { return THERAPY_LABELS[id] || id; }) : ['Not set'];
-        let next30 = 0;
-        let week = 0;
-        const months = new Map();
+        let spots = 0;
         (person.openings || []).forEach(function (opening) {
-            const date = parseIsoDate(opening.date);
-            if (!date || date < today || date > through)
+            const day = (0, http_1.asText)(opening.day, 20);
+            const time = (0, http_1.asText)(opening.time, 40);
+            const status = (0, http_1.asText)(opening.status, 80);
+            if (!day && !time)
                 return;
             total += 1;
-            next30 += 1;
-            const month = date.slice(0, 7);
-            monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
-            months.set(month, (months.get(month) || 0) + 1);
-            if (date >= weekStart && date <= weekEnd) {
-                weekTotal += 1;
-                week += 1;
-            }
+            spots += 1;
             therapyLabels.forEach(function (label) {
                 therapyCounts.set(label, (therapyCounts.get(label) || 0) + 1);
             });
@@ -815,10 +806,10 @@ function summarizeOpenings(options) {
                 staffEmail: email,
                 therapies: therapyLabels,
                 therapyIds: therapyIds,
-                date: date,
-                day: (0, http_1.asText)(opening.day, 20),
-                time: (0, http_1.asText)(opening.time, 40),
-                status: (0, http_1.asText)(opening.status, 80),
+                day: day,
+                time: time,
+                status: status,
+                spot: day && time ? day + ' at ' + time : (day || time),
             });
         });
         providers.push({
@@ -826,17 +817,16 @@ function summarizeOpenings(options) {
             staffEmail: email,
             therapyIds: therapyIds,
             therapies: therapyLabels,
-            week: week,
-            next30: next30,
+            spots: spots,
         });
     });
     providers.sort(function (a, b) { return String(a.staffName).localeCompare(String(b.staffName)); });
     slots.sort(function (a, b) {
-        return String(a.date).localeCompare(String(b.date)) || String(a.time).localeCompare(String(b.time)) || String(a.staffName).localeCompare(String(b.staffName));
-    });
-    const byMonth = Array.from(monthCounts.keys()).sort().map(function (month) {
-        const index = Number(month.slice(5, 7)) - 1;
-        return { month: month, label: (MONTHS[index] || month) + ' ' + month.slice(0, 4), count: monthCounts.get(month) || 0 };
+        const dayA = DAY_SORT.indexOf(String(a.day).toLowerCase());
+        const dayB = DAY_SORT.indexOf(String(b.day).toLowerCase());
+        return (dayA < 0 ? 9 : dayA) - (dayB < 0 ? 9 : dayB)
+            || String(a.time).localeCompare(String(b.time))
+            || String(a.staffName).localeCompare(String(b.staffName));
     });
     const byTherapy = Array.from(therapyCounts.keys()).sort().map(function (label) {
         return { label: label, count: therapyCounts.get(label) || 0 };
@@ -846,17 +836,9 @@ function summarizeOpenings(options) {
         source: 'emme-scheduling-db',
         timeZone: TIME_ZONE,
         today: today,
-        weekStart: weekStart,
-        weekEnd: weekEnd,
-        through: through,
-        windowDays: 30,
         total: total,
-        weekTotal: weekTotal,
         disciplineCount: disciplineCount,
         unlabeled: therapyCounts.get('Not set') || 0,
-        goalMax: OPENING_GOAL_MAX,
-        overGoal: total > OPENING_GOAL_MAX,
-        byMonth: byMonth,
         byTherapy: byTherapy,
         providers: providers,
         slots: slots,
@@ -922,14 +904,13 @@ function validId(id) {
     return /^[A-Za-z0-9_-]{1,80}$/.test(id);
 }
 async function defaultAvailability() {
-    const result = await (0, schedulingService_1.availabilityForWindow)(30);
+    const result = await (0, schedulingService_1.openingsFromDashboard)();
     return {
         configured: result.configured,
-        asOf: result.asOf,
         staff: result.staff.map(function (person) {
             return {
-                staffEmail: person.staffEmail,
-                staffName: person.staffName,
+                staffEmail: person.email,
+                staffName: person.employee,
                 openings: (person.summary && person.summary.openings) || [],
             };
         }),

@@ -1111,11 +1111,12 @@
           '<td><input class="cell-input" data-field="notes" value="' + escapeAttr(slot.notes) + '" placeholder="Client / notes" />' +
             slotLinkedClientHtml(slot) + '</td>' +
           '<td style="width:8rem"><input class="cell-input" data-field="lastDay" value="' + escapeAttr(clientLastVisit(findClientByName(slot.notes)) || slot.lastDay) + '" placeholder="Turns 3 or PAR end" title="Date of last visit: the day this client turns 3, or the PAR or Medicaid end date, whichever comes first" /></td>' +
+          '<td><input class="cell-input" data-field="scheduleNotes" value="' + escapeAttr(slot.scheduleNotes || '') + '" placeholder="Schedule notes" /></td>' +
           '<td style="width:4.5rem"><div class="slot-actions">' +
             '<button type="button" class="btn btn--icon btn--soft" data-action="dup-slot" title="Duplicate"><i data-lucide="copy"></i></button>' +
             '<button type="button" class="btn btn--icon btn--danger" data-action="del-slot" title="Delete"><i data-lucide="trash-2"></i></button>' +
           '</div></td></tr>';
-      }).join('') || '<tr><td colspan="6" style="padding:0.85rem;color:var(--muted)">No slots — use + Slot</td></tr>';
+      }).join('') || '<tr><td colspan="7" style="padding:0.85rem;color:var(--muted)">No slots — use + Slot</td></tr>';
 
       return '<article class="day-block" data-day-block="' + day.id + '">' +
         '<header class="day-block__header day-block__header--' + color + '">' +
@@ -1129,7 +1130,7 @@
           '</div>' +
         '</header>' +
         '<table class="slot-table"><thead><tr>' +
-          '<th class="col-drag"></th><th>Time</th><th>Status</th><th>Notes</th><th>Last visit</th><th></th>' +
+          '<th class="col-drag"></th><th>Time</th><th>Status</th><th>Notes</th><th>Last visit</th><th>Schedule notes</th><th></th>' +
         '</tr></thead><tbody data-drop-day="' + day.id + '">' + rows + '</tbody></table></article>';
     }).join('');
 
@@ -1789,11 +1790,11 @@
   }
 
   function scheduleRows() {
-    var rows = [['Board', 'Day', 'Time', 'Status', 'Client / notes', 'Last day']];
+    var rows = [['Board', 'Day', 'Time', 'Status', 'Client / notes', 'Last day', 'Schedule notes']];
     (state.workspace.boards || []).forEach(function (board) {
       (board.days || []).forEach(function (day) {
         (day.slots || []).forEach(function (slot) {
-          rows.push([board.name || '', day.name || '', slot.time || '', slot.status || '', slot.notes || '', slot.lastDay || '']);
+          rows.push([board.name || '', day.name || '', slot.time || '', slot.status || '', slot.notes || '', slot.lastDay || '', slot.scheduleNotes || '']);
         });
       });
     });
@@ -2639,7 +2640,7 @@
         }
         var blanks = (day.slots || []).filter(function (slot) { return !(slot.time || slot.status || slot.notes); });
         day.slots = incoming.map(function (slot) {
-          return { id: uid('slot'), time: slot.time, status: slot.status, notes: slot.notes, lastDay: slot.lastDay || '' };
+          return { id: uid('slot'), time: slot.time, status: slot.status, notes: slot.notes, lastDay: slot.lastDay || '', scheduleNotes: slot.scheduleNotes || '' };
         }).concat(blanks);
         rows += incoming.length;
         dayNames.push(EmmeScheduleImport.DAY_LABELS[key]);

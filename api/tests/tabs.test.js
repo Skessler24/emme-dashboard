@@ -37,4 +37,14 @@ test('the workbook built from scratch has the status drop-down on every table', 
   assert.strictEqual(wb.worksheets[0].name, 'Current Schedule');
   const rule = sheet.getCell('B2').dataValidation;
   assert.strictEqual(rule && rule.type, 'list');
+  const headers = [1, 2, 3, 4, 5].map((col) => String(sheet.getCell(1, col).value || ''));
+  assert.ok(headers[4] === 'Schedule notes');
+});
+
+test('schedule notes are written on the far right of the read-only copy', async () => {
+  const withNotes = { version: 1, boards: [{ id: 'b1', name: 'Current Schedule', days: [day('dWed', 'Wednesday', [{ id: 'w1', time: '4:30 PM', status: 'Open 2x (1&3)', notes: '', lastDay: '', scheduleNotes: 'Prefer a weekly client' }])] }], clients: [], dxCodes: [] };
+  const built = await workbook.buildScheduleWorkbook(withNotes, { readOnly: true });
+  const read = await workbook.readScheduleDays(new Uint8Array(built));
+  assert.strictEqual(read.wednesday[0].scheduleNotes, 'Prefer a weekly client');
+  assert.strictEqual(read.wednesday[0].status, 'Open 2x (1&3)');
 });

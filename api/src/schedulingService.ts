@@ -51,7 +51,7 @@ export type ScheduleSummary = {
   counts: { open: number; full: number; inProgress: number; notOpen: number };
 };
 
-type Slot = { time?: string; status?: string; notes?: string; lastDay?: string };
+type Slot = { time?: string; status?: string; notes?: string; lastDay?: string; scheduleNotes?: string };
 type Day = { name?: string; slots?: Slot[] };
 type Board = { name?: string; days?: Day[] };
 type Workspace = { ownerEmail?: string; updatedAt?: string; boards?: Board[] };

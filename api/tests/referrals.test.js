@@ -299,33 +299,50 @@ test('referral tracking, drafts, and openings', async (t) => {
       body: { action: 'save', familyName: 'Race Family', kind: 'private', baseUpdatedAt: '' },
     });
     assert.strictEqual(stale.status, 409);
-    const slots = [];
-    for (let i = 0; i < 21; i++) slots.push({ date: '2026-11-25', day: 'Wednesday', time: '9:' + i, status: 'open 4x' });
-    slots.push({ date: '2026-12-20', day: 'Sunday', time: '1:00 PM', status: 'open 1x (3)' });
-    slots.push({ date: '2026-11-20', day: 'Friday', time: '8:00 AM', status: 'open 4x' });
     const summary = summarizeOpenings({
       today: TODAY,
       kinds: [{ email: 'pat@emmeco.org', name: 'Pat Provider', therapies: ['slp', 'ot'] }],
       staff: [
-        { staffEmail: 'pat@emmeco.org', staffName: 'Pat Provider', openings: slots },
-        { staffEmail: 'sam@emmeco.org', staffName: 'Sam Provider', openings: [{ date: '2026-11-26', day: 'Thursday', time: '10:00 AM', status: 'open 4x' }] },
+        {
+          staffEmail: 'pat@emmeco.org',
+          staffName: 'Pat Provider',
+          openings: [
+            { day: 'Wednesday', time: '4:30 PM', status: 'Open 4x' },
+            { day: 'Wednesday', time: '5:30 PM', status: 'Open 2x (1&3)' },
+            { day: 'Friday', time: '9:00 AM', status: 'Open 2x (2&4)' },
+          ],
+        },
+        { staffEmail: 'sam@emmeco.org', staffName: 'Sam Provider', openings: [{ day: 'Thursday', time: '10:00 AM', status: 'Open 1x (3)' }] },
       ],
     });
-    assert.strictEqual(summary.total, 23);
-    assert.strictEqual(summary.weekTotal, 22);
-    assert.strictEqual(summary.overGoal, true);
-    assert.strictEqual(summary.goalMax, 20);
+    assert.strictEqual(summary.total, 4);
     assert.strictEqual(summary.disciplineCount, 2);
-    assert.strictEqual(summary.byTherapy.find((row) => row.label === 'Speech').count, 22);
-    assert.strictEqual(summary.byTherapy.find((row) => row.label === 'Occupational therapy').count, 22);
+    assert.strictEqual(summary.byTherapy.find((row) => row.label === 'Speech').count, 3);
+    assert.strictEqual(summary.byTherapy.find((row) => row.label === 'Occupational therapy').count, 3);
     assert.strictEqual(summary.unlabeled, 1);
-    assert.ok(summary.byMonth.some((row) => row.month === '2026-11' && row.label === 'November 2026'));
-    assert.ok(summary.byMonth.some((row) => row.month === '2026-12' && row.count === 1));
-    assert.strictEqual(summary.providers.find((row) => row.staffEmail === 'pat@emmeco.org').next30, 22);
-    assert.strictEqual(summary.slots.length, 23);
+    assert.strictEqual(summary.providers.find((row) => row.staffEmail === 'pat@emmeco.org').spots, 3);
+    assert.strictEqual(summary.slots.length, 4);
+    assert.strictEqual(summary.slots[0].spot, 'Wednesday at 4:30 PM');
+    assert.strictEqual(summary.slots[0].status, 'Open 4x');
+    assert.strictEqual(summary.slots.find((row) => row.time === '5:30 PM').status, 'Open 2x (1&3)');
   });
 
-  await t.test('opening counts come from the scheduling window and the kind of therapy set here', async () => {
+  await t.test('frequency of service is saved with the referral', async () => {
+    resetStore();
+    const list = memoryList();
+    const created = await call('POST', { list: list, body: { familyName: 'Weekly Family', kind: 'ei', frequency: 'Once a week' } });
+    assert.strictEqual(created.status, 201);
+    assert.strictEqual(created.body.referral.frequency, 'Once a week');
+    const saved = await call('POST', {
+      list: list,
+      rest: created.body.referral.id,
+      body: { action: 'save', familyName: 'Weekly Family', kind: 'ei', frequency: 'Twice a month', baseUpdatedAt: created.body.referral.updatedAt },
+    });
+    assert.strictEqual(saved.status, 200);
+    assert.strictEqual(saved.body.referral.frequency, 'Twice a month');
+  });
+
+  await t.test('opening counts come from the provider schedule and the kind of therapy set here', async () => {
     resetStore();
     const saved = await call('POST', {
       list: memoryList(),
@@ -349,8 +366,7 @@ test('referral tracking, drafts, and openings', async (t) => {
             staffEmail: 'pat@emmeco.org',
             staffName: 'Pat Provider',
             openings: [
-              { date: '2026-11-25', day: 'Wednesday', time: '9:00 AM', status: 'open 4x' },
-              { date: '2026-12-02', day: 'Wednesday', time: '9:00 AM', status: 'open 4x' },
+              { day: 'Wednesday', time: '9:00 AM', status: 'Open 4x' },
             ],
           }],
         }),
@@ -358,12 +374,11 @@ test('referral tracking, drafts, and openings', async (t) => {
     });
     assert.strictEqual(openings.status, 200);
     assert.strictEqual(openings.body.source, 'emme-scheduling-db');
-    assert.strictEqual(openings.body.total, 2);
-    assert.strictEqual(openings.body.weekTotal, 1);
-    assert.strictEqual(openings.body.overGoal, false);
+    assert.strictEqual(openings.body.total, 1);
     assert.strictEqual(openings.body.disciplineCount, 1);
     assert.strictEqual(openings.body.providers[0].therapies[0], 'Physical therapy');
-    assert.strictEqual(openings.body.byMonth.length, 2);
+    assert.strictEqual(openings.body.slots[0].spot, 'Wednesday at 9:00 AM');
+    assert.strictEqual(openings.body.slots[0].status, 'Open 4x');
   });
 
   await t.test('two outreaches and 15 days move an Early Intervention family to the bottom until they confirm', async () => {
