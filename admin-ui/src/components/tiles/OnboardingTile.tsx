@@ -14,6 +14,14 @@ function folderLine(label: string, found: FoundFile | null): string {
   return label + ': ' + found.path + ' (' + found.matchedBy + ')';
 }
 
+type ListId = 'checklist' | 'current' | 'archived';
+
+const LISTS: Array<{ id: ListId; label: string; tone: 'pink' | 'blue' | 'yellow' }> = [
+  { id: 'checklist', label: 'Checklist', tone: 'pink' },
+  { id: 'current', label: 'Current documents', tone: 'blue' },
+  { id: 'archived', label: 'Archived documents', tone: 'yellow' },
+];
+
 function OnboardingOverview() {
   const [employeeId, setEmployeeId] = useState('');
   const [employeeName, setEmployeeName] = useState('');
@@ -21,9 +29,15 @@ function OnboardingOverview() {
   const [currentDocs, setCurrentDocs] = useState<Docs[]>([]);
   const [archivedDocs, setArchivedDocs] = useState<Docs[]>([]);
   const [folder, setFolder] = useState('current');
+  const [list, setList] = useState<ListId>('checklist');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [folders, setFolders] = useState<{ mileage: FoundFile | null; schedule: FoundFile | null; email: string; name: string } | null>(null);
+
+  function openList(id: ListId) {
+    setList(id);
+    if (id === 'current' || id === 'archived') setFolder(id);
+  }
 
   async function load(event?: FormEvent) {
     event?.preventDefault();
@@ -81,54 +95,81 @@ function OnboardingOverview() {
     }
   }
 
+  const counts: Record<ListId, number> = {
+    checklist: checklist.length,
+    current: currentDocs.length,
+    archived: archivedDocs.length,
+  };
+  const open = LISTS.find((item) => item.id === list) || LISTS[0];
+
   return (
-    <section>
+    <section className="onb">
       <h1>Onboarding</h1>
       <p className="lede">Checklist rows come from the OnboardingChecklist list. Mileage and schedule folders are matched to the provider’s emmeco.org email. Finding them does not create anything new. “Create schedule from template” adds a schedule spreadsheet only when the provider does not have one, and never replaces a file.</p>
-      <form className="row" onSubmit={load}>
-        <label>Emme email<input value={employeeId} onChange={(event) => setEmployeeId(event.target.value)} placeholder="name@emmeco.org" required /></label>
-        <label>Provider name<input value={employeeName} onChange={(event) => setEmployeeName(event.target.value)} placeholder="First Last" /></label>
-        <button className="btn" type="submit">Load</button>
-        <button className="btn btn--ghost" type="button" onClick={findFolders}>Find existing folders</button>
-        <CreateScheduleButton email={employeeId} name={employeeName} onDone={() => { if (employeeId.trim()) void findFolders(); }} />
-      </form>
-      {folders ? (
-        <div>
-          <p className="muted">Searched existing admin folders for {folders.email}. Nothing new was created.</p>
-          <p>{folderLine('Mileage', folders.mileage)}</p>
-          <p>{folderLine('Schedule', folders.schedule)}</p>
-        </div>
-      ) : null}
-      {error ? <p className="error">{error}</p> : null}
-      {notice ? <p className="muted">{notice}</p> : null}
-      <DataTable
-        rows={checklist}
-        empty="No checklist items for this employee."
-        columns={[
-          { key: 'Title', label: 'Item' },
-          { key: 'Status', label: 'Status' },
-          { key: 'DueDate', label: 'Due' },
-          { key: 'EmployeeName', label: 'Employee' },
-        ]}
-      />
-      <h2>Documents</h2>
-      <div className="row">
-        <label>
-          Save to
-          <select value={folder} onChange={(event) => setFolder(event.target.value)}>
-            <option value="current">Current documents</option>
-            <option value="archived">Archived documents</option>
-          </select>
-        </label>
-        <label>
-          File
-          <input type="file" onChange={(event) => upload(event.target.files?.[0])} />
-        </label>
-      </div>
-      <h2>Current</h2>
-      <DataTable rows={currentDocs} empty="No current documents." columns={[{ key: 'name', label: 'File' }, { key: 'lastModified', label: 'Updated' }]} />
-      <h2>Archived</h2>
-      <DataTable rows={archivedDocs} empty="No archived documents." columns={[{ key: 'name', label: 'File' }, { key: 'lastModified', label: 'Updated' }]} />
+      <section className="onb-panel onb-panel--green">
+        <h2 className="onb-heading onb-heading--green">Find a person</h2>
+        <form className="row" onSubmit={load}>
+          <label>Emme email<input value={employeeId} onChange={(event) => setEmployeeId(event.target.value)} placeholder="name@emmeco.org" required /></label>
+          <label>Provider name<input value={employeeName} onChange={(event) => setEmployeeName(event.target.value)} placeholder="First Last" /></label>
+          <button className="btn" type="submit">Load</button>
+          <button className="btn btn--ghost" type="button" onClick={findFolders}>Find existing folders</button>
+          <CreateScheduleButton email={employeeId} name={employeeName} onDone={() => { if (employeeId.trim()) void findFolders(); }} />
+        </form>
+        {folders ? (
+          <div className="onb-found">
+            <p className="muted">Searched existing admin folders for {folders.email}. Nothing new was created.</p>
+            <p>{folderLine('Mileage', folders.mileage)}</p>
+            <p>{folderLine('Schedule', folders.schedule)}</p>
+          </div>
+        ) : null}
+        {error ? <p className="error">{error}</p> : null}
+        {notice ? <p className="muted">{notice}</p> : null}
+      </section>
+      <nav className="onb-tabs" aria-label="Onboarding lists">
+        {LISTS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={'onb-tab onb-tab--' + item.tone + (list === item.id ? ' is-on' : '')}
+            aria-current={list === item.id ? 'page' : undefined}
+            onClick={() => openList(item.id)}
+          >
+            <span className="onb-tab__mark" aria-hidden="true" />
+            {item.label}
+            <span className="onb-tab__count">{counts[item.id]}</span>
+          </button>
+        ))}
+      </nav>
+      <section className={'onb-panel onb-panel--' + open.tone} aria-label={open.label}>
+        <h2 className={'onb-heading onb-heading--' + open.tone}>{open.label}</h2>
+        {list === 'checklist' ? (
+          <DataTable
+            rows={checklist}
+            empty="No checklist items for this employee."
+            columns={[
+              { key: 'Title', label: 'Item' },
+              { key: 'Status', label: 'Status' },
+              { key: 'DueDate', label: 'Due' },
+              { key: 'EmployeeName', label: 'Employee' },
+            ]}
+          />
+        ) : (
+          <>
+            <p className="muted">{list === 'current' ? 'A file added here is saved with current documents.' : 'A file added here is filed with archived documents.'}</p>
+            <div className="row">
+              <label>
+                File
+                <input type="file" onChange={(event) => upload(event.target.files?.[0])} />
+              </label>
+            </div>
+            <DataTable
+              rows={list === 'current' ? currentDocs : archivedDocs}
+              empty={list === 'current' ? 'No current documents.' : 'No archived documents.'}
+              columns={[{ key: 'name', label: 'File' }, { key: 'lastModified', label: 'Updated' }]}
+            />
+          </>
+        )}
+      </section>
     </section>
   );
 }
