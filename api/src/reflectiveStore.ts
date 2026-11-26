@@ -72,6 +72,7 @@ function scheduleBlobName(email: string): string {
 }
 
 const APPOINTMENTS = 'reflective-supervision/appointments.json';
+const REMINDERS = 'reflective-supervision/reminders.json';
 
 async function readJson<T>(name: string, fallback: T): Promise<T> {
   const blob = container().getBlockBlobClient(name);
@@ -190,6 +191,19 @@ export async function listAppointments(email: string): Promise<Appointment[]> {
 
 export async function listAllAppointments(): Promise<Appointment[]> {
   return readAppointments();
+}
+
+export async function readReminderLog(): Promise<Record<string, string>> {
+  const stored = await readJson<{ sent?: Record<string, string> }>(REMINDERS, {});
+  return stored && stored.sent ? stored.sent : {};
+}
+
+export async function markReminded(email: string, day: string): Promise<void> {
+  return locked(async function () {
+    const sent = await readReminderLog();
+    sent[email.slice(0, 200)] = day;
+    await writeJson(REMINDERS, { sent }, '');
+  });
 }
 
 export async function addAppointment(item: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Appointment> {

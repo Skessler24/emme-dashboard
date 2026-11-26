@@ -8,6 +8,8 @@ exports.readScheduleWorkspace = readScheduleWorkspace;
 exports.listProviderEmails = listProviderEmails;
 exports.listAppointments = listAppointments;
 exports.listAllAppointments = listAllAppointments;
+exports.readReminderLog = readReminderLog;
+exports.markReminded = markReminded;
 exports.addAppointment = addAppointment;
 exports.updateAppointment = updateAppointment;
 const storage_blob_1 = require("@azure/storage-blob");
@@ -58,6 +60,7 @@ function scheduleBlobName(email) {
     return 'schedules/by-email/' + key + '.json';
 }
 const APPOINTMENTS = 'reflective-supervision/appointments.json';
+const REMINDERS = 'reflective-supervision/reminders.json';
 async function readJson(name, fallback) {
     const blob = container().getBlockBlobClient(name);
     if (!(await blob.exists()))
@@ -174,6 +177,17 @@ async function listAppointments(email) {
 }
 async function listAllAppointments() {
     return readAppointments();
+}
+async function readReminderLog() {
+    const stored = await readJson(REMINDERS, {});
+    return stored && stored.sent ? stored.sent : {};
+}
+async function markReminded(email, day) {
+    return locked(async function () {
+        const sent = await readReminderLog();
+        sent[email.slice(0, 200)] = day;
+        await writeJson(REMINDERS, { sent }, '');
+    });
 }
 async function addAppointment(item) {
     return locked(async function () {

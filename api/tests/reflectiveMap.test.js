@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const { blobs } = require('./fakes');
 
 process.env.EMME_ADMIN_EMAILS = 'boss@emmeco.org';
+process.env.AUTOMATION_API_KEY = 'test-automation-key';
 
 const handler = require('../reflective-supervision/index.js');
 const { blankMap, buildGrowthMapPdf, clientVisitTimes, matchingFolder, monthStanding, plusHour } = require('../dist/reflectiveMap');
@@ -19,9 +20,9 @@ function principal(email) {
   })).toString('base64');
 }
 
-async function call(email, method, query, body) {
+async function call(email, method, query, body, extraHeaders) {
   const context = {};
-  const headers = email ? { 'x-ms-client-principal': principal(email) } : {};
+  const headers = Object.assign({}, email ? { 'x-ms-client-principal': principal(email) } : {}, extraHeaders || {});
   await handler(context, { method, query: query || {}, body, headers });
   return context.res;
 }
@@ -149,7 +150,11 @@ test('a provider can suggest another time and an administrator can confirm it on
   global.fetch = async function (url, options) {
     const text = String(url);
     if (text.includes('/events')) {
-      return new Response(JSON.stringify({ id: 'evt-' + (text.includes(encodeURIComponent(ADMIN)) ? 'admin' : 'provider') }), { status: 201, headers: { 'content-type': 'application/json' } });
+      const who = text.includes('kelly.fitzpatrick') ? 'admin' : 'provider';
+      return new Response(JSON.stringify({ id: 'evt-' + who }), { status: 201, headers: { 'content-type': 'application/json' } });
+    }
+    if (text.includes('Kelly Fitzpatrick') || text.includes('Kelly%20Fitzpatrick')) {
+      return new Response(JSON.stringify({ value: [{ displayName: 'Kelly Fitzpatrick', mail: 'kelly.fitzpatrick@emmeco.org', userPrincipalName: 'kelly.fitzpatrick@emmeco.org' }] }), { status: 200, headers: { 'content-type': 'application/json' } });
     }
     if (text.includes('/sendMail')) return new Response('', { status: 202 });
     return originalFetch(url, options);
@@ -168,6 +173,7 @@ test('a provider can suggest another time and an administrator can confirm it on
     assert.strictEqual(confirmed.body.appointment.start, '2026-12-04T11:00');
     assert.ok(confirmed.body.appointment.adminEventId);
     assert.ok(confirmed.body.appointment.providerEventId);
+    assert.strictEqual(confirmed.body.appointment.adminEmail, 'kelly.fitzpatrick@emmeco.org');
     assert.ok(!JSON.stringify(confirmed.body).includes('I noticed'));
   } finally {
     global.fetch = originalFetch;
@@ -212,4 +218,42 @@ test('the observation folder stays admin-only and still refuses a change without
   assert.strictEqual((await call(null, 'GET', {})).status, 401);
   assert.strictEqual((await call(PROVIDER, 'GET', {})).status, 403);
   assert.strictEqual((await call(ADMIN, 'POST', {})).status, 405);
+});
+
+test('email reminders go to the other providers, not to Kelly and not outside Emme', async () => {
+  reset();
+  const originalFetch = global.fetch;
+  const sent = [];
+  global.fetch = async function (url, options) {
+    const text = decodeURIComponent(String(url));
+    if (text.includes('Kelly Fitzpatrick')) {
+      return new Response(JSON.stringify({ value: [{ displayName: 'Kelly Fitzpatrick', mail: 'kelly.fitzpatrick@emmeco.org', userPrincipalName: 'kelly.fitzpatrick@emmeco.org' }] }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }
+    if (text.includes('/sendMail')) {
+      sent.push(JSON.parse(options.body));
+      return new Response('', { status: 202 });
+    }
+    return originalFetch(url, options);
+  };
+  try {
+    const secret = 'private map sentence that must stay off the email';
+    const map = blankMap(PROVIDER, 'Pat Provider');
+    map.topics[0].e = secret;
+    await call(PROVIDER, 'PUT', { part: 'map' }, { baseUpdatedAt: '', map });
+    await call(ADMIN, 'PUT', { part: 'map', provider: 'kelly.fitzpatrick@emmeco.org' }, { baseUpdatedAt: '', map: blankMap('kelly.fitzpatrick@emmeco.org', 'Kelly Fitzpatrick') });
+    const first = await call(null, 'POST', { part: 'remind' }, {}, { 'x-emme-automation-key': 'test-automation-key' });
+    assert.strictEqual(first.status, 200, JSON.stringify(first.body));
+    const addresses = sent.map((item) => item.message.toRecipients[0].emailAddress.address);
+    assert.ok(addresses.includes(PROVIDER));
+    assert.ok(addresses.includes('kelly.fitzpatrick@emmeco.org'));
+    assert.ok(addresses.every((address) => address.endsWith('@emmeco.org')));
+    assert.ok(!JSON.stringify(sent).includes(secret));
+    assert.ok(!first.body.reminded.some((item) => item.email === 'kelly.fitzpatrick@emmeco.org'));
+    const again = await call(null, 'POST', { part: 'remind' }, {}, { 'x-emme-automation-key': 'test-automation-key' });
+    assert.strictEqual(again.body.reminded.length, 0);
+    assert.strictEqual((await call(null, 'POST', { part: 'remind' }, {})).status, 401);
+  } finally {
+    global.fetch = originalFetch;
+    resetReflectiveOfficeCache();
+  }
 });

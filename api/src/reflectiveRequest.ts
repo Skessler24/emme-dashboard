@@ -1,8 +1,8 @@
-import { resolveIsAdmin, requireUser } from './auth';
+import { automationAuthorized, resolveIsAdmin, requireUser } from './auth';
 import { getUserDisplayName } from './graphClient';
 import { FnContext, HttpRequest, json, methodOf, queryOf, readBody } from './http';
 import { buildGrowthMapPdf, clientVisitTimes, monthStanding, plusHour, validWhen } from './reflectiveMap';
-import { addCalendarEvent, notifyPerson, outlookBlocks, saveReadOnlyCopy } from './reflectiveOffice';
+import { SUPERVISOR_NAME, addCalendarEvent, notifyPerson, outlookBlocks, reflectiveSupervisor, saveReadOnlyCopy } from './reflectiveOffice';
 import {
   Appointment,
   MapConflictError,
@@ -11,7 +11,9 @@ import {
   listAllAppointments,
   listAppointments,
   listProviderEmails,
+  markReminded,
   readMap,
+  readReminderLog,
   readScheduleWorkspace,
   saveMap,
   updateAppointment,
@@ -84,8 +86,23 @@ function fail(context: FnContext, err: unknown): void {
   throw err;
 }
 
+function receivesSupervision(email: string, name: string, supervisorEmail: string): boolean {
+  if (!/^[a-z0-9._+-]+@emmeco\.org$/.test(email)) return false;
+  if (supervisorEmail && email === supervisorEmail) return false;
+  if (name.trim().toLowerCase() === SUPERVISOR_NAME.toLowerCase()) return false;
+  return true;
+}
+
+function daysSince(earlier: string, later: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(earlier) || !/^\d{4}-\d{2}-\d{2}$/.test(later)) return 99;
+  const start = Date.parse(earlier + 'T00:00:00Z');
+  const end = Date.parse(later + 'T00:00:00Z');
+  return Math.round((end - start) / 86400000);
+}
+
 async function placeOnCalendars(item: Appointment): Promise<string> {
   const problems: string[] = [];
+  if (!item.adminEmail) problems.push('Kelly Fitzpatrick’s calendar is not connected yet.');
   if (!item.adminEventId && item.adminEmail) {
     try {
       const id = await addCalendarEvent(item.adminEmail, item.start, item.end);
@@ -105,25 +122,46 @@ async function placeOnCalendars(item: Appointment): Promise<string> {
 }
 
 export async function handleReflectiveRequest(context: FnContext, req: HttpRequest): Promise<void> {
-  const caller = await callerOf(context, req);
-  if (!caller) return;
   const part = queryOf(req, 'part');
   const verb = methodOf(req);
+  if (part === 'remind' && verb === 'POST' && automationAuthorized(req)) {
+    try {
+      await sendDueReminders(context);
+    } catch (err) {
+      fail(context, err);
+    }
+    return;
+  }
+  const caller = await callerOf(context, req);
+  if (!caller) return;
   try {
+    if (part === 'remind' && verb === 'POST') {
+      if (!caller.admin) {
+        json(context, 403, { error: 'Emme Admin access is required' });
+        return;
+      }
+      await sendDueReminders(context);
+      return;
+    }
     if (part === 'providers' && verb === 'GET') {
       if (!caller.admin) {
         json(context, 403, { error: 'Emme Admin access is required' });
         return;
       }
+      const supervisor = await reflectiveSupervisor();
       const emails = await listProviderEmails();
       const today = denverToday();
       const all = await listAllAppointments();
-      const providers = await Promise.all(emails.map(async function (email) {
+      const providers = (await Promise.all(emails.map(async function (email) {
         const mine = all.filter(function (item) { return item.providerEmail === email; });
-        return { email, name: await personName(email, niceName(email)), standing: monthStanding(mine, today) };
-      }));
+        const name = await personName(email, niceName(email));
+        return { email, name, standing: monthStanding(mine, today) };
+      }))).filter(function (person) { return receivesSupervision(person.email, person.name, supervisor.email); });
       providers.sort(function (a, b) { return a.name.localeCompare(b.name); });
-      json(context, 200, { providers });
+      json(context, 200, {
+        providers,
+        supervisor: { name: supervisor.name, email: supervisor.email, error: supervisor.error },
+      });
       return;
     }
 
@@ -145,7 +183,8 @@ export async function handleReflectiveRequest(context: FnContext, req: HttpReque
     if (part === 'map' && verb === 'PUT') {
       const body = readBody(req);
       const saved = await saveMap(email, providerName, body.map, caller.email, String(body.baseUpdatedAt || ''));
-      json(context, 200, { role: caller.admin ? 'admin' : 'provider', me: caller.email, map: saved });
+      const copy = await saveReadOnlyCopy(saved.name || providerName, email, buildGrowthMapPdf(saved));
+      json(context, 200, { role: caller.admin ? 'admin' : 'provider', me: caller.email, map: saved, copy });
       return;
     }
 
@@ -220,11 +259,16 @@ async function changeAppointment(context: FnContext, req: HttpRequest, caller: C
       json(context, 400, { error: 'Enter a start and end in Mountain Time.' });
       return;
     }
+    const supervisor = await reflectiveSupervisor();
+    if (!receivesSupervision(email, providerName, supervisor.email)) {
+      json(context, 400, { error: 'Kelly Fitzpatrick gives reflective supervision. Choose one of the other providers.' });
+      return;
+    }
     const saved = await addAppointment({
       providerEmail: email,
       providerName,
-      adminEmail: caller.email,
-      adminName: caller.name,
+      adminEmail: supervisor.email,
+      adminName: supervisor.name,
       start,
       end,
       suggestedStart: '',
@@ -233,12 +277,15 @@ async function changeAppointment(context: FnContext, req: HttpRequest, caller: C
       providerEventId: '',
       adminEventId: '',
     });
-    const mailWarning = await notifyPerson(
-      caller.email,
-      email,
-      'Reflective supervision time to confirm',
-      'A reflective supervision time was proposed for ' + start.replace('T', ' ') + ' Mountain Time. Open Staff Expectations on the Emme dashboard to accept, decline, or suggest another time.',
-    );
+    const mailed = supervisor.email
+      ? await notifyPerson(
+        supervisor.email,
+        email,
+        'Reflective supervision time to confirm',
+        'Kelly Fitzpatrick proposed a reflective supervision time for ' + start.replace('T', ' ') + ' Mountain Time. Open Staff Expectations on the Emme dashboard to accept, decline, or suggest another time.',
+      )
+      : supervisor.error;
+    const mailWarning = mailed || supervisor.error;
     json(context, 200, { appointment: saved, mailWarning });
     return;
   }
@@ -305,23 +352,83 @@ async function changeAppointment(context: FnContext, req: HttpRequest, caller: C
     return;
   }
 
+  const supervisor = await reflectiveSupervisor();
+  if (supervisor.email) {
+    saved.adminEmail = supervisor.email;
+    saved.adminName = supervisor.name;
+  }
   if (saved.status === 'declined') {
-    mailWarning = await notifyPerson(caller.email, saved.adminEmail, 'Reflective supervision time declined', 'The proposed reflective supervision time was declined. Open Reflective Supervision on the admin dashboard to choose another time.');
+    mailWarning = supervisor.email
+      ? await notifyPerson(supervisor.email, supervisor.email, 'Reflective supervision time declined', saved.providerName + ' declined the proposed reflective supervision time. Open Reflective Supervision on the admin dashboard to choose another time.', true)
+      : supervisor.error;
   } else if (saved.status === 'suggested') {
-    mailWarning = await notifyPerson(caller.email, saved.adminEmail, 'Another reflective supervision time was suggested', 'A different reflective supervision time was suggested: ' + saved.suggestedStart.replace('T', ' ') + ' Mountain Time. Open Reflective Supervision on the admin dashboard to confirm it.');
+    mailWarning = supervisor.email
+      ? await notifyPerson(supervisor.email, supervisor.email, 'Another reflective supervision time was suggested', saved.providerName + ' suggested a different reflective supervision time: ' + saved.suggestedStart.replace('T', ' ') + ' Mountain Time. Open Reflective Supervision on the admin dashboard to confirm it.', true)
+      : supervisor.error;
   } else if ((action === 'accept' || action === 'confirm' || action === 'calendar') && (saved.status === 'accepted' || saved.status === 'confirmed')) {
     calendarWarning = await placeOnCalendars(saved);
-    await updateAppointment(saved.id, function (item) {
-      item.status = saved.status;
-      item.adminEventId = saved.adminEventId;
-      item.providerEventId = saved.providerEventId;
-      item.start = saved.start;
-      item.end = saved.end;
-    });
-    if (saved.status === 'confirmed') {
-      mailWarning = await notifyPerson(saved.adminEmail, saved.providerEmail, 'Reflective supervision is on the calendar', 'The reflective supervision time is confirmed and is on both Outlook calendars: ' + saved.start.replace('T', ' ') + ' Mountain Time.');
-    }
+    if (saved.status === 'confirmed' && supervisor.email) {
+      mailWarning = await notifyPerson(supervisor.email, saved.providerEmail, 'Reflective supervision is on the calendar', 'The reflective supervision time with Kelly Fitzpatrick is confirmed and is on both Outlook calendars: ' + saved.start.replace('T', ' ') + ' Mountain Time.');
+    } else if (!supervisor.email) mailWarning = supervisor.error;
   }
+  await updateAppointment(saved.id, function (item) {
+    item.status = saved.status;
+    item.adminEmail = saved.adminEmail;
+    item.adminName = saved.adminName;
+    item.adminEventId = saved.adminEventId;
+    item.providerEventId = saved.providerEventId;
+    item.start = saved.start;
+    item.end = saved.end;
+  });
 
   json(context, 200, { appointment: saved, mailWarning, calendarWarning });
+}
+
+async function sendDueReminders(context: FnContext): Promise<void> {
+  const supervisor = await reflectiveSupervisor();
+  const today = denverToday();
+  const log = await readReminderLog();
+  const reminded: Array<{ email: string; name: string; about: string }> = [];
+  if (!supervisor.email) {
+    json(context, 200, { reminded, mailWarning: supervisor.error, supervisor: supervisor.name });
+    return;
+  }
+  const emails = await listProviderEmails();
+  const all = await listAllAppointments();
+  const waitingForKelly: string[] = [];
+  let mailWarning = '';
+  for (let i = 0; i < emails.length; i++) {
+    const email = emails[i];
+    const name = await personName(email, niceName(email));
+    if (!receivesSupervision(email, name, supervisor.email)) continue;
+    const mine = all.filter(function (item) { return item.providerEmail === email; });
+    const standing = monthStanding(mine, today);
+    const open = mine.find(function (item) {
+      return item.status === 'proposed' || item.status === 'suggested' || item.status === 'accepted';
+    });
+    if (open && open.status !== 'proposed') {
+      const when = (open.suggestedStart || open.start).replace('T', ' ');
+      waitingForKelly.push(name + ' — ' + open.status + ' ' + when + ' Mountain Time');
+      continue;
+    }
+    let about = '';
+    if (open && open.status === 'proposed') {
+      about = 'A reflective supervision time with Kelly Fitzpatrick is waiting for your answer: ' + open.start.replace('T', ' ') + ' Mountain Time. Open Staff Expectations on the Emme dashboard.';
+    } else if (standing.short === 'Still needed' || standing.short === 'Behind') {
+      about = 'This month’s reflective supervision session with Kelly Fitzpatrick is ' + standing.short.toLowerCase() + '. Open Staff Expectations on the Emme dashboard.';
+    }
+    if (!about || daysSince(log[email] || '', today) < 7) continue;
+    mailWarning = await notifyPerson(supervisor.email, email, 'Reflective supervision reminder', about);
+    if (mailWarning) break;
+    await markReminded(email, today);
+    reminded.push({ email, name, about });
+  }
+  const summaryKey = 'summary:' + supervisor.email;
+  if (!mailWarning && (reminded.length || waitingForKelly.length) && daysSince(log[summaryKey] || '', today) >= 7) {
+    const lines = reminded.map(function (item) { return item.name + ' — ' + item.about; });
+    const text = ['Reflective supervision reminders for this week.'].concat(lines, waitingForKelly).join('\n');
+    mailWarning = await notifyPerson(supervisor.email, supervisor.email, 'Reflective supervision reminders', text, true);
+    if (!mailWarning) await markReminded(summaryKey, today);
+  }
+  json(context, 200, { reminded, waitingForKelly, mailWarning, supervisor: supervisor.name });
 }

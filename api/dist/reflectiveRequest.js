@@ -70,8 +70,26 @@ function fail(context, err) {
     }
     throw err;
 }
+function receivesSupervision(email, name, supervisorEmail) {
+    if (!/^[a-z0-9._+-]+@emmeco\.org$/.test(email))
+        return false;
+    if (supervisorEmail && email === supervisorEmail)
+        return false;
+    if (name.trim().toLowerCase() === reflectiveOffice_1.SUPERVISOR_NAME.toLowerCase())
+        return false;
+    return true;
+}
+function daysSince(earlier, later) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(earlier) || !/^\d{4}-\d{2}-\d{2}$/.test(later))
+        return 99;
+    const start = Date.parse(earlier + 'T00:00:00Z');
+    const end = Date.parse(later + 'T00:00:00Z');
+    return Math.round((end - start) / 86400000);
+}
 async function placeOnCalendars(item) {
     const problems = [];
+    if (!item.adminEmail)
+        problems.push('Kelly Fitzpatrick’s calendar is not connected yet.');
     if (!item.adminEventId && item.adminEmail) {
         try {
             const id = await (0, reflectiveOffice_1.addCalendarEvent)(item.adminEmail, item.start, item.end);
@@ -100,26 +118,48 @@ async function placeOnCalendars(item) {
     return problems.join(' ');
 }
 async function handleReflectiveRequest(context, req) {
+    const part = (0, http_1.queryOf)(req, 'part');
+    const verb = (0, http_1.methodOf)(req);
+    if (part === 'remind' && verb === 'POST' && (0, auth_1.automationAuthorized)(req)) {
+        try {
+            await sendDueReminders(context);
+        }
+        catch (err) {
+            fail(context, err);
+        }
+        return;
+    }
     const caller = await callerOf(context, req);
     if (!caller)
         return;
-    const part = (0, http_1.queryOf)(req, 'part');
-    const verb = (0, http_1.methodOf)(req);
     try {
+        if (part === 'remind' && verb === 'POST') {
+            if (!caller.admin) {
+                (0, http_1.json)(context, 403, { error: 'Emme Admin access is required' });
+                return;
+            }
+            await sendDueReminders(context);
+            return;
+        }
         if (part === 'providers' && verb === 'GET') {
             if (!caller.admin) {
                 (0, http_1.json)(context, 403, { error: 'Emme Admin access is required' });
                 return;
             }
+            const supervisor = await (0, reflectiveOffice_1.reflectiveSupervisor)();
             const emails = await (0, reflectiveStore_1.listProviderEmails)();
             const today = denverToday();
             const all = await (0, reflectiveStore_1.listAllAppointments)();
-            const providers = await Promise.all(emails.map(async function (email) {
+            const providers = (await Promise.all(emails.map(async function (email) {
                 const mine = all.filter(function (item) { return item.providerEmail === email; });
-                return { email, name: await personName(email, niceName(email)), standing: (0, reflectiveMap_1.monthStanding)(mine, today) };
-            }));
+                const name = await personName(email, niceName(email));
+                return { email, name, standing: (0, reflectiveMap_1.monthStanding)(mine, today) };
+            }))).filter(function (person) { return receivesSupervision(person.email, person.name, supervisor.email); });
             providers.sort(function (a, b) { return a.name.localeCompare(b.name); });
-            (0, http_1.json)(context, 200, { providers });
+            (0, http_1.json)(context, 200, {
+                providers,
+                supervisor: { name: supervisor.name, email: supervisor.email, error: supervisor.error },
+            });
             return;
         }
         const requested = (0, http_1.queryOf)(req, 'provider') || String((0, http_1.readBody)(req).provider || '');
@@ -139,7 +179,8 @@ async function handleReflectiveRequest(context, req) {
         if (part === 'map' && verb === 'PUT') {
             const body = (0, http_1.readBody)(req);
             const saved = await (0, reflectiveStore_1.saveMap)(email, providerName, body.map, caller.email, String(body.baseUpdatedAt || ''));
-            (0, http_1.json)(context, 200, { role: caller.admin ? 'admin' : 'provider', me: caller.email, map: saved });
+            const copy = await (0, reflectiveOffice_1.saveReadOnlyCopy)(saved.name || providerName, email, (0, reflectiveMap_1.buildGrowthMapPdf)(saved));
+            (0, http_1.json)(context, 200, { role: caller.admin ? 'admin' : 'provider', me: caller.email, map: saved, copy });
             return;
         }
         if (part === 'pdf' && verb === 'GET') {
@@ -208,11 +249,16 @@ async function changeAppointment(context, req, caller, email, providerName) {
             (0, http_1.json)(context, 400, { error: 'Enter a start and end in Mountain Time.' });
             return;
         }
+        const supervisor = await (0, reflectiveOffice_1.reflectiveSupervisor)();
+        if (!receivesSupervision(email, providerName, supervisor.email)) {
+            (0, http_1.json)(context, 400, { error: 'Kelly Fitzpatrick gives reflective supervision. Choose one of the other providers.' });
+            return;
+        }
         const saved = await (0, reflectiveStore_1.addAppointment)({
             providerEmail: email,
             providerName,
-            adminEmail: caller.email,
-            adminName: caller.name,
+            adminEmail: supervisor.email,
+            adminName: supervisor.name,
             start,
             end,
             suggestedStart: '',
@@ -221,7 +267,10 @@ async function changeAppointment(context, req, caller, email, providerName) {
             providerEventId: '',
             adminEventId: '',
         });
-        const mailWarning = await (0, reflectiveOffice_1.notifyPerson)(caller.email, email, 'Reflective supervision time to confirm', 'A reflective supervision time was proposed for ' + start.replace('T', ' ') + ' Mountain Time. Open Staff Expectations on the Emme dashboard to accept, decline, or suggest another time.');
+        const mailed = supervisor.email
+            ? await (0, reflectiveOffice_1.notifyPerson)(supervisor.email, email, 'Reflective supervision time to confirm', 'Kelly Fitzpatrick proposed a reflective supervision time for ' + start.replace('T', ' ') + ' Mountain Time. Open Staff Expectations on the Emme dashboard to accept, decline, or suggest another time.')
+            : supervisor.error;
+        const mailWarning = mailed || supervisor.error;
         (0, http_1.json)(context, 200, { appointment: saved, mailWarning });
         return;
     }
@@ -291,24 +340,90 @@ async function changeAppointment(context, req, caller, email, providerName) {
         (0, http_1.json)(context, 404, { error: 'That appointment was not found.' });
         return;
     }
+    const supervisor = await (0, reflectiveOffice_1.reflectiveSupervisor)();
+    if (supervisor.email) {
+        saved.adminEmail = supervisor.email;
+        saved.adminName = supervisor.name;
+    }
     if (saved.status === 'declined') {
-        mailWarning = await (0, reflectiveOffice_1.notifyPerson)(caller.email, saved.adminEmail, 'Reflective supervision time declined', 'The proposed reflective supervision time was declined. Open Reflective Supervision on the admin dashboard to choose another time.');
+        mailWarning = supervisor.email
+            ? await (0, reflectiveOffice_1.notifyPerson)(supervisor.email, supervisor.email, 'Reflective supervision time declined', saved.providerName + ' declined the proposed reflective supervision time. Open Reflective Supervision on the admin dashboard to choose another time.', true)
+            : supervisor.error;
     }
     else if (saved.status === 'suggested') {
-        mailWarning = await (0, reflectiveOffice_1.notifyPerson)(caller.email, saved.adminEmail, 'Another reflective supervision time was suggested', 'A different reflective supervision time was suggested: ' + saved.suggestedStart.replace('T', ' ') + ' Mountain Time. Open Reflective Supervision on the admin dashboard to confirm it.');
+        mailWarning = supervisor.email
+            ? await (0, reflectiveOffice_1.notifyPerson)(supervisor.email, supervisor.email, 'Another reflective supervision time was suggested', saved.providerName + ' suggested a different reflective supervision time: ' + saved.suggestedStart.replace('T', ' ') + ' Mountain Time. Open Reflective Supervision on the admin dashboard to confirm it.', true)
+            : supervisor.error;
     }
     else if ((action === 'accept' || action === 'confirm' || action === 'calendar') && (saved.status === 'accepted' || saved.status === 'confirmed')) {
         calendarWarning = await placeOnCalendars(saved);
-        await (0, reflectiveStore_1.updateAppointment)(saved.id, function (item) {
-            item.status = saved.status;
-            item.adminEventId = saved.adminEventId;
-            item.providerEventId = saved.providerEventId;
-            item.start = saved.start;
-            item.end = saved.end;
-        });
-        if (saved.status === 'confirmed') {
-            mailWarning = await (0, reflectiveOffice_1.notifyPerson)(saved.adminEmail, saved.providerEmail, 'Reflective supervision is on the calendar', 'The reflective supervision time is confirmed and is on both Outlook calendars: ' + saved.start.replace('T', ' ') + ' Mountain Time.');
+        if (saved.status === 'confirmed' && supervisor.email) {
+            mailWarning = await (0, reflectiveOffice_1.notifyPerson)(supervisor.email, saved.providerEmail, 'Reflective supervision is on the calendar', 'The reflective supervision time with Kelly Fitzpatrick is confirmed and is on both Outlook calendars: ' + saved.start.replace('T', ' ') + ' Mountain Time.');
         }
+        else if (!supervisor.email)
+            mailWarning = supervisor.error;
     }
+    await (0, reflectiveStore_1.updateAppointment)(saved.id, function (item) {
+        item.status = saved.status;
+        item.adminEmail = saved.adminEmail;
+        item.adminName = saved.adminName;
+        item.adminEventId = saved.adminEventId;
+        item.providerEventId = saved.providerEventId;
+        item.start = saved.start;
+        item.end = saved.end;
+    });
     (0, http_1.json)(context, 200, { appointment: saved, mailWarning, calendarWarning });
+}
+async function sendDueReminders(context) {
+    const supervisor = await (0, reflectiveOffice_1.reflectiveSupervisor)();
+    const today = denverToday();
+    const log = await (0, reflectiveStore_1.readReminderLog)();
+    const reminded = [];
+    if (!supervisor.email) {
+        (0, http_1.json)(context, 200, { reminded, mailWarning: supervisor.error, supervisor: supervisor.name });
+        return;
+    }
+    const emails = await (0, reflectiveStore_1.listProviderEmails)();
+    const all = await (0, reflectiveStore_1.listAllAppointments)();
+    const waitingForKelly = [];
+    let mailWarning = '';
+    for (let i = 0; i < emails.length; i++) {
+        const email = emails[i];
+        const name = await personName(email, niceName(email));
+        if (!receivesSupervision(email, name, supervisor.email))
+            continue;
+        const mine = all.filter(function (item) { return item.providerEmail === email; });
+        const standing = (0, reflectiveMap_1.monthStanding)(mine, today);
+        const open = mine.find(function (item) {
+            return item.status === 'proposed' || item.status === 'suggested' || item.status === 'accepted';
+        });
+        if (open && open.status !== 'proposed') {
+            const when = (open.suggestedStart || open.start).replace('T', ' ');
+            waitingForKelly.push(name + ' — ' + open.status + ' ' + when + ' Mountain Time');
+            continue;
+        }
+        let about = '';
+        if (open && open.status === 'proposed') {
+            about = 'A reflective supervision time with Kelly Fitzpatrick is waiting for your answer: ' + open.start.replace('T', ' ') + ' Mountain Time. Open Staff Expectations on the Emme dashboard.';
+        }
+        else if (standing.short === 'Still needed' || standing.short === 'Behind') {
+            about = 'This month’s reflective supervision session with Kelly Fitzpatrick is ' + standing.short.toLowerCase() + '. Open Staff Expectations on the Emme dashboard.';
+        }
+        if (!about || daysSince(log[email] || '', today) < 7)
+            continue;
+        mailWarning = await (0, reflectiveOffice_1.notifyPerson)(supervisor.email, email, 'Reflective supervision reminder', about);
+        if (mailWarning)
+            break;
+        await (0, reflectiveStore_1.markReminded)(email, today);
+        reminded.push({ email, name, about });
+    }
+    const summaryKey = 'summary:' + supervisor.email;
+    if (!mailWarning && (reminded.length || waitingForKelly.length) && daysSince(log[summaryKey] || '', today) >= 7) {
+        const lines = reminded.map(function (item) { return item.name + ' — ' + item.about; });
+        const text = ['Reflective supervision reminders for this week.'].concat(lines, waitingForKelly).join('\n');
+        mailWarning = await (0, reflectiveOffice_1.notifyPerson)(supervisor.email, supervisor.email, 'Reflective supervision reminders', text, true);
+        if (!mailWarning)
+            await (0, reflectiveStore_1.markReminded)(summaryKey, today);
+    }
+    (0, http_1.json)(context, 200, { reminded, waitingForKelly, mailWarning, supervisor: supervisor.name });
 }

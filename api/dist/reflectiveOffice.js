@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SUPERVISOR_NAME = void 0;
 exports.resetReflectiveOfficeCache = resetReflectiveOfficeCache;
 exports.saveReadOnlyCopy = saveReadOnlyCopy;
 exports.addCalendarEvent = addCalendarEvent;
+exports.reflectiveSupervisor = reflectiveSupervisor;
 exports.notifyPerson = notifyPerson;
 exports.outlookBlocks = outlookBlocks;
 const graphClient_1 = require("./graphClient");
@@ -12,9 +14,14 @@ const reflectiveMap_1 = require("./reflectiveMap");
  * Calendar events and emails say that a meeting exists. They do not include what was said.
  */
 const SHARE_URL = 'https://emmeco031.sharepoint.com/:f:/s/Emmeteam/IgC76zwHwa13Rp6tgPf4ysldAf8v9GKA9LPp1ML4qvUVUl8?e=4J5wWy';
+/** Kelly gives reflective supervision. Every other provider receives it. */
+exports.SUPERVISOR_NAME = 'Kelly Fitzpatrick';
+const SUPERVISOR_WAITING = 'Kelly Fitzpatrick’s mailbox could not be opened yet. Email and her calendar will start after Microsoft permission is granted.';
 let shareCache = null;
+let supervisorCache = null;
 function resetReflectiveOfficeCache() {
     shareCache = null;
+    supervisorCache = null;
 }
 function shareId(url) {
     return 'u!' + Buffer.from(url, 'utf8').toString('base64').replace(/=+$/g, '').replace(/\//g, '_').replace(/\+/g, '-');
@@ -81,8 +88,32 @@ async function addCalendarEvent(email, start, end) {
     });
     return String(data && data.id || '');
 }
-async function notifyPerson(fromEmail, toEmail, subject, text) {
-    if (!fromEmail || !toEmail || fromEmail === toEmail)
+async function reflectiveSupervisor() {
+    if (supervisorCache && supervisorCache.expires > Date.now()) {
+        return { email: supervisorCache.email, name: exports.SUPERVISOR_NAME, error: supervisorCache.error };
+    }
+    try {
+        const filter = encodeURIComponent("displayName eq 'Kelly Fitzpatrick'");
+        const data = await (0, graphClient_1.graphGet)('/users?$filter=' + filter + '&$select=displayName,mail,userPrincipalName&$top=5');
+        const rows = (data && data.value) || [];
+        const match = rows.find(function (row) {
+            return String(row && row.displayName || '').trim().toLowerCase() === exports.SUPERVISOR_NAME.toLowerCase();
+        });
+        const email = String(match && (match.mail || match.userPrincipalName) || '').trim().toLowerCase();
+        if (!match || !/^[a-z0-9._+-]+@emmeco\.org$/.test(email)) {
+            supervisorCache = { email: '', error: SUPERVISOR_WAITING, expires: Date.now() + 60 * 1000 };
+            return { email: '', name: exports.SUPERVISOR_NAME, error: SUPERVISOR_WAITING };
+        }
+        supervisorCache = { email, error: '', expires: Date.now() + 10 * 60 * 1000 };
+        return { email, name: exports.SUPERVISOR_NAME, error: '' };
+    }
+    catch (_) {
+        supervisorCache = { email: '', error: SUPERVISOR_WAITING, expires: Date.now() + 60 * 1000 };
+        return { email: '', name: exports.SUPERVISOR_NAME, error: SUPERVISOR_WAITING };
+    }
+}
+async function notifyPerson(fromEmail, toEmail, subject, text, allowSelf) {
+    if (!fromEmail || !toEmail || (fromEmail === toEmail && !allowSelf))
         return '';
     try {
         await (0, graphClient_1.graphSend)('/users/' + encodeURIComponent(fromEmail) + '/sendMail', {
