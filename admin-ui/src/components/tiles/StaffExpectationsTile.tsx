@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, type Row } from '../../api';
 import { DataTable } from '../DataTable';
 import { TileWithSetup } from '../setup/TileSetup';
-import { ExpectationsBoard } from './ExpectationsBoard';
+import { ExpectationsBoard, type ExpectationsPart } from './ExpectationsBoard';
 
 type SummaryFile = {
   employee: string;
@@ -48,6 +48,7 @@ function StaffExpectationsOverview() {
   const [compliance, setCompliance] = useState<Row[]>([]);
   const [error, setError] = useState('');
   const [mileageNote, setMileageNote] = useState('');
+  const [part, setPart] = useState<ExpectationsPart>('mileage');
 
   function loadLists() {
     Promise.all([
@@ -99,30 +100,40 @@ function StaffExpectationsOverview() {
   }
 
   const week = latestWeek(compliance);
+  const tabs: Array<{ id: ExpectationsPart; label: string; tone: string }> = [
+    { id: 'mileage', label: 'Mileage', tone: 'green' },
+    { id: 'notes', label: 'Open notes', tone: 'yellow' },
+    { id: 'evals', label: 'Evaluations', tone: 'pink' },
+    { id: 'cancellations', label: 'Cancellations', tone: 'blue' },
+    { id: 'schedules', label: 'Schedules', tone: 'green' },
+  ];
 
   return (
     <section>
       <h1>Staff expectations</h1>
       <p className="lede">
-        Openings come straight from each provider’s schedule in the app, so they are current the moment a provider saves.
-        The mileage address check, trip table, open notes, and cancellation review are first. The lists underneath are the workbook, the cancellations list, and the weekly counts.
+        Each list has its own tab. Mileage is checked for the provider you choose, using that provider’s map and the client’s address.
       </p>
       {error ? <p className="error">{error}</p> : null}
-      <ExpectationsBoard />
-      <h2>Openings</h2>
-      <DataTable
-        rows={openings}
-        empty="No provider schedules yet. They appear after a provider saves a schedule."
-        columns={[
-          { key: 'employee', label: 'Staff' },
-          { key: 'date', label: 'Date' },
-          { key: 'day', label: 'Day' },
-          { key: 'time', label: 'Time' },
-          { key: 'status', label: 'Status' },
-        ]}
-      />
-      <h2>Mileage</h2>
-      <p className="muted">Each provider’s mileage form is in SharePoint under Payroll & Mileage. A nightly check adds a row when the client is marked In person, the visit is on the provider’s Outlook calendar, and IntakeQ shows the appointment happened. Confirm a row when it is ready for billing. Travel outside 5 straight-line miles is approved or denied in the section above.</p>
+      <nav className="exp-tabs" aria-label="Staff expectation lists">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={'exp-tab exp-tab--' + tab.tone + (part === tab.id ? ' is-on' : '')}
+            aria-current={part === tab.id ? 'page' : undefined}
+            onClick={() => setPart(tab.id)}
+          >
+            <span aria-hidden="true" />
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+      <ExpectationsBoard part={part} />
+      {part === 'mileage' ? (
+      <section className="exp-panel">
+      <h2 className="exp-heading exp-heading--green"><i aria-hidden="true" />Mileage ready for billing</h2>
+      <p className="muted">Each provider’s mileage form is in SharePoint under Payroll & Mileage. A nightly check adds a row when the client is marked In person, the visit is on the provider’s Outlook calendar, and IntakeQ shows the appointment happened. Confirm a row when it is ready for billing.</p>
       {mileageNote ? <p className="error">{mileageNote}</p> : null}
       {mileage.length === 0 ? <p className="empty">No mileage yet. It appears after a provider marks a client In person, enters average miles, and both Outlook and IntakeQ show the visit.</p> : (
         <div className="table-wrap">
@@ -153,11 +164,32 @@ function StaffExpectationsOverview() {
           </table>
         </div>
       )}
-      <h2>Cancellations</h2>
+      </section>
+      ) : null}
+      {part === 'cancellations' ? (
+      <section className="exp-panel">
+      <h2 className="exp-heading exp-heading--blue"><i aria-hidden="true" />Every stored cancellation</h2>
       <p className="muted">These rows are kept for the quarterly productivity review. A scheduled check copies cancellations from IntakeQ into the Cancellations list. The review above applies the attendance rules. This table is every stored cancellation.</p>
       <DataTable rows={cancellations} empty="No cancellations stored yet." columns={[{ key: 'StaffName', label: 'Staff' }, { key: 'AppointmentDate', label: 'When' }, { key: 'Status', label: 'Status' }, { key: 'ClientName', label: 'Client' }, { key: 'ServiceName', label: 'Service' }]} />
-      <h2>Documentation</h2>
-      <p className="muted">Notes are expected to be locked within 48 hours of the session. Evaluations and reports follow the end of the week. The table below is the weekly counts. Note text stays in IntakeQ. The open list above is the live check.</p>
+      </section>
+      ) : null}
+      {part === 'schedules' ? (
+      <section className="exp-panel">
+      <h2 className="exp-heading exp-heading--green"><i aria-hidden="true" />Openings</h2>
+      <p className="muted">Openings come straight from each provider’s schedule in the app, so they are current the moment a provider saves.</p>
+      <DataTable
+        rows={openings}
+        empty="No provider schedules yet. They appear after a provider saves a schedule."
+        columns={[
+          { key: 'employee', label: 'Staff' },
+          { key: 'date', label: 'Date' },
+          { key: 'day', label: 'Day' },
+          { key: 'time', label: 'Time' },
+          { key: 'status', label: 'Status' },
+        ]}
+      />
+      <h2 className="exp-heading exp-heading--yellow"><i aria-hidden="true" />Weekly counts</h2>
+      <p className="muted">Notes are expected to be locked within 48 hours of the session. Evaluations and reports follow the end of the week. The table below is the weekly counts. Note text stays in IntakeQ.</p>
       <div className="panel" role="note" aria-label="Evaluation and report counts">
         {week ? (
           <p>Week of {week.week}: {countLabel(week.notes, 'open note', 'open notes')}, {countLabel(week.evals, 'open evaluation', 'open evaluations')}, {countLabel(week.reports, 'open report', 'open reports')}.</p>
@@ -167,8 +199,10 @@ function StaffExpectationsOverview() {
         <p className="muted">An open evaluation or report that is still open after Friday of its week is past the end of the week. Finished ones are recorded above for the UNICORN portal or the Medicaid PAR fax.</p>
       </div>
       <DataTable rows={compliance} empty="No weekly documentation summary yet." columns={[{ key: 'StaffName', label: 'Staff' }, { key: 'WeekOf', label: 'Week' }, { key: 'OpenNotes', label: 'Open notes' }, { key: 'OpenEvals', label: 'Open evals' }, { key: 'OpenReports', label: 'Open reports' }]} />
-      <h2>Reminders</h2>
-      <p className="muted">The email check, open notes, travel outside 5 miles, and too many cancellations show on this page. A Power Automate flow sends the matching email at 6:00 AM Denver time. This website does not run its own timer.</p>
+      <h2 className="exp-heading exp-heading--blue"><i aria-hidden="true" />Reminders</h2>
+      <p className="muted">The email check, open notes, travel outside a provider’s map, and too many cancellations show on this page. A Power Automate flow sends the matching email at 6:00 AM Denver time. This website does not run its own timer.</p>
+      </section>
+      ) : null}
     </section>
   );
 }

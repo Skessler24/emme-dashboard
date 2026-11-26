@@ -44,6 +44,51 @@ export function outsideZone(miles: number): boolean {
   return Number.isFinite(miles) && miles > ZONE_MILES;
 }
 
+export function mapIdFromLink(link: string): string {
+  const match = String(link || '').match(/[?&]mid=([^&#]+)/i);
+  if (!match) return '';
+  try { return decodeURIComponent(match[1]); } catch (_) { return match[1]; }
+}
+
+export function pointInRing(lat: number, lon: number, ring: Array<{ lat: number; lon: number }>): boolean {
+  if (!ring || ring.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const yi = ring[i].lat;
+    const xi = ring[i].lon;
+    const yj = ring[j].lat;
+    const xj = ring[j].lon;
+    const crosses = (yi > lat) !== (yj > lat);
+    if (crosses && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function coordinatePair(token: string): { lat: number; lon: number } | null {
+  const parts = token.split(',');
+  const lon = Number(parts[0]);
+  const lat = Number(parts[1]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { lat, lon };
+}
+
+/** Reads the drawn area and the pins from a Google My Map export. */
+export function parseMapKml(kml: string): { polygons: Array<Array<{ lat: number; lon: number }>>; points: Array<{ lat: number; lon: number }> } {
+  const polygons: Array<Array<{ lat: number; lon: number }>> = [];
+  const points: Array<{ lat: number; lon: number }> = [];
+  String(kml || '').split(/<Placemark\b/i).slice(1).forEach(function (chunk) {
+    const body = chunk.split(/<\/Placemark>/i)[0] || '';
+    const found = body.match(/<coordinates>([\s\S]*?)<\/coordinates>/i);
+    if (!found) return;
+    const pairs = found[1].trim().split(/\s+/).map(coordinatePair).filter(function (pair): pair is { lat: number; lon: number } {
+      return !!pair;
+    });
+    if (/<Polygon\b/i.test(body) && pairs.length >= 3) polygons.push(pairs);
+    else if (/<Point\b/i.test(body) && pairs.length) points.push(pairs[0]);
+  });
+  return { polygons, points };
+}
+
 export function mileageRatio(miles: number, hours: number): number | null {
   if (!Number.isFinite(miles) || !Number.isFinite(hours) || hours <= 0) return null;
   return Math.round((miles / hours) * 100) / 100;

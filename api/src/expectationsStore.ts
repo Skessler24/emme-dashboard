@@ -13,8 +13,8 @@ const BLOB = 'expectations/staff-board.json';
 
 export type HomeRecord = {
   address: string;
-  lat: number;
-  lon: number;
+  lat: number | null;
+  lon: number | null;
   mapLink: string;
   name: string;
 };

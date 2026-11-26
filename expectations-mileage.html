@@ -11,7 +11,15 @@
     body { margin: 0; font-family: Inter, "Segoe UI", sans-serif; color: var(--green); background: #fef7fc; }
     header { background: var(--green); color: #fff; padding: 0.9rem 1.2rem; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
     header a { color: #fff; }
-    h1, h2 { font-family: Comfortaa, cursive; }
+    h1, h2, h3 { font-family: Comfortaa, cursive; display: flex; align-items: center; gap: 0.5rem; }
+    h2::before, h3::before { content: ''; width: 0.65rem; height: 1.05rem; border-radius: 999px; background: var(--green); flex: 0 0 auto; }
+    h2.yellow::before, h3.yellow::before { background: #ffca34; }
+    h2.pink::before { background: #dd9fa3; }
+    h2.blue::before, h3.blue::before { background: #38b4fe; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.4rem 0 1rem; }
+    .tabs button { background: #fff; color: var(--green); border: 1px solid var(--line); }
+    .tabs button.is-on { background: var(--green); color: #fff; }
+    .panel-block { background: #fff; border: 1px solid var(--line); border-radius: 0.9rem; padding: 0.9rem 1rem; margin: 0 0 0.8rem; }
     main { max-width: 52rem; margin: 0 auto; padding: 1.2rem; }
     .muted { color: var(--muted); }
     .error { color: #8a3040; font-weight: 600; }
@@ -39,18 +47,25 @@
   </header>
   <main>
     <h1>Mileage</h1>
-    <p class="muted">Save your home address, check whether a client is inside 5 straight-line miles, and keep the trip table. An administrator sees the same information and approves travel outside the range.</p>
+    <p class="muted">Choose a tab. The visit check uses your map and the client’s address. A home address is optional.</p>
+    <nav class="tabs" aria-label="Mileage sections">
+      <button type="button" class="is-on" data-panel="visit">Mileage</button>
+      <button type="button" data-panel="notes">Open notes</button>
+      <button type="button" data-panel="evals">Evaluations</button>
+      <button type="button" data-panel="cancellations">Cancellations</button>
+    </nav>
     <p id="error" class="error"></p>
     <p id="notice" class="muted"></p>
     <section class="exp-email" id="exp-email">
       <label class="exp-check"><input type="checkbox" id="exp-email-box" /> <span>Did you check and reply to your emails today?</span></label>
       <p class="muted" id="exp-email-note">This resets each morning. It does not open your inbox.</p>
     </section>
+    <div class="panel-block" data-panel="visit">
     <h2>Can this visit be in person?</h2>
     <form id="home-form" class="row">
-      <label>Home address<input id="home-address" required /></label>
+      <label>Home address, optional<input id="home-address" placeholder="Only if the map has no drawn area" /></label>
       <label>Map link<input id="map-link" placeholder="https://" /></label>
-      <button type="submit">Save home</button>
+      <button type="submit">Save map</button>
     </form>
     <p id="map-open"></p>
     <form id="zone-form" class="row">
@@ -75,20 +90,27 @@
     </form>
     <p id="ratio"></p>
     <div class="panel"><table id="trips"><thead><tr><th>Date</th><th>Starting location</th><th>Ending location</th><th>Miles</th></tr></thead><tbody></tbody></table></div>
-    <h2>Open notes</h2>
+    </div>
+    <div class="panel-block" data-panel="notes" hidden>
+    <h2 class="yellow">Open notes</h2>
     <p class="muted">Notes still open more than 48 hours after the note date. You see only your own. Note text stays in IntakeQ.</p>
     <button class="ghost" type="button" id="refresh-btn">Refresh from IntakeQ</button>
     <div id="notes"></div>
-    <h2>Evaluations and reports</h2>
+    </div>
+    <div class="panel-block" data-panel="evals" hidden>
+    <h2 class="pink">Evaluations and reports</h2>
     <p class="muted">These follow the end of the week. Saturday means Friday of that week has passed. An administrator records the UNICORN portal or the Medicaid PAR fax when one is finished.</p>
-    <h3>Open evaluations</h3>
+    <h3 class="pink">Open evaluations</h3>
     <div id="evals"></div>
-    <h3>Open reports</h3>
+    <h3 class="blue">Open reports</h3>
     <div id="reports"></div>
-    <h2>Cancellations</h2>
+    </div>
+    <div class="panel-block" data-panel="cancellations" hidden>
+    <h2 class="blue">Cancellations</h2>
     <p class="muted">A cancellation counts when it was not rescheduled. A no-show or a late cancellation is an attendance incident. You see only your own. An administrator sends the family email or calls.</p>
     <label>Filter by client<input id="filter" /></label>
     <div id="clients"></div>
+    </div>
   </main>
   <script>
     (function () {
@@ -251,14 +273,14 @@
           box.hidden = false;
           box.innerHTML = '';
           var line = document.createElement('p');
-          line.textContent = result.miles + ' straight-line miles. ' + (result.outside ? 'This address is outside the 5-mile range.' : 'This address is inside the 5-mile range.');
+          line.textContent = result.detail || (result.outside ? 'This address is outside the provider’s range.' : 'This address is inside the provider’s range.');
           box.appendChild(line);
           if (result.outside) {
             var button = document.createElement('button');
             button.type = 'button';
             button.textContent = 'Send for admin approval';
             button.addEventListener('click', function () {
-              api('POST', { action: 'expectations-approval', clientAddress: address, miles: result.miles })
+              api('POST', { action: 'expectations-approval', clientAddress: address, miles: result.miles, measure: result.measure, outside: true })
                 .then(function () { notice('Sent for administrator approval.'); })
                 .catch(function (err) { error(err.message); });
             });
@@ -286,6 +308,13 @@
         api('POST', { action: 'expectations-copy' }).then(function () { notice('Read-only copy saved in Payroll & Mileage.'); }).catch(function (err) { error(err.message); });
       });
       document.getElementById('refresh-btn').addEventListener('click', function () { load(); });
+      document.querySelectorAll('.tabs button').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var name = button.getAttribute('data-panel');
+          document.querySelectorAll('.tabs button').forEach(function (item) { item.classList.toggle('is-on', item === button); });
+          document.querySelectorAll('.panel-block').forEach(function (panel) { panel.hidden = panel.getAttribute('data-panel') !== name; });
+        });
+      });
       document.getElementById('filter').addEventListener('input', function () { if (state.data) paintClients(state.data); });
       document.getElementById('exp-email-box').addEventListener('change', function (event) {
         var checked = event.target.checked;

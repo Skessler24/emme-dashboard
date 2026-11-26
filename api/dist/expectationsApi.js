@@ -10,6 +10,7 @@ const sharepointService_1 = require("./sharepointService");
 const expectationsRules_1 = require("./expectationsRules");
 const expectationsStore_1 = require("./expectationsStore");
 const expectationsZone_1 = require("./expectationsZone");
+const schedulingService_1 = require("./schedulingService");
 function clip(value, max) {
     return String(value == null ? '' : value).replace(/\u0000/g, '').trim().slice(0, max);
 }
@@ -41,6 +42,42 @@ function publicHome(state, email) {
     if (!home)
         return null;
     return { address: home.address, mapLink: home.mapLink, saved: true };
+}
+function readableName(email, saved) {
+    const name = String(saved || '').trim();
+    if (name && name.indexOf('@') === -1)
+        return name;
+    const local = email.split('@')[0] || email;
+    return local.split(/[._-]+/).filter(Boolean).map(function (part) {
+        return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+}
+async function providerChoices(state, email, isAdmin) {
+    const byEmail = new Map();
+    function add(addressEmail, savedName) {
+        const key = emailOf(addressEmail);
+        if (!key)
+            return;
+        const home = state.homes[key];
+        const current = byEmail.get(key);
+        const name = readableName(key, (home && home.name) || savedName || (current && current.name) || '');
+        byEmail.set(key, {
+            email: key,
+            name,
+            address: home ? home.address : '',
+            mapLink: home ? home.mapLink : '',
+        });
+    }
+    if (isAdmin) {
+        try {
+            const loaded = await (0, schedulingService_1.loadStaffWorkspaces)();
+            loaded.workspaces.forEach(function (row) { add(row.email, ''); });
+        }
+        catch (_) { /* schedules are optional; saved maps still show */ }
+        Object.keys(state.homes).forEach(function (key) { add(key, state.homes[key].name); });
+    }
+    add(email, '');
+    return Array.from(byEmail.values()).sort(function (a, b) { return a.name.localeCompare(b.name); });
 }
 async function notesFor(email, isAdmin, now) {
     const notes = await (0, intakeQService_1.getNoteSummaries)();
@@ -161,6 +198,7 @@ async function expectationsView(user, isAdmin, part) {
         zoneMiles: 5,
         measure: 'straight-line',
         home: publicHome(state, email),
+        providers: await providerChoices(state, email, isAdmin),
         homes: isAdmin ? Object.keys(state.homes).map(function (key) {
             return { email: key, address: state.homes[key].address, mapLink: state.homes[key].mapLink, name: state.homes[key].name };
         }) : [],
@@ -179,9 +217,9 @@ async function expectationsView(user, isAdmin, part) {
         outreachMessage: expectationsRules_1.OUTREACH_MESSAGE,
     };
 }
-function staffTarget(user, isAdmin, requested) {
+function staffTarget(user, isAdmin, requested, requestedName = '') {
     if (isAdmin && requested)
-        return { email: emailOf(requested), name: '' };
+        return { email: emailOf(requested), name: clip(requestedName, 120) };
     return { email: emailOf(user.email), name: user.name || user.email };
 }
 async function expectationsAction(user, isAdmin, body) {
@@ -190,20 +228,29 @@ async function expectationsAction(user, isAdmin, body) {
     if (action === 'expectations-home') {
         const address = clip(body.homeAddress, 180);
         const mapLink = clip(body.mapLink, 300);
+        if (!address && !mapLink)
+            throw new expectationsStore_1.ExpectationsStoreError('Add a map link or a home address.', 400);
         if (mapLink && !/^https:\/\//i.test(mapLink)) {
             throw new expectationsStore_1.ExpectationsStoreError('The map link must start with https://', 400);
         }
-        const point = await (0, expectationsZone_1.geocodeAddress)(address);
-        if (!point)
-            throw new expectationsStore_1.ExpectationsStoreError('That home address could not be found. Include the street, city, and ZIP.', 400);
-        const target = staffTarget(user, isAdmin, clip(body.staffEmail, 200));
+        let lat = null;
+        let lon = null;
+        if (address) {
+            const point = await (0, expectationsZone_1.geocodeAddress)(address);
+            if (!point)
+                throw new expectationsStore_1.ExpectationsStoreError('That home address could not be found. Include the street, city, and ZIP.', 400);
+            lat = point.lat;
+            lon = point.lon;
+        }
+        const target = staffTarget(user, isAdmin, clip(body.staffEmail, 200), clip(body.staffName, 120));
         await (0, expectationsStore_1.updateBoard)(function (state) {
+            const previous = state.homes[target.email];
             state.homes[target.email] = {
                 address,
-                lat: point.lat,
-                lon: point.lon,
+                lat,
+                lon,
                 mapLink,
-                name: target.name || (state.homes[target.email] && state.homes[target.email].name) || target.email,
+                name: target.name || (previous && previous.name) || target.email,
             };
         });
         return { ok: true };
@@ -211,41 +258,75 @@ async function expectationsAction(user, isAdmin, body) {
     if (action === 'expectations-zone') {
         const clientAddress = clip(body.clientAddress, 180);
         const state = await (0, expectationsStore_1.loadBoard)();
-        const target = staffTarget(user, isAdmin, clip(body.staffEmail, 200));
+        const target = staffTarget(user, isAdmin, clip(body.staffEmail, 200), clip(body.staffName, 120));
         const home = state.homes[target.email];
-        if (!home)
-            throw new expectationsStore_1.ExpectationsStoreError('Save the home address first.', 400);
+        if (!home || (!home.mapLink && !home.address)) {
+            throw new expectationsStore_1.ExpectationsStoreError('Save a map link or a home address first.', 400);
+        }
         const point = await (0, expectationsZone_1.geocodeAddress)(clientAddress);
         if (!point)
             throw new expectationsStore_1.ExpectationsStoreError('That client address could not be found. Include the street, city, and ZIP.', 400);
-        const miles = (0, expectationsRules_1.haversineMiles)(home.lat, home.lon, point.lat, point.lon);
-        return { miles, outside: (0, expectationsRules_1.outsideZone)(miles), measure: 'straight-line' };
+        const map = home.mapLink ? await (0, expectationsZone_1.readMapGeometry)(home.mapLink) : null;
+        const pin = (map && map.points[0]) || null;
+        const saved = home.address && Number.isFinite(home.lat) && Number.isFinite(home.lon)
+            ? { lat: home.lat, lon: home.lon }
+            : null;
+        if (map && map.polygons.length) {
+            const inside = map.polygons.some(function (ring) { return (0, expectationsRules_1.pointInRing)(point.lat, point.lon, ring); });
+            const from = pin || saved;
+            const miles = from ? (0, expectationsRules_1.haversineMiles)(from.lat, from.lon, point.lat, point.lon) : null;
+            return {
+                miles,
+                outside: !inside,
+                measure: 'map',
+                detail: inside
+                    ? 'Inside the area drawn on this provider’s map.'
+                    : 'Outside the area drawn on this provider’s map.',
+            };
+        }
+        const from = pin || saved;
+        if (!from) {
+            throw new expectationsStore_1.ExpectationsStoreError('This provider’s map could not be read. Add a home address, or share the Google My Map so anyone with the link can view it.', 400);
+        }
+        const miles = (0, expectationsRules_1.haversineMiles)(from.lat, from.lon, point.lat, point.lon);
+        const fromMap = !!pin;
+        return {
+            miles,
+            outside: (0, expectationsRules_1.outsideZone)(miles),
+            measure: fromMap ? 'map-pin' : 'straight-line',
+            detail: miles + ' straight-line miles from ' + (fromMap ? 'the pin on this provider’s map' : 'the saved home address') + '. '
+                + ((0, expectationsRules_1.outsideZone)(miles) ? 'This address is outside the 5-mile range.' : 'This address is inside the 5-mile range.'),
+        };
     }
     if (action === 'expectations-approval') {
         const clientAddress = clip(body.clientAddress, 180);
         const miles = roundMiles(body.miles);
-        if (!clientAddress || !Number.isFinite(miles))
-            throw new expectationsStore_1.ExpectationsStoreError('The address and miles are required.', 400);
-        if (!(0, expectationsRules_1.outsideZone)(miles))
+        const onMap = clip(body.measure, 20) === 'map';
+        if (!clientAddress)
+            throw new expectationsStore_1.ExpectationsStoreError('The address is required.', 400);
+        if (!onMap && !(0, expectationsRules_1.outsideZone)(miles))
             return { ok: true, outside: false };
+        if (onMap && body.outside !== true)
+            return { ok: true, outside: false };
+        const target = staffTarget(user, isAdmin, clip(body.staffEmail, 200), clip(body.staffName, 120));
         const created = await (0, expectationsStore_1.updateBoard)(function (state) {
             const existing = state.requests.find(function (item) {
-                return item.staffEmail === email && item.status === 'pending' && item.clientAddress.toLowerCase() === clientAddress.toLowerCase();
+                return item.staffEmail === target.email && item.status === 'pending' && item.clientAddress.toLowerCase() === clientAddress.toLowerCase();
             });
             if (existing)
                 return;
             state.requests.push({
                 id: (0, expectationsStore_1.newId)('trip'),
-                staffEmail: email,
-                staffName: user.name || email,
+                staffEmail: target.email,
+                staffName: target.name || (state.homes[target.email] && state.homes[target.email].name) || target.email,
                 clientAddress,
-                miles,
+                miles: Number.isFinite(miles) ? miles : 0,
                 status: 'pending',
                 decidedBy: '',
                 createdAt: new Date().toISOString(),
             });
         });
-        const pending = created.requests.filter(function (item) { return item.staffEmail === email && item.status === 'pending'; });
+        const pending = created.requests.filter(function (item) { return item.staffEmail === target.email && item.status === 'pending'; });
         return { ok: true, outside: true, requests: pending };
     }
     if (action === 'expectations-decision') {
