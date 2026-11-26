@@ -455,6 +455,18 @@ th { color: var(--color-green); font-size: 0.78rem; letter-spacing: 0.02em; back
   padding: 0.6rem 0.8rem;
 }
 
+.ref-note, .ref-warn { border-radius: 0.7rem; padding: 0.7rem 0.85rem; margin: 0 0 1rem; }
+.ref-note { background: #eaf4ea; border: 1px solid var(--color-green); }
+.ref-warn { background: #fff6d6; border: 1px solid var(--color-yellow); }
+.ref-note p, .ref-warn p { margin: 0.35rem 0 0; }
+.ref-kpis { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0.6rem 0 1rem; }
+.ref-kpis p { margin: 0; background: #fff; border: 1px solid var(--color-border); border-radius: 0.7rem; padding: 0.55rem 0.75rem; }
+.ref-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
+.ref-steps li { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; align-items: center; }
+.ref-check { display: flex; gap: 0.45rem; align-items: flex-start; font-weight: 500; color: var(--color-text); }
+.ref-check input { margin-top: 0.15rem; }
+.ref-choices { display: flex; flex-wrap: wrap; gap: 0.45rem 0.9rem; margin: 0.3rem 0 0.8rem; }
+
 .rs-map { margin-bottom: 2rem; }
 .rs-map h2, .rs-map h3 { margin: 1rem 0 0.4rem; }
 .rs-topic { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 0.85rem 1rem; margin: 0.7rem 0; }
@@ -467,4 +479,19 @@ th { color: var(--color-green); font-size: 0.78rem; letter-spacing: 0.02em; back
 .rs-list li { margin: 0.35rem 0; }
 @media (max-width: 767px) {
   .rs-epr { grid-template-columns: 1fr; }
+}
+
+.exp-board h2 { margin-top: 1.4rem; }
+.exp-email { border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 0.8rem 1rem; margin: 0.6rem 0 1rem; background: #fff; }
+.exp-check { display: flex; gap: 0.55rem; align-items: flex-start; font-weight: 700; color: var(--color-green); }
+.exp-check input { margin-top: 0.2rem; }
+.exp-burst { margin: 0.35rem 0 0; font-weight: 700; color: var(--color-green); }
+.exp-celebrate { animation: exp-pop 0.7s ease; background: #eaf4ea; }
+.exp-ratio { font-weight: 700; }
+.exp-ratio--high { color: #8a3040; font-weight: 700; }
+.exp-client { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 0.8rem 1rem; margin: 0.7rem 0; }
+.exp-client h3 { margin: 0 0 0.3rem; }
+@keyframes exp-pop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+@media print {
+  .exp-board .btn, .exp-board form, .site-header, .tab-nav, .subtabs, .ask-float { display: none !important; }
 }

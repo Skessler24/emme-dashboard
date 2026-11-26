@@ -1420,6 +1420,13 @@
       }
     }
   </style>
+  <style>
+    .exp-email { background: #fff; border: 1px solid rgba(8, 67, 57, 0.12); border-radius: 0.9rem; padding: 0.85rem 1rem; margin: 0 0 1.25rem; }
+    .exp-check { display: flex; gap: 0.55rem; align-items: flex-start; font-weight: 700; color: #084339; }
+    .exp-burst { margin: 0.35rem 0 0; color: rgba(8, 67, 57, 0.7); }
+    .exp-celebrate { animation: exp-pop 0.7s ease; background: #eaf4ea; }
+    @keyframes exp-pop { 0% { transform: scale(1); } 40% { transform: scale(1.02); } 100% { transform: scale(1); } }
+  </style>
 </head>
 <body>
 
@@ -1505,6 +1512,14 @@
           <p class="greeting__quote" id="js-quote"></p>
         </section>
 
+        <section class="exp-email" id="exp-email" aria-label="Email reminder">
+          <label class="exp-check">
+            <input type="checkbox" id="exp-email-box" />
+            <span>Did you check and reply to your emails today?</span>
+          </label>
+          <p class="exp-burst" id="exp-email-note">This resets each morning. It does not open your inbox.</p>
+        </section>
+
         <section aria-labelledby="resources-heading">
           <h2 class="section-heading" id="resources-heading">Resources &amp; Tools</h2>
           <ul class="card-grid" role="list">
@@ -1571,6 +1586,19 @@
                   <p class="card__desc">Your reflective supervision growth map, and times to accept or change</p>
                 </div>
                 <span class="card__action btn btn--yellow" aria-hidden="true">Open →</span>
+              </a>
+            </li>
+
+            <li role="listitem">
+              <a class="card card--green" href="expectations-mileage.html" aria-label="Mileage — home address, five mile check, and trip table">
+                <div class="card__icon-wrap card__icon-wrap--green" aria-hidden="true">
+                  <i data-lucide="map-pin" class="icon-md"></i>
+                </div>
+                <div class="card__body">
+                  <h3 class="card__title">Mileage</h3>
+                  <p class="card__desc">Check a client address against your 5-mile range, and keep your trip table</p>
+                </div>
+                <span class="card__action btn btn--green" aria-hidden="true">Open →</span>
               </a>
             </li>
 
@@ -3174,6 +3202,33 @@
       };
 
       window.addEventListener('DOMContentLoaded', function () { App.init(); });
+    })();
+  </script>
+  <script>
+    (function () {
+      var box = document.getElementById('exp-email-box');
+      var note = document.getElementById('exp-email-note');
+      var card = document.getElementById('exp-email');
+      if (!box) return;
+      function paint(checked, celebrate) {
+        box.checked = !!checked;
+        note.textContent = checked ? 'Checked for today.' : 'This resets each morning. It does not open your inbox.';
+        card.classList.toggle('exp-celebrate', !!celebrate);
+      }
+      fetch('/api/mileage?part=email', { credentials: 'include', headers: { Accept: 'application/json' } })
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) { if (data) paint(data.checked, false); })
+        .catch(function () {});
+      box.addEventListener('change', function () {
+        var checked = box.checked;
+        paint(checked, checked);
+        fetch('/api/mileage', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ action: 'expectations-email', checked: checked })
+        }).catch(function () { paint(false, false); });
+      });
     })();
   </script>
 </body>

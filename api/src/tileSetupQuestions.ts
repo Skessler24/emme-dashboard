@@ -294,7 +294,7 @@ const EXPECTATIONS: TileDef = {
   title: 'Staff Expectations',
   goal: 'Automate the weekly things administrators now check by hand: mileage, cancellations, notes that are not finished and locked, evaluations and reports that are open or missing, emails checked and answered, and reminders with due dates.',
   existing: [
-    'The Staff Expectations tile already exists (`admin-ui/src/components/tiles/StaffExpectationsTile.tsx`). It shows openings, mileage, cancellations, and documentation counts from the SharePoint lists `Mileage`, `Cancellations`, and `DocumentationCompliance`. Extend it rather than replacing it.',
+    'The Staff Expectations tile already exists (`admin-ui/src/components/tiles/StaffExpectationsTile.tsx`). Openings are read from the schedules saved in the app. Mileage rows come from each provider workbook. Cancellations come from the SharePoint list `Cancellations`. Documentation counts come from `DocumentationCompliance`. Extend it rather than replacing it.',
     'Mileage forms already log confirmed visits (`api/src/mileageWorkbook.ts`) in `EMME/PAYROLL & MILEAGE/Mileage/<provider>/`. Do not change that path.',
     'Open notes, evaluations, and cancellations are read live from IntakeQ (`api/src/intakeQService.ts`) and are not copied into the scheduling database. The documentation endpoint stores counts only. Never store note text.',
     'Reminders need a timer. The API on Static Web Apps cannot run by itself, so scheduled work should be a Power Automate flow that calls the API with the automation key.',
@@ -315,8 +315,8 @@ const EXPECTATIONS: TileDef = {
       { id: 'outside', label: 'Mileage outside the five mile zone needs approval from Jenny or Sara Beth' },
       { id: 'all', label: 'An administrator approves all mileage' },
       { id: 'monthly', label: 'An administrator receives a monthly summary' },
-    ], seed: { choice: ['enter', 'outside'], text: 'Whether every trip needs approval, and whether there is a monthly summary, was not answered.', unsure: true } },
-    { id: 'e_mile_zone', section: 'mileage', kind: 'text', text: 'How is the five mile zone measured? From where to where? Is it a straight line or driving distance?' },
+    ], seed: { choice: ['enter', 'outside', 'monthly'], text: 'Staff enter trip miles. Outside 5 straight-line miles, an administrator approves or denies. The monthly mileage ratio is on the mileage table.' } },
+    { id: 'e_mile_zone', section: 'mileage', kind: 'text', text: 'How is the five mile zone measured? From where to where? Is it a straight line or driving distance?', seed: { text: 'A straight line from the provider home address to the client address. Trip miles on the form are the driving miles staff enter between stops.' } },
 
     { id: 'e_cancel_why', section: 'cancel', kind: 'text', text: 'Why do you track cancellations, and where do they get used?', seed: { text: 'They need to keep track of cancellations for productivity documentation. They go over this quarterly.' } },
     { id: 'e_cancel_types', section: 'cancel', kind: 'many', text: 'Which of these count as a cancellation for productivity? (Pick all that apply.)', options: [
@@ -325,25 +325,25 @@ const EXPECTATIONS: TileDef = {
       { id: 'no-show', label: 'The family does not show up' },
       { id: 'late', label: 'The family cancels late (describe how late below)' },
       { id: 'illness-weather', label: 'Illness or weather' },
-    ] },
-    { id: 'e_cancel_how', section: 'cancel', kind: 'text', text: 'How are cancellations recorded today? Should the dashboard find them by itself from IntakeQ, or should staff enter them?' },
+    ], seed: { text: 'Productivity uses cancellations that were not rescheduled, whatever the reason. Attendance incidents are no-shows and late cancellations under 24 hours. The six-month limits are 4 weekly, 2 twice a month, and 1 monthly.' } },
+    { id: 'e_cancel_how', section: 'cancel', kind: 'text', text: 'How are cancellations recorded today? Should the dashboard find them by itself from IntakeQ, or should staff enter them?', seed: { text: 'IntakeQ cancellations are copied into the Cancellations list. The dashboard reviews that list.' } },
 
-    { id: 'e_notes_rule', section: 'notes', kind: 'text', text: 'When must notes be finished and locked? What should happen if they are not?', seed: { text: 'Complete and lock notes by the end of the week. If they are not, a reminder needs to be sent that says which notes.' } },
+    { id: 'e_notes_rule', section: 'notes', kind: 'text', text: 'When must notes be finished and locked? What should happen if they are not?', seed: { text: 'Lock notes no later than 48 hours after the session. Providers and administrators see the notes that are still open. Note text stays in IntakeQ.' } },
     { id: 'e_notes_when', section: 'notes', kind: 'one', text: 'When must notes be locked?', options: [
       { id: 'day', label: 'By the end of each day' },
       { id: 'week', label: 'By the end of each week' },
       { id: 'other', label: 'Something else (describe below)' },
-    ], seed: { choice: ['week'] } },
-    { id: 'e_notes_remind', section: 'notes', kind: 'text', text: 'What should trigger a reminder about open notes: a weekly list, a reminder each day they are late, or both? Who gets it: the staff member, an administrator, or both?' },
-    { id: 'e_evals', section: 'notes', kind: 'text', text: 'What should be tracked for evaluations and reports? How do you know when one is due or missing?', seed: { text: 'Evals and reports that are open and missing.' } },
-    { id: 'e_evals_due', section: 'notes', kind: 'text', text: 'What are the due dates for evaluations and reports? How long does a staff member have, and who is reminded?' },
+    ], seed: { choice: ['other'], text: 'No later than 48 hours after the session.' } },
+    { id: 'e_notes_remind', section: 'notes', kind: 'text', text: 'What should trigger a reminder about open notes: a weekly list, a reminder each day they are late, or both? Who gets it: the staff member, an administrator, or both?', seed: { text: 'Both the provider and an administrator see the open notes. The list refreshes at 6:00 AM or when someone presses Refresh.' } },
+    { id: 'e_evals', section: 'notes', kind: 'text', text: 'What should be tracked for evaluations and reports? How do you know when one is due or missing?', seed: { text: 'Open evaluations and reports. After Friday of that week they are past due. When finished, an administrator records UNICORN for early intervention or a PAR fax for Medicaid.' } },
+    { id: 'e_evals_due', section: 'notes', kind: 'text', text: 'What are the due dates for evaluations and reports? How long does a staff member have, and who is reminded?', seed: { text: 'By the end of the week. Everyone who is involved sees them: the provider sees their own, and administrators see all.' } },
 
     { id: 'e_email', section: 'email', kind: 'text', text: 'What does "emails checked and answered" mean? How would you know someone did it?', seed: { text: 'Emails checked and responded to.' } },
     { id: 'e_email_how', section: 'email', kind: 'one', text: 'How should it be recorded?', options: [
       { id: 'self', label: 'Staff mark it themselves each day' },
       { id: 'time', label: 'The system looks at how long a message waited for an answer' },
       { id: 'other', label: 'Something else (describe below)' },
-    ] },
+    ], seed: { choice: ['self'], text: 'A daily checkbox asks whether emails were checked and answered. It resets every morning. Inboxes are not read.' } },
 
     { id: 'e_remind_all', section: 'alerts', kind: 'text', text: 'Which reminders, due dates, and actions do your bosses keep track of by hand today?', seed: { text: 'We need a lot of automation around report reminders, due dates, and actions that need completed. Our bosses do all of this individually, and it is a lot.' } },
     { id: 'e_alert_which', section: 'alerts', kind: 'many', text: 'Which of these should send an alert by themselves? (Pick all that apply.)', options: [
@@ -352,13 +352,13 @@ const EXPECTATIONS: TileDef = {
       { id: 'mileage', label: 'Mileage outside the five mile zone' },
       { id: 'cancels', label: 'Too many cancellations' },
       { id: 'email', label: 'Email not checked' },
-    ] },
+    ], seed: { choice: ['notes', 'evals', 'mileage', 'cancels', 'email'] } },
     { id: 'e_alert_how', section: 'alerts', kind: 'many', text: 'How should alerts reach people? (Pick all that apply.)', options: [
       { id: 'email', label: 'Email' },
       { id: 'banner', label: 'The alert banner on their dashboard' },
       { id: 'teams', label: 'A message in Microsoft Teams' },
-    ] },
-    { id: 'e_openings', section: 'alerts', kind: 'text', text: 'What should staff schedules show about therapy openings, and who looks at them?', seed: { text: 'Auto sync schedules for therapy openings. The Schedule & Caseload database stays the source of truth, and nightly openings come from SharePoint files that Power Automate writes.' } },
+    ], seed: { choice: ['email', 'banner'], text: 'Show the alert on the dashboard and send an email. A Power Automate flow sends the 6:00 AM email.' } },
+    { id: 'e_openings', section: 'alerts', kind: 'text', text: 'What should staff schedules show about therapy openings, and who looks at them?', seed: { text: 'Show therapy openings from the schedules each provider saves in Schedule & Caseload. Those saved schedules are the source of truth. The Staff Expectations screen reads them as soon as a provider saves.' } },
     ...closing('e'),
   ],
   fileKinds: [
