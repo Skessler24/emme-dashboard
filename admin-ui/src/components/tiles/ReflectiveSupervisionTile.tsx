@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { TileWithSetup } from '../setup/TileSetup';
+import { ReflectiveMapPanel } from './ReflectiveMapPanel';
 
 type Item = {
   name: string;
@@ -50,7 +51,10 @@ function sizeLabel(bytes: number | null): string {
 export function ReflectiveSupervisionTile() {
   return (
     <TileWithSetup hashId="reflective-supervision" tileId="reflective-supervision" label="Reflective Supervision" mark="~setup">
-      <ReflectiveSupervisionFiles />
+      <>
+        <ReflectiveMapPanel />
+        <ReflectiveSupervisionFiles />
+      </>
     </TileWithSetup>
   );
 }

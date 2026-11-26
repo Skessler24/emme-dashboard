@@ -5,6 +5,7 @@ import { asText, FnContext, HttpRequest, json, methodOf, queryOf, readBody, rest
 import { addAlert, addMessage, endAlert, listAlerts, listMessages, markSeen, replyToMessage, unreadCount } from './conversationStore';
 import { confirmMileageRow, syncAllMileageLogs } from './mileageWorkbook';
 import { listObservationProcess, searchProviderLibraries } from './providerSetup';
+import { handleReflectiveRequest } from './reflectiveRequest';
 import { availabilityForWindow, openingsFromDashboard } from './schedulingService';
 import { createScheduleFromTemplate } from './scheduleWorkbook';
 import { checkSetup, createMissingLists } from './siteSetup';
@@ -619,6 +620,10 @@ async function scheduling(context: FnContext, req: HttpRequest): Promise<void> {
 }
 
 async function reflectiveSupervision(context: FnContext, req: HttpRequest): Promise<void> {
+  if (queryOf(req, 'part')) {
+    await handleReflectiveRequest(context, req);
+    return;
+  }
   const admin = await requireAdmin(context, req);
   if (!admin) return;
   if (methodOf(req) !== 'GET') {
